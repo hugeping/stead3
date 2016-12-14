@@ -339,9 +339,6 @@ stead.obj = stead.class {
 		if oo[v.nam] then
 			stead.err ("Duplicated object: "..v.nam, 2)
 		end
-		if not stead.getmt(v) then
-			stead.setmt(v, self)
-		end
 		local ro = {}
 		local vars = {}
 		for i = 1, #v do
@@ -371,7 +368,8 @@ stead.obj = stead.class {
 		stead.rawset(v, '__ro', ro)
 		stead.rawset(v, '__var', vars)
 		stead.rawset(v, '__list', {}) -- in list(s)
-		oo[v.nam] = v
+		oo[ro.nam] = v
+		stead.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
@@ -445,9 +443,6 @@ stead.room = stead.class({
 		if stead.type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
 		end
-		if not stead.getmt(v) then
-			stead.setmt(v, self)
-		end
 		if not v.way then
 			stead.rawset(v, 'way',  {})
 		end
@@ -457,6 +452,7 @@ stead.room = stead.class({
 		v.way = stead.list(v.way)
 		stead.table.insert(v.way.__list, v)
 		v = stead.obj(v)
+		stead.setmt(v, self)
 		return v
 	end;
 }, stead.obj);
@@ -470,8 +466,8 @@ stead.game = stead.class({
 		if not v.player then
 			v.player = 'player'
 		end
-		stead.setmt(v, self)
 		v = stead.obj(v)
+		stead.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
@@ -497,8 +493,8 @@ stead.player = stead.class ({
 		if not v.room then
 			v.room = 'main'
 		end
-		stead.setmt(v, self)
 		v = stead.obj(v)
+		stead.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
