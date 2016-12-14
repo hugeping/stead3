@@ -31,3 +31,4 @@ stead.ini()
 stead.save(io.stdout)
 --print(stead 'игрок':look())
 iface.cmd 'look'
+print( stead 'нож'.__list[1])

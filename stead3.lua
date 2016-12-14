@@ -103,6 +103,11 @@ function stead.class(s, inh)
 				t.__var[k] = true
 			end
 		end
+		if stead.type(v) == 'table' and v.__list_type then
+			if stead.type(t.__list) == 'table' then
+				t:attach(v)
+			end
+		end
 		stead.rawset(t, k, v)
 	end
 	if inh then
@@ -120,6 +125,7 @@ stead.list_mt = stead.class {
 			if s[i] == nil then
 				stead.err("Wrong item in list: "..stead.tostr(k), 2)
 			end
+			stead.table.insert(s[i].__list, s)
 		end
 	end;
 	look = function(s)
@@ -135,15 +141,28 @@ stead.list_mt = stead.class {
 		end
 		return r
 	end;
+	attach = function(s, o)
+		s:detach(o)
+		stead.table.insert(o.__list, s)
+	end;
+	detach = function(s, o)
+		for i = 1, #o.__list do
+			if o.__list[i] == s then
+				stead.table.remove(o.__list, i)
+				break
+			end
+		end
+	end;
 	add = function(s, n, pos)
+		if s:lookup(n) then
+			return -- already here
+		end
 		if not pos then
 			local o = stead.ref(n)
 			s:__dirty(true)
+			s:attach(o)
 			stead.table.insert(s, o)
 			return o
-		end
-		if s:lookup(n) then
-			return -- already here
 		end
 		if stead.type(pos) ~= 'number' then
 			stead.err("Wrong parameter to list.add:"..stead.tostr(pos), 2)
@@ -158,6 +177,7 @@ stead.list_mt = stead.class {
 		end
 		local o = stead.ref(n)
 		s:__dirty(true)
+		s:attach(o)
 		stead.table.insert(s, o)
 		return o
 	end;
@@ -181,7 +201,7 @@ stead.list_mt = stead.class {
 		local o, i = s:lookup(n)
 		if i then
 			s:__dirty(true)
-			stead.table.remove(s, i)
+			s:detach(o)
 			return o
 		end
 	end;
@@ -286,6 +306,11 @@ stead.obj_mt = stead.class {
 	__obj_type = true;
 	ini = function(s)
 		for k, v in stead.pairs(s) do
+			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
+				v:ini()
+			end
+		end
+		for k, v in stead.pairs(s.__const) do
 			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
 				v:ini()
 			end
@@ -447,6 +472,10 @@ function stead.list(v)
 	if stead.type(v) ~= 'table' then
 		stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
 	end
+	if v.__list_type then -- already list
+		return v
+	end
+	v.__list = {} -- list of obj
 	stead.setmt(v, stead.list_mt)
 	return v
 end
@@ -489,6 +518,7 @@ function stead.obj(v)
 		stead.err ("Wrong .obj attr in object:" .. v.nam, 2)
 	end
 	v.obj = stead.list(v.obj)
+	stead.table.insert(v.obj.__list, v)
 	for key, val in stead.pairs(v) do
 		if stead.rawget(v, key) ~= nil then
 			const[key] = val
@@ -497,9 +527,11 @@ function stead.obj(v)
 	end
 	stead.rawset(v, '__const', const)
 	stead.rawset(v, '__var', vars)
+	stead.rawset(v, '__list', {}) -- in list(s)
 	oo[v.nam] = v
 	return v
 end
+
 function stead.dump(t)
 	local rc = '';
 	if type(t) == 'string' then
@@ -641,6 +673,7 @@ function stead.room(v)
 		stead.err ("Wrong .way attr in object:" .. v.nam, 2)
 	end
 	v.way = stead.list(v.way)
+	stead.table.insert(v.way.__list, v)
 	v = stead.obj(v)
 	return v
 end
