@@ -20,7 +20,8 @@ a = room {
 	};
 }
 b = stead.new ( 'obj', {  })
---stead 'player'.where = 'главная';
+--stead.delete(b)
+stead 'player'.where = 'главная';
 --a.obj:add('игрок')
 a.x = true
 a:disable()
@@ -28,4 +29,4 @@ a:disable()
 stead.ini()
 stead.save(io.stdout)
 --print(stead 'игрок':look())
---iface.cmd 'look'
+iface.cmd 'look'

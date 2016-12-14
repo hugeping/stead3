@@ -122,7 +122,7 @@ stead.list_mt = stead.class {
 			end
 		end
 	end;
-	dsc = function(s)
+	look = function(s)
 		local r
 		for i = 1, #s do
 			r = (r or '')
@@ -162,10 +162,18 @@ stead.list_mt = stead.class {
 	lookup = function(s, n)
 		local o = stead.ref(n)
 		for i = 1, #s do
-			if s[i] == n then
+			if s[i] == o then
 				return o, i
 			end
 		end 
+	end;
+	seen = function(s, n)
+		for i = 1, #s do
+			local o = stead.ref(s[i])
+			if stead.dispof(o) == n then
+				return o, i
+			end
+		end
 	end;
 	del = function(s, n)
 		local o, i = s:lookup(n)
@@ -340,9 +348,10 @@ stead.player_mt = stead.class ({
 	end;
 	look = function(s)
 		local r = s.where
+		local title = stead.tostr(stead.dispof(r))
 		local dsc = stead.call(r, 'dsc')
-		local objs = stead.call(r.obj, 'dsc')
-		return stead.par(stead.scene_delim, dsc, objs)
+		local objs = r.obj:look()
+		return stead.par(stead.scene_delim, title, dsc, objs)
 	end;
 	act = function(s, w)
 	end;
@@ -406,7 +415,7 @@ stead.pclr = function()
 end
 
 stead.pget = function()
-	return stead.cctx().txt;
+	return stead.cctx().txt or '';
 end
 
 stead.p = function(...)
@@ -558,6 +567,14 @@ function stead.new(fn, ...)
 	return o
 end
 
+function stead.delete(s)
+	if s.__obj_type then
+		stead.objects[s.nam] = nil
+	else
+		stead.err("Delete non object table", 2)
+	end
+end
+
 function stead.var(v)
 	if stead.type(v) ~= 'table' then
 		stead.err ("Wrong argument to stead.var:"..stead.tostr(v), 2)
@@ -607,6 +624,18 @@ function stead.room(v)
 	return v
 end
 
+function stead.dispof(o)
+	o = stead.ref(o)
+	if stead.type(o) ~= 'table' then
+		std.err("Wrong parameter to stead.dispof", 2)
+		return
+	end
+	if o.disp ~= nil then
+		return stead.call(o, 'disp')
+	end
+	return o.nam
+end
+
 function stead.ref(o)
 	if type(o) == 'table' then
 		return o
@@ -618,10 +647,14 @@ function stead.ref(o)
 end
 
 function stead.deref(o)
-	return o.nam
+	if stead.type(o) == 'table' then
+		return o.nam
+	else
+		return o
+	end
 end
 
-stead.call = function(v, n, ...)
+stead.method = function(v, n, ...)
 	if stead.type(v) ~= 'table' then
 		stead.err ("Call on non table object:"..stead.tostr(n), 2);
 	end
@@ -647,6 +680,12 @@ stead.call = function(v, n, ...)
 		return stead.tostr(v[n]), true
 	end
 	stead.err ("Method not string nor function:"..stead.tostr(n), 2);
+end
+
+stead.call = function(v, n, ...)
+	local r, v = stead.method(v, n, ...)
+	if stead.type(r) == 'string' then return r end
+	return
 end
 
 local function get_token(inp)
@@ -711,7 +750,7 @@ iface = {
 		end
 		local r, v = game:cmd(cmd)
 		print(r)
-	end
+	end;
 };
 
 game = stead.game { nam = 'game', player = 'player' }
