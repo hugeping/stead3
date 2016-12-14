@@ -125,7 +125,7 @@ stead.list_mt = stead.class {
 			if s[i] == nil then
 				stead.err("Wrong item in list: "..stead.tostr(k), 2)
 			end
-			stead.table.insert(s[i].__list, s)
+			s:attach(s[i])
 		end
 	end;
 	look = function(s)
@@ -280,7 +280,9 @@ function stead.ini(fp)
 		oo[i]:ini()
 	end
 	for k, v in stead.pairs(oo) do
-		v:ini()
+		if stead.type(k) ~= 'number' then
+			v:ini()
+		end
 	end
 end
 
@@ -311,11 +313,24 @@ stead.obj_mt = stead.class {
 				v:ini()
 			end
 		end
+
 		for k, v in stead.pairs(s.__ro) do
 			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
 				v:ini()
 			end
 		end
+	end;
+	where = function(s)
+		local list = s.__list
+		local r = { }
+		for i = 1, #list do
+			local l = list[i]
+			local ll = l.__list
+			for k = 1, #ll do
+				stead.table.insert(r, ll[k])
+			end
+		end
+		return r
 	end;
 	disable = function(s)
 		s.__disabled = true
