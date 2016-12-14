@@ -125,11 +125,13 @@ stead.list_mt = stead.class {
 	look = function(s)
 		local r
 		for i = 1, #s do
-			r = (r or '')
-			if r ~= '' then
+			if r then
 				r = r .. stead.space_delim
 			end
-			r = r .. stead.call(s[i], 'dsc')
+			local d = s[i]:xref(stead.call(s[i], 'dsc'))
+			if stead.type(d) == 'string' then
+				r = (r or '').. d
+			end
 		end
 		return r
 	end;
@@ -314,6 +316,18 @@ stead.obj_mt = stead.class {
 			end
 		end
 	end;
+	xref = function(self, str)
+		function xrefrep(str)
+			local s = stead.string.gsub(str,'[\001\002]','');
+			return iface.xref(self, s);
+		end
+		if stead.type(str) ~= 'string' then
+			return
+		end
+		local s = stead.string.gsub(str, '\\?[\\{}]',
+			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' }):gsub('\001([^\002]+)\002', xrefrep):gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+		return s;
+	end
 };
 
 stead.room_mt = stead.class({
@@ -749,6 +763,14 @@ local function cmd_parse(inp)
 	return cmd
 end
 
+function stead.me()
+	return game.player
+end
+
+function stead.here()
+	return stead.me().where
+end
+
 iface = {
 	cmd = function(inp)
 		local cmd = cmd_parse(inp)
@@ -758,6 +780,13 @@ iface = {
 		local r, v = game:cmd(cmd)
 		print(r)
 	end;
+	xref = function(obj, str)
+		obj = stead.ref(obj)
+		if not obj then
+			return str;
+		end
+		return stead.cat(str, "("..stead.deref(obj)..")");
+	end,
 };
 
 game = stead.game { nam = 'game', player = 'player' }
