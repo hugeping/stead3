@@ -79,6 +79,9 @@ stead.setmt(stead, {
 })
 
 function stead.class(s, inh)
+	s.__tostring = function(s)
+		return stead.dispof(s)
+	end
 	s.__dirty = function(s, v)
 		local o = s.__dirty_flag
 		if v ~= nil then
@@ -539,10 +542,8 @@ function stead.obj(v)
 	v.obj = stead.list(v.obj)
 	stead.table.insert(v.obj.__list, v)
 	for key, val in stead.pairs(v) do
-		if stead.rawget(v, key) ~= nil then
-			ro[key] = val
-			stead.rawset(v, key, nil)
-		end
+		ro[key] = val
+		stead.rawset(v, key, nil)
 	end
 	stead.rawset(v, '__ro', ro)
 	stead.rawset(v, '__var', vars)
