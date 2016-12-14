@@ -79,9 +79,12 @@ stead.setmt(stead, {
 })
 
 function stead.class(s, inh)
+	s.__call = function(s, ...)
+		return s:new(...)
+	end;
 	s.__tostring = function(s)
 		return stead.dispof(s)
-	end
+	end;
 	s.__dirty = function(s, v)
 		local o = s.__dirty_flag
 		if v ~= nil then
@@ -113,14 +116,23 @@ function stead.class(s, inh)
 		end
 		stead.rawset(t, k, v)
 	end
-	if inh then
-		stead.setmt(s, inh)
-	end
+	stead.setmt(s, inh or { __call = s.__call })
 	return s
 end
 
-stead.list_mt = stead.class {
+stead.list = stead.class {
 	__list_type = true;
+	new = function(s, v)
+		if stead.type(v) ~= 'table' then
+			stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
+		end
+		if v.__list_type then -- already list
+			return v
+		end
+		v.__list = {} -- list of obj
+		stead.setmt(v, s)
+		return v
+	end;
 	ini = function(s)
 		for i = 1, #s do
 			local k = s[i]
@@ -215,6 +227,9 @@ stead.list_mt = stead.class {
 		fp:write(stead.string.format("%s = stead.list { ", n))
 		for i = 1, #s do
 			local vv = stead.deref(s[i])
+			if not vv then
+				stead.err ("Can not do deref on: "..stead.tostr(s[i]), 2)
+			end
 			if i ~= 1 then
 				fp:write(stead.string.format(", %q", vv))
 			else
@@ -308,8 +323,57 @@ function stead.varname(k)
 	end
 end
 
-stead.obj_mt = stead.class {
+stead.obj = stead.class {
 	__obj_type = true;
+	new = function(self, v)
+		local oo = stead.objects
+		if stead.type(v) ~= 'table' then
+			stead.err ("Wrong argument to stead.obj:"..stead.tostr(v), 2)
+		end
+		if v.nam == nil then
+			stead.rawset(v, 'nam', #oo + 1)
+		end
+		if stead.type(v.nam) ~= 'string' and stead.type(v.nam) ~= 'number' then
+			stead.err ("Wrong .nam in object.", 2)
+		end
+		if oo[v.nam] then
+			stead.err ("Duplicated object: "..v.nam, 2)
+		end
+		if not stead.getmt(v) then
+			stead.setmt(v, self)
+		end
+		local ro = {}
+		local vars = {}
+		for i = 1, #v do
+			for key, val in stead.pairs(v[i]) do
+				if stead.type(key) ~= 'string' then
+					stead.err("Wrong var name: "..stead.tostr(key), 2)
+				end
+				vars[key] = true
+				stead.rawset(v, key, val)
+			end
+		end
+		for i = 1, #v do
+			stead.table.remove(v, 1)
+		end
+		if not v.obj then
+			stead.rawset(v, 'obj', {})
+		end
+		if stead.type(v.obj) ~= 'table' then
+			stead.err ("Wrong .obj attr in object:" .. v.nam, 2)
+		end
+		v.obj = stead.list(v.obj)
+		stead.table.insert(v.obj.__list, v)
+		for key, val in stead.pairs(v) do
+			ro[key] = val
+			stead.rawset(v, key, nil)
+		end
+		stead.rawset(v, '__ro', ro)
+		stead.rawset(v, '__var', vars)
+		stead.rawset(v, '__list', {}) -- in list(s)
+		oo[v.nam] = v
+		return v
+	end;
 	ini = function(s)
 		for k, v in stead.pairs(s) do
 			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
@@ -374,35 +438,75 @@ stead.obj_mt = stead.class {
 	end
 };
 
-stead.room_mt = stead.class({
+stead.room = stead.class({
 --	way = false;
 	__room_type = true;
-}, stead.obj_mt);
+	new = function(self, v)
+		if stead.type(v) ~= 'table' then
+			stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
+		end
+		if not stead.getmt(v) then
+			stead.setmt(v, self)
+		end
+		if not v.way then
+			stead.rawset(v, 'way',  {})
+		end
+		if stead.type(v.way) ~= 'table' then
+			stead.err ("Wrong .way attr in object:" .. v.nam, 2)
+		end
+		v.way = stead.list(v.way)
+		stead.table.insert(v.way.__list, v)
+		v = stead.obj(v)
+		return v
+	end;
+}, stead.obj);
 
-stead.game_mt = stead.class({
+stead.game = stead.class({
 	__game_type = true;
+	new = function(self, v)
+		if stead.type(v) ~= 'table' then
+			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
+		end
+		if not v.player then
+			v.player = 'player'
+		end
+		stead.setmt(v, self)
+		v = stead.obj(v)
+		return v
+	end;
 	ini = function(s)
 		stead.rawset(s, 'player', stead.ref(s.player))
 		if not s.player then
 			stead.err ("Wrong player", 2)
 		end
-		stead.obj_mt.ini(s)
+		stead.obj.ini(s)
 	end;
 	cmd = function(s, cmd)
 		if cmd[1] == nil or cmd[1] == 'look' then
 			return s.player:look()
 		end
 	end;
-}, stead.obj_mt);
+}, stead.obj);
 
-stead.player_mt = stead.class ({
+stead.player = stead.class ({
 	__player_type = true;
+	new = function(self, v)
+		if stead.type(v) ~= 'table' then
+			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
+		end
+		if not v.room then
+			v.room = 'main'
+		end
+		stead.setmt(v, self)
+		v = stead.obj(v)
+		return v
+	end;
 	ini = function(s)
 		stead.rawset(s, 'room', stead.ref(s.room))
 		if not s.where then
 			std.err ("Wrong player location", 2)
 		end
-		stead.obj_mt.ini(s)
+		stead.obj.ini(s)
 	end;
 	look = function(s)
 		local r = s.room
@@ -419,7 +523,7 @@ stead.player_mt = stead.class ({
 	where = function(s)
 		return s.room
 	end;
-}, stead.obj_mt)
+}, stead.obj)
 
 -- merge strings with "space" as separator
 stead.par = function(space, ...)
@@ -490,67 +594,6 @@ stead.p = function(...)
 	stead.cctx().txt = stead.cat(stead.cctx().txt, stead.space_delim);
 end
 
-function stead.list(v)
-	if stead.type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
-	end
-	if v.__list_type then -- already list
-		return v
-	end
-	v.__list = {} -- list of obj
-	stead.setmt(v, stead.list_mt)
-	return v
-end
-
-function stead.obj(v)
-	local oo = stead.objects
-	if stead.type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.obj:"..stead.tostr(v), 2)
-	end
-	if v.nam == nil then
-		stead.rawset(v, 'nam', #oo + 1)
-	end 
-	if stead.type(v.nam) ~= 'string' and stead.type(v.nam) ~= 'number' then
-		stead.err ("Wrong .nam in object.", 2)
-	end
-	if oo[v.nam] then
-		stead.err ("Duplicated object: "..v.nam, 2)
-	end
-	if not stead.getmt(v) then
-		stead.setmt(v, stead.obj_mt)
-	end
-	local ro = {}
-	local vars = {}
-	for i = 1, #v do
-		for key, val in stead.pairs(v[i]) do
-			if stead.type(key) ~= 'string' then
-				stead.err("Wrong var name: "..stead.tostr(key), 2)
-			end
-			vars[key] = true
-			stead.rawset(v, key, val)
-		end
-	end
-	for i = 1, #v do
-		stead.table.remove(v, 1)
-	end
-	if not v.obj then
-		stead.rawset(v, 'obj', {})
-	end
-	if stead.type(v.obj) ~= 'table' then
-		stead.err ("Wrong .obj attr in object:" .. v.nam, 2)
-	end
-	v.obj = stead.list(v.obj)
-	stead.table.insert(v.obj.__list, v)
-	for key, val in stead.pairs(v) do
-		ro[key] = val
-		stead.rawset(v, key, nil)
-	end
-	stead.rawset(v, '__ro', ro)
-	stead.rawset(v, '__var', vars)
-	stead.rawset(v, '__list', {}) -- in list(s)
-	oo[v.nam] = v
-	return v
-end
 
 function stead.dump(t)
 	local rc = '';
@@ -655,48 +698,7 @@ function stead.var(v)
 	return v
 end
 
-function stead.player(v)
-	if stead.type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
-	end
-	if not v.room then
-		v.room = 'main'
-	end
-	stead.setmt(v, stead.player_mt)
-	v = stead.obj(v)
-	return v
-end
 
-function stead.game(v)
-	if stead.type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
-	end
-	if not v.player then
-		v.player = 'player'
-	end
-	stead.setmt(v, stead.game_mt)
-	v = stead.obj(v)
-	return v
-end
-
-function stead.room(v)
-	if stead.type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
-	end
-	if not stead.getmt(v) then
-		stead.setmt(v, stead.room_mt)
-	end
-	if not v.way then
-		stead.rawset(v, 'way',  {})
-	end
-	if stead.type(v.way) ~= 'table' then
-		stead.err ("Wrong .way attr in object:" .. v.nam, 2)
-	end
-	v.way = stead.list(v.way)
-	stead.table.insert(v.way.__list, v)
-	v = stead.obj(v)
-	return v
-end
 
 function stead.dispof(o)
 	o = stead.ref(o)
