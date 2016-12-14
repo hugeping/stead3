@@ -395,14 +395,14 @@ stead.game_mt = stead.class({
 stead.player_mt = stead.class ({
 	__player_type = true;
 	ini = function(s)
-		stead.rawset(s, 'where', stead.ref(s.where))
+		stead.rawset(s, 'room', stead.ref(s.room))
 		if not s.where then
 			std.err ("Wrong player location", 2)
 		end
 		stead.obj_mt.ini(s)
 	end;
 	look = function(s)
-		local r = s.where
+		local r = s.room
 		local title = stead.tostr(stead.dispof(r))
 		local dsc = stead.call(r, 'dsc')
 		local objs = r.obj:look()
@@ -412,6 +412,9 @@ stead.player_mt = stead.class ({
 	end;
 	walk = function(s, w)
 		w = stead.ref(w)
+	end;
+	where = function(s)
+		return s.room
 	end;
 }, stead.obj_mt)
 
@@ -655,8 +658,8 @@ function stead.player(v)
 	if stead.type(v) ~= 'table' then
 		stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
 	end
-	if not v.where then
-		v.where = 'main'
+	if not v.room then
+		v.room = 'main'
 	end
 	stead.setmt(v, stead.player_mt)
 	v = stead.obj(v)
@@ -820,7 +823,7 @@ function stead.me()
 end
 
 function stead.here()
-	return stead.me().where
+	return stead.me().room
 end
 
 iface = {
@@ -842,5 +845,5 @@ iface = {
 };
 
 game = stead.game { nam = 'game', player = 'player' }
-pl = stead.player { nam = 'player', where = 'main' }
+pl = stead.player { nam = 'player', room = 'main' }
 stead.room { nam = 'main' }

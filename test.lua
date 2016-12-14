@@ -22,7 +22,7 @@ a.dsc = 'Проверка';
 b = stead.new ( 'obj', {  })
 c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)
-stead 'player'.where = 'главная';
+stead 'player'.room = 'главная';
 a.obj:add('игрок')
 a.x = true
 a:disable()
@@ -32,3 +32,4 @@ stead.save(io.stdout)
 --print(stead 'игрок':look())
 iface.cmd 'look'
 print( (stead 'нож':where())[1].nam)
+print (stead 'игрок':where().nam)
