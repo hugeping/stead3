@@ -241,7 +241,8 @@ stead.save_var = function(vv, fp, n)
 		elseif stead.type(vv.save) == 'function' then
 			vv:save(fp, n)
 		else
-			stead.save_table(vv, fp, n)
+			fp:write(stead.string.format("%s = %s\n", n,  stead.dump(vv)))
+--			stead.save_table(vv, fp, n)
 		end
 	end
 end
@@ -702,8 +703,11 @@ end
 
 function stead.deref(o)
 	if stead.type(o) == 'table' then
-		return o.nam
-	else
+		if o.__obj_type then
+			return o.nam
+		end
+		return
+	elseif stead.ref(o) then
 		return o
 	end
 end

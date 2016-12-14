@@ -9,9 +9,7 @@ pl {
 
 a = room {
 	nam = 'главная';
-	{
-		dsc = 'Проверка';
-	};
+	dsc = 'Проверка';
 	obj = {
 		obj {
 			nam = 'нож';
@@ -20,11 +18,12 @@ a = room {
 	};
 }
 a.xm = { 1, 2, 3 }
+a.dsc = 'Проверка';
 b = stead.new ( 'obj', {  })
 c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)
 stead 'player'.where = 'главная';
---a.obj:add('игрок')
+a.obj:add('игрок')
 a.x = true
 a:disable()
 --a.z = { [1] = { a }}
