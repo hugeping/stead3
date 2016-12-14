@@ -19,6 +19,7 @@ a = room {
 		};
 	};
 }
+a.xm = { 1, 2, 3 }
 b = stead.new ( 'obj', {  })
 c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)

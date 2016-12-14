@@ -497,7 +497,7 @@ function stead.obj(v)
 	if not stead.getmt(v) then
 		stead.setmt(v, stead.obj_mt)
 	end
-	local const = {}
+	local ro = {}
 	local vars = {}
 	for i = 1, #v do
 		for key, val in stead.pairs(v[i]) do
@@ -521,11 +521,11 @@ function stead.obj(v)
 	stead.table.insert(v.obj.__list, v)
 	for key, val in stead.pairs(v) do
 		if stead.rawget(v, key) ~= nil then
-			const[key] = val
+			ro[key] = val
 			stead.rawset(v, key, nil)
 		end
 	end
-	stead.rawset(v, '__ro', const)
+	stead.rawset(v, '__ro', ro)
 	stead.rawset(v, '__var', vars)
 	stead.rawset(v, '__list', {}) -- in list(s)
 	oo[v.nam] = v
