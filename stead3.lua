@@ -569,7 +569,14 @@ end
 
 function stead.delete(s)
 	if s.__obj_type then
-		stead.objects[s.nam] = nil
+		if stead.type(s.nam) == 'number' then
+			stead.table.remove(stead.objects, s.nam)
+			for i = s.nam, #stead.objects do
+				stead.rawset(stead.objects[i], 'nam', i)
+			end
+		else
+			stead.objects[s.nam] = nil
+		end
 	else
 		stead.err("Delete non object table", 2)
 	end

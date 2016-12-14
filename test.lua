@@ -20,7 +20,8 @@ a = room {
 	};
 }
 b = stead.new ( 'obj', {  })
---stead.delete(b)
+c = stead.new ( 'obj', { x = 'c = ' })
+stead.delete(b)
 stead 'player'.where = 'главная';
 --a.obj:add('игрок')
 a.x = true
