@@ -330,7 +330,7 @@ stead.obj_mt = stead.class {
 				stead.table.insert(r, ll[k])
 			end
 		end
-		return r
+		return r[1], r
 	end;
 	disable = function(s)
 		s.__disabled = true

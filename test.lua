@@ -31,5 +31,5 @@ stead.ini()
 stead.save(io.stdout)
 --print(stead 'игрок':look())
 iface.cmd 'look'
-print( (stead 'нож':where())[1].nam)
+print( (stead 'нож':where()).nam)
 print (stead 'игрок':where().nam)
