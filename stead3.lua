@@ -87,7 +87,7 @@ function stead.class(s, inh)
 		return o
 	end;
 	s.__index = function(t, k)
-		local v = stead.rawget(t, '__const')
+		local v = stead.rawget(t, '__ro')
 		if v then
 			v = stead.rawget(v, k)
 			if v ~= nil then
@@ -98,8 +98,8 @@ function stead.class(s, inh)
 	end;
 	s.__newindex = function(t, k, v)
 		s:__dirty(true)
-		if stead.type(t.__const) == 'table' and stead.type(k) == 'string' then
-			if stead.type(v) ~= 'function' and t.__const[k] ~= v then
+		if stead.type(t.__ro) == 'table' and stead.type(k) == 'string' then
+			if stead.type(v) ~= 'function' then
 				t.__var[k] = true
 			end
 		end
@@ -310,7 +310,7 @@ stead.obj_mt = stead.class {
 				v:ini()
 			end
 		end
-		for k, v in stead.pairs(s.__const) do
+		for k, v in stead.pairs(s.__ro) do
 			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
 				v:ini()
 			end
@@ -334,7 +334,7 @@ stead.obj_mt = stead.class {
 			local l = stead.string.format("%s%s", n, stead.varname(k))
 			stead.save_var(s[k], fp, l)
 		end
-		for k, v in stead.pairs(s.__const) do
+		for k, v in stead.pairs(s.__ro) do
 			if stead.dirty(v) then
 				local l = stead.string.format("%s%s", n, stead.varname(k))
 				stead.save_var(s[k], fp, l)
@@ -525,7 +525,7 @@ function stead.obj(v)
 			stead.rawset(v, key, nil)
 		end
 	end
-	stead.rawset(v, '__const', const)
+	stead.rawset(v, '__ro', const)
 	stead.rawset(v, '__var', vars)
 	stead.rawset(v, '__list', {}) -- in list(s)
 	oo[v.nam] = v
