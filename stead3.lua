@@ -156,9 +156,18 @@ stead.list = stead.class {
 			if r then
 				r = r .. stead.space_delim
 			end
-			local d = s[i]:xref(stead.call(s[i], 'dsc'))
-			if stead.type(d) == 'string' then
-				r = (r or '').. d
+			local o = s[i]
+			if not o:disabled() then
+				local d = o:xref(stead.call(s[i], 'dsc'))
+				if stead.type(d) == 'string' then
+					r = (r or '').. d
+				end
+				if not o:closed() then
+					d = o.obj:look()
+					if stead.type(d) == 'string' then
+						r = (r or '') .. d
+					end
+				end
 			end
 		end
 		return r
@@ -411,6 +420,15 @@ stead.obj = stead.class {
 		end
 		return r[1], r
 	end;
+	close = function(s)
+		s.__closed = true
+	end;
+	open = function(s)
+		s.__closed = false
+	end;
+	closed = function(s)
+		return s.__closed
+	end;
 	disable = function(s)
 		s.__disabled = true
 	end;
@@ -491,10 +509,29 @@ stead.game = stead.class({
 		end
 		stead.obj.ini(s)
 	end;
-	cmd = function(s, cmd)
-		if cmd[1] == nil or cmd[1] == 'look' then
-			return s.player:look()
+	disp = function(s, reaction, state)
+		local r, objs
+
+		r = stead.here()
+
+		if state then
+			objs = r.obj:look()
 		end
+
+		return stead.par(stead.scene_delim, reaction, objs), state
+	end;
+	cmd = function(s, cmd)
+		local r, v, pv, av
+		if cmd[1] == nil or cmd[1] == 'look' then
+			r, v = s.player:look()
+		end
+		if v == false then
+			return r, false -- wrong cmd?
+		end
+		if v then -- game:step
+--			pv, av = s:step()
+		end
+		return s:disp(r, v)
 	end;
 }, stead.obj);
 
@@ -518,12 +555,19 @@ stead.player = stead.class ({
 		end
 		stead.obj.ini(s)
 	end;
+	reaction = function(s, t)
+		local o = s.__reaction
+		if t == nil then
+			return o
+		end
+		s.__reaction = t
+		return o
+	end;
 	look = function(s)
-		local r = s.room
+		local r = s:where()
 		local title = stead.tostr(stead.dispof(r))
 		local dsc = stead.call(r, 'dsc')
-		local objs = r.obj:look()
-		return stead.par(stead.scene_delim, title, dsc, objs)
+		return stead.par(stead.scene_delim, title, dsc), true
 	end;
 	act = function(s, w)
 	end;
@@ -722,7 +766,7 @@ end
 function stead.dispof(o)
 	o = stead.ref(o)
 	if stead.type(o) ~= 'table' then
-		std.err("Wrong parameter to stead.dispof", 2)
+		stead.err("Wrong parameter to stead.dispof", 2)
 		return
 	end
 	if o.disp ~= nil then
