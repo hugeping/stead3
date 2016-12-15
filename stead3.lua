@@ -17,6 +17,35 @@ stead = {
 	rawget = rawget;
 	string = string;
 	getinfo = debug.getinfo;
+	__mod_init = {},
+	__mod_done = {},
+	__mod_start = {},
+	__mod_cmd = {},
+	mod_init = function(f, ...)
+		if stead.type(f) ~= 'function' then
+			error ("Wrong parameter to mod_init.", 2);
+		end
+		stead.table.insert(stead.__mod_init, f);
+		f();
+	end;
+	mod_done = function(f, ...)
+		if stead.type(f) ~= 'function' then
+			error ("Wrong parameter to mod_done.", 2);
+		end
+		stead.table.insert(stead.__mod_done, f);
+	end;
+	mod_start = function(f, ...)
+		if stead.type(f) ~= 'function' then
+			error ("Wrong parameter to mod_start.", 2);
+		end
+		stead.table.insert(stead.__mod_start, f);
+	end;
+	mod_cmd = function(f, ...)
+		if stead.type(f) ~= 'function' then
+			error ("Wrong parameter to mod_cmd.", 2);
+		end
+		stead.table.insert(stead.__mod_cmd, f);
+	end;
 }
 
 if _VERSION == "Lua 5.1" then
@@ -341,6 +370,9 @@ function stead.ini(fp)
 		if stead.type(k) ~= 'number' then
 			v:ini()
 		end
+	end
+	for i = 1, #stead.__mod_init do
+		stead.__mod_init[i]();
 	end
 	stead.initialized = true
 end

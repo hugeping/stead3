@@ -46,4 +46,14 @@ stead.setmt(_G, {
 	end
 })
 
+local function mod_init()
+	for k, v in stead.pairs(declarations) do
+		stead.rawset(_G, k, nil)
+	end
+	declarations = {}
+end
+
+stead.mod_init(mod_init)
+stead.mod_done(mod_init)
+
 const = stead.const
