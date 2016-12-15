@@ -361,7 +361,7 @@ function stead.save(fp)
 	end
 end
 
-function stead.ini(fp)
+function stead.init(fp)
 	local oo = stead.objects
 	for i = 1, #oo do
 		oo[i]:ini()
@@ -375,6 +375,14 @@ function stead.ini(fp)
 		stead.__mod_init[i]();
 	end
 	stead.initialized = true
+end
+
+function stead.done(fp)
+	stead.initialized = false
+	for i = 1, #stead.__mod_init do
+		stead.__mod_done[i]();
+	end
+	stead.objects = {}
 end
 
 function stead.dirty(o)
