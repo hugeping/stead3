@@ -78,6 +78,13 @@ stead.setmt(stead, {
 	end;
 })
 
+function stead.is_obj(v, t)
+	if stead.type(v) ~= 'table' then
+		return false
+	end
+	return v['__'..(t or 'obj')..'_type']
+end
+
 function stead.class(s, inh)
 	s.__call = function(s, ...)
 		return s:new(...)
@@ -109,7 +116,7 @@ function stead.class(s, inh)
 				t.__var[k] = true
 			end
 		end
-		if stead.type(v) == 'table' and v.__list_type then
+		if stead.is_obj(v, 'list') then
 			if stead.type(t.__list) == 'table' then
 				t:attach(v)
 			end
@@ -126,7 +133,7 @@ stead.list = stead.class {
 		if stead.type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
 		end
-		if v.__list_type then -- already list
+		if stead.is_obj(v, 'list') then -- already list
 			return v
 		end
 		v.__list = {} -- list of obj
@@ -248,8 +255,11 @@ stead.save_var = function(vv, fp, n)
 		fp:write(stead.string.format("%s = ", n))
 		fp:write(stead.string.format("%q\n", vv))
 	elseif stead.type(vv) == 'table' then
-		local d = stead.deref(vv)
-		if d then
+		if stead.is_obj(vv) then
+			local d = stead.deref(vv)
+			if not d then
+				stead.err("Can not deref object:"..stead.tostr(vv), 2)
+			end
 			fp:write(stead.string.format("%s = ", n))
 			if stead.type(d) == 'string' then
 				fp:write(stead.string.format("stead %q\n", d))
@@ -593,13 +603,22 @@ end
 
 function stead.dump(t)
 	local rc = '';
-	if type(t) == 'string' then
-		rc = string.format("%q", t):gsub("\\\n", "\\n")
-	elseif type(t) == 'number' then
-		rc = tostring(t)
-	elseif type(t) == 'boolean' then
-		rc = tostring(t)
-	elseif type(t) == 'table' then
+	if stead.type(t) == 'string' then
+		rc = stead.string.format("%q", t):gsub("\\\n", "\\n")
+	elseif stead.type(t) == 'number' then
+		rc = stead.tostr(t)
+	elseif stead.type(t) == 'boolean' then
+		rc = stead.tostr(t)
+	elseif stead.type(t) == 'table' then
+		if stead.is_obj(t) then
+			local d = stead.deref(t)
+			if stead.type(d) == 'number' then
+				rc = stead.string.format("stead(%d)", d)
+			else
+				rc = stead.string.format("stead %q", d)
+			end
+			return rc
+		end
 		local k,v
 		local nkeys = {}
 		local keys = {}
@@ -673,7 +692,7 @@ function stead.new(fn, ...)
 end
 
 function stead.delete(s)
-	if s.__obj_type then
+	if stead.is_obj(s) then
 		if stead.type(s.nam) == 'number' then
 			stead.table.remove(stead.objects, s.nam)
 			for i = s.nam, #stead.objects do
@@ -719,11 +738,8 @@ function stead.ref(o)
 end
 
 function stead.deref(o)
-	if stead.type(o) == 'table' then
-		if o.__obj_type then
-			return o.nam
-		end
-		return
+	if stead.is_obj(o) then
+		return o.nam
 	elseif stead.ref(o) then
 		return o
 	end
