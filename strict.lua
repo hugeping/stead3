@@ -1,6 +1,9 @@
 local declarations = {}
 
 function stead.const(n)
+	if stead.initialized then
+		stead.err ("Use const only in global context", 2)
+	end
 	if type(n) == 'string' then
 		declarations[n] = true
 		return
