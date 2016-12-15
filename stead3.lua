@@ -16,6 +16,7 @@ stead = {
 	rawset = rawset;
 	rawget = rawget;
 	string = string;
+	getinfo = debug.getinfo;
 }
 
 if _VERSION == "Lua 5.1" then
@@ -171,6 +172,26 @@ stead.list = stead.class {
 			end
 		end
 		return r
+	end;
+	disable = function(s)
+		for i = 1, #s do
+			s[i]:disable()
+		end
+	end;
+	enable = function(s)
+		for i = 1, #s do
+			s[i]:enable()
+		end
+	end;
+	close = function(s)
+		for i = 1, #s do
+			s[i]:close()
+		end
+	end;
+	open = function(s)
+		for i = 1, #s do
+			s[i]:open()
+		end
 	end;
 	attach = function(s, o)
 		s:detach(o)
@@ -910,3 +931,5 @@ iface = {
 game = stead.game { nam = 'game', player = 'player' }
 pl = stead.player { nam = 'player', room = 'main' }
 stead.room { nam = 'main' }
+
+require "strict"
