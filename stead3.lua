@@ -634,6 +634,9 @@ stead.player = stead.class ({
 	end;
 	walk = function(s, w)
 		w = stead.ref(w)
+		if not w then
+			stead.err("Wrong parameter to walk: "..stead.tostr(w))
+		end
 	end;
 	where = function(s)
 		return s.room
