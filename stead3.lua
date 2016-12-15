@@ -312,6 +312,7 @@ function stead.ini(fp)
 			v:ini()
 		end
 	end
+	stead.initialized = true
 end
 
 function stead.dirty(o)
@@ -336,6 +337,9 @@ end
 stead.obj = stead.class {
 	__obj_type = true;
 	new = function(self, v)
+		if stead.initialized and not stead.__in_new then
+			stead.err ("Use stead.new() to create dynamic objects:"..stead.tostr(v), 2)
+		end
 		local oo = stead.objects
 		if stead.type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.obj:"..stead.tostr(v), 2)
@@ -676,7 +680,9 @@ function stead.new(fn, ...)
 		end
 		l = stead.string.format("%s%s", l, stead.dump(arg[i]))
 	end
+	stead.__in_new = true
 	local f, r = stead.eval("return "..fn.."("..l..")")
+	stead.__in_new = false
 	local o
 	if stead.type(r) == 'string' then
 		stead.err("Wrong constructor: "..r, 2)
@@ -712,8 +718,6 @@ function stead.var(v)
 	end
 	return v
 end
-
-
 
 function stead.dispof(o)
 	o = stead.ref(o)
