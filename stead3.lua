@@ -654,29 +654,55 @@ stead.player = stead.class ({
 		local dsc = stead.call(r, 'dsc')
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
-	act = function(s, w, ...)
-		w = stead.ref(w)
+	use = function(s, w1, w2)
 		local r, v, t
-		r, v = stead.call(game, 'onact', w, ...)
+		w1 = stead.ref(w)
+		w2 = stead.ref(w2)
+		if w2 and w1 ~= w2 then
+			return s:call('use', w1, w2)
+		end
+		-- inv mode
+		return s:call('inv', w1)
+	end;
+	onuse = function(s, w1, w2, ...)
+		local r, v = stead.call(w2, 'onuse', w1, ...)
+		if r ~= nil or v ~= nil then
+			return r, false -- stop chain
+		end
+	end;
+	call = function(s, m, w, ...)
+		if stead.type(m) ~= 'string' then
+			stead.err ("Wrong method in player.call: "..stead.tostr(m), 2)
+		end
+		w = stead.ref(w)
+		if not stead.is_obj(w) then
+			stead.err ("Wrong parameter to player.call: "..stead.tostr(w), 2)
+		end
+
+		local r, v, t
+		r, v = stead.call(game, 'on'..m, w, ...)
 		t = stead.par(stead.space_delim, t, r)
 		if v == false then
 			return t, true
 		end
 		if v ~= true then
-			r, v = stead.call(s, 'onact', w, ...)
+			r, v = stead.call(s, 'on'..m, w, ...)
 			t = stead.par(stead.space_delim, t, r)
 			if v == false then
 				return t, true
 			end
 		end
-		r, v = stead.call(w, 'act', ...)
+		r, v = stead.call(w, m, w, ...)
 		t = stead.par(stead.space_delim, t, r)
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
-		r, v = stead.call(game, 'act', ...)
+		r, v = stead.call(game, m, w, ...)
 		t = stead.par(stead.space_delim, t, r)
 		return t, v
+	end;
+	act = function(s, w, ...)
+		return s:call('act', w, ...)
 	end;
 	walkin = function(s, w)
 		return s:walk(w, true, false)
