@@ -33,7 +33,6 @@ a.obj:add('игрок')
 a.x = true
 a:disable()
 --a.z = { [1] = { a }}
-stead.save(io.stdout)
 --print(stead 'игрок':look())
 iface.cmd 'look'
 print( (stead 'нож':where()))
@@ -41,4 +40,5 @@ print (stead 'нож':where())
 print(stead 'нож':where().obj:del 'нож')
 print (stead 'нож':where())
 print(stead 'игрок':walk(a))
+stead.save(io.stdout)
 stead.done()

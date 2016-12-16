@@ -649,7 +649,7 @@ stead.player = stead.class ({
 	end;
 	look = function(s)
 		local r = s:where()
-		local title = stead.tostr(stead.dispof(r))
+		local title = stead.tostr(stead.titleof(r))
 		local dsc = stead.call(r, 'dsc')
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
@@ -675,13 +675,15 @@ stead.player = stead.class ({
 		t = stead.par(stead.scene_delim, t, r)
 
 		if v == false then -- stop walk
-			return r, true
+			s.__in_walk = nil
+			return t, true
 		end
 
 		if v ~= true then
 			r, v = stead.call(s, 'onwalk', s.__in_walk)
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
+				s.__in_walk = nil
 				return t, true
 			end
 		end
@@ -690,19 +692,22 @@ stead.player = stead.class ({
 			r, v = stead.call(s:where(), 'onexit', s.__in_walk)
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
+				s.__in_walk = nil
 				return t, true
 			end
 
 			r, v = stead.call(s.__in_walk, 'onenter', s:where())
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
+				s.__in_walk = nil
 				return t, true
 			end
 		end
 
-		r, v = stead.call(stead.here(), 'exit', s.__in_walk)
+		r, v = stead.call(s:where(), 'exit', s.__in_walk)
 		t = stead.par(stead.scene_delim, t, r)
 		s.room = s.__in_walk
+		s.room.__from = f
 		r, v = stead.call(s.__in_walk, 'enter', f)
 		t = stead.par(stead.scene_delim, t, r)
 		s.room = s.__in_walk
@@ -900,7 +905,7 @@ end
 
 function stead.dispof(o)
 	o = stead.ref(o)
-	if stead.type(o) ~= 'table' then
+	if not stead.is_obj(o) then
 		stead.err("Wrong parameter to stead.dispof", 2)
 		return
 	end
@@ -908,6 +913,18 @@ function stead.dispof(o)
 		return stead.call(o, 'disp')
 	end
 	return o.nam
+end
+
+function stead.titleof(o)
+	o = stead.ref(o)
+	if not stead.is_obj(o) then
+		stead.err("Wrong parameter to stead.titleof", 2)
+		return
+	end
+	if o.title ~= nil then
+		return stead.call(o.title)
+	end
+	return stead.dispof(o)
 end
 
 function stead.ref(o)
