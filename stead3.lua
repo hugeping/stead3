@@ -539,8 +539,10 @@ stead.obj = stead.class {
 };
 
 stead.room = stead.class({
---	way = false;
 	__room_type = true;
+	from  = function(self)
+		return s.__where or self
+	end;
 	new = function(self, v)
 		if stead.type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
@@ -601,7 +603,6 @@ stead.game = stead.class({
 		if state then
 			objs = r.obj:look()
 		end
-
 		return stead.par(stead.scene_delim, reaction, objs), state
 	end;
 	cmd = function(s, cmd)
@@ -649,13 +650,44 @@ stead.player = stead.class ({
 	end;
 	look = function(s)
 		local r = s:where()
-		local title = stead.tostr(stead.titleof(r))
+		local title = iface.title(stead.titleof(r))
 		local dsc = stead.call(r, 'dsc')
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
-	act = function(s, w)
+	act = function(s, w, ...)
+		w = stead.ref(w)
+		local r, v, t
+		r, v = stead.call(game, 'onact', w, ...)
+		t = stead.par(stead.space_delim, t, r)
+		if v == false then
+			return t, true
+		end
+		if v ~= true then
+			r, v = stead.call(s, 'onact', w, ...)
+			t = stead.par(stead.space_delim, t, r)
+			if v == false then
+				return t, true
+			end
+		end
+		r, v = stead.call(w, 'act', ...)
+		t = stead.par(stead.space_delim, t, r)
+		if v ~= nil or r ~= nil then
+			return t, v
+		end
+		r, v = stead.call(game, 'act', ...)
+		t = stead.par(stead.space_delim, t, r)
+		return t, v
 	end;
-	walk = function(s, w)
+	walkin = function(s, w)
+		return s:walk(w, true, false)
+	end;
+	walkout = function(s, w)
+		if w == nil then
+			w = s:where():from()
+		end
+		return s:walk(w, false, true)
+	end;
+	walk = function(s, w, noexit, noenter)
 		w = stead.ref(w)
 		if not w then
 			stead.err("Wrong parameter to walk: "..stead.tostr(w))
@@ -689,27 +721,33 @@ stead.player = stead.class ({
 		end
 
 		if v ~= true then
-			r, v = stead.call(s:where(), 'onexit', s.__in_walk)
-			t = stead.par(stead.scene_delim, t, r)
-			if v == false then
-				s.__in_walk = nil
-				return t, true
+			if not noexit then
+				r, v = stead.call(s:where(), 'onexit', s.__in_walk)
+				t = stead.par(stead.scene_delim, t, r)
+				if v == false then
+					s.__in_walk = nil
+					return t, true
+				end
 			end
-
-			r, v = stead.call(s.__in_walk, 'onenter', s:where())
-			t = stead.par(stead.scene_delim, t, r)
-			if v == false then
-				s.__in_walk = nil
-				return t, true
+			if not noenter then
+				r, v = stead.call(s.__in_walk, 'onenter', s:where())
+				t = stead.par(stead.scene_delim, t, r)
+				if v == false then
+					s.__in_walk = nil
+					return t, true
+				end
 			end
 		end
-
-		r, v = stead.call(s:where(), 'exit', s.__in_walk)
-		t = stead.par(stead.scene_delim, t, r)
-		s.room = s.__in_walk
-		s.room.__from = f
-		r, v = stead.call(s.__in_walk, 'enter', f)
-		t = stead.par(stead.scene_delim, t, r)
+		if not noexit then
+			r, v = stead.call(s:where(), 'exit', s.__in_walk)
+			t = stead.par(stead.scene_delim, t, r)
+		end
+		if not noenter then
+			s.room = s.__in_walk
+			s.room.__from = f
+			r, v = stead.call(s.__in_walk, 'enter', f)
+			t = stead.par(stead.scene_delim, t, r)
+		end
 		s.room = s.__in_walk
 		s.__in_walk = nil
 		return t, true
@@ -1048,7 +1086,13 @@ iface = {
 			return "Error in cmd arguments", false
 		end
 		local r, v = game:cmd(cmd)
-		print(r)
+		if v == false then
+			return r, false
+		end
+		if v == true then
+			r = iface.fmt(r)
+		end
+		return r, v
 	end;
 	xref = function(obj, str)
 		obj = stead.ref(obj)
@@ -1056,7 +1100,18 @@ iface = {
 			return str;
 		end
 		return stead.cat(str, "("..stead.deref(obj)..")");
-	end,
+	end;
+	title = function(str)
+		return "[ "..stead.tostr(str).." ]"
+	end;
+	fmt = function(str)
+		if stead.type(str) ~= 'string' then
+			return
+		end
+		local s = stead.string.gsub(str,'[\t \n]+', stead.space_delim);
+		s = stead.string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+		return s
+	end
 };
 
 stead.game { nam = 'game', player = 'player' }
