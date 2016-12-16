@@ -3,6 +3,9 @@ room = stead.room
 obj = stead.obj
 pl = stead.player
 p = stead.p
+main = stead.ref 'main'
+game = stead.ref 'game'
+
 pl {
 	nam = 'игрок';
 }
@@ -37,5 +40,5 @@ print( (stead 'нож':where()))
 print (stead 'нож':where())
 print(stead 'нож':where().obj:del 'нож')
 print (stead 'нож':where())
-print(pl:walk(a))
+print(stead 'игрок':walk(a))
 stead.done()

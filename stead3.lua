@@ -670,8 +670,7 @@ stead.player = stead.class ({
 		end
 
 		local r, v, t
-		local f = stead.here()
-
+		local f = s:where()
 		r, v = stead.call(game, 'onwalk', s.__in_walk)
 		t = stead.par(stead.scene_delim, t, r)
 
@@ -680,7 +679,7 @@ stead.player = stead.class ({
 		end
 
 		if v ~= true then
-			r, v = stead.call(stead.me(), 'onwalk', s.__in_walk)
+			r, v = stead.call(s, 'onwalk', s.__in_walk)
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
 				return t, true
@@ -688,13 +687,13 @@ stead.player = stead.class ({
 		end
 
 		if v ~= true then
-			r, v = stead.call(stead.here(), 'onexit', s.__in_walk)
+			r, v = stead.call(s:where(), 'onexit', s.__in_walk)
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
 				return t, true
 			end
 
-			r, v = stead.call(s.__in_walk, 'onenter', stead.here())
+			r, v = stead.call(s.__in_walk, 'onenter', s:where())
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
 				return t, true
@@ -703,10 +702,10 @@ stead.player = stead.class ({
 
 		r, v = stead.call(stead.here(), 'exit', s.__in_walk)
 		t = stead.par(stead.scene_delim, t, r)
-		stead.me().room = s.__in_walk
+		s.room = s.__in_walk
 		r, v = stead.call(s.__in_walk, 'enter', f)
 		t = stead.par(stead.scene_delim, t, r)
-		stead.me().room = s.__in_walk
+		s.room = s.__in_walk
 		s.__in_walk = nil
 		return t, true
 	end;
@@ -1043,8 +1042,8 @@ iface = {
 	end,
 };
 
-game = stead.game { nam = 'game', player = 'player' }
-pl = stead.player { nam = 'player', room = 'main' }
+stead.game { nam = 'game', player = 'player' }
 stead.room { nam = 'main' }
+stead.player { nam = 'player', room = 'main' }
 
 require "strict"
