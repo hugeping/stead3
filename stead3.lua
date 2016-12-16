@@ -124,7 +124,7 @@ function stead.class(s, inh)
 	end;
 	s.__dirty = function(s, v)
 		local o = s.__dirty_flag
-		if v ~= nil then
+		if v ~= nil and stead.initialized then
 			stead.rawset(s, '__dirty_flag', v)
 		end
 		return o
@@ -140,11 +140,20 @@ function stead.class(s, inh)
 		return s[k]
 	end;
 	s.__newindex = function(t, k, v)
+		local ro
+		if stead.is_obj(t) and stead.type(k) == 'string' then
+			ro = t.__ro
+		end
+		if not stead.initialized and ro then
+			stead.rawset(ro, k, v)
+			return
+		end
 		s:__dirty(true)
-		if stead.type(t.__ro) == 'table' and stead.type(k) == 'string' then
+		if ro then
 			if stead.type(v) ~= 'function' then
 				t.__var[k] = true
 			end
+			ro[k] = nil
 		end
 		if stead.is_obj(v, 'list') then
 			if stead.type(t.__list) == 'table' then
@@ -560,6 +569,10 @@ stead.game = stead.class({
 			v.player = 'player'
 		end
 		v = stead.obj(v)
+		if v.lifes == nil then
+			stead.rawset(v, 'lifes', {})
+		end
+		v.lifes = stead.list(v.lifes)
 		stead.setmt(v, self)
 		return v
 	end;
@@ -569,6 +582,16 @@ stead.game = stead.class({
 			stead.err ("Wrong player", 2)
 		end
 		stead.obj.ini(s)
+	end;
+	life = function(s)
+		for i = 1, #s.lifes do
+			local v
+			local pre
+			local o = s.lifes[i]
+			if not o:disabled() then
+				v, pre = stead.call(o, 'life');
+			end
+		end
 	end;
 	disp = function(s, reaction, state)
 		local r, objs
@@ -637,6 +660,54 @@ stead.player = stead.class ({
 		if not w then
 			stead.err("Wrong parameter to walk: "..stead.tostr(w))
 		end
+
+		local inwalk = s.__in_walk
+
+		s.__in_walk = w
+
+		if inwalk then
+			return
+		end
+
+		local r, v, t
+
+		r, v = stead.call(game, 'onwalk', s.__in_walk)
+		t = stead.par(stead.scene_delim, t, r)
+
+		if v == false then -- stop walk
+			return r, true
+		end
+
+		if v ~= true then
+			r, v = stead.call(stead.me(), 'onwalk', s.__in_walk)
+			t = stead.par(stead.scene_delim, t, r)
+			if v == false then
+				return t, true
+			end
+		end
+		if v ~= true then
+			r, v = stead.call(stead.here(), 'onexit', s.__in_walk)
+			t = stead.par(stead.scene_delim, t, r)
+			if v == false then
+				return t, true
+			end
+		end
+
+		if v ~= true then
+			r, v = stead.call(s.__in_walk, 'onenter', stead.here())
+			t = stead.par(stead.scene_delim, t, r)
+			if v == false then
+				return t, true
+			end
+		end
+
+		r, v = stead.call(stead.here(), 'exit', s.__in_walk)
+		t = stead.par(stead.scene_delim, t, r)
+		r, v = stead.call(s.__in_walk, 'enter', stead.here())
+		t = stead.par(stead.scene_delim, t, r)
+
+		s.__in_walk = nil
+		return t, true
 	end;
 	where = function(s)
 		return s.room
@@ -862,7 +933,7 @@ stead.method = function(v, n, ...)
 		stead.err ("Call on non table object:"..stead.tostr(n), 2);
 	end
 	if v[n] == nil then
-		return nil, nil
+		return
 	end
 	if stead.type(v[n]) == 'string' then
 		return v[n], true;
