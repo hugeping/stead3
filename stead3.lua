@@ -670,6 +670,7 @@ stead.player = stead.class ({
 		end
 
 		local r, v, t
+		local f = stead.here()
 
 		r, v = stead.call(game, 'onwalk', s.__in_walk)
 		t = stead.par(stead.scene_delim, t, r)
@@ -685,15 +686,14 @@ stead.player = stead.class ({
 				return t, true
 			end
 		end
+
 		if v ~= true then
 			r, v = stead.call(stead.here(), 'onexit', s.__in_walk)
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
 				return t, true
 			end
-		end
 
-		if v ~= true then
 			r, v = stead.call(s.__in_walk, 'onenter', stead.here())
 			t = stead.par(stead.scene_delim, t, r)
 			if v == false then
@@ -703,9 +703,10 @@ stead.player = stead.class ({
 
 		r, v = stead.call(stead.here(), 'exit', s.__in_walk)
 		t = stead.par(stead.scene_delim, t, r)
-		r, v = stead.call(s.__in_walk, 'enter', stead.here())
+		stead.me().room = s.__in_walk
+		r, v = stead.call(s.__in_walk, 'enter', f)
 		t = stead.par(stead.scene_delim, t, r)
-
+		stead.me().room = s.__in_walk
 		s.__in_walk = nil
 		return t, true
 	end;
