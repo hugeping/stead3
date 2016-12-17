@@ -1,11 +1,15 @@
 local declarations = {}
 local variables = {}
+local type = stead.type
+local rawget = stead.rawget
+local rawset = stead.rawset
+local pairs = stead.pairs
 
 local function __declare(n, t)
 	if stead.initialized then
 		stead.err ("Use "..t.." only in global context", 2)
 	end
-	if stead.type(n) ~= 'table' then
+	if type(n) ~= 'table' then
 		stead.err ("Wrong parameter to "..n, 2)
 	end
 	for k, v in stead.pairs(n) do
@@ -35,7 +39,7 @@ stead.setmt(_G,
 		local d = declarations[n]
 		if d then --
 			if d.type == 'declare' and stead.initialized then
-				stead.rawset(_, n, d.value)
+				rawset(_, n, d.value)
 			end
 			return d.value
 		end
@@ -60,11 +64,11 @@ stead.setmt(_G,
 				return
 			end
 			if d.type == 'declare' then
-				stead.rawset(t, k, v)
+				rawset(t, k, v)
 			elseif d.type == 'const' then
 				stead.err ("Modify read-only constant: "..k, 2)
 			elseif d.type == 'global' then
-				stead.rawset(t, k, v)
+				rawset(t, k, v)
 				variables[k] = true
 			end
 			return
@@ -77,7 +81,7 @@ stead.setmt(_G,
 				error ("Set uninitialized variable: "..k.." in "..f, 2)
 			end
 		end
-		stead.rawset(t, k, v)
+		rawset(t, k, v)
 	end
 })
 
@@ -85,23 +89,23 @@ local function mod_save(fp)
 	-- save global variables
 	stead.tables = {}
 	local tables = {}
-	for k, v in stead.pairs(declarations) do -- name all table variables
+	for k, v in pairs(declarations) do -- name all table variables
 		local o = _G[k]
-		if stead.type(o) == 'table' then
+		if type(o) == 'table' then
 			if not tables[o] then
 				tables[o] = k
 			end
 		end
 	end
-	for k, v in stead.pairs(tables) do
+	for k, v in pairs(tables) do
 		if variables[v] then
-			local o = stead.rawget(_G, v)
+			local o = rawget(_G, v)
 			stead.save_var(o, fp, v)
 		end
 	end
 	stead.tables = tables
-	for k, v in stead.pairs(variables) do
-		local o = stead.rawget(_G, k)
+	for k, v in pairs(variables) do
+		local o = rawget(_G, k)
 		if not stead.tables[o] then
 			stead.save_var(o, fp, k)
 		end
@@ -112,8 +116,8 @@ local function mod_init()
 end
 
 local function mod_done()
-	for k, v in stead.pairs(declarations) do
-		stead.rawset(_G, k, nil)
+	for k, v in pairs(declarations) do
+		rawset(_G, k, nil)
 	end
 	stead.tables = {}
 	declarations = {}

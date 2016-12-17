@@ -19,42 +19,7 @@ stead = {
 	string = string;
 	next = next;
 	getinfo = debug.getinfo;
-	__mod_init = {},
-	__mod_done = {},
-	__mod_start = {},
-	__mod_cmd = {},
-	__mod_save = {},
-	mod_init = function(f, ...)
-		if stead.type(f) ~= 'function' then
-			error ("Wrong parameter to mod_init.", 2);
-		end
-		stead.table.insert(stead.__mod_init, f);
-		f();
-	end;
-	mod_done = function(f, ...)
-		if stead.type(f) ~= 'function' then
-			error ("Wrong parameter to mod_done.", 2);
-		end
-		stead.table.insert(stead.__mod_done, f);
-	end;
-	mod_start = function(f, ...)
-		if stead.type(f) ~= 'function' then
-			error ("Wrong parameter to mod_start.", 2);
-		end
-		stead.table.insert(stead.__mod_start, f);
-	end;
-	mod_cmd = function(f, ...)
-		if stead.type(f) ~= 'function' then
-			error ("Wrong parameter to mod_cmd.", 2);
-		end
-		stead.table.insert(stead.__mod_cmd, f);
-	end;
-	mod_save = function(f, ...)
-		if stead.type(f) ~= 'function' then
-			error ("Wrong parameter to mod_save.", 2);
-		end
-		stead.table.insert(stead.__mod_save, f);
-	end;
+	__mod_hooks = {},
 }
 local table = stead.table
 local pairs = stead.pairs
@@ -62,6 +27,7 @@ local ipairs = stead.ipairs
 local string = stead.string
 local rawset = stead.rawset
 local rawget = stead.rawget
+local type = stead.type
 
 if _VERSION == "Lua 5.1" then
 	stead.eval = loadstring
@@ -69,7 +35,7 @@ if _VERSION == "Lua 5.1" then
 else
 	stead.eval = load
 	stead.unpack = table.unpack
-	stead.table.maxn = table_get_maxn
+	table.maxn = table_get_maxn
 	string.gfind = string.gmatch
 	math.mod = math.fmod
 	math.log10 = function(a)
@@ -77,15 +43,55 @@ else
 	end
 end
 
+local function __mod_callback_reg(f, hook, ...)
+	if type(f) ~= 'function' then
+		stead.err ("Wrong parameter to mod_"..hook..".", 2);
+	end
+	if not stead.__mod_hooks[hook] then
+		stead.__mod_hooks[hook] = {}
+	end
+	table.insert(stead.__mod_hooks[hook], f);
+	f();
+end
+
+function stead.mod_call(hook, ...)
+	if not stead.__mod_hooks[hook] then
+		return
+	end
+	for k, v in ipairs(stead.__mod_hooks[hook]) do
+		v(...)
+	end
+end
+
+function stead.mod_init(f, ...)
+	__mod_callback_reg(f, 'init', ...)
+end
+
+function stead.mod_done(f, ...)
+	__mod_callback_reg(f, 'done', ...)
+end
+
+function stead.mod_start(f, ...)
+	__mod_callback_reg(f, 'start', ...)
+end
+
+function stead.mod_cmd(f, ...)
+	__mod_callback_reg(f, 'cmd', ...)
+end
+
+function stead.mod_save(f, ...)
+	__mod_callback_reg(f, 'save', ...)
+end
+
 stead.fmt = function(...)
 	local res
 	local a = {...};
 
 	for i = 1, #a do
-		if stead.type(a[i]) == 'string' then
-			local s = stead.string.gsub(a[i],'[\t ]+', stead.space_delim);
-			s = stead.string.gsub(s, '[\n]+', stead.space_delim);
-			s = stead.string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+		if type(a[i]) == 'string' then
+			local s = string.gsub(a[i],'[\t ]+', stead.space_delim);
+			s = string.gsub(s, '[\n]+', stead.space_delim);
+			s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
 			res = stead.par('', res, s);
 		end
 	end
@@ -124,7 +130,7 @@ stead.setmt(stead, {
 })
 
 function stead.is_obj(v, t)
-	if stead.type(v) ~= 'table' then
+	if type(v) ~= 'table' then
 		return false
 	end
 	return v['__'..(t or 'obj')..'_type']
@@ -140,14 +146,14 @@ function stead.class(s, inh)
 	s.__dirty = function(s, v)
 		local o = s.__dirty_flag
 		if v ~= nil and stead.initialized then
-			stead.rawset(s, '__dirty_flag', v)
+			rawset(s, '__dirty_flag', v)
 		end
 		return o
 	end;
 	s.__index = function(t, k)
-		local v = stead.rawget(t, '__ro')
+		local v = rawget(t, '__ro')
 		if v then
-			v = stead.rawget(v, k)
+			v = rawget(v, k)
 			if v ~= nil then
 				return v
 			end
@@ -156,26 +162,26 @@ function stead.class(s, inh)
 	end;
 	s.__newindex = function(t, k, v)
 		local ro
-		if stead.is_obj(t) and stead.type(k) == 'string' then
+		if stead.is_obj(t) and type(k) == 'string' then
 			ro = t.__ro
 		end
 		if not stead.initialized and ro then
-			stead.rawset(ro, k, v)
+			rawset(ro, k, v)
 			return
 		end
 		s:__dirty(true)
 		if ro then
-			if stead.type(v) ~= 'function' then
+			if type(v) ~= 'function' then
 				t.__var[k] = true
 			end
 			ro[k] = nil
 		end
 		if stead.is_obj(v, 'list') then
-			if stead.type(t.__list) == 'table' then
+			if type(t.__list) == 'table' then
 				t:attach(v)
 			end
 		end
-		stead.rawset(t, k, v)
+		rawset(t, k, v)
 	end
 	stead.setmt(s, inh or { __call = s.__call })
 	return s
@@ -184,7 +190,7 @@ end
 stead.list = stead.class {
 	__list_type = true;
 	new = function(s, v)
-		if stead.type(v) ~= 'table' then
+		if type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
 		end
 		if stead.is_obj(v, 'list') then -- already list
@@ -213,12 +219,12 @@ stead.list = stead.class {
 			local o = s[i]
 			if not o:disabled() then
 				local d = o:xref(stead.call(s[i], 'dsc'))
-				if stead.type(d) == 'string' then
+				if type(d) == 'string' then
 					r = (r or '').. d
 				end
 				if not o:closed() then
 					d = o.obj:look()
-					if stead.type(d) == 'string' then
+					if type(d) == 'string' then
 						r = (r or '') .. d
 					end
 				end
@@ -248,12 +254,12 @@ stead.list = stead.class {
 	end;
 	attach = function(s, o)
 		s:detach(o)
-		stead.table.insert(o.__list, s)
+		table.insert(o.__list, s)
 	end;
 	detach = function(s, o)
 		for i = 1, #o.__list do
 			if o.__list[i] == s then
-				stead.table.remove(o.__list, i)
+				table.remove(o.__list, i)
 				break
 			end
 		end
@@ -266,10 +272,10 @@ stead.list = stead.class {
 			local o = stead.ref(n)
 			s:__dirty(true)
 			s:attach(o)
-			stead.table.insert(s, o)
+			table.insert(s, o)
 			return o
 		end
-		if stead.type(pos) ~= 'number' then
+		if type(pos) ~= 'number' then
 			stead.err("Wrong parameter to list.add:"..stead.tostr(pos), 2)
 		end
 		if pos > #s then
@@ -283,7 +289,7 @@ stead.list = stead.class {
 		local o = stead.ref(n)
 		s:__dirty(true)
 		s:attach(o)
-		stead.table.insert(s, o)
+		table.insert(s, o)
 		return o
 	end;
 	lookup = function(s, n)
@@ -314,47 +320,47 @@ stead.list = stead.class {
 		if not s:__dirty() then
 			return
 		end
-		fp:write(stead.string.format("%s = stead.list { ", n))
+		fp:write(string.format("%s = stead.list { ", n))
 		for i = 1, #s do
 			local vv = stead.deref(s[i])
 			if not vv then
 				stead.err ("Can not do deref on: "..stead.tostr(s[i]), 2)
 			end
 			if i ~= 1 then
-				fp:write(stead.string.format(", %q", vv))
+				fp:write(string.format(", %q", vv))
 			else
-				fp:write(stead.string.format("%q", vv))
+				fp:write(string.format("%q", vv))
 			end
 		end
 		fp:write(" }\n")
 	end;
 }
 stead.save_var = function(vv, fp, n)
-	if stead.type(vv) == 'boolean' or stead.type(vv) == 'number' then
-		fp:write(stead.string.format("%s = ", n))
+	if type(vv) == 'boolean' or type(vv) == 'number' then
+		fp:write(string.format("%s = ", n))
 		fp:write(stead.tostr(vv)..'\n')
-	elseif stead.type(vv) == 'string' then
-		fp:write(stead.string.format("%s = ", n))
-		fp:write(stead.string.format("%q\n", vv))
-	elseif stead.type(vv) == 'table' then
+	elseif type(vv) == 'string' then
+		fp:write(string.format("%s = ", n))
+		fp:write(string.format("%q\n", vv))
+	elseif type(vv) == 'table' then
 		if stead.tables[vv] then
 			local k = stead.tables[vv]
-			fp:write(stead.string.format("%s = %s\n", n, k))
+			fp:write(string.format("%s = %s\n", n, k))
 		elseif stead.is_obj(vv) then
 			local d = stead.deref(vv)
 			if not d then
 				stead.err("Can not deref object:"..stead.tostr(vv), 2)
 			end
-			fp:write(stead.string.format("%s = ", n))
-			if stead.type(d) == 'string' then
-				fp:write(stead.string.format("stead %q\n", d))
+			fp:write(string.format("%s = ", n))
+			if type(d) == 'string' then
+				fp:write(string.format("stead %q\n", d))
 			else
-				fp:write(stead.string.format("stead(%d)\n", d))
+				fp:write(string.format("stead(%d)\n", d))
 			end
-		elseif stead.type(vv.save) == 'function' then
+		elseif type(vv.save) == 'function' then
 			vv:save(fp, n)
 		else
-			fp:write(stead.string.format("%s = %s\n", n,  stead.dump(vv)))
+			fp:write(string.format("%s = %s\n", n,  stead.dump(vv)))
 --			stead.save_table(vv, fp, n)
 		end
 	end
@@ -362,14 +368,14 @@ end
 
 stead.save_table = function(vv, fp, n)
 	local l
-	fp:write(stead.string.format("%s = {}\n", n))
-	for k, v in stead.pairs(vv) do
+	fp:write(string.format("%s = {}\n", n))
+	for k, v in pairs(vv) do
 		l = nil
-		if stead.type(k) == 'number' then
-			l = stead.string.format("%s%s", n, stead.varname(k))
+		if type(k) == 'number' then
+			l = string.format("%s%s", n, stead.varname(k))
 			stead.save_var(v, fp, l)
-		elseif stead.type(k) == 'string' then
-			l = stead.string.format("%s%s", n, stead.varname(k))
+		elseif type(k) == 'string' then
+			l = string.format("%s%s", n, stead.varname(k))
 			stead.save_var(v, fp, l)
 		end
 	end
@@ -378,16 +384,14 @@ end
 function stead.save(fp)
 	local oo = stead.objects -- save dynamic objects
 	for i = 1, #oo do
-		oo[i]:save(fp, stead.string.format("stead(%d)", i))
+		oo[i]:save(fp, string.format("stead(%d)", i))
 	end
 
-	for i = 1, #stead.__mod_save do -- module objects???
-		stead.__mod_save[i](fp);
-	end
+	stead.mod_call('save', fp)
 
-	for k, v in stead.pairs(oo) do -- save static objects
-		if stead.type(k) == 'string' then
-			v:save(fp, stead.string.format("stead %q", k))
+	for k, v in pairs(oo) do -- save static objects
+		if type(k) == 'string' then
+			v:save(fp, string.format("stead %q", k))
 		end
 	end
 end
@@ -397,25 +401,21 @@ function stead.init(fp)
 	for i = 1, #oo do
 		oo[i]:ini()
 	end
-	for k, v in stead.pairs(oo) do
-		if stead.type(k) ~= 'number' then
+	for k, v in pairs(oo) do
+		if type(k) ~= 'number' then
 			v:ini()
 		end
 	end
-	for i = 1, #stead.__mod_init do
-		stead.__mod_init[i]();
-	end
+	stead.mod_call('init')
 	stead.initialized = true
 end
 
 function stead.done(fp)
 	stead.initialized = false
-	for i = 1, #stead.__mod_init do
-		stead.__mod_done[i]();
-	end
+	stead.mod_call('done')
 	local objects = {}
-	for k, v in stead.pairs(stead.objects) do
-		if stead.type(k) == 'string' and k:byte(1) == 0x40 then
+	for k, v in pairs(stead.objects) do
+		if type(k) == 'string' and k:byte(1) == 0x40 then
 			objects[k] = v
 		end
 	end
@@ -423,20 +423,20 @@ function stead.done(fp)
 end
 
 function stead.dirty(o)
-	if stead.type(o) ~= 'table' or stead.type(o.__dirty) ~= 'function' then
+	if type(o) ~= 'table' or type(o.__dirty) ~= 'function' then
 		return false
 	end
 	return o:__dirty()
 end
 
 function stead.varname(k)
-	if stead.type(k) == 'number' then
-		return stead.string.format("[%d]", k)
-	elseif stead.type(k) == 'string' then
+	if type(k) == 'number' then
+		return string.format("[%d]", k)
+	elseif type(k) == 'string' then
 		if not lua_keywords[k] then
-			return stead.string.format(".%s", k)
+			return string.format(".%s", k)
 		else
-			return stead.string.format("[%q]", k)
+			return string.format("[%q]", k)
 		end
 	end
 end
@@ -448,13 +448,13 @@ stead.obj = stead.class {
 			stead.err ("Use stead.new() to create dynamic objects:"..stead.tostr(v), 2)
 		end
 		local oo = stead.objects
-		if stead.type(v) ~= 'table' then
+		if type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.obj:"..stead.tostr(v), 2)
 		end
 		if v.nam == nil then
-			stead.rawset(v, 'nam', #oo + 1)
+			rawset(v, 'nam', #oo + 1)
 		end
-		if stead.type(v.nam) ~= 'string' and stead.type(v.nam) ~= 'number' then
+		if type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
 			stead.err ("Wrong .nam in object.", 2)
 		end
 		if oo[v.nam] then
@@ -464,51 +464,51 @@ stead.obj = stead.class {
 		local vars = {}
 		local raw = {}
 		for i = 1, #v do
-			for key, val in stead.pairs(v[i]) do
-				if stead.type(key) ~= 'string' then
+			for key, val in pairs(v[i]) do
+				if type(key) ~= 'string' then
 					stead.err("Wrong var name: "..stead.tostr(key), 2)
 				end
 				raw[key] = true
-				stead.rawset(v, key, val)
+				rawset(v, key, val)
 			end
 		end
 		for i = 1, #v do
-			stead.table.remove(v, 1)
+			table.remove(v, 1)
 		end
 		if not v.obj then
-			stead.rawset(v, 'obj', {})
+			rawset(v, 'obj', {})
 		end
-		if stead.type(v.obj) ~= 'table' then
+		if type(v.obj) ~= 'table' then
 			stead.err ("Wrong .obj attr in object:" .. v.nam, 2)
 		end
 		v.obj = stead.list(v.obj)
-		stead.table.insert(v.obj.__list, v)
-		for key, val in stead.pairs(v) do
+		table.insert(v.obj.__list, v)
+		for key, val in pairs(v) do
 			if not raw[key] then
 				ro[key] = val
-				if stead.type(val) == 'table'
+				if type(val) == 'table'
 					and not stead.getmt(val) then
 					stead.array(val)
 				end
-				stead.rawset(v, key, nil)
+				rawset(v, key, nil)
 			end
 		end
-		stead.rawset(v, '__ro', ro)
-		stead.rawset(v, '__var', vars)
-		stead.rawset(v, '__list', {}) -- in list(s)
+		rawset(v, '__ro', ro)
+		rawset(v, '__var', vars)
+		rawset(v, '__list', {}) -- in list(s)
 		oo[ro.nam] = v
 		stead.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
-		for k, v in stead.pairs(s) do
-			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
+		for k, v in pairs(s) do
+			if type(v) == 'table' and type(v.ini) == 'function' then
 				v:ini()
 			end
 		end
 
-		for k, v in stead.pairs(s.__ro) do
-			if stead.type(v) == 'table' and stead.type(v.ini) == 'function' then
+		for k, v in pairs(s.__ro) do
+			if type(v) == 'table' and type(v.ini) == 'function' then
 				v:ini()
 			end
 		end
@@ -520,7 +520,7 @@ stead.obj = stead.class {
 			local l = list[i]
 			local ll = l.__list
 			for k = 1, #ll do
-				stead.table.insert(r, ll[k])
+				table.insert(r, ll[k])
 			end
 		end
 		return r[1], r
@@ -545,29 +545,29 @@ stead.obj = stead.class {
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create
-			local l = stead.string.format("stead.new(%q, %s) -- %s\n", s.__dynamic.fn, s.__dynamic.arg, n)
+			local l = string.format("stead.new(%q, %s) -- %s\n", s.__dynamic.fn, s.__dynamic.arg, n)
 			fp:write(l)
 		end
-		for k, v in stead.pairs(s.__var) do
-			local l = stead.string.format("%s%s", n, stead.varname(k))
+		for k, v in pairs(s.__var) do
+			local l = string.format("%s%s", n, stead.varname(k))
 			stead.save_var(s[k], fp, l)
 		end
-		for k, v in stead.pairs(s.__ro) do
+		for k, v in pairs(s.__ro) do
 			if stead.dirty(v) then
-				local l = stead.string.format("%s%s", n, stead.varname(k))
+				local l = string.format("%s%s", n, stead.varname(k))
 				stead.save_var(s[k], fp, l)
 			end
 		end
 	end;
 	xref = function(self, str)
 		function xrefrep(str)
-			local s = stead.string.gsub(str,'[\001\002]','');
+			local s = string.gsub(str,'[\001\002]','');
 			return iface.xref(self, s);
 		end
-		if stead.type(str) ~= 'string' then
+		if type(str) ~= 'string' then
 			return
 		end
-		local s = stead.string.gsub(str, '\\?[\\{}]',
+		local s = string.gsub(str, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' }):gsub('\001([^\002]+)\002', xrefrep):gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
 		return s;
 	end
@@ -579,17 +579,17 @@ stead.room = stead.class({
 		return s.__where or self
 	end;
 	new = function(self, v)
-		if stead.type(v) ~= 'table' then
+		if type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
 		end
 		if not v.way then
-			stead.rawset(v, 'way',  {})
+			rawset(v, 'way',  {})
 		end
-		if stead.type(v.way) ~= 'table' then
+		if type(v.way) ~= 'table' then
 			stead.err ("Wrong .way attr in object:" .. v.nam, 2)
 		end
 		v.way = stead.list(v.way)
-		stead.table.insert(v.way.__list, v)
+		table.insert(v.way.__list, v)
 		v = stead.obj(v)
 		stead.setmt(v, self)
 		return v
@@ -599,7 +599,7 @@ stead.room = stead.class({
 stead.game = stead.class({
 	__game_type = true;
 	new = function(self, v)
-		if stead.type(v) ~= 'table' then
+		if type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
 		end
 		if not v.player then
@@ -607,14 +607,14 @@ stead.game = stead.class({
 		end
 		v = stead.obj(v)
 		if v.lifes == nil then
-			stead.rawset(v, 'lifes', {})
+			rawset(v, 'lifes', {})
 		end
 		v.lifes = stead.list(v.lifes)
 		stead.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
-		stead.rawset(s, 'player', stead.ref(s.player))
+		rawset(s, 'player', stead.ref(s.player))
 		if not s.player then
 			stead.err ("Wrong player", 2)
 		end
@@ -657,28 +657,28 @@ stead.game = stead.class({
 
 local array_mt = {
 	__index = function(t, k)
-		local ro = stead.rawget(t, '__ro')
+		local ro = rawget(t, '__ro')
 		if ro then
-			return stead.rawget(ro, k)
+			return rawget(ro, k)
 		end
 	end;
 	__newindex = function(t, k, v)
 		local parent = t.__parent
-		stead.rawset(parent, '__dirty_flag', true)
-		stead.rawset(t, k, v)
+		rawset(parent, '__dirty_flag', true)
+		rawset(t, k, v)
 	end;
 }
 
 function stead.array(t, parent)
-	if stead.type(t) ~= 'table' then
+	if type(t) ~= 'table' then
 		return
 	end
 	t.__parent = parent or t
 	t.__ro = {}
 	t.__dirty = function(s) return s.__dirty_flag end;
 	stead.setmt(t, array_mt)
-	for k, v in stead.pairs(t) do
-		if stead.type(v) == 'table' and not stead.getmt(v) then
+	for k, v in pairs(t) do
+		if type(v) == 'table' and not stead.getmt(v) then
 		--	stead.array(v, t.__parent)
 		end
 	end
@@ -687,7 +687,7 @@ end
 stead.player = stead.class ({
 	__player_type = true;
 	new = function(self, v)
-		if stead.type(v) ~= 'table' then
+		if type(v) ~= 'table' then
 			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
 		end
 		if not v.room then
@@ -698,7 +698,7 @@ stead.player = stead.class ({
 		return v
 	end;
 	ini = function(s)
-		stead.rawset(s, 'room', stead.ref(s.room))
+		rawset(s, 'room', stead.ref(s.room))
 		if not s.where then
 			std.err ("Wrong player location", 2)
 		end
@@ -730,7 +730,7 @@ stead.player = stead.class ({
 		return s:call('inv', w1, w2)
 	end;
 	call = function(s, m, w, w2, ...)
-		if stead.type(m) ~= 'string' then
+		if type(m) ~= 'string' then
 			stead.err ("Wrong method in player.call: "..stead.tostr(m), 2)
 		end
 
@@ -861,7 +861,7 @@ stead.par = function(space, ...)
 	local res
 	local a = { ... };
 	for i = 1, #a do
-		if stead.type(a[i]) == 'string' then
+		if type(a[i]) == 'string' then
 			if res == nil then
 				res = ""
 			else
@@ -882,7 +882,7 @@ stead.cat = function(v,...)
 	end
 	local a = { ... }
 	for i = 1, #a do
-		if stead.type(a[i]) == 'string' then
+		if type(a[i]) == 'string' then
 			v = v .. a[i];
 		end
 	end
@@ -927,39 +927,39 @@ end
 
 local function __dump(t)
 	local rc = '';
-	if stead.type(t) == 'string' then
-		rc = stead.string.format("%q", t):gsub("\\\n", "\\n")
-	elseif stead.type(t) == 'number' then
+	if type(t) == 'string' then
+		rc = string.format("%q", t):gsub("\\\n", "\\n")
+	elseif type(t) == 'number' then
 		rc = stead.tostr(t)
-	elseif stead.type(t) == 'boolean' then
+	elseif type(t) == 'boolean' then
 		rc = stead.tostr(t)
-	elseif stead.type(t) == 'table' and not t.__visited then
+	elseif type(t) == 'table' and not t.__visited then
 		t.__visited = true
 		if stead.tables[t] then
 			local k = stead.tables[t]
-			return stead.string.format("%s", k)
+			return string.format("%s", k)
 		elseif stead.is_obj(t) then
 			local d = stead.deref(t)
-			if stead.type(d) == 'number' then
-				rc = stead.string.format("stead(%d)", d)
+			if type(d) == 'number' then
+				rc = string.format("stead(%d)", d)
 			else
-				rc = stead.string.format("stead %q", d)
+				rc = string.format("stead %q", d)
 			end
 			return rc
 		end
 		local k,v
 		local nkeys = {}
 		local keys = {}
-		for k,v in stead.pairs(t) do
-			if stead.type(v) ~= 'function' and stead.type(v) ~= 'userdata' then
-				if stead.type(k) == 'number' then
-					stead.table.insert(nkeys, { key = k, val = v })
+		for k,v in pairs(t) do
+			if type(v) ~= 'function' and type(v) ~= 'userdata' then
+				if type(k) == 'number' then
+					table.insert(nkeys, { key = k, val = v })
 				elseif k:find("__", 1, true) ~= 1 then
-					stead.table.insert(keys, { key = k, val = v })
+					table.insert(keys, { key = k, val = v })
 				end
 			end
 		end
-		stead.table.sort(nkeys, function(a, b) return a.key < b.key end)
+		table.sort(nkeys, function(a, b) return a.key < b.key end)
 		rc = "{ "
 		local n
 		for k = 1, #nkeys do
@@ -979,11 +979,11 @@ local function __dump(t)
 		end
 		for k = 1, #keys do
 			v = keys[k]
-			if stead.type(v.key) == 'string' then
+			if type(v.key) == 'string' then
 				if v.key:find("^[a-zA-Z_]+[a-zA-Z0-9_]*$") and not lua_keywords[v.key] then
 					rc = rc .. v.key .. " = "..stead.dump(v.val)..", "
 				else
-					rc = rc .. "[" .. stead.string.format("%q", v.key) .. "] = "..stead.dump(v.val)..", "
+					rc = rc .. "[" .. string.format("%q", v.key) .. "] = "..stead.dump(v.val)..", "
 				end
 			else
 				rc = rc .. stead.tostr(v.key) .. " = "..stead.dump(v.val)..", "
@@ -995,11 +995,11 @@ local function __dump(t)
 end
 
 local function cleardump(t)
-	if stead.type(t) ~= 'table' or not t.__visited then
+	if type(t) ~= 'table' or not t.__visited then
 		return
 	end
 	t.__visited = nil
-	for k, v in stead.pairs(t) do
+	for k, v in pairs(t) do
 		cleardump(v)
 	end
 end
@@ -1011,7 +1011,7 @@ function stead.dump(t)
 end
 
 function stead.new(fn, ...)
-	if stead.type(fn) ~= 'string' then
+	if type(fn) ~= 'string' then
 		std.err ("Wrong parameter to stead.new", 2)
 	end
 	local arg = { ... }
@@ -1020,31 +1020,31 @@ function stead.new(fn, ...)
 		if i ~= 1 then
 			l = ", "..l
 		end
-		l = stead.string.format("%s%s", l, stead.dump(arg[i]))
+		l = string.format("%s%s", l, stead.dump(arg[i]))
 	end
 	stead.__in_new = true
 	local f, r = stead.eval("return "..fn.."("..l..")")
 	stead.__in_new = false
 	local o
-	if stead.type(r) == 'string' then
+	if type(r) == 'string' then
 		stead.err("Wrong constructor: "..r, 2)
 	end
-	if stead.type(f) == 'function' then
+	if type(f) == 'function' then
 		o = f()
 	end
-	if stead.type(o) ~= 'table' then
+	if type(o) ~= 'table' then
 		stead.err ("Constructor did not return object:"..fn.."("..l..")", 2)
 	end
-	stead.rawset(o, '__dynamic', { fn = fn, arg = l })
+	rawset(o, '__dynamic', { fn = fn, arg = l })
 	return o
 end
 
 function stead.delete(s)
 	if stead.is_obj(s) then
-		if stead.type(s.nam) == 'number' then
-			stead.table.remove(stead.objects, s.nam)
+		if type(s.nam) == 'number' then
+			table.remove(stead.objects, s.nam)
 			for i = s.nam, #stead.objects do
-				stead.rawset(stead.objects[i], 'nam', i)
+				rawset(stead.objects[i], 'nam', i)
 			end
 		else
 			stead.objects[s.nam] = nil
@@ -1055,7 +1055,7 @@ function stead.delete(s)
 end
 
 function stead.var(v)
-	if stead.type(v) ~= 'table' then
+	if type(v) ~= 'table' then
 		stead.err ("Wrong argument to stead.var:"..stead.tostr(v), 2)
 	end
 	return v
@@ -1104,28 +1104,28 @@ function stead.deref(o)
 end
 
 stead.method = function(v, n, ...)
-	if stead.type(v) ~= 'table' then
+	if type(v) ~= 'table' then
 		stead.err ("Call on non table object:"..stead.tostr(n), 2);
 	end
 	if v[n] == nil then
 		return
 	end
-	if stead.type(v[n]) == 'string' then
+	if type(v[n]) == 'string' then
 		return v[n], true;
 	end
-	if stead.type(v[n]) == 'function' then
+	if type(v[n]) == 'function' then
 		stead.callpush(v, ...)
 		local a, b = v[n](v, ...);
-		if stead.type(a) ~= 'string' then
+		if type(a) ~= 'string' then
 			a, b = stead.pget(), a
 		end
 		stead.callpop()
 		return a, b
 	end
-	if stead.type(v[n]) == 'boolean' then
+	if type(v[n]) == 'boolean' then
 		return v[n], true
 	end
-	if stead.type(v[n]) == 'table' then
+	if type(v[n]) == 'table' then
 		return v[n], true
 	end
 	stead.err ("Method not string nor function:"..stead.tostr(n), 2);
@@ -1133,7 +1133,7 @@ end
 
 stead.call = function(v, n, ...)
 	local r, v = stead.method(v, n, ...)
-	if stead.type(r) == 'string' then return r end
+	if type(r) == 'string' then return r end
 	return
 end
 
@@ -1175,7 +1175,7 @@ end
 
 local function cmd_parse(inp)
 	local cmd = {}
-	if stead.type(inp) ~= 'string' then
+	if type(inp) ~= 'string' then
 		return false
 	end
 	inp = inp:gsub("[ \t]*$", "")
@@ -1186,7 +1186,7 @@ local function cmd_parse(inp)
 		if not v or v == '' then
 			break
 		end
-		stead.table.insert(cmd, v)
+		table.insert(cmd, v)
 	end
 	return cmd
 end
@@ -1225,11 +1225,11 @@ iface = {
 		return "[ "..stead.tostr(str).." ]"
 	end;
 	fmt = function(str)
-		if stead.type(str) ~= 'string' then
+		if type(str) ~= 'string' then
 			return
 		end
-		local s = stead.string.gsub(str,'[\t \n]+', stead.space_delim);
-		s = stead.string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+		local s = string.gsub(str,'[\t \n]+', stead.space_delim);
+		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
 		return s
 	end
 };
