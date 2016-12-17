@@ -4,6 +4,7 @@ stead = {
 	call_top = 0,
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
+	tables = {};
 	tostr = tostring;
 	tonum = tonumber;
 	type = type;
@@ -262,8 +263,8 @@ stead.list = stead.class {
 		elseif pos < 0 then
 			pos = #s + pos + 1
 		end
-		if pos <= 0 then 
-			pos = 1 
+		if pos <= 0 then
+			pos = 1
 		end
 		local o = stead.ref(n)
 		s:__dirty(true)
@@ -277,7 +278,7 @@ stead.list = stead.class {
 			if s[i] == o then
 				return o, i
 			end
-		end 
+		end
 	end;
 	seen = function(s, n)
 		for i = 1, #s do
@@ -314,7 +315,6 @@ stead.list = stead.class {
 		fp:write(" }\n")
 	end;
 }
-
 stead.save_var = function(vv, fp, n)
 	if stead.type(vv) == 'boolean' or stead.type(vv) == 'number' then
 		fp:write(stead.string.format("%s = ", n))
@@ -323,7 +323,9 @@ stead.save_var = function(vv, fp, n)
 		fp:write(stead.string.format("%s = ", n))
 		fp:write(stead.string.format("%q\n", vv))
 	elseif stead.type(vv) == 'table' then
-		if stead.is_obj(vv) then
+		if stead.tables[vv] then
+			fp:write(stead.string.format("%s = %s\n", n, stead.tables[vv]))
+		elseif stead.is_obj(vv) then
 			local d = stead.deref(vv)
 			if not d then
 				stead.err("Can not deref object:"..stead.tostr(vv), 2)
@@ -344,7 +346,7 @@ stead.save_var = function(vv, fp, n)
 end
 
 stead.save_table = function(vv, fp, n)
-	local l 
+	local l
 	fp:write(stead.string.format("%s = {}\n", n))
 	for k, v in stead.pairs(vv) do
 		l = nil
@@ -795,7 +797,7 @@ stead.par = function(space, ...)
 				res = res .. space;
 			end
 			res = res .. a[i];
-		end 
+		end
 	end
 	return res;
 end
@@ -811,7 +813,7 @@ stead.cat = function(v,...)
 	for i = 1, #a do
 		if stead.type(a[i]) == 'string' then
 			v = v .. a[i];
-		end 
+		end
 	end
 	return v;
 end
@@ -830,7 +832,7 @@ stead.callpop = function()
 	stead.call_top = stead.call_top - 1;
 	if stead.call_top < 0 then
 		stead.err ("callpush/callpop mismatch")
-	end 
+	end
 end
 
 stead.pclr = function()
@@ -862,7 +864,9 @@ function stead.dump(t)
 	elseif stead.type(t) == 'boolean' then
 		rc = stead.tostr(t)
 	elseif stead.type(t) == 'table' then
-		if stead.is_obj(t) then
+		if stead.tables[t] then
+			return stead.string.format("%s", stead.tables[t])
+		elseif stead.is_obj(t) then
 			local d = stead.deref(t)
 			if stead.type(d) == 'number' then
 				rc = stead.string.format("stead(%d)", d)
@@ -935,7 +939,7 @@ function stead.new(fn, ...)
 	if stead.type(r) == 'string' then
 		stead.err("Wrong constructor: "..r, 2)
 	end
-	if stead.type(f) == 'function' then 
+	if stead.type(f) == 'function' then
 		o = f()
 	end
 	if stead.type(o) ~= 'table' then

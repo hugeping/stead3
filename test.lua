@@ -10,17 +10,37 @@ pl {
 	nam = 'игрок';
 }
 game.onwalk = function() p 'game onwalk'; end
-a = room {
-	nam = 'главная';
-	dsc = 'Проверка';
-	onenter = "a onenter";
-	enter = "a enter";
-	obj = {
+
+const {
+	global_const = true;
+}
+
+global {
+	global_table = { a = 1 };
+}
+global {
+	global_var = global_table;
+}
+declare {
+	zlist = stead.list {
 		obj {
 			nam = 'нож';
 			dsc = "Тут лежит {нож}";
 		};
 	};
+}
+a = room {
+	nam = 'главная';
+	dsc = 'Проверка';
+	onenter = "a onenter";
+	enter = "a enter";
+	obj = zlist;
+--	obj = {
+--		obj {
+--			nam = 'нож';
+--			dsc = "Тут лежит {нож}";
+--		};
+--	};
 }
 a.xm = { 1, 2, 3 }
 a.dsc = 'Проверка';
@@ -29,6 +49,10 @@ c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)
 stead 'player'.room = 'главная';
 stead.init()
+a.zx = global_table;
+
+print(global_var, global_table)
+global_var = global_table
 a.obj:add('игрок')
 a.x = true
 a:disable()
@@ -41,4 +65,5 @@ print (stead 'нож':where())
 print(stead 'игрок':walk(a))
 print(iface.cmd 'look')
 stead.save(io.stdout)
+-- global_const = 2
 stead.done()
