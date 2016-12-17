@@ -56,6 +56,12 @@ stead = {
 		stead.table.insert(stead.__mod_save, f);
 	end;
 }
+local table = stead.table
+local pairs = stead.pairs
+local ipairs = stead.ipairs
+local string = stead.string
+local rawset = stead.rawset
+local rawget = stead.rawget
 
 if _VERSION == "Lua 5.1" then
 	stead.eval = loadstring
@@ -456,12 +462,13 @@ stead.obj = stead.class {
 		end
 		local ro = {}
 		local vars = {}
+		local raw = {}
 		for i = 1, #v do
 			for key, val in stead.pairs(v[i]) do
 				if stead.type(key) ~= 'string' then
 					stead.err("Wrong var name: "..stead.tostr(key), 2)
 				end
-				vars[key] = true
+				raw[key] = true
 				stead.rawset(v, key, val)
 			end
 		end
@@ -477,8 +484,14 @@ stead.obj = stead.class {
 		v.obj = stead.list(v.obj)
 		stead.table.insert(v.obj.__list, v)
 		for key, val in stead.pairs(v) do
-			ro[key] = val
-			stead.rawset(v, key, nil)
+			if not raw[key] then
+				ro[key] = val
+				if stead.type(val) == 'table'
+					and not stead.getmt(val) then
+					stead.array(val)
+				end
+				stead.rawset(v, key, nil)
+			end
 		end
 		stead.rawset(v, '__ro', ro)
 		stead.rawset(v, '__var', vars)
@@ -641,6 +654,35 @@ stead.game = stead.class({
 		return s:disp(r, v)
 	end;
 }, stead.obj);
+
+local array_mt = {
+	__index = function(t, k)
+		local ro = stead.rawget(t, '__ro')
+		if ro then
+			return stead.rawget(ro, k)
+		end
+	end;
+	__newindex = function(t, k, v)
+		local parent = t.__parent
+		stead.rawset(parent, '__dirty_flag', true)
+		stead.rawset(t, k, v)
+	end;
+}
+
+function stead.array(t, parent)
+	if stead.type(t) ~= 'table' then
+		return
+	end
+	t.__parent = parent or t
+	t.__ro = {}
+	t.__dirty = function(s) return s.__dirty_flag end;
+	stead.setmt(t, array_mt)
+	for k, v in stead.pairs(t) do
+		if stead.type(v) == 'table' and not stead.getmt(v) then
+		--	stead.array(v, t.__parent)
+		end
+	end
+end
 
 stead.player = stead.class ({
 	__player_type = true;
@@ -883,8 +925,7 @@ stead.p = function(...)
 	stead.cctx().txt = stead.cat(stead.cctx().txt, stead.space_delim);
 end
 
-
-function stead.dump(t)
+local function __dump(t)
 	local rc = '';
 	if stead.type(t) == 'string' then
 		rc = stead.string.format("%q", t):gsub("\\\n", "\\n")
@@ -892,7 +933,8 @@ function stead.dump(t)
 		rc = stead.tostr(t)
 	elseif stead.type(t) == 'boolean' then
 		rc = stead.tostr(t)
-	elseif stead.type(t) == 'table' then
+	elseif stead.type(t) == 'table' and not t.__visited then
+		t.__visited = true
 		if stead.tables[t] then
 			local k = stead.tables[t]
 			return stead.string.format("%s", k)
@@ -908,14 +950,16 @@ function stead.dump(t)
 		local k,v
 		local nkeys = {}
 		local keys = {}
-		for k,v in pairs(t) do
-			if type(k) == 'number' then
-				table.insert(nkeys, { key = k, val = v })
-			else
-				table.insert(keys, { key = k, val = v })
+		for k,v in stead.pairs(t) do
+			if stead.type(v) ~= 'function' and stead.type(v) ~= 'userdata' then
+				if stead.type(k) == 'number' then
+					stead.table.insert(nkeys, { key = k, val = v })
+				elseif k:find("__", 1, true) ~= 1 then
+					stead.table.insert(keys, { key = k, val = v })
+				end
 			end
 		end
-		table.sort(nkeys, function(a, b) return a.key < b.key end)
+		stead.table.sort(nkeys, function(a, b) return a.key < b.key end)
 		rc = "{ "
 		local n
 		for k = 1, #nkeys do
@@ -930,23 +974,39 @@ function stead.dump(t)
 		if n then
 			for k = n, #nkeys do
 				v = nkeys[k]
-				rc = rc .. "["..tostring(v.key).."] = "..stead.dump(v.val)..", "
+				rc = rc .. "["..stead.tostr(v.key).."] = "..stead.dump(v.val)..", "
 			end
 		end
 		for k = 1, #keys do
 			v = keys[k]
-			if type(v.key) == 'string' then
+			if stead.type(v.key) == 'string' then
 				if v.key:find("^[a-zA-Z_]+[a-zA-Z0-9_]*$") and not lua_keywords[v.key] then
 					rc = rc .. v.key .. " = "..stead.dump(v.val)..", "
 				else
-					rc = rc .. "[" .. string.format("%q", v.key) .. "] = "..stead.dump(v.val)..", "
+					rc = rc .. "[" .. stead.string.format("%q", v.key) .. "] = "..stead.dump(v.val)..", "
 				end
 			else
-				rc = rc .. tostring(v.key) .. " = "..stead.dump(v.val)..", "
+				rc = rc .. stead.tostr(v.key) .. " = "..stead.dump(v.val)..", "
 			end
 		end
 		rc = rc:gsub(",[ \t]*$", "") .. " }"
 	end
+	return rc
+end
+
+local function cleardump(t)
+	if stead.type(t) ~= 'table' or not t.__visited then
+		return
+	end
+	t.__visited = nil
+	for k, v in stead.pairs(t) do
+		cleardump(v)
+	end
+end
+
+function stead.dump(t)
+	local rc = __dump(t)
+	cleardump(t)
 	return rc
 end
 
