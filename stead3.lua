@@ -370,14 +370,16 @@ stead.save_table = function(vv, fp, n)
 end
 
 function stead.save(fp)
-	for i = 1, #stead.__mod_save do
-		stead.__mod_save[i](fp);
-	end
-	local oo = stead.objects
+	local oo = stead.objects -- save dynamic objects
 	for i = 1, #oo do
 		oo[i]:save(fp, stead.string.format("stead(%d)", i))
 	end
-	for k, v in stead.pairs(oo) do
+
+	for i = 1, #stead.__mod_save do -- module objects???
+		stead.__mod_save[i](fp);
+	end
+
+	for k, v in stead.pairs(oo) do -- save static objects
 		if stead.type(k) == 'string' then
 			v:save(fp, stead.string.format("stead %q", k))
 		end

@@ -82,6 +82,7 @@ stead.setmt(_G,
 })
 
 local function mod_save(fp)
+	-- save global variables
 	stead.tables = {}
 	local tables = {}
 	for k, v in stead.pairs(declarations) do -- name all table variables
@@ -94,7 +95,8 @@ local function mod_save(fp)
 	end
 	for k, v in stead.pairs(tables) do
 		if variables[v] then
-			stead.save_var(stead.rawget(_G, v), fp, v)
+			local o = stead.rawget(_G, v)
+			stead.save_var(o, fp, v)
 		end
 	end
 	stead.tables = tables

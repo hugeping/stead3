@@ -35,6 +35,7 @@ a = room {
 	onenter = "a onenter";
 	enter = "a enter";
 	obj = zlist;
+	table =  { };
 --	obj = {
 --		obj {
 --			nam = 'нож';
@@ -52,7 +53,7 @@ stead.init()
 a.zx = { azx = 1 } --global_table;
 global_table = 1
 -- global_table = a.zx
-global_var = 2
+global_var = b
 print(global_var, global_table)
 --global_var = global_table
 a.obj:add('игрок')
@@ -66,6 +67,7 @@ print(stead 'нож':where().obj:del 'нож')
 print (stead 'нож':where())
 print(stead 'игрок':walk(a))
 print(iface.cmd 'look')
+a.table.z = { true }
 stead.save(io.stdout)
 -- global_const = 2
 stead.done()
