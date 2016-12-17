@@ -1,6 +1,33 @@
 local declarations = {}
 local variables = {}
 
+local function __ref(n, t)
+	if stead.type(t) ~= 'table' then
+		return
+	end
+	local ref = stead.tables[t] or { key = n, ref = {} }
+	ref.ref[n] = true
+	stead.tables[t] = ref
+end
+
+local function __deref(n, t)
+	if stead.type(t) ~= 'table' then
+		return
+	end
+	local ref = stead.tables[t]
+	if not ref then
+		return
+	end
+	ref.ref[n] = nil
+	local k, v = stead.next(ref.ref)
+	if not k then
+		stead.tables[t] = nil
+	elseif n == ref.key then
+		ref.key = k
+	end
+	return
+end
+
 local function __declare(n, t)
 	if stead.initialized then
 		stead.err ("Use "..t.." only in global context", 2)
@@ -9,10 +36,11 @@ local function __declare(n, t)
 		stead.err ("Wrong parameter to "..n, 2)
 	end
 	for k, v in stead.pairs(n) do
-		declarations[k] = {value = v, type = t}
-		if stead.type(v) == 'table' and not stead.tables[v] then -- name of tables
-			stead.tables[v] = k
+		if declarations[k] then
+			stead.err ("Duplicate declaration: "..k, 2)
 		end
+		declarations[k] = {value = v, type = t}
+		__ref(k, v)
 	end
 	return n
 end
@@ -52,8 +80,13 @@ stead.setmt(_G,
 	__newindex = function(t, k, v)
 		local d = declarations[k]
 		if d then
+			if v == d.value then
+				return --nothing todo
+			end
+			__deref(k, d.value)
 			if not stead.initialized then
 				d.value = v
+				__ref(k, v)
 				return
 			end
 			if d.type == 'declare' then
@@ -83,11 +116,20 @@ stead.setmt(_G,
 stead.obj {
 	nam = '@strict';
 	save = function(s, fp, n)
+		for k, v in stead.pairs(stead.tables) do
+			if variables[v.key] then
+				stead.save_var(stead.rawget(_G, v.key), fp, v.key)
+			end
+		end
 		for k, v in stead.pairs(variables) do
-			stead.save_var(stead.rawget(_G, k), fp, k)
+			local o = stead.rawget(_G, k)
+			if not stead.tables[o] then
+				stead.save_var(o, fp, k)
+			end
 		end
 	end
 }
+
 local function mod_init()
 end
 
@@ -103,7 +145,7 @@ local function mod_done()
 end
 
 stead.mod_init(mod_init)
-stead.mod_done(mod_init)
+stead.mod_done(mod_done)
 
 const = stead.const
 global = stead.global

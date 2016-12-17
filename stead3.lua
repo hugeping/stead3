@@ -17,6 +17,7 @@ stead = {
 	rawset = rawset;
 	rawget = rawget;
 	string = string;
+	next = next;
 	getinfo = debug.getinfo;
 	__mod_init = {},
 	__mod_done = {},
@@ -324,7 +325,8 @@ stead.save_var = function(vv, fp, n)
 		fp:write(stead.string.format("%q\n", vv))
 	elseif stead.type(vv) == 'table' then
 		if stead.tables[vv] then
-			fp:write(stead.string.format("%s = %s\n", n, stead.tables[vv]))
+			local k = stead.tables[vv].key
+			fp:write(stead.string.format("%s = %s\n", n, k))
 		elseif stead.is_obj(vv) then
 			local d = stead.deref(vv)
 			if not d then
@@ -871,7 +873,8 @@ function stead.dump(t)
 		rc = stead.tostr(t)
 	elseif stead.type(t) == 'table' then
 		if stead.tables[t] then
-			return stead.string.format("%s", stead.tables[t])
+			local k = stead.tables[t].key
+			return stead.string.format("%s", k)
 		elseif stead.is_obj(t) then
 			local d = stead.deref(t)
 			if stead.type(d) == 'number' then
