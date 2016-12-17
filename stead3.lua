@@ -665,7 +665,7 @@ local function array_rw(t)
 	end
 	for k, v in pairs(t) do
 		if type(k) ~= 'string' or k:find("__", 1, true) ~= 1 then
-			if type(v) == 'table' and not stead.getmt(v)then
+			if type(v) == 'table' and stead.rawget(v, '__array') then
 				array_rw(v)
 			end
 		end
@@ -682,6 +682,7 @@ local array_mt = {
 	__newindex = function(t, k, v)
 		local parent = t.__parent
 		rawset(parent, '__dirty_flag', true)
+		rawset(t, k, v)
 		array_rw(parent)
 	end;
 }
@@ -692,6 +693,7 @@ function stead.array(t, parent)
 	end
 	t.__parent = parent or t
 	t.__ro = {}
+	t.__array = true
 	t.__dirty = function(s) return s.__dirty_flag end;
 	stead.setmt(t, array_mt)
 	for k, v in pairs(t) do

@@ -68,7 +68,7 @@ print(stead 'нож':where().obj:del 'нож')
 print (stead 'нож':where())
 print(stead 'игрок':walk(a))
 print(iface.cmd 'look')
-a.table.z = 1
+a.table["N"] = { 7 }
 global_array.n.z = 7
 stead.save(io.stdout)
 -- global_const = 2
