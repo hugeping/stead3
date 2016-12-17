@@ -23,6 +23,7 @@ stead = {
 	__mod_done = {},
 	__mod_start = {},
 	__mod_cmd = {},
+	__mod_save = {},
 	mod_init = function(f, ...)
 		if stead.type(f) ~= 'function' then
 			error ("Wrong parameter to mod_init.", 2);
@@ -47,6 +48,12 @@ stead = {
 			error ("Wrong parameter to mod_cmd.", 2);
 		end
 		stead.table.insert(stead.__mod_cmd, f);
+	end;
+	mod_save = function(f, ...)
+		if stead.type(f) ~= 'function' then
+			error ("Wrong parameter to mod_save.", 2);
+		end
+		stead.table.insert(stead.__mod_save, f);
 	end;
 }
 
@@ -325,7 +332,7 @@ stead.save_var = function(vv, fp, n)
 		fp:write(stead.string.format("%q\n", vv))
 	elseif stead.type(vv) == 'table' then
 		if stead.tables[vv] then
-			local k = stead.tables[vv].key
+			local k = stead.tables[vv]
 			fp:write(stead.string.format("%s = %s\n", n, k))
 		elseif stead.is_obj(vv) then
 			local d = stead.deref(vv)
@@ -363,6 +370,9 @@ stead.save_table = function(vv, fp, n)
 end
 
 function stead.save(fp)
+	for i = 1, #stead.__mod_save do
+		stead.__mod_save[i](fp);
+	end
 	local oo = stead.objects
 	for i = 1, #oo do
 		oo[i]:save(fp, stead.string.format("stead(%d)", i))
@@ -882,7 +892,7 @@ function stead.dump(t)
 		rc = stead.tostr(t)
 	elseif stead.type(t) == 'table' then
 		if stead.tables[t] then
-			local k = stead.tables[t].key
+			local k = stead.tables[t]
 			return stead.string.format("%s", k)
 		elseif stead.is_obj(t) then
 			local d = stead.deref(t)

@@ -1,33 +1,6 @@
 local declarations = {}
 local variables = {}
 
-local function __ref(n, t)
-	if stead.type(t) ~= 'table' then
-		return
-	end
-	local ref = stead.tables[t] or { key = n, ref = {} }
-	ref.ref[n] = true
-	stead.tables[t] = ref
-end
-
-local function __deref(n, t)
-	if stead.type(t) ~= 'table' then
-		return
-	end
-	local ref = stead.tables[t]
-	if not ref then
-		return
-	end
-	ref.ref[n] = nil
-	local k, v = stead.next(ref.ref)
-	if not k then
-		stead.tables[t] = nil
-	elseif n == ref.key then
-		ref.key = k
-	end
-	return
-end
-
 local function __declare(n, t)
 	if stead.initialized then
 		stead.err ("Use "..t.." only in global context", 2)
@@ -40,7 +13,6 @@ local function __declare(n, t)
 			stead.err ("Duplicate declaration: "..k, 2)
 		end
 		declarations[k] = {value = v, type = t}
-		__ref(k, v)
 	end
 	return n
 end
@@ -83,20 +55,16 @@ stead.setmt(_G,
 			if v == d.value then
 				return --nothing todo
 			end
-			__deref(k, d.value)
 			if not stead.initialized then
 				d.value = v
-				__ref(k, v)
 				return
 			end
 			if d.type == 'declare' then
 				stead.rawset(t, k, v)
-				d.value = v
 			elseif d.type == 'const' then
 				stead.err ("Modify read-only constant: "..k, 2)
 			elseif d.type == 'global' then
 				stead.rawset(t, k, v)
-				d.value = v
 				variables[k] = true
 			end
 			return
@@ -113,22 +81,30 @@ stead.setmt(_G,
 	end
 })
 
-stead.obj {
-	nam = '@strict';
-	save = function(s, fp, n)
-		for k, v in stead.pairs(stead.tables) do
-			if variables[v.key] then
-				stead.save_var(stead.rawget(_G, v.key), fp, v.key)
-			end
-		end
-		for k, v in stead.pairs(variables) do
-			local o = stead.rawget(_G, k)
-			if not stead.tables[o] then
-				stead.save_var(o, fp, k)
+local function mod_save(fp)
+	stead.tables = {}
+	local tables = {}
+	for k, v in stead.pairs(declarations) do -- name all table variables
+		local o = _G[k]
+		if stead.type(o) == 'table' then
+			if not tables[o] then
+				tables[o] = k
 			end
 		end
 	end
-}
+	for k, v in stead.pairs(tables) do
+		if variables[v] then
+			stead.save_var(stead.rawget(_G, v), fp, v)
+		end
+	end
+	stead.tables = tables
+	for k, v in stead.pairs(variables) do
+		local o = stead.rawget(_G, k)
+		if not stead.tables[o] then
+			stead.save_var(o, fp, k)
+		end
+	end
+end
 
 local function mod_init()
 end
@@ -136,16 +112,15 @@ end
 local function mod_done()
 	for k, v in stead.pairs(declarations) do
 		stead.rawset(_G, k, nil)
-		if stead.type(v) == 'table' then
-			stead.tables[v] = nil
-		end
 	end
+	stead.tables = {}
 	declarations = {}
 	variables = {}
 end
 
 stead.mod_init(mod_init)
 stead.mod_done(mod_done)
+stead.mod_save(mod_save)
 
 const = stead.const
 global = stead.global

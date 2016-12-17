@@ -49,9 +49,9 @@ c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)
 stead 'player'.room = 'главная';
 stead.init()
-a.zx = global_table;
+a.zx = { azx = 1 } --global_table;
 global_table = 1
-global_table = a.zx
+-- global_table = a.zx
 global_var = 2
 print(global_var, global_table)
 --global_var = global_table
