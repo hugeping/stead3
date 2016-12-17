@@ -611,7 +611,7 @@ stead.game = stead.class({
 		r = stead.here()
 
 		if state then
-			objs = stead.call(r, 'obj'):look()
+			objs = r.obj:look()
 		end
 		return stead.par(stead.scene_delim, reaction, objs), state
 	end;
@@ -1054,7 +1054,7 @@ stead.method = function(v, n, ...)
 		return v[n], true
 	end
 	if stead.type(v[n]) == 'table' then
-		return v[n](), true
+		return v[n], true
 	end
 	stead.err ("Method not string nor function:"..stead.tostr(n), 2);
 end
