@@ -16,6 +16,9 @@ local function __declare(n, t)
 		if declarations[k] then
 			stead.err ("Duplicate declaration: "..k, 2)
 		end
+		if type(v) == 'table' and not stead.getmt(v) then
+			stead.array(v)
+		end
 		declarations[k] = {value = v, type = t}
 	end
 	return n
@@ -94,6 +97,10 @@ local function mod_save(fp)
 		if type(o) == 'table' then
 			if not tables[o] then
 				tables[o] = k
+			end
+			if stead.dirty(o) then
+				variables[k] = true
+				rawset(_G, k, v.value)
 			end
 		end
 	end

@@ -655,6 +655,23 @@ stead.game = stead.class({
 	end;
 }, stead.obj);
 
+local function array_rw(t)
+	local ro = rawget(t, '__ro')
+	if not ro then
+		return
+	end
+	for k, v in pairs(ro) do
+		rawset(t, k, v)
+	end
+	for k, v in pairs(t) do
+		if type(k) ~= 'string' or k:find("__", 1, true) ~= 1 then
+			if type(v) == 'table' and not stead.getmt(v)then
+				array_rw(v)
+			end
+		end
+	end
+end
+
 local array_mt = {
 	__index = function(t, k)
 		local ro = rawget(t, '__ro')
@@ -665,7 +682,7 @@ local array_mt = {
 	__newindex = function(t, k, v)
 		local parent = t.__parent
 		rawset(parent, '__dirty_flag', true)
-		rawset(t, k, v)
+		array_rw(parent)
 	end;
 }
 
@@ -678,10 +695,15 @@ function stead.array(t, parent)
 	t.__dirty = function(s) return s.__dirty_flag end;
 	stead.setmt(t, array_mt)
 	for k, v in pairs(t) do
-		if type(v) == 'table' and not stead.getmt(v) then
-		--	stead.array(v, t.__parent)
+		if type(k) ~= 'string' or k:find("__", 1, true) ~= 1 then
+			rawset(t.__ro, k, v)
+			rawset(t, k, nil)
+			if type(v) == 'table' and not stead.getmt(v) then
+				stead.array(v, t.__parent)
+			end
 		end
 	end
+	return t
 end
 
 stead.player = stead.class ({

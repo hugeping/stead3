@@ -17,6 +17,7 @@ const {
 
 global {
 	global_table = { a = 1 };
+	global_array = { n = {}, 1, 2, 3};
 }
 global {
 	global_var = global_table;
@@ -68,6 +69,7 @@ print (stead 'нож':where())
 print(stead 'игрок':walk(a))
 print(iface.cmd 'look')
 a.table.z = 1
+global_array.n.z = 7
 stead.save(io.stdout)
 -- global_const = 2
 stead.done()
