@@ -393,7 +393,13 @@ function stead.done(fp)
 	for i = 1, #stead.__mod_init do
 		stead.__mod_done[i]();
 	end
-	stead.objects = {}
+	local objects = {}
+	for k, v in stead.pairs(stead.objects) do
+		if stead.type(k) == 'string' and k:byte(1) == 0x40 then
+			objects[k] = v
+		end
+	end
+	stead.objects = objects
 end
 
 function stead.dirty(o)
