@@ -4,6 +4,8 @@ local type = stead.type
 local rawget = stead.rawget
 local rawset = stead.rawset
 local pairs = stead.pairs
+local table = stead.table
+local next = stead.next
 
 local function __declare(n, t)
 	if stead.initialized then
@@ -88,10 +90,52 @@ stead.setmt(_G,
 	end
 })
 
+local function depends(t, tables, deps)
+	if type(t) ~= 'table' then return end
+	if tables[t] then
+		deps[t] = tables[t]
+	end
+	for k, v in pairs(t) do
+		if type(v) == 'table' then
+			depends(v, tables, deps)
+		end
+	end
+end
+
+local function makedeps(nam, depends, deps)
+	local ndeps = {}
+	local rc = false
+
+	local t = rawget(_G, nam)
+	if type(t) ~= 'table' then
+		return
+	end
+	if type(depends[nam]) ~= 'table' then
+		return
+	end
+	local d = depends[nam]
+	for k, v in pairs(d) do
+		local dd = depends[v]
+		if dd and k ~= t then
+			ndeps[k] = v
+			rc = rc or makedeps(v, depends, deps)
+		end
+	end
+	if not next(ndeps) then
+		depends[nam] = nil
+		table.insert(deps, t)
+		rc = true
+	else
+		depends[nam] = ndeps
+	end
+	return rc
+end
+
 local function mod_save(fp)
 	-- save global variables
 	stead.tables = {}
 	local tables = {}
+	local deps = {}
 	for k, v in pairs(declarations) do -- name all table variables
 		local o = rawget(_G, k) or v.value
 		if type(o) == 'table' then
@@ -100,17 +144,34 @@ local function mod_save(fp)
 			end
 		end
 	end
-	for k, v in pairs(tables) do
-		if variables[v] then
-			local o = rawget(_G, v)
-			stead.save_var(o, fp, v)
+
+	for k, v in pairs(variables) do
+		local d = {}
+		local o = rawget(_G, k)
+		depends(o, tables, d)
+		if k == tables[o] then -- self depend
+			d[o] = nil
+		end
+		if next(d) then
+			deps[k] = d
 		end
 	end
-	stead.tables = tables
-	for k, v in pairs(variables) do
+
+	stead.tables = tables -- save all depends
+
+	for k, v in pairs(variables) do -- write w/o deps
 		local o = rawget(_G, k)
-		if stead.tables[o] ~= k then
+		if not deps[k] then
 			stead.save_var(o, fp, k)
+		end
+	end
+	for k, v in pairs(variables) do
+		local d = {}
+		while makedeps(k, deps, d) do
+			for i=1, #d do
+				stead.save_var(d[i], fp, k)
+			end
+			d = {}
 		end
 	end
 end

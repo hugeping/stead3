@@ -357,7 +357,7 @@ stead.save_var = function(vv, fp, n)
 		fp:write(string.format("%s = ", n))
 		fp:write(string.format("%q\n", vv))
 	elseif type(vv) == 'table' then
-		if stead.tables[vv] then
+		if stead.tables[vv] and stead.tables[vv] ~= n then
 			local k = stead.tables[vv]
 			fp:write(string.format("%s = %s\n", n, k))
 		elseif stead.is_obj(vv) then
@@ -919,7 +919,7 @@ stead.p = function(...)
 	stead.cctx().txt = stead.cat(stead.cctx().txt, stead.space_delim);
 end
 
-local function __dump(t)
+local function __dump(t, nested)
 	local rc = '';
 	if type(t) == 'string' then
 		rc = string.format("%q", t):gsub("\\\n", "\\n")
@@ -929,7 +929,7 @@ local function __dump(t)
 		rc = stead.tostr(t)
 	elseif type(t) == 'table' and not t.__visited then
 		t.__visited = true
-		if stead.tables[t] then
+		if stead.tables[t] and nested then
 			local k = stead.tables[t]
 			return string.format("%s", k)
 		elseif stead.is_obj(t) then
@@ -959,7 +959,7 @@ local function __dump(t)
 		for k = 1, #nkeys do
 			v = nkeys[k]
 			if v.key == k then
-				rc = rc .. stead.dump(v.val)..", "
+				rc = rc .. __dump(v.val, true)..", "
 			else
 				n = k
 				break
@@ -968,19 +968,19 @@ local function __dump(t)
 		if n then
 			for k = n, #nkeys do
 				v = nkeys[k]
-				rc = rc .. "["..stead.tostr(v.key).."] = "..stead.dump(v.val)..", "
+				rc = rc .. "["..stead.tostr(v.key).."] = "..__dump(v.val, true)..", "
 			end
 		end
 		for k = 1, #keys do
 			v = keys[k]
 			if type(v.key) == 'string' then
 				if v.key:find("^[a-zA-Z_]+[a-zA-Z0-9_]*$") and not lua_keywords[v.key] then
-					rc = rc .. v.key .. " = "..stead.dump(v.val)..", "
+					rc = rc .. v.key .. " = "..__dump(v.val, true)..", "
 				else
-					rc = rc .. "[" .. string.format("%q", v.key) .. "] = "..stead.dump(v.val)..", "
+					rc = rc .. "[" .. string.format("%q", v.key) .. "] = "..__dump(v.val, true)..", "
 				end
 			else
-				rc = rc .. stead.tostr(v.key) .. " = "..stead.dump(v.val)..", "
+				rc = rc .. stead.tostr(v.key) .. " = "..__dump(v.val, true)..", "
 			end
 		end
 		rc = rc:gsub(",[ \t]*$", "") .. " }"
