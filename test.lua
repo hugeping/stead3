@@ -22,7 +22,8 @@ global {
 global {
 	global_var = global_table;
 }
-declare {
+
+global {
 	zlist = stead.list {
 		obj {
 			nam = 'нож';
@@ -30,11 +31,16 @@ declare {
 		};
 	};
 }
+x = room {
+	nam = 'x';
+	xtable = { 1, 2, 3 };
+}
 a = room {
 	nam = 'главная';
 	dsc = 'Проверка';
 	onenter = "a onenter";
 	enter = "a enter";
+	atable = x.xtable;
 	obj = zlist;
 	table =  { };
 --	obj = {
@@ -44,6 +50,7 @@ a = room {
 --		};
 --	};
 }
+print(a.atable)
 a.xm = { 1, 2, 3 }
 a.dsc = 'Проверка';
 b = stead.new ( 'obj', {  })
@@ -51,13 +58,16 @@ c = stead.new ( 'obj', { x = 'c = ' })
 stead.delete(b)
 stead 'player'.room = 'главная';
 stead.init()
+x.xtable[1] = 1
+a.atable[1] = 1
+
 a.zx = { azx = 1 } --global_table;
 global_table = 1
 -- global_table = a.zx
 global_var = b
-print(global_var, global_table)
+--print(zlist, global_var, global_table)
 --global_var = global_table
-a.obj:add('игрок')
+--a.obj:add('игрок')
 a.x = true
 a:disable()
 --a.z = { [1] = { a }}

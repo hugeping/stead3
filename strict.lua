@@ -16,10 +16,11 @@ local function __declare(n, t)
 		if declarations[k] then
 			stead.err ("Duplicate declaration: "..k, 2)
 		end
-		if type(v) == 'table' and not stead.getmt(v) then
-			stead.array(v)
-		end
 		declarations[k] = {value = v, type = t}
+		if t == 'global' then
+			rawset(_G, k, v)
+			variables[k] = true
+		end
 	end
 	return n
 end
@@ -30,6 +31,7 @@ end
 
 function stead.global(n)
 	return __declare(n, 'global')
+
 end
 
 function stead.declare(n)
@@ -41,7 +43,7 @@ stead.setmt(_G,
 	__index = function(_, n)
 		local d = declarations[n]
 		if d then --
-			if d.type == 'declare' and stead.initialized then
+			if stead.initialized and (d.type ~= 'const') then
 				rawset(_, n, d.value)
 			end
 			return d.value
@@ -66,13 +68,11 @@ stead.setmt(_G,
 				d.value = v
 				return
 			end
-			if d.type == 'declare' then
-				rawset(t, k, v)
-			elseif d.type == 'const' then
+			if d.type == 'const' then
 				stead.err ("Modify read-only constant: "..k, 2)
-			elseif d.type == 'global' then
+			else
+				d.value = v
 				rawset(t, k, v)
-				variables[k] = true
 			end
 			return
 		end
@@ -93,14 +93,10 @@ local function mod_save(fp)
 	stead.tables = {}
 	local tables = {}
 	for k, v in pairs(declarations) do -- name all table variables
-		local o = _G[k]
+		local o = rawget(_G, k) or v.value
 		if type(o) == 'table' then
 			if not tables[o] then
 				tables[o] = k
-			end
-			if stead.dirty(o) then
-				variables[k] = true
-				rawset(_G, k, v.value)
 			end
 		end
 	end
@@ -113,7 +109,7 @@ local function mod_save(fp)
 	stead.tables = tables
 	for k, v in pairs(variables) do
 		local o = rawget(_G, k)
-		if not stead.tables[o] then
+		if stead.tables[o] ~= k then
 			stead.save_var(o, fp, k)
 		end
 	end

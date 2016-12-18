@@ -141,6 +141,13 @@ function stead.class(s, inh)
 		return s:new(...)
 	end;
 	s.__tostring = function(s)
+		if not stead.is_obj(s) then
+			local os = s.__tostring
+			s.__tostring = nil
+			local t = stead.tostr(s)
+			s.__tostring = os
+			return t
+		end
 		return stead.dispof(s)
 	end;
 	s.__dirty = function(s, v)
@@ -151,14 +158,21 @@ function stead.class(s, inh)
 		return o
 	end;
 	s.__index = function(t, k)
-		local v = rawget(t, '__ro')
-		if v then
-			v = rawget(v, k)
-			if v ~= nil then
-				return v
-			end
+		local ro = rawget(t, '__ro')
+		local v
+		if ro then
+			v = rawget(ro, k)
 		end
-		return s[k]
+		if v == nil then
+			return s[k]
+		end
+		if stead.initialized and type(v) == 'table' then
+			-- make rw
+			t.__var[k] = true
+			rawset(t, k, v)
+			ro[k] = nil
+		end
+		return v
 	end;
 	s.__newindex = function(t, k, v)
 		local ro
@@ -424,7 +438,7 @@ end
 
 function stead.dirty(o)
 	if type(o) ~= 'table' or type(o.__dirty) ~= 'function' then
-		return false
+		return true
 	end
 	return o:__dirty()
 end
@@ -486,10 +500,6 @@ stead.obj = stead.class {
 		for key, val in pairs(v) do
 			if not raw[key] then
 				ro[key] = val
-				if type(val) == 'table'
-					and not stead.getmt(val) then
-					stead.array(val)
-				end
 				rawset(v, key, nil)
 			end
 		end
@@ -549,11 +559,7 @@ stead.obj = stead.class {
 			fp:write(l)
 		end
 		for k, v in pairs(s.__var) do
-			local l = string.format("%s%s", n, stead.varname(k))
-			stead.save_var(s[k], fp, l)
-		end
-		for k, v in pairs(s.__ro) do
-			if stead.dirty(v) then
+			if stead.dirty(s[k]) then
 				local l = string.format("%s%s", n, stead.varname(k))
 				stead.save_var(s[k], fp, l)
 			end
@@ -670,42 +676,6 @@ local function array_rw(t)
 			end
 		end
 	end
-end
-
-local array_mt = {
-	__index = function(t, k)
-		local ro = rawget(t, '__ro')
-		if ro then
-			return rawget(ro, k)
-		end
-	end;
-	__newindex = function(t, k, v)
-		local parent = t.__parent
-		rawset(parent, '__dirty_flag', true)
-		rawset(t, k, v)
-		array_rw(parent)
-	end;
-}
-
-function stead.array(t, parent)
-	if type(t) ~= 'table' then
-		return
-	end
-	t.__parent = parent or t
-	t.__ro = {}
-	t.__array = true
-	t.__dirty = function(s) return s.__dirty_flag end;
-	stead.setmt(t, array_mt)
-	for k, v in pairs(t) do
-		if type(k) ~= 'string' or k:find("__", 1, true) ~= 1 then
-			rawset(t.__ro, k, v)
-			rawset(t, k, nil)
-			if type(v) == 'table' and not stead.getmt(v) then
-				stead.array(v, t.__parent)
-			end
-		end
-	end
-	return t
 end
 
 stead.player = stead.class ({
