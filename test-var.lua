@@ -20,6 +20,16 @@ global {
 global {
 	d = { a }
 }
+
+global {
+	zlist = stead.list {
+		obj {
+			nam = 'нож';
+			dsc = "Тут лежит {нож}";
+		};
+	};
+}
+
 stead.init()
 print('--------')
 stead.save(io.stdout)
