@@ -96,7 +96,7 @@ local function depends(t, tables, deps)
 		deps[t] = tables[t]
 	end
 	for k, v in pairs(t) do
-		if type(v) == 'table' then
+		if type(v) == 'table' and not stead.getmt(v) then
 			depends(v, tables, deps)
 		end
 	end
