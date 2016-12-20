@@ -4,6 +4,7 @@ stead = {
 	call_top = 0,
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
+	objects_nr = 0;
 	tables = {};
 	tostr = tostring;
 	tonum = tonumber;
@@ -214,6 +215,24 @@ stead.list = stead.class {
 		stead.setmt(v, s)
 		return v
 	end;
+	renam = function(s, new)
+		local oo = stead.objects
+		if new == s.nam then
+			return
+		end
+		if oo[new] then
+			stead.err ("Duplicated obj name: "..stead.tostr(new), 2)
+		end
+		oo[s.nam] = nil
+		oo[new] = new
+		if type(new) == 'number' then
+			if new > stead.objects_nr then
+				stead.objects_nr = new
+			end
+		end
+		s.nam = new
+		return s
+	end;
 	ini = function(s)
 		for i = 1, #s do
 			local k = s[i]
@@ -398,7 +417,9 @@ end
 function stead.save(fp)
 	local oo = stead.objects -- save dynamic objects
 	for i = 1, #oo do
-		oo[i]:save(fp, string.format("stead(%d)", i))
+		if oo[i] then
+			oo[i]:save(fp, string.format("stead(%d)", i))
+		end
 	end
 
 	stead.mod_call('save', fp)
@@ -410,30 +431,42 @@ function stead.save(fp)
 	end
 end
 
-function stead.init(fp)
+function stead.for_each_obj(fn, ...)
 	local oo = stead.objects
 	for i = 1, #oo do
-		oo[i]:ini()
+		if oo[i] then
+			fn(oo[i], ...)
+		end
 	end
 	for k, v in pairs(oo) do
 		if type(k) ~= 'number' then
-			v:ini()
+			fn(v, ...)
 		end
 	end
+end
+
+function stead.init(fp)
+	stead.for_each_obj(function(v)
+		if type(v.ini) == 'function' then
+			v:ini()
+		end
+	end)
 	stead.mod_call('init')
 	stead.initialized = true
 end
 
-function stead.done(fp)
+function stead.done()
 	stead.initialized = false
 	stead.mod_call('done')
 	local objects = {}
-	for k, v in pairs(stead.objects) do
+	stead.for_each_obj(function(v)
+		local k = stead.deref(v)
 		if type(k) == 'string' and k:byte(1) == 0x40 then
 			objects[k] = v
 		end
-	end
+	end)
 	stead.objects = objects
+	stead.objects_nr = 0
 end
 
 function stead.dirty(o)
@@ -467,6 +500,10 @@ stead.obj = stead.class {
 		end
 		if v.nam == nil then
 			rawset(v, 'nam', #oo + 1)
+			local nr = #oo
+			if nr > stead.objects_nr then
+				stead.objects_nr = nr
+			end
 		end
 		if type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
 			stead.err ("Wrong .nam in object.", 2)
@@ -555,7 +592,7 @@ stead.obj = stead.class {
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create
-			local l = string.format("stead.new(%q, %s) -- %s\n", s.__dynamic.fn, s.__dynamic.arg, n)
+			local l = string.format("stead.new(%q, %s):renam(%d)\n", s.__dynamic.fn, s.__dynamic.arg, s.nam)
 			fp:write(l)
 		end
 		for k, v in pairs(s.__var) do
@@ -1035,14 +1072,7 @@ end
 
 function stead.delete(s)
 	if stead.is_obj(s) then
-		if type(s.nam) == 'number' then
-			table.remove(stead.objects, s.nam)
-			for i = s.nam, #stead.objects do
-				rawset(stead.objects[i], 'nam', i)
-			end
-		else
-			stead.objects[s.nam] = nil
-		end
+		stead.objects[s.nam] = nil
 	else
 		stead.err("Delete non object table", 2)
 	end

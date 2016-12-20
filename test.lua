@@ -55,7 +55,7 @@ a.xm = { 1, 2, 3 }
 a.dsc = 'Проверка';
 b = stead.new ( 'obj', {  })
 c = stead.new ( 'obj', { x = 'c = ' })
-stead.delete(b)
+--stead.delete(b)
 stead 'player'.room = 'главная';
 stead.init()
 x.xtable[1] = 1
