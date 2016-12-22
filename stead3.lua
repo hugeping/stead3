@@ -791,7 +791,7 @@ stead.player = stead.class ({
 			end
 		end
 		if m == 'use' and w2 then
-			r, v = stead.call(w2, 'onuse', w, w2, ...)
+			r, v = stead.call(w2, 'used', w, ...)
 			if r ~= nil or v ~= nil then
 				return r, false -- stop chain
 			end
