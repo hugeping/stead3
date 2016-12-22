@@ -23,11 +23,17 @@ a = room {
 }
 apple = obj {
 	nam = 'яблоко';
-	tak = 'взял яблоко';
+	tak = function(s) p 'взял яблоко'; return; end;
+	act = function()
+		p "действие"
+	end;
+	inv = "использовал";
 	dsc = '{яблоко}';
 }
 stead 'player'.room = 'главная';
 stead.init()
-print(stead 'player':take 'яблоко')
+print(stead 'game':cmd({'act', 'яблоко'}))
+print(stead 'game':cmd({'use', 'яблоко'}))
+--print(stead 'player':take 'яблоко')
 stead.save(io.stdout)
 stead.done()

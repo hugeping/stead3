@@ -333,14 +333,14 @@ stead.list = stead.class {
 			end
 		end
 	end;
-	seen = function(s, n)
-		for i = 1, #s do
-			local o = stead.ref(s[i])
-			if stead.dispof(o) == n then
-				return o, i
-			end
-		end
-	end;
+--	seen = function(s, n)
+--		for i = 1, #s do
+--			local o = stead.ref(s[i])
+--			if stead.dispof(o) == n then
+--				return o, i
+--			end
+--		end
+--	end;
 	del = function(s, n)
 		local o, i = s:lookup(n)
 		if i then
@@ -640,7 +640,37 @@ stead.obj = stead.class {
 		local s = string.gsub(str, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' }):gsub('\001([^\002]+)\002', xrefrep):gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
 		return s;
-	end
+	end;
+	seen = function(s, w)
+		local o
+		if s:disabled() or s:closed() then
+			return
+		end
+		o = s.obj:lookup(w)
+		if o then
+			return o, s
+		end
+		for i = 1, #s.obj do
+			local v = s.obj[i]
+			o = s.obj[i]:lookup(w)
+			if o then
+				return o, s.obj[i]
+			end
+		end
+	end;
+	lookup = function(s, w)
+		local o = s.obj:lookup(w)
+		if o then
+			return o, s
+		end
+		for i = 1, #s.obj do
+			local v = s.obj[i]
+			o = s.obj[i]:lookup(w)
+			if o then
+				return o, s.obj[i]
+			end
+		end
+	end;
 };
 
 stead.room = stead.class({
@@ -714,6 +744,37 @@ stead.game = stead.class({
 		local r, v, pv, av
 		if cmd[1] == nil or cmd[1] == 'look' then
 			r, v = s.player:look()
+		elseif cmd[1] == 'act' then
+			local o = stead.ref(cmd[2]) -- on what?
+			o = s.player:search(o)
+			if not o then
+				return nil, false -- wrong input
+			end
+			r, v = s.player:take(o)
+			if not v then
+				r, v = s.player:action(o)
+			end
+			-- if s.player:search(o)
+		elseif cmd[1] == 'use' then
+			local o1 = stead.ref(cmd[2])
+			local o2 = stead.ref(cmd[3])
+			o1 = s.player:have(o1)
+			if not o1 then
+				return nil, false -- wrong input
+			end
+			if o1 == o2 or not o2 then -- inv?
+				if not o1 then
+					return nil, false -- wrong input
+				end
+				r, v = s.player:useit(o1)
+			else
+				r, v = s.player:useon(o1, o2)
+			end
+		elseif cmd[1] == 'go' then
+			local o = stead.ref(cmd[2])
+			if not o then
+				return nil, false -- wrong input
+			end
 		end
 		if v == false then
 			return r, false -- wrong cmd?
@@ -776,7 +837,23 @@ stead.player = stead.class ({
 		local dsc = stead.call(r, 'dsc')
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
-	useit = function(s, w1, w2)
+	search = function(s, w)
+		return s:where():seen(w)
+	end;
+	have = function(s, w)
+		local o, i = s:inventory():lookup(w)
+		if not o then
+			return o, i
+		end
+		if o:disabled() then
+			return
+		end
+		return o, i
+	end;
+	useit = function(s, w, ...)
+		return s:call('inv', w, ...)
+	end;
+	useon = function(s, w1, w2)
 		local r, v, t
 		w1 = stead.ref(w)
 		w2 = stead.ref(w2)
@@ -845,6 +922,9 @@ stead.player = stead.class ({
 			local o = w:remove()
 			s:inventory():add(o)
 			return r, v
+		end
+		if v == false then -- forbidden take
+			return r, true
 		end
 		return r, v
 	end;
@@ -1197,7 +1277,10 @@ end
 
 stead.call = function(v, n, ...)
 	local r, v = stead.method(v, n, ...)
-	if type(r) == 'string' then return r, v end
+	if type(r) == 'string' then
+		if v == nil then v = true end
+		return r, v
+	end
 	return nil, v
 end
 
