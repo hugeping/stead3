@@ -346,6 +346,7 @@ stead.list = stead.class {
 		if i then
 			s:__dirty(true)
 			s:detach(o)
+			table.remove(s, i)
 			return o
 		end
 	end;
@@ -570,7 +571,33 @@ stead.obj = stead.class {
 				table.insert(r, ll[k])
 			end
 		end
+		if #r == 1 then
+			return r[1]
+		end
 		return r[1], r
+	end;
+	remove = function(s, w)
+		local o = stead.ref(s)
+		if not s then
+			stead.err ("Wrong object in remove: "..stead.tostr(s), 2)
+		end
+		if w then
+			w = stead.ref(w)
+			if not w then
+				stead.err ("Wrong where in remove", 2)
+			end
+			w.obj:del(o)
+			return o
+		end
+		local wh, where = s:where()
+		if where then
+			for i = 1, #where do
+				where[i].obj:del(o)
+			end
+			return o, where
+		end
+		wh.obj:del(o)
+		return o, wh
 	end;
 	close = function(s)
 		s.__closed = true
@@ -807,6 +834,19 @@ stead.player = stead.class ({
 	end;
 	action = function(s, w, ...)
 		return s:call('act', w, ...)
+	end;
+	inventory = function(s)
+		return s.obj
+	end;
+	take = function(s, w, ...)
+		local r, v = s:call('tak', w, ...)
+		if v == true then -- take it!
+			w = stead.ref(w)
+			local o = w:remove()
+			s:inventory():add(o)
+			return r, v
+		end
+		return r, v
 	end;
 	walkin = function(s, w)
 		return s:walk(w, true, false)
@@ -1157,8 +1197,8 @@ end
 
 stead.call = function(v, n, ...)
 	local r, v = stead.method(v, n, ...)
-	if type(r) == 'string' then return r end
-	return
+	if type(r) == 'string' then return r, v end
+	return nil, v
 end
 
 local function get_token(inp)
