@@ -138,18 +138,21 @@ function stead.is_obj(v, t)
 end
 
 function stead.class(s, inh)
+	s.__parent = function(s)
+		return inh
+	end;
 	s.__call = function(s, ...)
 		return s:new(...)
 	end;
-	s.__tostring = function(s)
-		if not stead.is_obj(s) then
+	s.__tostring = function(self)
+		if not stead.is_obj(self) then
 			local os = s.__tostring
 			s.__tostring = nil
-			local t = stead.tostr(s)
+			local t = stead.tostr(self)
 			s.__tostring = os
 			return t
 		end
-		return stead.dispof(s)
+		return stead.dispof(self)
 	end;
 	s.__dirty = function(s, v)
 		local o = s.__dirty_flag
@@ -694,6 +697,28 @@ stead.room = stead.class({
 		stead.setmt(v, self)
 		return v
 	end;
+	seen = function(self, w)
+		local r, v = self:__parent().seen(self, w)
+		if stead.is_obj(r) then
+			return r, v
+		end
+		r, v = self.way:lookup(w)
+		if not stead.is_obj(r) or r:disabled() or r:closed() then
+			return
+		end
+		return r, self.way
+	end;
+	lookup = function(self, w)
+		local r, v = self:__parent().lookup(self, w)
+		if stead.is_obj(r) then
+			return r, v
+		end
+		r, v = self.way:lookup(w)
+		if stead.is_obj(r) then
+			return r, self.way
+		end
+		return r, v
+	end;
 }, stead.obj);
 
 stead.game = stead.class({
@@ -775,6 +800,7 @@ stead.game = stead.class({
 			if not o then
 				return nil, false -- wrong input
 			end
+			r, v = s.player:go(o)
 		end
 		if v == false then
 			return r, false -- wrong cmd?
@@ -838,7 +864,16 @@ stead.player = stead.class ({
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
 	search = function(s, w)
-		return s:where():seen(w)
+		local r, v
+		r, v = s:where():seen(w)
+		if r ~= nil then
+			return r, v
+		end
+		r, v = s:where().way:lookup(w)
+		if not r or r:disabled() or r:closed() then
+			return
+		end
+		return r, s:where()
 	end;
 	have = function(s, w)
 		local o, i = s:inventory():lookup(w)
@@ -1001,6 +1036,14 @@ stead.player = stead.class ({
 		s.room = s.__in_walk
 		s.__in_walk = nil
 		return t, true
+	end;
+	go = function(s, w)
+		local r, v
+		r, v = s:where():seen(w)
+		if not is_obj(r, 'room') then
+			return nil, false
+		end
+		return s:walk(w)
 	end;
 	where = function(s)
 		return s.room

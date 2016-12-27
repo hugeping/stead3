@@ -20,6 +20,7 @@ a = room {
 	onenter = "a onenter";
 	enter = "a enter";
 	obj = { 'яблоко'};
+	way = { 'x' };
 }
 apple = obj {
 	nam = 'яблоко';
@@ -32,8 +33,10 @@ apple = obj {
 }
 stead 'player'.room = 'главная';
 stead.init()
+print(stead 'главная':lookup('яблоко'))
+print(stead 'главная':seen('x'))
 print(stead 'game':cmd({'act', 'яблоко'}))
 print(stead 'game':cmd({'use', 'яблоко'}))
---print(stead 'player':take 'яблоко')
+print(stead 'player':take 'яблоко')
 stead.save(io.stdout)
 stead.done()
