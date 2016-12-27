@@ -53,7 +53,7 @@ local function __mod_callback_reg(f, hook, ...)
 		stead.__mod_hooks[hook] = {}
 	end
 	table.insert(stead.__mod_hooks[hook], f);
-	f();
+--	f();
 end
 
 function stead.mod_call(hook, ...)
