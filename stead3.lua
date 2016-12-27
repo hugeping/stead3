@@ -451,7 +451,9 @@ function stead.for_each_obj(fn, ...)
 end
 
 function stead.init(fp)
---	game:ini();
+	stead.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
+	stead.room { nam = 'main' }
+	stead.player { nam = 'player', room = 'main' }
 end
 
 function stead.done()
@@ -1507,8 +1509,7 @@ iface = {
 	end
 };
 
-stead.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
-stead.room { nam = 'main' }
-stead.player { nam = 'player', room = 'main' }
 
 require "strict"
+
+stead.init()
