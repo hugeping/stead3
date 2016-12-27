@@ -1,4 +1,4 @@
-require 'stead3'
+require 'stead'
 room = stead.room
 obj = stead.obj
 pl = stead.player
