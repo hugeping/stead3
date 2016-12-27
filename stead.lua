@@ -451,9 +451,19 @@ function stead.for_each_obj(fn, ...)
 end
 
 function stead.init(fp)
+	if stead.ref 'game' then
+		stead.delete('game')
+	end
+	if stead.ref 'main' then
+		stead.delete('main')
+	end
+	if stead.ref 'player' then
+		stead.delete('player')
+	end
 	stead.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	stead.room { nam = 'main' }
 	stead.player { nam = 'player', room = 'main' }
+	rawset(_G, 'game', stead.ref 'game')
 end
 
 function stead.done()
@@ -1319,6 +1329,7 @@ function stead.new(fn, ...)
 end
 
 function stead.delete(s)
+	s = stead.ref(s)
 	if stead.is_obj(s) then
 		stead.objects[s.nam] = nil
 	else
@@ -1506,11 +1517,13 @@ iface = {
 		local s = string.gsub(str,'[\t \n]+', stead.space_delim);
 		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
 		return s
-	end
+	end;
+	input = function()
+	end;
 };
 
 
 require "strict"
-require "ext/gui"
+-- require "ext/gui"
 
 stead.init()
