@@ -31,6 +31,17 @@ apple = obj {
 	inv = "использовал";
 	dsc = '{яблоко}';
 }
+
+apple2 = obj {
+	nam = 'яблоко|2';
+	tak = function(s) p 'взял яблоко'; return; end;
+	act = function()
+		p "действие"
+	end;
+	inv = "использовал";
+	dsc = '{яблоко}';
+}
+
 stead 'player'.room = 'главная';
 stead.init()
 print(stead 'главная':lookup('яблоко'))
@@ -38,5 +49,8 @@ print(stead 'главная':seen('x'))
 print(stead 'game':cmd({'act', 'яблоко'}))
 print(stead 'game':cmd({'use', 'яблоко'}))
 print(stead 'player':take 'яблоко')
+print(stead 'player':take 'яблоко|2')
+print(stead 'player':dump())
+print(stead 'player':where():dump_way())
 stead.save(io.stdout)
 stead.done()

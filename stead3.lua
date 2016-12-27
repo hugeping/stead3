@@ -1,6 +1,7 @@
 stead = {
-	space_delim = ' ';
-	scene_delim = '^^';
+	space_delim = ' ',
+	scene_delim = '^^',
+	delim = '|',
 	call_top = 0,
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
@@ -655,9 +656,9 @@ stead.obj = stead.class {
 		end
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			o = s.obj[i]:lookup(w)
+			o = v:lookup(w)
 			if o then
-				return o, s.obj[i]
+				return o, v
 			end
 		end
 	end;
@@ -668,12 +669,37 @@ stead.obj = stead.class {
 		end
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			o = s.obj[i]:lookup(w)
+			o = v:lookup(w)
 			if o then
-				return o, s.obj[i]
+				return o, v
 			end
 		end
 	end;
+	dump = function(s)
+		local rc
+		for i = 1, #s.obj do
+			local v = s.obj[i]
+			if stead.is_obj(v) and not v:disabled() then
+				local vv
+				if rc then
+					rc = rc .. stead.delim
+				else
+					rc = ''
+				end
+				vv = stead.dump(v.nam)
+				vv = vv:gsub('\\?'..stead.delim,
+					     { [stead.delim] = '\\'..stead.delim });
+				rc = rc .. vv
+				if not v:closed() then
+					vv = v:dump()
+					if vv then
+						rc = rc .. stead.delim .. vv
+					end
+				end
+			end
+		end
+		return rc
+	end
 };
 
 stead.room = stead.class({
@@ -719,6 +745,26 @@ stead.room = stead.class({
 		end
 		return r, v
 	end;
+	dump_way = function(s)
+		local rc
+		for i = 1, #s.way do
+			local v = s.way[i]
+			if stead.is_obj(v, 'room')
+			and not v:disabled() and not v:closed() then
+				local vv
+				if rc then
+					rc = rc .. stead.delim
+				else
+					rc = ''
+				end
+				vv = stead.dump(v.nam)
+				vv = vv:gsub('\\?'..stead.delim,
+					     { [stead.delim] = '\\'..stead.delim });
+				rc = rc .. vv
+			end
+		end
+		return rc
+	end
 }, stead.obj);
 
 stead.game = stead.class({
@@ -755,18 +801,23 @@ stead.game = stead.class({
 			end
 		end
 	end;
+	step = function(s)
+
+	end;
 	disp = function(s, reaction, state)
-		local r, objs
-
+		local r, objs, l
 		r = stead.here()
-
 		if state then
+			if s.player:need_scene() then
+				l = s.player:look()
+			end
 			objs = r.obj:look()
 		end
-		return stead.par(stead.scene_delim, reaction, objs), state
+		return stead.par(stead.scene_delim, reaction, l, objs), state
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
+		s.player:need_scene(false)
 		if cmd[1] == nil or cmd[1] == 'look' then
 			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
@@ -801,12 +852,20 @@ stead.game = stead.class({
 				return nil, false -- wrong input
 			end
 			r, v = s.player:go(o)
+		elseif cmd[1] == 'inv' then -- show inv
+			r = s.player:dump() -- just info
+			v = nil
+		elseif cmd[1] == 'way' then -- show ways
+			r = s.player:where():dump_way()
+			v = nil
+		elseif cmd[1] == 'save' then -- todo
+		elseif cmd[1] == 'load' then -- todo
 		end
 		if v == false then
 			return r, false -- wrong cmd?
 		end
 		if v then -- game:step
---			pv, av = s:step()
+			pv, av = s:step()
 		end
 		return s:disp(r, v)
 	end;
@@ -857,6 +916,17 @@ stead.player = stead.class ({
 		s.__reaction = t
 		return o
 	end;
+	need_scene = function(s, v)
+		local ov = s.__need_scene or false
+		if v == nil then
+			return ov
+		end
+		if type(v) ~= 'boolean' then
+			stead.err("Wrong parameter to player:need_scene: "..stead.tostr(v), 2)
+		end
+		s.__need_scene = v
+		return ov
+	end;
 	look = function(s)
 		local r = s:where()
 		local title = iface.title(stead.titleof(r))
@@ -899,14 +969,15 @@ stead.player = stead.class ({
 		-- inv mode?
 		return s:call('inv', w1, w2)
 	end;
-	call = function(s, m, w, w2, ...)
+	call = function(s, m, w1, w2, ...)
+		local w
 		if type(m) ~= 'string' then
 			stead.err ("Wrong method in player.call: "..stead.tostr(m), 2)
 		end
 
-		w = stead.ref(w)
+		w = stead.ref(w1)
 		if not stead.is_obj(w) then
-			stead.err ("Wrong parameter to player.call: "..stead.tostr(w), 2)
+			stead.err ("Wrong parameter to player.call: "..stead.tostr(w1), 2)
 		end
 
 		local r, v, t
@@ -1035,6 +1106,7 @@ stead.player = stead.class ({
 		end
 		s.room = s.__in_walk
 		s.__in_walk = nil
+		s:need_scene(true)
 		return t, true
 	end;
 	go = function(s, w)
