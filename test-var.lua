@@ -30,7 +30,7 @@ global {
 	};
 }
 
-stead.init()
+game:ini()
 print('--------')
 stead.save(io.stdout)
 print('--------')

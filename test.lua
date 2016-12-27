@@ -57,7 +57,7 @@ b = stead.new ( 'obj', {  })
 c = stead.new ( 'obj', { x = 'c = ' })
 --stead.delete(b)
 stead 'player'.room = 'главная';
-stead.init()
+game:ini()
 x.xtable[1] = 1
 a.atable[1] = 1
 

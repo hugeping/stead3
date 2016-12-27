@@ -43,7 +43,7 @@ apple2 = obj {
 }
 
 stead 'player'.room = 'главная';
-stead.init()
+game:ini()
 print(stead 'главная':lookup('яблоко'))
 print(stead 'главная':seen('x'))
 print(stead 'game':cmd({'act', 'яблоко'}))

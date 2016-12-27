@@ -451,13 +451,7 @@ function stead.for_each_obj(fn, ...)
 end
 
 function stead.init(fp)
-	stead.for_each_obj(function(v)
-		if type(v.ini) == 'function' then
-			v:ini()
-		end
-	end)
-	stead.mod_call('init')
-	stead.initialized = true
+--	game:ini();
 end
 
 function stead.done()
@@ -785,11 +779,25 @@ stead.game = stead.class({
 		return v
 	end;
 	ini = function(s)
-		rawset(s, 'player', stead.ref(s.player))
+		stead.mod_call('init') -- init modules
+
+		rawset(s, 'player', stead.ref(s.player)) -- init game
 		if not s.player then
 			stead.err ("Wrong player", 2)
 		end
 		stead.obj.ini(s)
+
+		stead.for_each_obj(function(v) -- call ini of all objects
+			if v ~= s and type(v.ini) == 'function' then
+				v:ini()
+			end
+		end)
+
+		stead.initialized = true
+
+		if type(stead.rawget(_G, 'init')) == 'function' then
+			init()
+		end
 	end;
 	life = function(s)
 		for i = 1, #s.lifes do
@@ -1496,7 +1504,7 @@ iface = {
 	end
 };
 
-stead.game { nam = 'game', player = 'player' }
+stead.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
 stead.room { nam = 'main' }
 stead.player { nam = 'player', room = 'main' }
 
