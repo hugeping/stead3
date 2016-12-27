@@ -798,6 +798,9 @@ stead.game = stead.class({
 		if type(stead.rawget(_G, 'init')) == 'function' then
 			init()
 		end
+		if type(stead.rawget(_G, 'start')) == 'function' then
+			start() -- start before load
+		end
 	end;
 	life = function(s)
 		for i = 1, #s.lifes do
