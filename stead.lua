@@ -791,6 +791,8 @@ stead.game = stead.class({
 		return v
 	end;
 	ini = function(s)
+		require "strict"
+
 		stead.mod_call('init') -- init modules
 
 		rawset(s, 'player', stead.ref(s.player)) -- init game
@@ -1523,7 +1525,6 @@ iface = {
 };
 
 
-require "strict"
 -- require "ext/gui"
 
 stead.init()

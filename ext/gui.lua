@@ -1,6 +1,4 @@
-stead.declare {
-	instead = {
-	}
+instead = {
 }
 
 function instead.get_inv()
