@@ -1511,6 +1511,6 @@ iface = {
 
 
 require "strict"
-require "gui"
+require "ext/gui"
 
 stead.init()
