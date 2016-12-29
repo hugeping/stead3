@@ -21,6 +21,7 @@ stead = {
 	io = io;
 	string = string;
 	next = next;
+	loadfile = loadfile;
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
 }
@@ -158,7 +159,7 @@ function stead.class(s, inh)
 		return stead.dispof(self)
 	end;
 	s.__dirty = function(s, v)
-		local o = s.__dirty_flag
+		local o = rawget(s, '__dirty_flag')
 		if v ~= nil and stead.initialized then
 			rawset(s, '__dirty_flag', v)
 		end
@@ -198,8 +199,9 @@ function stead.class(s, inh)
 			ro[k] = nil
 		end
 		if stead.is_obj(v, 'list') then
+			v:__dirty(true) -- set is always dirty
 			if type(t.__list) == 'table' then
-				t:attach(v)
+				v:attach(t)
 			end
 		end
 		rawset(t, k, v)
@@ -419,6 +421,32 @@ stead.save_table = function(vv, fp, n)
 			stead.save_var(v, fp, l)
 		end
 	end
+end
+
+function stead.reset()
+	stead:done()
+	stead:init()
+	local f, err = stead.loadfile('main.lua')
+	if not f then
+		stead.err(err, 2)
+	end
+	f()
+	game:ini()
+end
+
+function stead.load(fname)
+	print "reset"
+	stead:reset()
+	local f, err = stead.loadfile(fname)
+	if not f then
+		stead.err(err, 2)
+	end
+	print "load"
+	f();
+	print "init"
+	game:ini()
+	print "init done"
+	return game:lastdisp()
 end
 
 function stead.save(fp)
@@ -835,11 +863,13 @@ stead.game = stead.class({
 			end
 		end)
 
-		stead.initialized = true
-
-		if type(stead.rawget(_G, 'init')) == 'function' then
-			init()
+		if not stead.initialized then
+			stead.initialized = true
+			if type(stead.rawget(_G, 'init')) == 'function' then
+				init()
+			end
 		end
+
 		if type(stead.rawget(_G, 'start')) == 'function' then
 			start() -- start before load
 		end
@@ -857,6 +887,13 @@ stead.game = stead.class({
 	step = function(s)
 
 	end;
+	lastdisp = function(s, str)
+		local ov = s.__lastdisp
+		if str ~= nil then
+			s.__lastdisp = str
+		end
+		return ov
+	end;
 	disp = function(s, reaction, state)
 		local r, objs, l
 		r = stead.here()
@@ -867,7 +904,11 @@ stead.game = stead.class({
 			end
 			objs = r.obj:look()
 		end
-		return stead.par(stead.scene_delim, reaction or false, l or false, objs or false) or '', state
+		l = stead.par(stead.scene_delim, reaction or false, l or false, objs or false) or ''
+		if state then
+			s:lastdisp(l)
+		end
+		return l, state
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
@@ -913,8 +954,11 @@ stead.game = stead.class({
 			r = s.player:where():dump_way()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
-			stead.save(cmd[2])
+			r = stead.save(cmd[2])
+			v = nil
 		elseif cmd[1] == 'load' then -- todo
+			r = stead.load(cmd[2])
+			v = false
 		end
 		if v == false then
 			return r, false -- wrong cmd?
@@ -1553,7 +1597,7 @@ iface = {
 		stead.cache = {}
 		local r, v = game:cmd(cmd)
 		if v == false then
-			return r, false
+			return iface:fmt(r), false
 		end
 		if v == true then
 			r = iface:fmt(r)
