@@ -77,7 +77,7 @@ print (stead 'нож':where())
 print(stead 'нож':where().obj:del 'нож')
 print (stead 'нож':where())
 print(stead 'игрок':walk(a))
-print(iface.cmd 'look')
+print(iface:cmd 'look')
 a.table["N"] = { 7 }
 global_array.n.z = 7
 stead.save(io.stdout)

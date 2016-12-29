@@ -18,6 +18,7 @@ stead = {
 	ipairs = ipairs;
 	rawset = rawset;
 	rawget = rawget;
+	io = io;
 	string = string;
 	next = next;
 	getinfo = debug.getinfo;
@@ -30,6 +31,7 @@ local string = stead.string
 local rawset = stead.rawset
 local rawget = stead.rawget
 local type = stead.type
+local io = stead.io;
 
 if _VERSION == "Lua 5.1" then
 	stead.eval = loadstring
@@ -420,6 +422,20 @@ stead.save_table = function(vv, fp, n)
 end
 
 function stead.save(fp)
+	if type(fp) == 'string' then
+		fp = io.open(fp, "wb");
+		if not fp then
+			return nil, false -- can create file
+		end
+	end
+	local n
+	if stead.type(stead.savename) == 'function' then
+		n = stead.savename()
+	end
+	if stead.type(n) == 'string' then
+		fp:write("-- $Name: "..n:gsub("\n","\\n").."$\n");
+	end
+
 	local oo = stead.objects -- save dynamic objects
 	for i = 1, #oo do
 		if oo[i] then
@@ -434,6 +450,8 @@ function stead.save(fp)
 			v:save(fp, string.format("stead %q", k))
 		end
 	end
+	fp:flush();
+	fp:close();
 end
 
 function stead.for_each_obj(fn, ...)
@@ -485,6 +503,16 @@ function stead.dirty(o)
 		return true
 	end
 	return o:__dirty()
+end
+
+function stead.deref_str(o)
+	local k = stead.deref(o)
+	if type(k) == 'number' then
+		return stead.tostr(k)
+	elseif type(k) == 'string' then
+		return stead.string.format("%q", k)
+	end
+	return
 end
 
 function stead.varname(k)
@@ -642,7 +670,7 @@ stead.obj = stead.class {
 	xref = function(self, str)
 		function xrefrep(str)
 			local s = string.gsub(str,'[\001\002]','');
-			return iface.xref(self, s);
+			return iface:xref(s, self);
 		end
 		if type(str) ~= 'string' then
 			return
@@ -692,7 +720,7 @@ stead.obj = stead.class {
 				else
 					rc = ''
 				end
-				vv = stead.dump(v.nam)
+				vv = iface:xref(stead.dispof(v), v)
 				vv = vv:gsub('\\?'..stead.delim,
 					     { [stead.delim] = '\\'..stead.delim });
 				rc = rc .. vv
@@ -763,7 +791,7 @@ stead.room = stead.class({
 				else
 					rc = ''
 				end
-				vv = stead.dump(v.nam)
+				vv = iface:xref(stead.dispof(v), v)
 				vv = vv:gsub('\\?'..stead.delim,
 					     { [stead.delim] = '\\'..stead.delim });
 				rc = rc .. vv
@@ -833,12 +861,13 @@ stead.game = stead.class({
 		local r, objs, l
 		r = stead.here()
 		if state then
+			reaction = iface:em(reaction)
 			if s.player:need_scene() then
 				l = s.player:look()
 			end
 			objs = r.obj:look()
 		end
-		return stead.par(stead.scene_delim, reaction, l, objs), state
+		return stead.par(stead.scene_delim, reaction or false, l or false, objs or false), state
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
@@ -884,6 +913,7 @@ stead.game = stead.class({
 			r = s.player:where():dump_way()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
+			stead.save(cmd[2])
 		elseif cmd[1] == 'load' then -- todo
 		end
 		if v == false then
@@ -949,12 +979,13 @@ stead.player = stead.class ({
 		if type(v) ~= 'boolean' then
 			stead.err("Wrong parameter to player:need_scene: "..stead.tostr(v), 2)
 		end
+		if v == false then v = nil end
 		s.__need_scene = v
 		return ov
 	end;
 	look = function(s)
 		local r = s:where()
-		local title = iface.title(stead.titleof(r))
+		local title = iface:title(stead.titleof(r))
 		local dsc = stead.call(r, 'dsc')
 		return stead.par(stead.scene_delim, title, dsc), true
 	end;
@@ -1137,7 +1168,7 @@ stead.player = stead.class ({
 	go = function(s, w)
 		local r, v
 		r, v = s:where():seen(w)
-		if not is_obj(r, 'room') then
+		if not stead.is_obj(r, 'room') then
 			return nil, false
 		end
 		return s:walk(w)
@@ -1365,7 +1396,7 @@ function stead.titleof(o)
 		return
 	end
 	if o.title ~= nil then
-		return stead.call(o.title)
+		return stead.call(o, 'title')
 	end
 	return stead.dispof(o)
 end
@@ -1466,6 +1497,15 @@ local function cmd_parse(inp)
 	if type(inp) ~= 'string' then
 		return false
 	end
+	if inp:find("^save[ \t]+") then
+		cmd[1] = 'save'
+		cmd[2] = inp:gsub("^save[ \t]+", "")
+		return cmd
+	elseif inp:find("^load[ \t]+") then
+		cmd[1] = 'load'
+		cmd[2] = inp:gsub("^load[ \t]+", "")
+		return cmd
+	end
 	inp = inp:gsub("[ \t]*$", "")
 	while true do
 		inp = inp:gsub("^[ ,\t]*","")
@@ -1487,40 +1527,62 @@ function stead.here()
 	return stead.me().room
 end
 
+function stead.cacheable(n, f)
+	return function(...)
+		local s = stead.cache[n]
+		if s ~= nil then
+			if s == -1 then s = nil end
+			return s
+		end
+		stead.cache[n] = -1
+		s = f(...)
+		if s ~= nil then
+			stead.cache[n] = s
+		end
+		return s
+	end
+end
+
 iface = {
-	cmd = function(inp)
+	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
+		print(inp)
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
+		stead.cache = {}
 		local r, v = game:cmd(cmd)
 		if v == false then
 			return r, false
 		end
 		if v == true then
-			r = iface.fmt(r)
+			r = iface:fmt(r)
 		end
+		print(r, v)
 		return r, v
 	end;
-	xref = function(obj, str)
+	xref = function(self, str, obj)
 		obj = stead.ref(obj)
 		if not obj then
 			return str;
 		end
 		return stead.cat(str, "("..stead.deref(obj)..")");
 	end;
-	title = function(str)
+	title = function(self, str)
 		return "[ "..stead.tostr(str).." ]"
 	end;
-	fmt = function(str)
+	fmt = function(self, str)
 		if type(str) ~= 'string' then
 			return
 		end
 		local s = string.gsub(str,'[\t \n]+', stead.space_delim);
 		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-		return s
+		return stead.cat(s, '\n')
 	end;
-	input = function()
+	input = function(self)
+	end;
+	em = function(self, str)
+		return str
 	end;
 };
 
