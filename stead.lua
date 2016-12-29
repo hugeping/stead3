@@ -198,8 +198,10 @@ function stead.class(s, inh)
 			end
 			ro[k] = nil
 		end
-		if stead.is_obj(v, 'list') then
+		if type(v) == 'table' and type(v.__dirty) == 'function' then
 			v:__dirty(true) -- set is always dirty
+		end
+		if stead.is_obj(v, 'list') then
 			if type(t.__list) == 'table' then
 				v:attach(t)
 			end
@@ -435,17 +437,13 @@ function stead.reset()
 end
 
 function stead.load(fname)
-	print "reset"
 	stead:reset()
 	local f, err = stead.loadfile(fname)
 	if not f then
 		stead.err(err, 2)
 	end
-	print "load"
 	f();
-	print "init"
 	game:ini()
-	print "init done"
 	return game:lastdisp()
 end
 
@@ -616,13 +614,13 @@ stead.obj = stead.class {
 	end;
 	ini = function(s)
 		for k, v in pairs(s) do
-			if type(v) == 'table' and type(v.ini) == 'function' then
+			if stead.is_obj(v, 'list') then
 				v:ini()
 			end
 		end
 
 		for k, v in pairs(s.__ro) do
-			if type(v) == 'table' and type(v.ini) == 'function' then
+			if stead.is_obj(v, 'list') then
 				v:ini()
 			end
 		end
