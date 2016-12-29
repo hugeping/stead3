@@ -162,6 +162,7 @@ function stead.class(s, inh)
 		local o = rawget(s, '__dirty_flag')
 		if v ~= nil and stead.initialized then
 			rawset(s, '__dirty_flag', v)
+			return s
 		end
 		return o
 	end;
@@ -197,9 +198,6 @@ function stead.class(s, inh)
 				t.__var[k] = true
 			end
 			ro[k] = nil
-		end
-		if type(v) == 'table' and type(v.__dirty) == 'function' then
-			v:__dirty(true) -- set is always dirty
 		end
 		if stead.is_obj(v, 'list') then
 			if type(t.__list) == 'table' then
@@ -376,7 +374,8 @@ stead.list = stead.class {
 				fp:write(string.format("%q", vv))
 			end
 		end
-		fp:write(" }\n")
+		fp:write(" }:__dirty(true)\n")
+
 	end;
 }
 stead.save_var = function(vv, fp, n)
