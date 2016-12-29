@@ -867,7 +867,7 @@ stead.game = stead.class({
 			end
 			objs = r.obj:look()
 		end
-		return stead.par(stead.scene_delim, reaction or false, l or false, objs or false), state
+		return stead.par(stead.scene_delim, reaction or false, l or false, objs or false) or '', state
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
@@ -1589,4 +1589,4 @@ iface = {
 
 -- require "ext/gui"
 
-stead.init()
+stead:init()
