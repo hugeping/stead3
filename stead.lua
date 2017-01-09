@@ -496,6 +496,10 @@ function std.init(fp)
 	if std.ref 'player' then
 		std.delete('player')
 	end
+	if std.ref '@xact' then
+		std.delete('@xact')
+	end
+	std.obj { nam = '@xact', act = function(s, x) std.err ('Undefined xact: '..std.tostr(x), 2) end; }
 	std.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
@@ -918,13 +922,21 @@ std.game = std.class({
 			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
 			local o = std.ref(cmd[2]) -- on what?
-			o = s.player:search(o)
-			if not o then
-				return nil, false -- wrong input
-			end
-			r, v = s.player:take(o)
-			if not v then
-				r, v = s.player:action(o)
+			if std.namof(o) == '@xact' then
+				local a = {}
+				for i = 3, #cmd do
+					table.insert(a, cmd[i])
+				end
+				r, v = std.call(o, 'act', std.unpack(a))
+			else
+				o = s.player:search(o)
+				if not o then
+					return nil, false -- wrong input
+				end
+				r, v = s.player:take(o)
+				if not v then
+					r, v = s.player:action(o)
+				end
 			end
 			-- if s.player:search(o)
 		elseif cmd[1] == 'use' then
@@ -1421,7 +1433,14 @@ function std.var(v)
 	end
 	return v
 end
-
+function std.namof(o)
+	o = std.ref(o)
+	if not std.is_obj(o) then
+		std.err("Wrong parameter to std.namof: "..std.tostr(o), 2)
+		return
+	end
+	return o.nam
+end
 function std.dispof(o)
 	o = std.ref(o)
 	if not std.is_obj(o) then
