@@ -496,10 +496,21 @@ function std.init(fp)
 	if std.ref 'player' then
 		std.delete('player')
 	end
-	if std.ref '@xact' then
-		std.delete('@xact')
+	if std.ref '@' then
+		std.delete('@')
 	end
-	std.obj { nam = '@xact', act = function(s, x) std.err ('Undefined xact: '..std.tostr(x), 2) end; }
+	std.obj { nam = '@',
+		  {
+			  iface = {
+			  };
+		  };
+		  act = function(s, x)
+			  local cmd = std.cmd_parse(x)
+			  if s.iface[cmd[1]] then
+				  return std.method(s.iface, std.unpack(cmd))
+			  end
+			  std.err ('Undefined @ act: '..std.tostr(x), 2)
+	end; }
 	std.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
@@ -692,18 +703,25 @@ std.obj = std.class {
 	xref = function(self, str)
 		function xrefrep(str)
 			local oo = self
+			local a
 			local s = string.gsub(str,'[\001\002]','');
 			s = s:gsub('\\?[\\'..std.delim..']', { [ std.delim ] = '\001', [ '\\'..std.delim ] = std.delim });
 			local i = s:find('\001', 1, true)
 			if i then -- xact
 				oo = s:sub(1, i - 1)
 				s = s:sub(i + 1)
-				self = std.ref(oo)
+				if oo:find("@", 1, true) == 1 then
+					local o = '@'
+					a = oo:sub(2)
+					self = std.ref(o)
+				else
+					self = std.ref(oo)
+				end
 			end
 			if not std.is_obj(self) then
 				std.err("Wrong object in xref: "..std.tostr(oo), 2)
 			end
-			return iface:xref(s, self);
+			return iface:xref(s, self, a);
 		end
 		if type(str) ~= 'string' then
 			return
@@ -922,7 +940,7 @@ std.game = std.class({
 			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
 			local o = std.ref(cmd[2]) -- on what?
-			if std.namof(o) == '@xact' then
+			if std.namof(o) == '@' then
 				local a = {}
 				for i = 3, #cmd do
 					table.insert(a, cmd[i])
@@ -1590,6 +1608,8 @@ local function cmd_parse(inp)
 	end
 	return cmd
 end
+
+std.cmd_parse = cmd_parse
 
 function std.me()
 	return game.player
