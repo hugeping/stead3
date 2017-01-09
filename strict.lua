@@ -1,22 +1,24 @@
 local declarations = {}
 local variables = {}
-local type = stead.type
-local rawget = stead.rawget
-local rawset = stead.rawset
-local pairs = stead.pairs
-local table = stead.table
-local next = stead.next
+local std = stead
+
+local type = std.type
+local rawget = std.rawget
+local rawset = std.rawset
+local pairs = std.pairs
+local table = std.table
+local next = std.next
 
 local function __declare(n, t)
 	if stead.initialized then
-		stead.err ("Use "..t.." only in global context", 2)
+		std.err ("Use "..t.." only in global context", 2)
 	end
 	if type(n) ~= 'table' then
-		stead.err ("Wrong parameter to "..n, 2)
+		std.err ("Wrong parameter to "..n, 2)
 	end
-	for k, v in stead.pairs(n) do
+	for k, v in std.pairs(n) do
 		if declarations[k] then
-			stead.err ("Duplicate declaration: "..k, 2)
+			std.err ("Duplicate declaration: "..k, 2)
 		end
 		declarations[k] = {value = v, type = t}
 		if t == 'global' then
@@ -27,30 +29,30 @@ local function __declare(n, t)
 	return n
 end
 
-function stead.const(n)
+function std.const(n)
 	return __declare(n, 'const')
 end
 
-function stead.global(n)
+function std.global(n)
 	return __declare(n, 'global')
 
 end
 
-function stead.declare(n)
+function std.declare(n)
 	return __declare(n, 'declare')
 end
 
-stead.setmt(_G,
+std.setmt(_G,
 {
 	__index = function(_, n)
 		local d = declarations[n]
 		if d then --
-			if stead.initialized and (d.type ~= 'const') then
+			if std.initialized and (d.type ~= 'const') then
 				rawset(_, n, d.value)
 			end
 			return d.value
 		end
-		local f = stead.getinfo(2, "S").source
+		local f = std.getinfo(2, "S").source
 		if f:byte(1) == 0x3d then
 			return
 		end
@@ -66,20 +68,20 @@ stead.setmt(_G,
 			if v == d.value then
 				return --nothing todo
 			end
-			if not stead.initialized then
+			if not std.initialized then
 				d.value = v
 				return
 			end
 			if d.type == 'const' then
-				stead.err ("Modify read-only constant: "..k, 2)
+				std.err ("Modify read-only constant: "..k, 2)
 			else
 				d.value = v
 				rawset(t, k, v)
 			end
 			return
 		end
-		if type(v) ~= 'function' and not stead.is_obj(v) then
-			local f = stead.getinfo(2, "S").source
+		if type(v) ~= 'function' and not std.is_obj(v) then
+			local f = std.getinfo(2, "S").source
 			if f:byte(1) ~= 0x40 then
 				print ("Set uninitialized variable: "..k.." in "..f)
 			else
@@ -96,7 +98,7 @@ local function depends(t, tables, deps)
 		deps[t] = tables[t]
 	end
 	for k, v in pairs(t) do
-		if type(v) == 'table' and not stead.getmt(v) then
+		if type(v) == 'table' and not std.getmt(v) then
 			depends(v, tables, deps)
 		end
 	end
@@ -133,7 +135,7 @@ end
 
 local function mod_save(fp)
 	-- save global variables
-	stead.tables = {}
+	std.tables = {}
 	local tables = {}
 	local deps = {}
 	for k, v in pairs(declarations) do -- name all table variables
@@ -157,19 +159,19 @@ local function mod_save(fp)
 		end
 	end
 
-	stead.tables = tables -- save all depends
+	std.tables = tables -- save all depends
 
 	for k, v in pairs(variables) do -- write w/o deps
 		local o = rawget(_G, k)
 		if not deps[k] then
-			stead.save_var(o, fp, k)
+			std.save_var(o, fp, k)
 		end
 	end
 	for k, v in pairs(variables) do
 		local d = {}
 		while makedeps(k, deps, d) do
 			for i=1, #d do
-				stead.save_var(d[i], fp, k)
+				std.save_var(d[i], fp, k)
 			end
 			d = {}
 		end
@@ -183,15 +185,15 @@ local function mod_done()
 	for k, v in pairs(declarations) do
 		rawset(_G, k, nil)
 	end
-	stead.tables = {}
+	std.tables = {}
 	declarations = {}
 	variables = {}
 end
 
-stead.mod_init(mod_init)
-stead.mod_done(mod_done)
-stead.mod_save(mod_save)
+std.mod_init(mod_init)
+std.mod_done(mod_done)
+std.mod_save(mod_save)
 
-const = stead.const
-global = stead.global
-declare = stead.declare
+const = std.const
+global = std.global
+declare = std.declare

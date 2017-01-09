@@ -25,82 +25,75 @@ stead = {
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
 }
-local table = stead.table
-local pairs = stead.pairs
-local ipairs = stead.ipairs
-local string = stead.string
-local rawset = stead.rawset
-local rawget = stead.rawget
-local type = stead.type
-local io = stead.io;
+
+local std = stead
+
+local table = std.table
+local pairs = std.pairs
+local ipairs = std.ipairs
+local string = std.string
+local rawset = std.rawset
+local rawget = std.rawget
+local type = std.type
+local io = std.io;
 
 if _VERSION == "Lua 5.1" then
-	stead.eval = loadstring
-	stead.unpack = unpack
+	std.eval = loadstring
+	std.unpack = unpack
 else
-	stead.eval = load
-	stead.unpack = table.unpack
+	std.eval = load
+	std.unpack = table.unpack
 	table.maxn = table_get_maxn
 	string.gfind = string.gmatch
 	math.mod = math.fmod
 	math.log10 = function(a)
-		return stead.math.log(a, 10)
+		return std.math.log(a, 10)
 	end
 end
 
 local function __mod_callback_reg(f, hook, ...)
 	if type(f) ~= 'function' then
-		stead.err ("Wrong parameter to mod_"..hook..".", 2);
+		std.err ("Wrong parameter to mod_"..hook..".", 2);
 	end
-	if not stead.__mod_hooks[hook] then
-		stead.__mod_hooks[hook] = {}
+	if not std.__mod_hooks[hook] then
+		std.__mod_hooks[hook] = {}
 	end
-	table.insert(stead.__mod_hooks[hook], f);
+	table.insert(std.__mod_hooks[hook], f);
 --	f();
 end
 
-function stead.mod_call(hook, ...)
-	if not stead.__mod_hooks[hook] then
+function std.mod_call(hook, ...)
+	if not std.__mod_hooks[hook] then
 		return
 	end
-	for k, v in ipairs(stead.__mod_hooks[hook]) do
+	for k, v in ipairs(std.__mod_hooks[hook]) do
 		v(...)
 	end
 end
 
-function stead.mod_init(f, ...)
+function std.mod_init(f, ...)
 	__mod_callback_reg(f, 'init', ...)
 end
 
-function stead.mod_done(f, ...)
+function std.mod_done(f, ...)
 	__mod_callback_reg(f, 'done', ...)
 end
 
-function stead.mod_start(f, ...)
+function std.mod_start(f, ...)
 	__mod_callback_reg(f, 'start', ...)
 end
 
-function stead.mod_cmd(f, ...)
+function std.mod_cmd(f, ...)
 	__mod_callback_reg(f, 'cmd', ...)
 end
 
-function stead.mod_save(f, ...)
+function std.mod_save(f, ...)
 	__mod_callback_reg(f, 'save', ...)
 end
 
-stead.fmt = function(...)
-	local res
-	local a = {...};
-
-	for i = 1, #a do
-		if type(a[i]) == 'string' then
-			local s = string.gsub(a[i],'[\t ]+', stead.space_delim);
-			s = string.gsub(s, '[\n]+', stead.space_delim);
-			s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-			res = stead.par('', res, s);
-		end
-	end
-	return res
+std.fmt = function(str)
+	str = stead.obj.xref('<empty>', str)
+	return str
 end
 
 local lua_keywords = {
@@ -128,20 +121,20 @@ local lua_keywords = {
 	["while"] = true,
 }
 
-stead.setmt(stead, {
+std.setmt(stead, {
 	__call = function(s, k)
-		return stead.ref(k)
+		return std.ref(k)
 	end;
 })
 
-function stead.is_obj(v, t)
+function std.is_obj(v, t)
 	if type(v) ~= 'table' then
 		return false
 	end
 	return v['__'..(t or 'obj')..'_type']
 end
 
-function stead.class(s, inh)
+function std.class(s, inh)
 	s.__parent = function(s)
 		return inh
 	end;
@@ -149,18 +142,18 @@ function stead.class(s, inh)
 		return s:new(...)
 	end;
 	s.__tostring = function(self)
-		if not stead.is_obj(self) then
+		if not std.is_obj(self) then
 			local os = s.__tostring
 			s.__tostring = nil
-			local t = stead.tostr(self)
+			local t = std.tostr(self)
 			s.__tostring = os
 			return t
 		end
-		return stead.dispof(self)
+		return std.dispof(self)
 	end;
 	s.__dirty = function(s, v)
 		local o = rawget(s, '__dirty_flag')
-		if v ~= nil and stead.initialized then
+		if v ~= nil and std.initialized then
 			rawset(s, '__dirty_flag', v)
 			return s
 		end
@@ -175,7 +168,7 @@ function stead.class(s, inh)
 		if v == nil then
 			return s[k]
 		end
-		if stead.initialized and type(v) == 'table' then
+		if std.initialized and type(v) == 'table' then
 			-- make rw
 			t.__var[k] = true
 			rawset(t, k, v)
@@ -185,10 +178,10 @@ function stead.class(s, inh)
 	end;
 	s.__newindex = function(t, k, v)
 		local ro
-		if stead.is_obj(t) and type(k) == 'string' then
+		if std.is_obj(t) and type(k) == 'string' then
 			ro = t.__ro
 		end
-		if not stead.initialized and ro then
+		if not std.initialized and ro then
 			rawset(ro, k, v)
 			return
 		end
@@ -199,43 +192,43 @@ function stead.class(s, inh)
 			end
 			ro[k] = nil
 		end
-		if stead.is_obj(v, 'list') then
+		if std.is_obj(v, 'list') then
 			if type(t.__list) == 'table' then
 				v:attach(t)
 			end
 		end
 		rawset(t, k, v)
 	end
-	stead.setmt(s, inh or { __call = s.__call })
+	std.setmt(s, inh or { __call = s.__call })
 	return s
 end
 
-stead.list = stead.class {
+std.list = std.class {
 	__list_type = true;
 	new = function(s, v)
 		if type(v) ~= 'table' then
-			stead.err ("Wrong argument to stead.list:"..stead.tostr(v), 2)
+			std.err ("Wrong argument to std.list:"..std.tostr(v), 2)
 		end
-		if stead.is_obj(v, 'list') then -- already list
+		if std.is_obj(v, 'list') then -- already list
 			return v
 		end
 		v.__list = {} -- list of obj
-		stead.setmt(v, s)
+		std.setmt(v, s)
 		return v
 	end;
 	renam = function(s, new)
-		local oo = stead.objects
+		local oo = std.objects
 		if new == s.nam then
 			return
 		end
 		if oo[new] then
-			stead.err ("Duplicated obj name: "..stead.tostr(new), 2)
+			std.err ("Duplicated obj name: "..std.tostr(new), 2)
 		end
 		oo[s.nam] = nil
 		oo[new] = new
 		if type(new) == 'number' then
-			if new > stead.objects_nr then
-				stead.objects_nr = new
+			if new > std.objects_nr then
+				std.objects_nr = new
 			end
 		end
 		s.nam = new
@@ -244,9 +237,9 @@ stead.list = stead.class {
 	ini = function(s)
 		for i = 1, #s do
 			local k = s[i]
-			s[i] = stead.ref(k)
+			s[i] = std.ref(k)
 			if s[i] == nil then
-				stead.err("Wrong item in list: "..stead.tostr(k), 2)
+				std.err("Wrong item in list: "..std.tostr(k), 2)
 			end
 			s:attach(s[i])
 		end
@@ -255,11 +248,11 @@ stead.list = stead.class {
 		local r
 		for i = 1, #s do
 			if r then
-				r = r .. stead.space_delim
+				r = r .. std.space_delim
 			end
 			local o = s[i]
 			if not o:disabled() then
-				local d = o:xref(stead.call(s[i], 'dsc'))
+				local d = o:xref(std.call(s[i], 'dsc'))
 				if type(d) == 'string' then
 					r = (r or '').. d
 				end
@@ -310,14 +303,14 @@ stead.list = stead.class {
 			return -- already here
 		end
 		if not pos then
-			local o = stead.ref(n)
+			local o = std.ref(n)
 			s:__dirty(true)
 			s:attach(o)
 			table.insert(s, o)
 			return o
 		end
 		if type(pos) ~= 'number' then
-			stead.err("Wrong parameter to list.add:"..stead.tostr(pos), 2)
+			std.err("Wrong parameter to list.add:"..std.tostr(pos), 2)
 		end
 		if pos > #s then
 			pos = #s
@@ -327,14 +320,14 @@ stead.list = stead.class {
 		if pos <= 0 then
 			pos = 1
 		end
-		local o = stead.ref(n)
+		local o = std.ref(n)
 		s:__dirty(true)
 		s:attach(o)
 		table.insert(s, o)
 		return o
 	end;
 	lookup = function(s, n)
-		local o = stead.ref(n)
+		local o = std.ref(n)
 		for i = 1, #s do
 			if s[i] == o then
 				return o, i
@@ -343,8 +336,8 @@ stead.list = stead.class {
 	end;
 --	seen = function(s, n)
 --		for i = 1, #s do
---			local o = stead.ref(s[i])
---			if stead.dispof(o) == n then
+--			local o = std.ref(s[i])
+--			if std.dispof(o) == n then
 --				return o, i
 --			end
 --		end
@@ -362,11 +355,11 @@ stead.list = stead.class {
 		if not s:__dirty() then
 			return
 		end
-		fp:write(string.format("%s = stead.list { ", n))
+		fp:write(string.format("%s = std.list { ", n))
 		for i = 1, #s do
-			local vv = stead.deref(s[i])
+			local vv = std.deref(s[i])
 			if not vv then
-				stead.err ("Can not do deref on: "..stead.tostr(s[i]), 2)
+				std.err ("Can not do deref on: "..std.tostr(s[i]), 2)
 			end
 			if i ~= 1 then
 				fp:write(string.format(", %q", vv))
@@ -378,75 +371,75 @@ stead.list = stead.class {
 
 	end;
 }
-stead.save_var = function(vv, fp, n)
+std.save_var = function(vv, fp, n)
 	if type(vv) == 'boolean' or type(vv) == 'number' then
 		fp:write(string.format("%s = ", n))
-		fp:write(stead.tostr(vv)..'\n')
+		fp:write(std.tostr(vv)..'\n')
 	elseif type(vv) == 'string' then
 		fp:write(string.format("%s = ", n))
 		fp:write(string.format("%q\n", vv))
 	elseif type(vv) == 'table' then
-		if stead.tables[vv] and stead.tables[vv] ~= n then
-			local k = stead.tables[vv]
+		if std.tables[vv] and std.tables[vv] ~= n then
+			local k = std.tables[vv]
 			fp:write(string.format("%s = %s\n", n, k))
-		elseif stead.is_obj(vv) then
-			local d = stead.deref(vv)
+		elseif std.is_obj(vv) then
+			local d = std.deref(vv)
 			if not d then
-				stead.err("Can not deref object:"..stead.tostr(vv), 2)
+				std.err("Can not deref object:"..std.tostr(vv), 2)
 			end
 			fp:write(string.format("%s = ", n))
 			if type(d) == 'string' then
-				fp:write(string.format("stead %q\n", d))
+				fp:write(string.format("std %q\n", d))
 			else
-				fp:write(string.format("stead(%d)\n", d))
+				fp:write(string.format("std(%d)\n", d))
 			end
 		elseif type(vv.save) == 'function' then
 			vv:save(fp, n)
 		else
-			fp:write(string.format("%s = %s\n", n,  stead.dump(vv)))
---			stead.save_table(vv, fp, n)
+			fp:write(string.format("%s = %s\n", n,  std.dump(vv)))
+--			std.save_table(vv, fp, n)
 		end
 	end
 end
 
-stead.save_table = function(vv, fp, n)
+std.save_table = function(vv, fp, n)
 	local l
 	fp:write(string.format("%s = {}\n", n))
 	for k, v in pairs(vv) do
 		l = nil
 		if type(k) == 'number' then
-			l = string.format("%s%s", n, stead.varname(k))
-			stead.save_var(v, fp, l)
+			l = string.format("%s%s", n, std.varname(k))
+			std.save_var(v, fp, l)
 		elseif type(k) == 'string' then
-			l = string.format("%s%s", n, stead.varname(k))
-			stead.save_var(v, fp, l)
+			l = string.format("%s%s", n, std.varname(k))
+			std.save_var(v, fp, l)
 		end
 	end
 end
 
-function stead.reset()
-	stead:done()
-	stead:init()
-	local f, err = stead.loadfile('main.lua')
+function std.reset()
+	std:done()
+	std:init()
+	local f, err = std.loadfile('main.lua')
 	if not f then
-		stead.err(err, 2)
+		std.err(err, 2)
 	end
 	f()
 	game:ini()
 end
 
-function stead.load(fname)
-	stead:reset()
-	local f, err = stead.loadfile(fname)
+function std.load(fname)
+	std:reset()
+	local f, err = std.loadfile(fname)
 	if not f then
-		stead.err(err, 2)
+		std.err(err, 2)
 	end
 	f();
 	game:ini()
 	return game:lastdisp()
 end
 
-function stead.save(fp)
+function std.save(fp)
 	if type(fp) == 'string' then
 		fp = io.open(fp, "wb");
 		if not fp then
@@ -454,33 +447,33 @@ function stead.save(fp)
 		end
 	end
 	local n
-	if stead.type(stead.savename) == 'function' then
-		n = stead.savename()
+	if std.type(std.savename) == 'function' then
+		n = std.savename()
 	end
-	if stead.type(n) == 'string' then
+	if std.type(n) == 'string' then
 		fp:write("-- $Name: "..n:gsub("\n","\\n").."$\n");
 	end
-
-	local oo = stead.objects -- save dynamic objects
+	fp:write("local std = stead\n");
+	local oo = std.objects -- save dynamic objects
 	for i = 1, #oo do
 		if oo[i] then
-			oo[i]:save(fp, string.format("stead(%d)", i))
+			oo[i]:save(fp, string.format("std(%d)", i))
 		end
 	end
 
-	stead.mod_call('save', fp)
+	std.mod_call('save', fp)
 
 	for k, v in pairs(oo) do -- save static objects
 		if type(k) == 'string' then
-			v:save(fp, string.format("stead %q", k))
+			v:save(fp, string.format("std %q", k))
 		end
 	end
 	fp:flush();
 	fp:close();
 end
 
-function stead.for_each_obj(fn, ...)
-	local oo = stead.objects
+function std.for_each_obj(fn, ...)
+	local oo = std.objects
 	for i = 1, #oo do
 		if oo[i] then
 			fn(oo[i], ...)
@@ -493,54 +486,54 @@ function stead.for_each_obj(fn, ...)
 	end
 end
 
-function stead.init(fp)
-	if stead.ref 'game' then
-		stead.delete('game')
+function std.init(fp)
+	if std.ref 'game' then
+		std.delete('game')
 	end
-	if stead.ref 'main' then
-		stead.delete('main')
+	if std.ref 'main' then
+		std.delete('main')
 	end
-	if stead.ref 'player' then
-		stead.delete('player')
+	if std.ref 'player' then
+		std.delete('player')
 	end
-	stead.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
-	stead.room { nam = 'main' }
-	stead.player { nam = 'player', room = 'main' }
-	rawset(_G, 'game', stead.ref 'game')
+	std.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
+	std.room { nam = 'main' }
+	std.player { nam = 'player', room = 'main' }
+	rawset(_G, 'game', std.ref 'game')
 end
 
-function stead.done()
-	stead.initialized = false
-	stead.mod_call('done')
+function std.done()
+	std.initialized = false
+	std.mod_call('done')
 	local objects = {}
-	stead.for_each_obj(function(v)
-		local k = stead.deref(v)
+	std.for_each_obj(function(v)
+		local k = std.deref(v)
 		if type(k) == 'string' and k:byte(1) == 0x40 then
 			objects[k] = v
 		end
 	end)
-	stead.objects = objects
-	stead.objects_nr = 0
+	std.objects = objects
+	std.objects_nr = 0
 end
 
-function stead.dirty(o)
+function std.dirty(o)
 	if type(o) ~= 'table' or type(o.__dirty) ~= 'function' then
 		return true
 	end
 	return o:__dirty()
 end
 
-function stead.deref_str(o)
-	local k = stead.deref(o)
+function std.deref_str(o)
+	local k = std.deref(o)
 	if type(k) == 'number' then
-		return stead.tostr(k)
+		return std.tostr(k)
 	elseif type(k) == 'string' then
-		return stead.string.format("%q", k)
+		return std.string.format("%q", k)
 	end
 	return
 end
 
-function stead.varname(k)
+function std.varname(k)
 	if type(k) == 'number' then
 		return string.format("[%d]", k)
 	elseif type(k) == 'string' then
@@ -552,28 +545,28 @@ function stead.varname(k)
 	end
 end
 
-stead.obj = stead.class {
+std.obj = std.class {
 	__obj_type = true;
 	new = function(self, v)
-		if stead.initialized and not stead.__in_new then
-			stead.err ("Use stead.new() to create dynamic objects:"..stead.tostr(v), 2)
+		if std.initialized and not std.__in_new then
+			std.err ("Use std.new() to create dynamic objects:"..std.tostr(v), 2)
 		end
-		local oo = stead.objects
+		local oo = std.objects
 		if type(v) ~= 'table' then
-			stead.err ("Wrong argument to stead.obj:"..stead.tostr(v), 2)
+			std.err ("Wrong argument to std.obj:"..std.tostr(v), 2)
 		end
 		if v.nam == nil then
 			rawset(v, 'nam', #oo + 1)
 			local nr = #oo
-			if nr > stead.objects_nr then
-				stead.objects_nr = nr
+			if nr > std.objects_nr then
+				std.objects_nr = nr
 			end
 		end
 		if type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
-			stead.err ("Wrong .nam in object.", 2)
+			std.err ("Wrong .nam in object.", 2)
 		end
 		if oo[v.nam] then
-			stead.err ("Duplicated object: "..v.nam, 2)
+			std.err ("Duplicated object: "..v.nam, 2)
 		end
 		local ro = {}
 		local vars = {}
@@ -581,7 +574,7 @@ stead.obj = stead.class {
 		for i = 1, #v do
 			for key, val in pairs(v[i]) do
 				if type(key) ~= 'string' then
-					stead.err("Wrong var name: "..stead.tostr(key), 2)
+					std.err("Wrong var name: "..std.tostr(key), 2)
 				end
 				raw[key] = true
 				rawset(v, key, val)
@@ -594,9 +587,9 @@ stead.obj = stead.class {
 			rawset(v, 'obj', {})
 		end
 		if type(v.obj) ~= 'table' then
-			stead.err ("Wrong .obj attr in object:" .. v.nam, 2)
+			std.err ("Wrong .obj attr in object:" .. v.nam, 2)
 		end
-		v.obj = stead.list(v.obj)
+		v.obj = std.list(v.obj)
 		table.insert(v.obj.__list, v)
 		for key, val in pairs(v) do
 			if not raw[key] then
@@ -608,18 +601,18 @@ stead.obj = stead.class {
 		rawset(v, '__var', vars)
 		rawset(v, '__list', {}) -- in list(s)
 		oo[ro.nam] = v
-		stead.setmt(v, self)
+		std.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
 		for k, v in pairs(s) do
-			if stead.is_obj(v, 'list') then
+			if std.is_obj(v, 'list') then
 				v:ini()
 			end
 		end
 
 		for k, v in pairs(s.__ro) do
-			if stead.is_obj(v, 'list') then
+			if std.is_obj(v, 'list') then
 				v:ini()
 			end
 		end
@@ -640,14 +633,14 @@ stead.obj = stead.class {
 		return r[1], r
 	end;
 	remove = function(s, w)
-		local o = stead.ref(s)
+		local o = std.ref(s)
 		if not s then
-			stead.err ("Wrong object in remove: "..stead.tostr(s), 2)
+			std.err ("Wrong object in remove: "..std.tostr(s), 2)
 		end
 		if w then
-			w = stead.ref(w)
+			w = std.ref(w)
 			if not w then
-				stead.err ("Wrong where in remove", 2)
+				std.err ("Wrong where in remove", 2)
 			end
 			w.obj:del(o)
 			return o
@@ -682,19 +675,30 @@ stead.obj = stead.class {
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create
-			local l = string.format("stead.new(%q, %s):renam(%d)\n", s.__dynamic.fn, s.__dynamic.arg, s.nam)
+			local l = string.format("std.new(%q, %s):renam(%d)\n", s.__dynamic.fn, s.__dynamic.arg, s.nam)
 			fp:write(l)
 		end
 		for k, v in pairs(s.__var) do
-			if stead.dirty(s[k]) then
-				local l = string.format("%s%s", n, stead.varname(k))
-				stead.save_var(s[k], fp, l)
+			if std.dirty(s[k]) then
+				local l = string.format("%s%s", n, std.varname(k))
+				std.save_var(s[k], fp, l)
 			end
 		end
 	end;
 	xref = function(self, str)
 		function xrefrep(str)
+			local oo = self
 			local s = string.gsub(str,'[\001\002]','');
+			s = s:gsub('\\?[\\'..std.delim..']', { [ std.delim ] = '\001', [ '\\'..std.delim ] = std.delim });
+			local i = s:find('\001', 1, true)
+			if i then -- xact
+				oo = s:sub(1, i - 1)
+				s = s:sub(i + 1)
+				self = std.ref(oo)
+			end
+			if not std.is_obj(self) then
+				std.err("Wrong object in xref: "..std.tostr(oo), 2)
+			end
 			return iface:xref(s, self);
 		end
 		if type(str) ~= 'string' then
@@ -738,21 +742,21 @@ stead.obj = stead.class {
 		local rc
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			if stead.is_obj(v) and not v:disabled() then
+			if std.is_obj(v) and not v:disabled() then
 				local vv
 				if rc then
-					rc = rc .. stead.delim
+					rc = rc .. std.delim
 				else
 					rc = ''
 				end
-				vv = iface:xref(stead.dispof(v), v)
-				vv = vv:gsub('\\?'..stead.delim,
-					     { [stead.delim] = '\\'..stead.delim });
+				vv = iface:xref(std.dispof(v), v)
+				vv = vv:gsub('\\?'..std.delim,
+					     { [std.delim] = '\\'..std.delim });
 				rc = rc .. vv
 				if not v:closed() then
 					vv = v:dump()
 					if vv then
-						rc = rc .. stead.delim .. vv
+						rc = rc .. std.delim .. vv
 					end
 				end
 			end
@@ -761,45 +765,45 @@ stead.obj = stead.class {
 	end
 };
 
-stead.room = stead.class({
+std.room = std.class({
 	__room_type = true;
 	from  = function(self)
 		return s.__where or self
 	end;
 	new = function(self, v)
 		if type(v) ~= 'table' then
-			stead.err ("Wrong argument to stead.room:"..stead.tostr(v), 2)
+			std.err ("Wrong argument to std.room:"..std.tostr(v), 2)
 		end
 		if not v.way then
 			rawset(v, 'way',  {})
 		end
 		if type(v.way) ~= 'table' then
-			stead.err ("Wrong .way attr in object:" .. v.nam, 2)
+			std.err ("Wrong .way attr in object:" .. v.nam, 2)
 		end
-		v.way = stead.list(v.way)
+		v.way = std.list(v.way)
 		table.insert(v.way.__list, v)
-		v = stead.obj(v)
-		stead.setmt(v, self)
+		v = std.obj(v)
+		std.setmt(v, self)
 		return v
 	end;
 	seen = function(self, w)
 		local r, v = self:__parent().seen(self, w)
-		if stead.is_obj(r) then
+		if std.is_obj(r) then
 			return r, v
 		end
 		r, v = self.way:lookup(w)
-		if not stead.is_obj(r) or r:disabled() or r:closed() then
+		if not std.is_obj(r) or r:disabled() or r:closed() then
 			return
 		end
 		return r, self.way
 	end;
 	lookup = function(self, w)
 		local r, v = self:__parent().lookup(self, w)
-		if stead.is_obj(r) then
+		if std.is_obj(r) then
 			return r, v
 		end
 		r, v = self.way:lookup(w)
-		if stead.is_obj(r) then
+		if std.is_obj(r) then
 			return r, self.way
 		end
 		return r, v
@@ -808,66 +812,66 @@ stead.room = stead.class({
 		local rc
 		for i = 1, #s.way do
 			local v = s.way[i]
-			if stead.is_obj(v, 'room')
+			if std.is_obj(v, 'room')
 			and not v:disabled() and not v:closed() then
 				local vv
 				if rc then
-					rc = rc .. stead.delim
+					rc = rc .. std.delim
 				else
 					rc = ''
 				end
-				vv = iface:xref(stead.dispof(v), v)
-				vv = vv:gsub('\\?'..stead.delim,
-					     { [stead.delim] = '\\'..stead.delim });
+				vv = iface:xref(std.dispof(v), v)
+				vv = vv:gsub('\\?'..std.delim,
+					     { [std.delim] = '\\'..std.delim });
 				rc = rc .. vv
 			end
 		end
 		return rc
 	end
-}, stead.obj);
+}, std.obj);
 
-stead.game = stead.class({
+std.game = std.class({
 	__game_type = true;
 	new = function(self, v)
 		if type(v) ~= 'table' then
-			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
+			std.err ("Wrong argument to std.pl:"..std.tostr(v), 2)
 		end
 		if not v.player then
 			v.player = 'player'
 		end
-		v = stead.obj(v)
+		v = std.obj(v)
 		if v.lifes == nil then
 			rawset(v, 'lifes', {})
 		end
-		v.lifes = stead.list(v.lifes)
-		stead.setmt(v, self)
+		v.lifes = std.list(v.lifes)
+		std.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
 		require "strict"
 
-		stead.mod_call('init') -- init modules
+		std.mod_call('init') -- init modules
 
-		rawset(s, 'player', stead.ref(s.player)) -- init game
+		rawset(s, 'player', std.ref(s.player)) -- init game
 		if not s.player then
-			stead.err ("Wrong player", 2)
+			std.err ("Wrong player", 2)
 		end
-		stead.obj.ini(s)
+		std.obj.ini(s)
 
-		stead.for_each_obj(function(v) -- call ini of all objects
+		std.for_each_obj(function(v) -- call ini of all objects
 			if v ~= s and type(v.ini) == 'function' then
 				v:ini()
 			end
 		end)
 
-		if not stead.initialized then
-			stead.initialized = true
-			if type(stead.rawget(_G, 'init')) == 'function' then
+		if not std.initialized then
+			std.initialized = true
+			if type(std.rawget(_G, 'init')) == 'function' then
 				init()
 			end
 		end
 
-		if type(stead.rawget(_G, 'start')) == 'function' then
+		if type(std.rawget(_G, 'start')) == 'function' then
 			start() -- start before load
 		end
 	end;
@@ -877,7 +881,7 @@ stead.game = stead.class({
 			local pre
 			local o = s.lifes[i]
 			if not o:disabled() then
-				v, pre = stead.call(o, 'life');
+				v, pre = std.call(o, 'life');
 			end
 		end
 	end;
@@ -893,7 +897,7 @@ stead.game = stead.class({
 	end;
 	disp = function(s, reaction, state)
 		local r, objs, l
-		r = stead.here()
+		r = std.here()
 		if state then
 			reaction = iface:em(reaction)
 			if s.player:need_scene() then
@@ -901,7 +905,7 @@ stead.game = stead.class({
 			end
 			objs = r.obj:look()
 		end
-		l = stead.par(stead.scene_delim, reaction or false, l or false, objs or false) or ''
+		l = std.par(std.scene_delim, reaction or false, l or false, objs or false) or ''
 		if state then
 			s:lastdisp(l)
 		end
@@ -913,7 +917,7 @@ stead.game = stead.class({
 		if cmd[1] == nil or cmd[1] == 'look' then
 			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
-			local o = stead.ref(cmd[2]) -- on what?
+			local o = std.ref(cmd[2]) -- on what?
 			o = s.player:search(o)
 			if not o then
 				return nil, false -- wrong input
@@ -924,8 +928,8 @@ stead.game = stead.class({
 			end
 			-- if s.player:search(o)
 		elseif cmd[1] == 'use' then
-			local o1 = stead.ref(cmd[2])
-			local o2 = stead.ref(cmd[3])
+			local o1 = std.ref(cmd[2])
+			local o2 = std.ref(cmd[3])
 			o1 = s.player:have(o1)
 			if not o1 then
 				return nil, false -- wrong input
@@ -939,7 +943,7 @@ stead.game = stead.class({
 				r, v = s.player:useon(o1, o2)
 			end
 		elseif cmd[1] == 'go' then
-			local o = stead.ref(cmd[2])
+			local o = std.ref(cmd[2])
 			if not o then
 				return nil, false -- wrong input
 			end
@@ -951,10 +955,10 @@ stead.game = stead.class({
 			r = s.player:where():dump_way()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
-			r = stead.save(cmd[2])
+			r = std.save(cmd[2])
 			v = nil
 		elseif cmd[1] == 'load' then -- todo
-			r = stead.load(cmd[2])
+			r = std.load(cmd[2])
 			v = false
 		end
 		if v == false then
@@ -965,7 +969,7 @@ stead.game = stead.class({
 		end
 		return s:disp(r, v)
 	end;
-}, stead.obj);
+}, std.obj);
 
 local function array_rw(t)
 	local ro = rawget(t, '__ro')
@@ -977,32 +981,32 @@ local function array_rw(t)
 	end
 	for k, v in pairs(t) do
 		if type(k) ~= 'string' or k:find("__", 1, true) ~= 1 then
-			if type(v) == 'table' and stead.rawget(v, '__array') then
+			if type(v) == 'table' and std.rawget(v, '__array') then
 				array_rw(v)
 			end
 		end
 	end
 end
 
-stead.player = stead.class ({
+std.player = std.class ({
 	__player_type = true;
 	new = function(self, v)
 		if type(v) ~= 'table' then
-			stead.err ("Wrong argument to stead.pl:"..stead.tostr(v), 2)
+			std.err ("Wrong argument to std.pl:"..std.tostr(v), 2)
 		end
 		if not v.room then
 			v.room = 'main'
 		end
-		v = stead.obj(v)
-		stead.setmt(v, self)
+		v = std.obj(v)
+		std.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
-		rawset(s, 'room', stead.ref(s.room))
+		rawset(s, 'room', std.ref(s.room))
 		if not s.where then
 			std.err ("Wrong player location", 2)
 		end
-		stead.obj.ini(s)
+		std.obj.ini(s)
 	end;
 	reaction = function(s, t)
 		local o = s.__reaction
@@ -1018,7 +1022,7 @@ stead.player = stead.class ({
 			return ov
 		end
 		if type(v) ~= 'boolean' then
-			stead.err("Wrong parameter to player:need_scene: "..stead.tostr(v), 2)
+			std.err("Wrong parameter to player:need_scene: "..std.tostr(v), 2)
 		end
 		if v == false then v = nil end
 		s.__need_scene = v
@@ -1026,9 +1030,9 @@ stead.player = stead.class ({
 	end;
 	look = function(s)
 		local r = s:where()
-		local title = iface:title(stead.titleof(r))
-		local dsc = stead.call(r, 'dsc')
-		return stead.par(stead.scene_delim, title, dsc), true
+		local title = iface:title(std.titleof(r))
+		local dsc = std.call(r, 'dsc')
+		return std.par(std.scene_delim, title, dsc), true
 	end;
 	search = function(s, w)
 		local r, v
@@ -1057,8 +1061,8 @@ stead.player = stead.class ({
 	end;
 	useon = function(s, w1, w2)
 		local r, v, t
-		w1 = stead.ref(w)
-		w2 = stead.ref(w2)
+		w1 = std.ref(w)
+		w2 = std.ref(w2)
 
 		if w2 and w1 ~= w2 then
 			return s:call('use', w1, w2)
@@ -1069,47 +1073,47 @@ stead.player = stead.class ({
 	call = function(s, m, w1, w2, ...)
 		local w
 		if type(m) ~= 'string' then
-			stead.err ("Wrong method in player.call: "..stead.tostr(m), 2)
+			std.err ("Wrong method in player.call: "..std.tostr(m), 2)
 		end
 
-		w = stead.ref(w1)
-		if not stead.is_obj(w) then
-			stead.err ("Wrong parameter to player.call: "..stead.tostr(w1), 2)
+		w = std.ref(w1)
+		if not std.is_obj(w) then
+			std.err ("Wrong parameter to player.call: "..std.tostr(w1), 2)
 		end
 
 		local r, v, t
-		r, v = stead.call(game, 'on'..m, w, w2, ...)
-		t = stead.par(stead.space_delim, t, r)
+		r, v = std.call(game, 'on'..m, w, w2, ...)
+		t = std.par(std.space_delim, t, r)
 		if v == false then
 			return t, true
 		end
 		if v ~= true then
-			r, v = stead.call(s, 'on'..m, w, w2, ...)
-			t = stead.par(stead.space_delim, t, r)
+			r, v = std.call(s, 'on'..m, w, w2, ...)
+			t = std.par(std.space_delim, t, r)
 			if v == false then
 				return t, true
 			end
 		end
 		if v ~= true then
-			r, v = stead.call(s:where(), 'on'..m, w, w2, ...)
-			t = stead.par(stead.space_delim, t, r)
+			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
+			t = std.par(std.space_delim, t, r)
 			if v == false then
 				return t, true
 			end
 		end
 		if m == 'use' and w2 then
-			r, v = stead.call(w2, 'used', w, ...)
+			r, v = std.call(w2, 'used', w, ...)
 			if r ~= nil or v ~= nil then
 				return r, false -- stop chain
 			end
 		end
-		r, v = stead.call(w, m, w, w2, ...)
-		t = stead.par(stead.space_delim, t, r)
+		r, v = std.call(w, m, w, w2, ...)
+		t = std.par(std.space_delim, t, r)
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
-		r, v = stead.call(game, m, w, w2, ...)
-		t = stead.par(stead.space_delim, t, r)
+		r, v = std.call(game, m, w, w2, ...)
+		t = std.par(std.space_delim, t, r)
 		return t, v
 	end;
 	action = function(s, w, ...)
@@ -1121,7 +1125,7 @@ stead.player = stead.class ({
 	take = function(s, w, ...)
 		local r, v = s:call('tak', w, ...)
 		if v == true then -- take it!
-			w = stead.ref(w)
+			w = std.ref(w)
 			local o = w:remove()
 			s:inventory():add(o)
 			return r, v
@@ -1141,9 +1145,9 @@ stead.player = stead.class ({
 		return s:walk(w, false, true)
 	end;
 	walk = function(s, w, noexit, noenter)
-		w = stead.ref(w)
+		w = std.ref(w)
 		if not w then
-			stead.err("Wrong parameter to walk: "..stead.tostr(w))
+			std.err("Wrong parameter to walk: "..std.tostr(w))
 		end
 
 		local inwalk = s.__in_walk
@@ -1156,8 +1160,8 @@ stead.player = stead.class ({
 
 		local r, v, t
 		local f = s:where()
-		r, v = stead.call(game, 'onwalk', s.__in_walk)
-		t = stead.par(stead.scene_delim, t, r)
+		r, v = std.call(game, 'onwalk', s.__in_walk)
+		t = std.par(std.scene_delim, t, r)
 
 		if v == false then -- stop walk
 			s.__in_walk = nil
@@ -1165,8 +1169,8 @@ stead.player = stead.class ({
 		end
 
 		if v ~= true then
-			r, v = stead.call(s, 'onwalk', s.__in_walk)
-			t = stead.par(stead.scene_delim, t, r)
+			r, v = std.call(s, 'onwalk', s.__in_walk)
+			t = std.par(std.scene_delim, t, r)
 			if v == false then
 				s.__in_walk = nil
 				return t, true
@@ -1175,16 +1179,16 @@ stead.player = stead.class ({
 
 		if v ~= true then
 			if not noexit then
-				r, v = stead.call(s:where(), 'onexit', s.__in_walk)
-				t = stead.par(stead.scene_delim, t, r)
+				r, v = std.call(s:where(), 'onexit', s.__in_walk)
+				t = std.par(std.scene_delim, t, r)
 				if v == false then
 					s.__in_walk = nil
 					return t, true
 				end
 			end
 			if not noenter then
-				r, v = stead.call(s.__in_walk, 'onenter', s:where())
-				t = stead.par(stead.scene_delim, t, r)
+				r, v = std.call(s.__in_walk, 'onenter', s:where())
+				t = std.par(std.scene_delim, t, r)
 				if v == false then
 					s.__in_walk = nil
 					return t, true
@@ -1192,14 +1196,14 @@ stead.player = stead.class ({
 			end
 		end
 		if not noexit then
-			r, v = stead.call(s:where(), 'exit', s.__in_walk)
-			t = stead.par(stead.scene_delim, t, r)
+			r, v = std.call(s:where(), 'exit', s.__in_walk)
+			t = std.par(std.scene_delim, t, r)
 		end
 		if not noenter then
 			s.room = s.__in_walk
 			s.room.__from = f
-			r, v = stead.call(s.__in_walk, 'enter', f)
-			t = stead.par(stead.scene_delim, t, r)
+			r, v = std.call(s.__in_walk, 'enter', f)
+			t = std.par(std.scene_delim, t, r)
 		end
 		s.room = s.__in_walk
 		s.__in_walk = nil
@@ -1209,7 +1213,7 @@ stead.player = stead.class ({
 	go = function(s, w)
 		local r, v
 		r, v = s:where():seen(w)
-		if not stead.is_obj(r, 'room') then
+		if not std.is_obj(r, 'room') then
 			return nil, false
 		end
 		return s:walk(w)
@@ -1217,10 +1221,10 @@ stead.player = stead.class ({
 	where = function(s)
 		return s.room
 	end;
-}, stead.obj)
+}, std.obj)
 
 -- merge strings with "space" as separator
-stead.par = function(space, ...)
+std.par = function(space, ...)
 	local res
 	local a = { ... };
 	for i = 1, #a do
@@ -1236,12 +1240,12 @@ stead.par = function(space, ...)
 	return res;
 end
 -- add to not nill string any string
-stead.cat = function(v,...)
+std.cat = function(v,...)
 	if not v then
 		return nil
 	end
 	if type(v) ~= 'string' then
-		stead.err("Wrong parameter to stead.cat: "..stead.tostr(v), 2);
+		std.err("Wrong parameter to std.cat: "..std.tostr(v), 2);
 	end
 	local a = { ... }
 	for i = 1, #a do
@@ -1252,40 +1256,40 @@ stead.cat = function(v,...)
 	return v;
 end
 
-stead.cctx = function()
-	return stead.call_ctx[stead.call_top];
+std.cctx = function()
+	return std.call_ctx[std.call_top];
 end
 
-stead.callpush = function(v, ...)
-	stead.call_top = stead.call_top + 1;
-	stead.call_ctx[stead.call_top] = { txt = nil, self = v, action = false };
+std.callpush = function(v, ...)
+	std.call_top = std.call_top + 1;
+	std.call_ctx[std.call_top] = { txt = nil, self = v, action = false };
 end
 
-stead.callpop = function()
-	stead.call_ctx[stead.call_top] = nil;
-	stead.call_top = stead.call_top - 1;
-	if stead.call_top < 0 then
-		stead.err ("callpush/callpop mismatch")
+std.callpop = function()
+	std.call_ctx[std.call_top] = nil;
+	std.call_top = std.call_top - 1;
+	if std.call_top < 0 then
+		std.err ("callpush/callpop mismatch")
 	end
 end
 
-stead.pclr = function()
-	stead.cctx().txt = nil
+std.pclr = function()
+	std.cctx().txt = nil
 end
 
-stead.pget = function()
-	return stead.cctx().txt or '';
+std.pget = function()
+	return std.cctx().txt or '';
 end
 
-stead.p = function(...)
+std.p = function(...)
 	local a = {...}
-	if stead.cctx() == nil then
+	if std.cctx() == nil then
 		error ("Call from global context.", 2);
 	end
 	for i = 1, #a do
-		stead.cctx().txt = stead.par('', stead.cctx().txt, stead.tostr(a[i]));
+		std.cctx().txt = std.par('', std.cctx().txt, std.tostr(a[i]));
 	end
-	stead.cctx().txt = stead.cat(stead.cctx().txt, stead.space_delim);
+	std.cctx().txt = std.cat(std.cctx().txt, std.space_delim);
 end
 
 local function __dump(t, nested)
@@ -1293,20 +1297,20 @@ local function __dump(t, nested)
 	if type(t) == 'string' then
 		rc = string.format("%q", t):gsub("\\\n", "\\n")
 	elseif type(t) == 'number' then
-		rc = stead.tostr(t)
+		rc = std.tostr(t)
 	elseif type(t) == 'boolean' then
-		rc = stead.tostr(t)
+		rc = std.tostr(t)
 	elseif type(t) == 'table' and not t.__visited then
 		t.__visited = true
-		if stead.tables[t] and nested then
-			local k = stead.tables[t]
+		if std.tables[t] and nested then
+			local k = std.tables[t]
 			return string.format("%s", k)
-		elseif stead.is_obj(t) then
-			local d = stead.deref(t)
+		elseif std.is_obj(t) then
+			local d = std.deref(t)
 			if type(d) == 'number' then
-				rc = string.format("stead(%d)", d)
+				rc = string.format("std(%d)", d)
 			else
-				rc = string.format("stead %q", d)
+				rc = string.format("std %q", d)
 			end
 			return rc
 		end
@@ -1337,7 +1341,7 @@ local function __dump(t, nested)
 		if n then
 			for k = n, #nkeys do
 				v = nkeys[k]
-				rc = rc .. "["..stead.tostr(v.key).."] = "..__dump(v.val, true)..", "
+				rc = rc .. "["..std.tostr(v.key).."] = "..__dump(v.val, true)..", "
 			end
 		end
 		for k = 1, #keys do
@@ -1349,7 +1353,7 @@ local function __dump(t, nested)
 					rc = rc .. "[" .. string.format("%q", v.key) .. "] = "..__dump(v.val, true)..", "
 				end
 			else
-				rc = rc .. stead.tostr(v.key) .. " = "..__dump(v.val, true)..", "
+				rc = rc .. std.tostr(v.key) .. " = "..__dump(v.val, true)..", "
 			end
 		end
 		rc = rc:gsub(",[ \t]*$", "") .. " }"
@@ -1367,15 +1371,15 @@ local function cleardump(t)
 	end
 end
 
-function stead.dump(t)
+function std.dump(t)
 	local rc = __dump(t)
 	cleardump(t)
 	return rc
 end
 
-function stead.new(fn, ...)
+function std.new(fn, ...)
 	if type(fn) ~= 'string' then
-		std.err ("Wrong parameter to stead.new", 2)
+		std.err ("Wrong parameter to std.new", 2)
 	end
 	local arg = { ... }
 	local l = ''
@@ -1383,86 +1387,86 @@ function stead.new(fn, ...)
 		if i ~= 1 then
 			l = ", "..l
 		end
-		l = string.format("%s%s", l, stead.dump(arg[i]))
+		l = string.format("%s%s", l, std.dump(arg[i]))
 	end
-	stead.__in_new = true
-	local f, r = stead.eval("return "..fn.."("..l..")")
-	stead.__in_new = false
+	std.__in_new = true
+	local f, r = std.eval("return "..fn.."("..l..")")
+	std.__in_new = false
 	local o
 	if type(r) == 'string' then
-		stead.err("Wrong constructor: "..r, 2)
+		std.err("Wrong constructor: "..r, 2)
 	end
 	if type(f) == 'function' then
 		o = f()
 	end
 	if type(o) ~= 'table' then
-		stead.err ("Constructor did not return object:"..fn.."("..l..")", 2)
+		std.err ("Constructor did not return object:"..fn.."("..l..")", 2)
 	end
 	rawset(o, '__dynamic', { fn = fn, arg = l })
 	return o
 end
 
-function stead.delete(s)
-	s = stead.ref(s)
-	if stead.is_obj(s) then
-		stead.objects[s.nam] = nil
+function std.delete(s)
+	s = std.ref(s)
+	if std.is_obj(s) then
+		std.objects[s.nam] = nil
 	else
-		stead.err("Delete non object table", 2)
+		std.err("Delete non object table", 2)
 	end
 end
 
-function stead.var(v)
+function std.var(v)
 	if type(v) ~= 'table' then
-		stead.err ("Wrong argument to stead.var:"..stead.tostr(v), 2)
+		std.err ("Wrong argument to std.var:"..std.tostr(v), 2)
 	end
 	return v
 end
 
-function stead.dispof(o)
-	o = stead.ref(o)
-	if not stead.is_obj(o) then
-		stead.err("Wrong parameter to stead.dispof", 2)
+function std.dispof(o)
+	o = std.ref(o)
+	if not std.is_obj(o) then
+		std.err("Wrong parameter to std.dispof", 2)
 		return
 	end
 	if o.disp ~= nil then
-		return stead.call(o, 'disp')
+		return std.call(o, 'disp')
 	end
 	return o.nam
 end
 
-function stead.titleof(o)
-	o = stead.ref(o)
-	if not stead.is_obj(o) then
-		stead.err("Wrong parameter to stead.titleof", 2)
+function std.titleof(o)
+	o = std.ref(o)
+	if not std.is_obj(o) then
+		std.err("Wrong parameter to std.titleof", 2)
 		return
 	end
 	if o.title ~= nil then
-		return stead.call(o, 'title')
+		return std.call(o, 'title')
 	end
-	return stead.dispof(o)
+	return std.dispof(o)
 end
 
-function stead.ref(o)
+function std.ref(o)
 	if type(o) == 'table' then
 		return o
 	end
-	local oo = stead.objects
+	local oo = std.objects
 	if oo[o] then
 		return oo[o]
 	end
 end
 
-function stead.deref(o)
-	if stead.is_obj(o) then
+function std.deref(o)
+	if std.is_obj(o) then
 		return o.nam
-	elseif stead.ref(o) then
+	elseif std.ref(o) then
 		return o
 	end
 end
 
-stead.method = function(v, n, ...)
+std.method = function(v, n, ...)
 	if type(v) ~= 'table' then
-		stead.err ("Call on non table object:"..stead.tostr(n), 2);
+		std.err ("Call on non table object:"..std.tostr(n), 2);
 	end
 	if v[n] == nil then
 		return
@@ -1471,12 +1475,12 @@ stead.method = function(v, n, ...)
 		return v[n], true;
 	end
 	if type(v[n]) == 'function' then
-		stead.callpush(v, ...)
+		std.callpush(v, ...)
 		local a, b = v[n](v, ...);
 		if type(a) ~= 'string' then
-			a, b = stead.pget(), a
+			a, b = std.pget(), a
 		end
-		stead.callpop()
+		std.callpop()
 		return a, b
 	end
 	if type(v[n]) == 'boolean' then
@@ -1485,11 +1489,11 @@ stead.method = function(v, n, ...)
 	if type(v[n]) == 'table' then
 		return v[n], true
 	end
-	stead.err ("Method not string nor function:"..stead.tostr(n), 2);
+	std.err ("Method not string nor function:"..std.tostr(n), 2);
 end
 
-stead.call = function(v, n, ...)
-	local r, v = stead.method(v, n, ...)
+std.call = function(v, n, ...)
+	local r, v = std.method(v, n, ...)
 	if type(r) == 'string' then
 		if v == nil then v = true end
 		return r, v
@@ -1529,7 +1533,15 @@ local function get_token(inp)
 		end
 		k = k + 1
 	end
-	if not q and stead.tonum(rc) then rc = stead.tonum(rc) end
+	if not q then
+		if std.tonum(rc) then
+			rc = std.tonum(rc)
+		elseif rc == 'true' then
+			rc = true
+		elseif rc == 'false' then
+			rc = false
+		end
+	end
 	return rc, k
 end
 
@@ -1560,25 +1572,25 @@ local function cmd_parse(inp)
 	return cmd
 end
 
-function stead.me()
+function std.me()
 	return game.player
 end
 
-function stead.here()
-	return stead.me().room
+function std.here()
+	return std.me().room
 end
 
-function stead.cacheable(n, f)
+function std.cacheable(n, f)
 	return function(...)
-		local s = stead.cache[n]
+		local s = std.cache[n]
 		if s ~= nil then
 			if s == -1 then s = nil end
 			return s
 		end
-		stead.cache[n] = -1
+		std.cache[n] = -1
 		s = f(...)
 		if s ~= nil then
-			stead.cache[n] = s
+			std.cache[n] = s
 		end
 		return s
 	end
@@ -1591,7 +1603,7 @@ iface = {
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
-		stead.cache = {}
+		std.cache = {}
 		local r, v = game:cmd(cmd)
 		if v == false then
 			return iface:fmt(r), false
@@ -1603,22 +1615,23 @@ iface = {
 		return r, v
 	end;
 	xref = function(self, str, obj)
-		obj = stead.ref(obj)
+		obj = std.ref(obj)
 		if not obj then
 			return str;
 		end
-		return stead.cat(str, "("..stead.deref(obj)..")");
+		return std.cat(str, "("..std.deref(obj)..")");
 	end;
 	title = function(self, str)
-		return "[ "..stead.tostr(str).." ]"
+		return "[ "..std.tostr(str).." ]"
 	end;
 	fmt = function(self, str)
 		if type(str) ~= 'string' then
 			return
 		end
-		local s = string.gsub(str,'[\t \n]+', stead.space_delim);
+		str = std.fmt(str)
+		local s = string.gsub(str,'[\t \n]+', std.space_delim);
 		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-		return stead.cat(s, '\n')
+		return std.cat(s, '\n')
 	end;
 	input = function(self)
 	end;
@@ -1630,4 +1643,4 @@ iface = {
 
 -- require "ext/gui"
 
-stead:init()
+std:init()
