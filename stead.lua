@@ -507,7 +507,7 @@ function std.init(fp)
 		  act = function(s, x)
 			  local cmd = std.cmd_parse(x)
 			  if s.iface[cmd[1]] then
-				  return std.method(s.iface, std.unpack(cmd))
+				  return std.call(s.iface, std.unpack(cmd))
 			  end
 			  std.err ('Undefined @ act: '..std.tostr(x), 2)
 	end; }
@@ -515,6 +515,7 @@ function std.init(fp)
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
 	rawset(_G, 'game', std.ref 'game')
+	std.xact = std.ref '@'.iface
 end
 
 function std.done()
