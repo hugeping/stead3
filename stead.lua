@@ -139,6 +139,10 @@ function std.class(s, inh)
 		return inh
 	end;
 	s.__call = function(s, ...)
+		local a = { ... }
+		if #a == 1 and type(a[1]) == 'string' then
+			return std.ref(a[1])
+		end
 		return s:new(...)
 	end;
 	s.__tostring = function(self)
