@@ -91,7 +91,7 @@ function std.mod_save(f, ...)
 	__mod_callback_reg(f, 'save', ...)
 end
 
-std.fmt = function(str)
+std.fmt = function(str, state)
 	str = stead.obj.xref('<empty>', str)
 	return str
 end
@@ -1712,7 +1712,7 @@ iface = {
 			return iface:fmt(r), false
 		end
 		if v == true then
-			r = iface:fmt(r)
+			r = iface:fmt(r, true)
 		end
 		print(r, v)
 		return r, v
@@ -1727,11 +1727,11 @@ iface = {
 	title = function(self, str)
 		return "[ "..std.tostr(str).." ]"
 	end;
-	fmt = function(self, str)
+	fmt = function(self, str, state)
 		if type(str) ~= 'string' then
 			return
 		end
-		str = std.fmt(str)
+		str = std.fmt(str, state)
 		local s = string.gsub(str,'[\t \n]+', std.space_delim);
 		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
 		return std.cat(s, '\n')
