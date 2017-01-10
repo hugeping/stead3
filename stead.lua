@@ -874,6 +874,16 @@ std.game = std.class({
 		std.setmt(v, self)
 		return v
 	end;
+	time = function(s, t)
+		local ov = s.__time or 0
+		if t ~= nil then
+			if type(t) ~= 'number' then
+				std.err ("Wrong parameter to game:time: "..stead.tostr(t), 2)
+			end
+			s.__time = t
+		end
+		return ov
+	end;
 	ini = function(s)
 		require "strict"
 
@@ -902,18 +912,42 @@ std.game = std.class({
 			start() -- start before load
 		end
 	end;
+	lifeon = function(s, w, ...)
+		s.lifes:add(w, ...)
+	end;
+	lifeoff = function(s, w)
+		s.lifes:del(w)
+	end;
 	life = function(s)
+		local av, vv
+		s.player:events(false, false)
+		local ll = {}
+
 		for i = 1, #s.lifes do
-			local v
-			local pre
-			local o = s.lifes[i]
+			table.insert(ll, s.lifes[i])
+		end
+
+		for i = 1, #ll do
+			local v, pre
+			local o = ll[i]
 			if not o:disabled() then
-				v, pre = std.call(o, 'life');
+				v, pre = std.method(o, 'life');
+				av, vv = s.player:events()
+				if pre then -- hi-pri msg
+					av = std.par(std.space_delim, av or nil, v)
+				else
+					vv = std.par(std.space_delim, vv or nil, v)
+				end
+				s.player:events(av or false, vv or false)
+				if pre == false then -- break cycle
+					break
+				end
 			end
 		end
 	end;
 	step = function(s)
-
+		s:life()
+		s.__time = s:time() + 1
 	end;
 	lastdisp = function(s, str)
 		local ov = s.__lastdisp
@@ -922,17 +956,24 @@ std.game = std.class({
 		end
 		return ov
 	end;
-	disp = function(s, reaction, state)
-		local r, objs, l
+	disp = function(s, state)
+		local r, objs, l, av, pv
+		local reaction = s.player:reaction() or nil
 		r = std.here()
 		if state then
 			reaction = iface:em(reaction)
+			av, pv = s.player:events()
+			av = iface:em(av)
+			pv = iface:em(pv)
 			if s.player:need_scene() then
 				l = s.player:look()
 			end
 			objs = r.obj:look()
 		end
-		l = std.par(std.scene_delim, reaction or false, l or false, objs or false) or ''
+		l = std.par(std.scene_delim, reaction or false,
+			    av or false, l or false,
+			    objs or false,
+			    pv or false) or ''
 		if state then
 			s:lastdisp(l)
 		end
@@ -942,7 +983,9 @@ std.game = std.class({
 		local r, v, pv, av
 		s.player:need_scene(false)
 		if cmd[1] == nil or cmd[1] == 'look' then
-			r, v = s.player:look()
+			s.player:need_scene(true)
+			v = true
+--			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
 			local o = std.ref(cmd[2]) -- on what?
 			if std.namof(o) == '@' then
@@ -999,10 +1042,11 @@ std.game = std.class({
 		if v == false then
 			return r, false -- wrong cmd?
 		end
+		s.player:reaction(r or false)
 		if v then -- game:step
 			pv, av = s:step()
 		end
-		return s:disp(r, v)
+		return s:disp(v)
 	end;
 }, std.obj);
 
@@ -1043,6 +1087,17 @@ std.player = std.class ({
 		end
 		std.obj.ini(s)
 	end;
+	events = function(s, av, pv)
+		local oa = s.__aevents
+		local op = s.__pevents
+		if av ~= nil then
+			s.__aevents = av
+		end
+		if pv ~= nil then
+			s.__pevents = pv
+		end
+		return oa, op
+	end;
 	reaction = function(s, t)
 		local o = s.__reaction
 		if t == nil then
@@ -1067,7 +1122,7 @@ std.player = std.class ({
 		local r = s:where()
 		local title = iface:title(std.titleof(r))
 		local dsc = std.call(r, 'dsc')
-		return std.par(std.scene_delim, title, dsc), true
+		return std.par(std.scene_delim, title or false, dsc or false), true
 	end;
 	search = function(s, w)
 		local r, v
