@@ -327,7 +327,11 @@ std.list = std.class {
 		local o = std.ref(n)
 		s:__dirty(true)
 		s:attach(o)
-		table.insert(s, o)
+		if pos then
+			table.insert(s, pos, o)
+		else
+			table.insert(s, o)
+		end
 		return o
 	end;
 	lookup = function(s, n)
