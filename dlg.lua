@@ -9,7 +9,7 @@ std.dlg = std.class({
 			end
 			local o = s.obj[i]
 			if not o:disabled() and not o:closed() then
-				local d = iface:xref(std.call(s[i], 'dsc'), o)
+				local d = iface:xref(std.call(s.obj[i], 'dsc'), o)
 				if type(d) == 'string' then
 					r = (r or '').. d
 				end
