@@ -1782,5 +1782,6 @@ iface = {
 
 -- require "ext/gui"
 require "strict"
+require "aliases"
 
 std:init()
