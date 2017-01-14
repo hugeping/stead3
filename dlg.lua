@@ -1,5 +1,5 @@
 local std = stead
-std.phrase_prefix = '--'
+std.phrase_prefix = '-- '
 std.dlg = std.class({
 	__dlg_type = true;
 	display = function(s)
