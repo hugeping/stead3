@@ -42,55 +42,6 @@ function std.declare(n)
 	return __declare(n, 'declare')
 end
 
-std.setmt(_G,
-{
-	__index = function(_, n)
-		local d = declarations[n]
-		if d then --
-			if std.initialized and (d.type ~= 'const') then
-				rawset(_, n, d.value)
-			end
-			return d.value
-		end
-		local f = std.getinfo(2, "S").source
-		if f:byte(1) == 0x3d then
-			return
-		end
-		if f:byte(1) ~= 0x40 then
-			print ("Uninitialized global variable: "..n.." in "..f)
-		else
-			error ("Uninitialized global variable: "..n.." in "..f, 2)
-		end
-	end;
-	__newindex = function(t, k, v)
-		local d = declarations[k]
-		if d then
-			if v == d.value then
-				return --nothing todo
-			end
-			if not std.initialized then
-				d.value = v
-				return
-			end
-			if d.type == 'const' then
-				std.err ("Modify read-only constant: "..k, 2)
-			else
-				d.value = v
-				rawset(t, k, v)
-			end
-			return
-		end
-		if type(v) ~= 'function' and not std.is_obj(v) then
-			local f = std.getinfo(2, "S").source
-			if f:byte(1) ~= 0x40 then
-				print ("Set uninitialized variable: "..k.." in "..f)
-			else
-				error ("Set uninitialized variable: "..k.." in "..f, 2)
-			end
-		end
-		rawset(t, k, v)
-	end
-})
 
 local function depends(t, tables, deps)
 	if type(t) ~= 'table' then return end
@@ -179,9 +130,58 @@ local function mod_save(fp)
 end
 
 local function mod_init()
+	std.setmt(_G, {
+	__index = function(_, n)
+		local d = declarations[n]
+		if d then --
+			if std.initialized and (d.type ~= 'const') then
+				rawset(_, n, d.value)
+			end
+			return d.value
+		end
+		local f = std.getinfo(2, "S").source
+		if f:byte(1) == 0x3d then
+			return
+		end
+		if f:byte(1) ~= 0x40 then
+			print ("Uninitialized global variable: "..n.." in "..f)
+		else
+			error ("Uninitialized global variable: "..n.." in "..f, 2)
+		end
+	end;
+	__newindex = function(t, k, v)
+		local d = declarations[k]
+		if d then
+			if v == d.value then
+				return --nothing todo
+			end
+			if not std.initialized then
+				d.value = v
+				return
+			end
+			if d.type == 'const' then
+				std.err ("Modify read-only constant: "..k, 2)
+			else
+				d.value = v
+				rawset(t, k, v)
+			end
+			return
+		end
+		if type(v) ~= 'function' and not std.is_obj(v) then
+			local f = std.getinfo(2, "S").source
+			if f:byte(1) ~= 0x40 then
+				print ("Set uninitialized variable: "..k.." in "..f)
+			else
+				error ("Set uninitialized variable: "..k.." in "..f, 2)
+			end
+		end
+		rawset(t, k, v)
+	end
+	})
 end
 
 local function mod_done()
+	std.setmt(_G, {})
 	for k, v in pairs(declarations) do
 		rawset(_G, k, nil)
 	end

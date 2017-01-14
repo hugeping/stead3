@@ -24,6 +24,7 @@ stead = {
 	loadfile = loadfile;
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
+	files = {},
 }
 
 local std = stead
@@ -173,10 +174,12 @@ function std.class(s, inh)
 			return s[k]
 		end
 		if std.initialized and type(v) == 'table' then
-			-- make rw
-			t.__var[k] = true
-			rawset(t, k, v)
-			ro[k] = nil
+			-- make rw if simple table
+			if type(v.__dirty) ~= 'function' then
+				t.__var[k] = true
+				rawset(t, k, v)
+				ro[k] = nil
+			end
 		end
 		return v
 	end;
@@ -189,7 +192,8 @@ function std.class(s, inh)
 			rawset(ro, k, v)
 			return
 		end
-		s:__dirty(true)
+
+		t:__dirty(true)
 		if ro then
 			if type(v) ~= 'function' then
 				t.__var[k] = true
@@ -425,29 +429,47 @@ std.save_table = function(vv, fp, n)
 	end
 end
 
-function std.reset()
-	std:done()
-	std:init()
-	local f, err = std.loadfile('main.lua')
+function std:reset(fn) -- reset state [and load new main]
+	self:done()
+	self:init()
+	local f, err = std.loadfile(fn or 'main.lua')
 	if not f then
 		std.err(err, 2)
 	end
+	if fn and fn ~= 'main.lua' then
+		std.startfile = fn -- another start file
+	end
 	f()
-	game:ini()
+	self 'game':ini()
+	self 'game'.player:need_scene(true) -- old object
 end
 
-function std.load(fname)
-	std:reset()
+function std:load(fname) -- load save
+	self:reset()
 	local f, err = std.loadfile(fname)
 	if not f then
 		std.err(err, 2)
 	end
 	f();
-	game:ini()
-	return game:lastdisp()
+	self 'game':ini()
+	return self 'game':lastdisp()
 end
 
-function std.save(fp)
+function std:gamefile(fn) -- load game file
+	if type(fn) ~= 'string' then
+		std.err("Wrong paramter to stead:file: "..std.tostr(f), 2)
+	end
+	local f, err = std.loadfile(fn)
+	if not f then
+		std.err(err, 2)
+	end
+	std.initialized = false
+	f() -- loaded!
+	self 'game':ini()
+	table.insert(std.files, fn) -- remember it
+end
+
+function std:save(fp)
 	if type(fp) == 'string' then
 		fp = io.open(fp, "wb");
 		if not fp then
@@ -462,6 +484,15 @@ function std.save(fp)
 		fp:write("-- $Name: "..n:gsub("\n","\\n").."$\n");
 	end
 	fp:write("local std = stead\n");
+	-- reset
+	if std.startfile then
+		fp:write(string.format("std:reset(%q)\n", std.startfile))
+	end
+	-- files
+	for i = 1, #std.files do
+		fp:write(string.format("std:gamefile(%q)\n", std.files[i]))
+	end
+
 	local oo = std.objects -- save dynamic objects
 	for i = 1, #oo do
 		if oo[i] then
@@ -494,7 +525,7 @@ function std.for_each_obj(fn, ...)
 	end
 end
 
-function std.init(fp)
+function std:init()
 	if std.ref 'game' then
 		std.delete('game')
 	end
@@ -526,23 +557,25 @@ function std.init(fp)
 	std.xact = std.ref '@'.iface
 end
 
-function std.done()
+function std:done()
 	std.initialized = false
 	std.mod_call('done')
 	local objects = {}
 	std.for_each_obj(function(v)
 		local k = std.deref(v)
+		print("Deleting "..k)
 		if type(k) == 'string' and k:byte(1) == 0x40 then
 			objects[k] = v
 		end
 	end)
 	std.objects = objects
 	std.objects_nr = 0
+	std.files = {}
 end
 
 function std.dirty(o)
 	if type(o) ~= 'table' or type(o.__dirty) ~= 'function' then
-		return true
+		return false
 	end
 	return o:__dirty()
 end
@@ -702,11 +735,16 @@ std.obj = std.class {
 			local l = string.format("std.new(%q, %s):renam(%d)\n", s.__dynamic.fn, s.__dynamic.arg, s.nam)
 			fp:write(l)
 		end
-		for k, v in pairs(s.__var) do
-			if std.dirty(s[k]) then
+		for k, v in pairs(s.__ro) do
+			local o = s.__ro[k]
+			if std.dirty(o) then
 				local l = string.format("%s%s", n, std.varname(k))
 				std.save_var(s[k], fp, l)
 			end
+		end
+		for k, v in pairs(s.__var) do
+			local l = string.format("%s%s", n, std.varname(k))
+			std.save_var(s[k], fp, l)
 		end
 	end;
 	xref = function(self, str)
@@ -889,8 +927,6 @@ std.game = std.class({
 		return ov
 	end;
 	ini = function(s)
-		require "strict"
-
 		std.mod_call('init') -- init modules
 
 		rawset(s, 'player', std.ref(s.player)) -- init game
@@ -981,7 +1017,7 @@ std.game = std.class({
 		if state then
 			s:lastdisp(l)
 		end
-		return l, state
+		return l
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
@@ -1037,20 +1073,21 @@ std.game = std.class({
 			r = s.player:where():dump_way()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
-			r = std.save(cmd[2])
+			r = std:save(cmd[2])
 			v = nil
 		elseif cmd[1] == 'load' then -- todo
-			r = std.load(cmd[2])
+			r = std:load(cmd[2])
 			v = false
 		end
 		if v == false then
 			return r, false -- wrong cmd?
 		end
+		s = std 'game' -- after resert game is recreated
 		s.player:reaction(r or false)
 		if v then -- game:step
 			pv, av = s:step()
 		end
-		return s:disp(v)
+		return s:disp(v), true
 	end;
 }, std.obj);
 
@@ -1085,7 +1122,7 @@ std.player = std.class ({
 		return v
 	end;
 	ini = function(s)
-		rawset(s, 'room', std.ref(s.room))
+		s.room = std.ref(s.room)
 		if not s.where then
 			std.err ("Wrong player location", 2)
 		end
@@ -1095,10 +1132,10 @@ std.player = std.class ({
 		local oa = s.__aevents
 		local op = s.__pevents
 		if av ~= nil then
-			s.__aevents = av
+			s.__aevents = av or nil
 		end
 		if pv ~= nil then
-			s.__pevents = pv
+			s.__pevents = pv or nil
 		end
 		return oa, op
 	end;
@@ -1107,7 +1144,7 @@ std.player = std.class ({
 		if t == nil then
 			return o
 		end
-		s.__reaction = t
+		s.__reaction = t or nil
 		return o
 	end;
 	need_scene = function(s, v)
@@ -1743,7 +1780,7 @@ iface = {
 	end;
 };
 
-
 -- require "ext/gui"
+require "strict"
 
 std:init()
