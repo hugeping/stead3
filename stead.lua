@@ -526,16 +526,16 @@ function std.for_each_obj(fn, ...)
 end
 
 function std:init()
-	if std.ref 'game' then
+	if std 'game' then
 		std.delete('game')
 	end
-	if std.ref 'main' then
+	if std 'main' then
 		std.delete('main')
 	end
-	if std.ref 'player' then
+	if std 'player' then
 		std.delete('player')
 	end
-	if std.ref '@' then
+	if std '@' then
 		std.delete('@')
 	end
 	std.obj { nam = '@',
