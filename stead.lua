@@ -929,7 +929,7 @@ std.game = std.class({
 	ini = function(s)
 		std.mod_call('init') -- init modules
 
-		rawset(s, 'player', std.ref(s.player)) -- init game
+		s.player = std.ref(s.player) -- init game
 		if not s.player then
 			std.err ("Wrong player", 2)
 		end
