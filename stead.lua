@@ -252,7 +252,7 @@ std.list = std.class {
 			s:attach(s[i])
 		end
 	end;
-	look = function(s)
+	display = function(s)
 		local r
 		for i = 1, #s do
 			if r then
@@ -265,7 +265,7 @@ std.list = std.class {
 					r = (r or '').. d
 				end
 				if not o:closed() then
-					d = o.obj:look()
+					d = o.obj:display()
 					if type(d) == 'string' then
 						r = (r or '') .. d
 					end
@@ -748,7 +748,7 @@ std.obj = std.class {
 		end
 	end;
 	xref = function(self, str)
-		function xrefrep(str)
+		local function xrefrep(str)
 			local oo = self
 			local a
 			local s = string.gsub(str,'[\001\002]','');
@@ -775,6 +775,9 @@ std.obj = std.class {
 		end
 		local s = string.gsub(str, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' }):gsub('\001([^\002]+)\002', xrefrep):gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+		if s == str then
+			return iface:xref(s, self)
+		end
 		return s;
 	end;
 	seen = function(s, w)
@@ -877,8 +880,14 @@ std.room = std.class({
 		end
 		return r, v
 	end;
-	look = function(s)
-		return s.obj:look()
+	scene = function(s)
+		local title, dsc, objs
+		title = iface:title(std.titleof(s))
+		dsc = std.call(s, 'dsc')
+		return std.par(std.scene_delim, title, dsc)
+	end;
+	display = function(s)
+		return s.obj:display()
 	end;
 	dump_way = function(s)
 		local rc
@@ -1000,7 +1009,7 @@ std.game = std.class({
 		return ov
 	end;
 	disp = function(s, state)
-		local r, objs, l, av, pv
+		local r, l, av, pv
 		local reaction = s.player:reaction() or nil
 		r = std.here()
 		if state then
@@ -1008,14 +1017,10 @@ std.game = std.class({
 			av, pv = s.player:events()
 			av = iface:em(av)
 			pv = iface:em(pv)
-			if s.player:need_scene() then
-				l = s.player:look()
-			end
-			objs = r:look()
+			l = s.player:look()
 		end
 		l = std.par(std.scene_delim, reaction or false,
 			    av or false, l or false,
-			    objs or false,
 			    pv or false) or ''
 		if state then
 			s:lastdisp(l)
@@ -1163,10 +1168,12 @@ std.player = std.class ({
 		return ov
 	end;
 	look = function(s)
+		local scene
 		local r = s:where()
-		local title = iface:title(std.titleof(r))
-		local dsc = std.call(r, 'dsc')
-		return std.par(std.scene_delim, title or false, dsc or false), true
+		if s:need_scene() then
+			scene = r:scene()
+		end
+		return std.par(std.scene_delim, scene or false, r:display())
 	end;
 	search = function(s, w)
 		local r, v
