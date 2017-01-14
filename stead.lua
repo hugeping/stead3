@@ -136,9 +136,9 @@ function std.is_obj(v, t)
 end
 
 function std.class(s, inh)
-	s.__parent = function(s)
-		return inh
-	end;
+--	s.__parent = function(s)
+--		return inh
+--	end;
 	s.__call = function(s, ...)
 		local a = { ... }
 		if #a == 1 and type(a[1]) == 'string' then
@@ -856,7 +856,7 @@ std.room = std.class({
 		return v
 	end;
 	seen = function(self, w)
-		local r, v = self:__parent().seen(self, w)
+		local r, v = std.obj.seen(self, w)
 		if std.is_obj(r) then
 			return r, v
 		end
@@ -867,7 +867,7 @@ std.room = std.class({
 		return r, self.way
 	end;
 	lookup = function(self, w)
-		local r, v = self:__parent().lookup(self, w)
+		local r, v = std.obj.lookup(self, w)
 		if std.is_obj(r) then
 			return r, v
 		end
@@ -876,6 +876,9 @@ std.room = std.class({
 			return r, self.way
 		end
 		return r, v
+	end;
+	look = function(s)
+		return s.obj:look()
 	end;
 	dump_way = function(s)
 		local rc
@@ -1008,7 +1011,7 @@ std.game = std.class({
 			if s.player:need_scene() then
 				l = s.player:look()
 			end
-			objs = r.obj:look()
+			objs = r:look()
 		end
 		l = std.par(std.scene_delim, reaction or false,
 			    av or false, l or false,
@@ -1781,6 +1784,7 @@ iface = {
 };
 
 -- require "ext/gui"
+require "dlg"
 require "strict"
 require "aliases"
 

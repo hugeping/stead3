@@ -4,6 +4,7 @@ pr = std.pr
 pn = std.pn
 obj = std.obj
 room = std.room
+dlg = std.dlg
 me = std.me
 here = std.here
 walk = function(...)
