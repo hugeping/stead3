@@ -441,7 +441,7 @@ function std:reset(fn) -- reset state [and load new main]
 	end
 	f()
 	self 'game':ini()
-	self 'game'.player:need_scene(true) -- old object
+	self 'game'.player:need_scene(true)
 end
 
 function std:load(fname) -- load save
@@ -1213,7 +1213,7 @@ std.player = std.class ({
 		end
 
 		local r, v, t
-		r, v = std.call(game, 'on'..m, w, w2, ...)
+		r, v = std.call(std 'game', 'on'..m, w, w2, ...)
 		t = std.par(std.space_delim, t, r)
 		if v == false then
 			return t, true
@@ -1243,7 +1243,7 @@ std.player = std.class ({
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
-		r, v = std.call(game, m, w, w2, ...)
+		r, v = std.call(std 'game', m, w, w2, ...)
 		t = std.par(std.space_delim, t, r)
 		return t, v
 	end;
@@ -1291,7 +1291,7 @@ std.player = std.class ({
 
 		local r, v, t
 		local f = s:where()
-		r, v = std.call(game, 'onwalk', s.__in_walk)
+		r, v = std.call(std 'game', 'onwalk', s.__in_walk)
 		t = std.par(std.scene_delim, t, r)
 
 		if v == false then -- stop walk
@@ -1713,7 +1713,7 @@ end
 std.cmd_parse = cmd_parse
 
 function std.me()
-	return game.player
+	return std 'game'.player
 end
 
 function std.here()
@@ -1744,7 +1744,7 @@ iface = {
 			return "Error in cmd arguments", false
 		end
 		std.cache = {}
-		local r, v = game:cmd(cmd)
+		local r, v = std 'game':cmd(cmd)
 		if v == false then
 			return iface:fmt(r), false
 		end
