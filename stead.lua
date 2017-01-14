@@ -1082,7 +1082,7 @@ std.game = std.class({
 		if v == false then
 			return r, false -- wrong cmd?
 		end
-		s = std 'game' -- after resert game is recreated
+		s = std 'game' -- after reset game is recreated
 		s.player:reaction(r or false)
 		if v then -- game:step
 			pv, av = s:step()
