@@ -211,6 +211,10 @@ function std.class(s, inh)
 	return s
 end
 
+function std.is_tag(n)
+	return type(n) == 'string' and n:byte(1) == 0x27
+end
+
 std.list = std.class {
 	__list_type = true;
 	new = function(s, v)
@@ -334,7 +338,7 @@ std.list = std.class {
 	end;
 	lookup = function(s, n)
 		local o, tag
-		if type(n) == 'string' and n:byte(1) == 0x23 then -- #
+		if std.is_tag(n) then
 			tag = n
 		else
 			o = std.ref(n)
@@ -1570,6 +1574,9 @@ function std.new(fn, ...)
 		std.err ("Constructor did not return object:"..fn.."("..l..")", 2)
 	end
 	rawset(o, '__dynamic', { fn = fn, arg = l })
+	if std.initialized then
+		o:ini() -- do initialization
+	end
 	return o
 end
 
