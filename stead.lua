@@ -1637,6 +1637,10 @@ function std.dispof(o)
 		return std.call(o, 'disp')
 	end
 	if type(o.nam) ~= 'string' then
+		if std.is_tag(o.tag) then
+			o = o.tag:sub(2)
+			return o
+		end
 		std.err("No nam nor disp are specified for obj: "..std.tostr(o.nam), 2)
 	end
 	return o.nam
