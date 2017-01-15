@@ -624,6 +624,10 @@ std.obj = std.class {
 		if type(v) ~= 'table' then
 			std.err ("Wrong argument to std.obj:"..std.tostr(v), 2)
 		end
+		if std.is_tag(v.nam) then
+			rawset(v, 'tag', v.nam)
+			rawset(v, 'nam', nil)
+		end
 		if v.nam == nil then
 			rawset(v, 'nam', #oo + 1)
 			local nr = #oo

@@ -27,6 +27,31 @@ std.dlg = std.class({
 		return r
 	end;
 }, std.room)
+
+function std.phr(...)
+	local disabled
+	local a = {...}
+	local o = {
+	}
+	for i = 1, #a do
+		local v = a[i]
+		if i == 1 and type(v) == 'boolean' then
+			if not v then
+				disabled = true
+			else
+				o.always = true
+			end
+		elseif o.tag == nil and v ~= nil then
+			o.tag = v
+		elseif o.dsc == nil and v ~= nil then
+			o.dsc = v
+		elseif o.act == nil and v ~= nil then
+			o.act = v
+		else
+
+		end
+	end
+end
 --[[
 false -- выключена (disabled)
 true -- всегда (always = true)
