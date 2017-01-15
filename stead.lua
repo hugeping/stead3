@@ -158,8 +158,10 @@ function std.class(s, inh)
 	end;
 	s.__dirty = function(s, v)
 		local o = rawget(s, '__dirty_flag')
-		if v ~= nil and std.initialized then
-			rawset(s, '__dirty_flag', v)
+		if v ~= nil then
+			if std.initialized then
+				rawset(s, '__dirty_flag', v)
+			end
 			return s
 		end
 		return o
@@ -200,10 +202,8 @@ function std.class(s, inh)
 			end
 			ro[k] = nil
 		end
-		if std.is_obj(v, 'list') then
-			if std.is_obj(t) then
-				v:attach(t)
-			end
+		if std.is_obj(v, 'list') and std.is_obj(t) then
+			v:attach(t)
 		end
 		rawset(t, k, v)
 	end
@@ -212,7 +212,7 @@ function std.class(s, inh)
 end
 
 function std.is_tag(n)
-	return type(n) == 'string' and n:byte(1) == 0x27
+	return type(n) == 'string' and n:byte(1) == 0x23
 end
 
 std.list = std.class {
@@ -224,11 +224,12 @@ std.list = std.class {
 		if std.is_obj(v, 'list') then -- already list
 			return v
 		end
-		v.__list = {} -- list of obj
+--		v.__list = {} -- where is attached
 		std.setmt(v, s)
 		return v
 	end;
-	ini = function(s)
+	ini = function(s, o)
+		rawset(s, '__list',  {}) -- where is attached
 		for i = 1, #s do
 			local k = s[i]
 			s[i] = std.ref(k)
@@ -236,6 +237,9 @@ std.list = std.class {
 				std.err("Wrong item in list: "..std.tostr(k), 2)
 			end
 			s:__attach(s[i])
+		end
+		if o then
+			s:attach(o)
 		end
 	end;
 	display = function(s)
@@ -345,7 +349,7 @@ std.list = std.class {
 		end
 		for i = 1, #s do
 			if s[i] == o or (tag and s[i].tag == tag) then
-				return o, i
+				return s[i], i
 			end
 		end
 	end;
@@ -441,23 +445,19 @@ std.save_table = function(vv, fp, n)
 	end
 end
 
-function std:reset(fn) -- reset state [and load new main]
+function std:reset() -- reset state
 	self:done()
 	self:init()
-	local f, err = std.loadfile(fn or 'main.lua')
+	local f, err = std.loadfile('main.lua')
 	if not f then
 		std.err(err, 2)
 	end
-	if fn and fn ~= 'main.lua' then
-		std.startfile = fn -- another start file
-	end
 	f()
-	self 'game':ini()
-	self 'game'.player:need_scene(true)
 end
 
 function std:load(fname) -- load save
 	self:reset()
+	std.initialized = false
 	local f, err = std.loadfile(fname)
 	if not f then
 		std.err(err, 2)
@@ -467,9 +467,18 @@ function std:load(fname) -- load save
 	return self 'game':lastdisp()
 end
 
-function std:gamefile(fn) -- load game file
+function std:gamefile(fn, reset) -- load game file
 	if type(fn) ~= 'string' then
 		std.err("Wrong paramter to stead:file: "..std.tostr(f), 2)
+	end
+	if reset then
+		std:reset()
+		if fn ~= 'main.lua' then
+			std.startfile = fn -- another start file
+		end
+		self 'game':ini()
+		self 'game'.player:need_scene(true)
+		return
 	end
 	local f, err = std.loadfile(fn)
 	if not f then
@@ -538,16 +547,16 @@ function std.for_each_obj(fn, ...)
 end
 
 function std:init()
-	if std 'game' then
+	if std.ref 'game' then
 		std.delete('game')
 	end
-	if std 'main' then
+	if std.ref 'main' then
 		std.delete('main')
 	end
-	if std 'player' then
+	if std.ref 'player' then
 		std.delete('player')
 	end
-	if std '@' then
+	if std.ref '@' then
 		std.delete('@')
 	end
 	std.obj { nam = '@',
@@ -663,7 +672,7 @@ std.obj = std.class {
 			std.err ("Wrong .obj attr in object:" .. v.nam, 2)
 		end
 		v.obj = std.list(v.obj)
-		v.obj:attach(v)
+--		v.obj:attach(v)
 		for key, val in pairs(v) do
 			if not raw[key] then
 				ro[key] = val
@@ -672,7 +681,7 @@ std.obj = std.class {
 		end
 		rawset(v, '__ro', ro)
 		rawset(v, '__var', vars)
-		rawset(v, '__list', {}) -- in list(s)
+		rawset(v, '__list', {}) -- in what list(s)
 		oo[ro.nam] = v
 		std.setmt(v, self)
 		return v
@@ -698,13 +707,13 @@ std.obj = std.class {
 	ini = function(s)
 		for k, v in pairs(s) do
 			if std.is_obj(v, 'list') then
-				v:ini()
+				v:ini(s)
 			end
 		end
 
 		for k, v in pairs(s.__ro) do
 			if std.is_obj(v, 'list') then
-				v:ini()
+				v:ini(s)
 			end
 		end
 	end;
@@ -791,12 +800,16 @@ std.obj = std.class {
 			if i then -- xact
 				oo = s:sub(1, i - 1)
 				s = s:sub(i + 1)
-				if oo:find("@", 1, true) == 1 then
+				if oo:find("@", 1, true) == 1 then -- call '@' obj (aka xact)
 					local o = '@'
 					a = oo:sub(2)
 					self = std.ref(o)
 				else
-					self = std.ref(oo)
+					if std.is_tag(oo) then -- #tag?
+						self = std.here():lookup(oo)
+					else
+						self = std.ref(oo)
+					end
 				end
 			end
 			if not std.is_obj(self) then
@@ -887,7 +900,7 @@ std.room = std.class({
 			std.err ("Wrong .way attr in object:" .. v.nam, 2)
 		end
 		v.way = std.list(v.way)
-		v.way:attach(v)
+--		v.way:attach(v)
 		v = std.obj(v)
 		std.setmt(v, self)
 		return v
@@ -1124,7 +1137,7 @@ std.game = std.class({
 		if v == false then
 			return r, false -- wrong cmd?
 		end
-		s = std 'game' -- after reset game is recreated
+		s = std.ref 'game' -- after reset game is recreated
 		s.player:reaction(r or false)
 		if v then -- game:step
 			pv, av = s:step()
@@ -1257,7 +1270,7 @@ std.player = std.class ({
 		end
 
 		local r, v, t
-		r, v = std.call(std 'game', 'on'..m, w, w2, ...)
+		r, v = std.call(std.ref 'game', 'on'..m, w, w2, ...)
 		t = std.par(std.space_delim, t, r)
 		if v == false then
 			return t, true
@@ -1287,7 +1300,7 @@ std.player = std.class ({
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
-		r, v = std.call(std 'game', m, w, w2, ...)
+		r, v = std.call(std.ref 'game', m, w, w2, ...)
 		t = std.par(std.space_delim, t, r)
 		return t, v
 	end;
@@ -1335,7 +1348,7 @@ std.player = std.class ({
 
 		local r, v, t
 		local f = s:where()
-		r, v = std.call(std 'game', 'onwalk', s.__in_walk)
+		r, v = std.call(std.ref 'game', 'onwalk', s.__in_walk)
 		t = std.par(std.scene_delim, t, r)
 
 		if v == false then -- stop walk
@@ -1616,6 +1629,9 @@ function std.dispof(o)
 	if o.disp ~= nil then
 		return std.call(o, 'disp')
 	end
+	if type(o.nam) ~= 'string' then
+		std.err("No nam nor disp are specified for obj: "..std.tostr(o.nam), 2)
+	end
 	return o.nam
 end
 
@@ -1698,9 +1714,10 @@ local function get_token(inp)
 		local c = inp:sub(k, k)
 		if c == '' then
 			if q then
-				return false
+				return nil -- error
 			end
-			return rc, k
+			break
+--			return rc, k
 		end
 		if c == '"' and q then
 			k = k + 1
@@ -1749,7 +1766,7 @@ local function cmd_parse(inp)
 		inp = inp:gsub("^[ ,\t]*","")
 		local v, i = get_token(inp)
 		inp = inp:sub(i)
-		if not v or v == '' then
+		if v == nil or v == '' then
 			break
 		end
 		table.insert(cmd, v)
@@ -1760,7 +1777,7 @@ end
 std.cmd_parse = cmd_parse
 
 function std.me()
-	return std 'game'.player
+	return std.ref 'game'.player
 end
 
 function std.here()
@@ -1791,7 +1808,7 @@ iface = {
 			return "Error in cmd arguments", false
 		end
 		std.cache = {}
-		local r, v = std 'game':cmd(cmd)
+		local r, v = std.ref 'game':cmd(cmd)
 		if v == false then
 			return iface:fmt(r), false
 		end
