@@ -201,7 +201,7 @@ function std.class(s, inh)
 			ro[k] = nil
 		end
 		if std.is_obj(v, 'list') then
-			if type(t.__list) == 'table' then
+			if std.is_obj(t) then
 				v:attach(t)
 			end
 		end
@@ -224,24 +224,6 @@ std.list = std.class {
 		std.setmt(v, s)
 		return v
 	end;
-	renam = function(s, new)
-		local oo = std.objects
-		if new == s.nam then
-			return
-		end
-		if oo[new] then
-			std.err ("Duplicated obj name: "..std.tostr(new), 2)
-		end
-		oo[s.nam] = nil
-		oo[new] = new
-		if type(new) == 'number' then
-			if new > std.objects_nr then
-				std.objects_nr = new
-			end
-		end
-		s.nam = new
-		return s
-	end;
 	ini = function(s)
 		for i = 1, #s do
 			local k = s[i]
@@ -249,7 +231,7 @@ std.list = std.class {
 			if s[i] == nil then
 				std.err("Wrong item in list: "..std.tostr(k), 2)
 			end
-			s:attach(s[i])
+			s:__attach(s[i])
 		end
 	end;
 	display = function(s)
@@ -294,11 +276,23 @@ std.list = std.class {
 			s[i]:open()
 		end
 	end;
-	attach = function(s, o)
+	attach = function(s, o) -- attach to object
 		s:detach(o)
+		table.insert(s.__list, o)
+	end;
+	detach = function(s, o) -- detach from object
+		for i = 1, #s.__list do
+			if s.__list[i] == o then
+				table.remove(s.__list, i)
+				break
+			end
+		end
+	end;
+	__attach = function(s, o) -- attach object to list
+		s:__detach(o)
 		table.insert(o.__list, s)
 	end;
-	detach = function(s, o)
+	__detach = function(s, o) -- detach object from list
 		for i = 1, #o.__list do
 			if o.__list[i] == s then
 				table.remove(o.__list, i)
@@ -313,7 +307,7 @@ std.list = std.class {
 		if not pos then
 			local o = std.ref(n)
 			s:__dirty(true)
-			s:attach(o)
+			s:__attach(o)
 			table.insert(s, o)
 			return o
 		end
@@ -330,7 +324,7 @@ std.list = std.class {
 		end
 		local o = std.ref(n)
 		s:__dirty(true)
-		s:attach(o)
+		s:__attach(o)
 		if pos then
 			table.insert(s, pos, o)
 		else
@@ -339,9 +333,14 @@ std.list = std.class {
 		return o
 	end;
 	lookup = function(s, n)
-		local o = std.ref(n)
+		local o, tag
+		if type(n) == 'string' and n:byte(1) == 0x23 then -- #
+			tag = n
+		else
+			o = std.ref(n)
+		end
 		for i = 1, #s do
-			if s[i] == o then
+			if s[i] == o or (tag and s[i].tag == tag) then
 				return o, i
 			end
 		end
@@ -354,11 +353,20 @@ std.list = std.class {
 --			end
 --		end
 --	end;
+	zap = function(s) -- delete all objects
+		local l = {}
+		for i = 1, #s do
+			table.insert(l, s[i])
+		end
+		for i = 1, #l do
+			s:del(l[i])
+		end
+	end;
 	del = function(s, n)
 		local o, i = s:lookup(n)
 		if i then
 			s:__dirty(true)
-			s:detach(o)
+			s:__detach(o)
 			table.remove(s, i)
 			return o
 		end
@@ -647,7 +655,7 @@ std.obj = std.class {
 			std.err ("Wrong .obj attr in object:" .. v.nam, 2)
 		end
 		v.obj = std.list(v.obj)
-		table.insert(v.obj.__list, v)
+		v.obj:attach(v)
 		for key, val in pairs(v) do
 			if not raw[key] then
 				ro[key] = val
@@ -660,6 +668,24 @@ std.obj = std.class {
 		oo[ro.nam] = v
 		std.setmt(v, self)
 		return v
+	end;
+	renam = function(s, new)
+		local oo = std.objects
+		if new == s.nam then
+			return
+		end
+		if oo[new] then
+			std.err ("Duplicated obj name: "..std.tostr(new), 2)
+		end
+		oo[s.nam] = nil
+		oo[new] = new
+		if type(new) == 'number' then
+			if new > std.objects_nr then
+				std.objects_nr = new
+			end
+		end
+		s.nam = new
+		return s
 	end;
 	ini = function(s)
 		for k, v in pairs(s) do
@@ -834,7 +860,7 @@ std.obj = std.class {
 			end
 		end
 		return rc
-	end
+	end;
 };
 
 std.room = std.class({
@@ -853,7 +879,7 @@ std.room = std.class({
 			std.err ("Wrong .way attr in object:" .. v.nam, 2)
 		end
 		v.way = std.list(v.way)
-		table.insert(v.way.__list, v)
+		v.way:attach(v)
 		v = std.obj(v)
 		std.setmt(v, self)
 		return v
