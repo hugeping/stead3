@@ -224,12 +224,11 @@ std.list = std.class {
 		if std.is_obj(v, 'list') then -- already list
 			return v
 		end
---		v.__list = {} -- where is attached
+		v.__list = {} -- where is attached
 		std.setmt(v, s)
 		return v
 	end;
 	ini = function(s, o)
-		rawset(s, '__list',  {}) -- where is attached
 		for i = 1, #s do
 			local k = s[i]
 			s[i] = std.ref(k)
@@ -457,12 +456,14 @@ end
 
 function std:load(fname) -- load save
 	self:reset()
-	std.initialized = false
-	local f, err = std.loadfile(fname)
+	self 'game':ini()
+
+	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
 		std.err(err, 2)
 	end
 	f();
+
 	self 'game':ini()
 	return self 'game':lastdisp()
 end
@@ -484,8 +485,9 @@ function std:gamefile(fn, reset) -- load game file
 	if not f then
 		std.err(err, 2)
 	end
-	std.initialized = false
+	std.__in_gamefile = true
 	f() -- loaded!
+	std.__in_gamefile = false
 	self 'game':ini()
 	table.insert(std.files, fn) -- remember it
 end
@@ -626,7 +628,7 @@ end
 std.obj = std.class {
 	__obj_type = true;
 	new = function(self, v)
-		if std.initialized and not std.__in_new then
+		if std.initialized and not std.__in_new and not std.__in_gamefile then
 			std.err ("Use std.new() to create dynamic objects:"..std.tostr(v), 2)
 		end
 		local oo = std.objects
@@ -995,6 +997,10 @@ std.game = std.class({
 		std.obj.ini(s)
 
 		std.for_each_obj(function(v) -- call ini of all objects
+			rawset(v, '__list', {}) -- reset all links
+		end)
+
+		std.for_each_obj(function(v) -- call ini of all objects
 			if v ~= s and type(v.ini) == 'function' then
 				v:ini()
 			end
@@ -1009,6 +1015,7 @@ std.game = std.class({
 
 		if type(std.rawget(_G, 'start')) == 'function' then
 			start() -- start before load
+			std.rawset(_G, 'start', nil)
 		end
 	end;
 	lifeon = function(s, w, ...)
