@@ -232,7 +232,7 @@ std.list = std.class {
 		for i = 1, #s do
 			local k = s[i]
 			s[i] = std.ref(k)
-			if s[i] == nil then
+			if not std.is_obj(s[i]) then
 				std.err("Wrong item in list: "..std.tostr(k), 2)
 			end
 			s:__attach(s[i])
@@ -719,20 +719,46 @@ std.obj = std.class {
 			end
 		end
 	end;
-	where = function(s)
+	room = function(s, r)
+		local rooms = r or {}
+		local ww = {}
+		local o
+		if type(rooms) ~= 'table' then
+			std.err("Wrong argument to room: "..std.tostr(r), 2)
+		end
+		s:where(ww)
+		while #ww > 0 do
+			local nww = {}
+			for k, v in ipairs(ww) do
+				if std.is_obj(v, 'room') then
+					if not o then
+						o = v
+					end
+					table.insert(rooms, v)
+				else
+					v:where(nww)
+				end
+			end
+			ww = nww
+		end
+		return o
+	end;
+	where = function(s, w)
 		local list = s.__list
-		local r = { }
+		local r = w or { }
+		local o
+		if type(r) ~= 'table' then
+			std.err("Wrong argument to obj:where: "..std.tostr(w), 2)
+		end
 		for i = 1, #list do
 			local l = list[i]
 			local ll = l.__list
+			o = ll[1]
 			for k = 1, #ll do
 				table.insert(r, ll[k])
 			end
 		end
-		if #r == 1 then
-			return r[1]
-		end
-		return r[1], r
+		return o
 	end;
 	remove = function(s, w)
 		local o = std.ref(s)
@@ -747,15 +773,12 @@ std.obj = std.class {
 			w.obj:del(o)
 			return o
 		end
-		local wh, where = s:where()
-		if where then
-			for i = 1, #where do
-				where[i].obj:del(o)
-			end
-			return o, where
+		local where = {}
+		s:where(where)
+		for i = 1, #where do
+			where[i].obj:del(o)
 		end
-		wh.obj:del(o)
-		return o, wh
+		return o, where
 	end;
 	close = function(s)
 		s.__closed = true
@@ -1413,7 +1436,10 @@ std.player = std.class ({
 		end
 		return s:walk(w)
 	end;
-	where = function(s)
+	where = function(s, where)
+		if type(where) == 'table' then
+			table.insert(where, s.room)
+		end
 		return s.room
 	end;
 }, std.obj)
