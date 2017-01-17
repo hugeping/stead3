@@ -25,7 +25,6 @@ stead = {
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
 	files = {},
-	game = {}, -- fake one
 }
 
 local std = stead
@@ -163,7 +162,7 @@ function std.class(s, inh)
 	s.__dirty = function(s, v)
 		local o = rawget(s, '__dirty_flag')
 		if v ~= nil then
-			if std.game.initialized then
+			if std.game then
 				rawset(s, '__dirty_flag', v)
 			end
 			return s
@@ -179,7 +178,7 @@ function std.class(s, inh)
 		if v == nil then
 			return s[k]
 		end
-		if std.game.initialized and type(v) == 'table' then
+		if std.game and type(v) == 'table' then
 			-- make rw if simple table
 			if type(v.__dirty) ~= 'function' then
 				t.__var[k] = true
@@ -194,7 +193,7 @@ function std.class(s, inh)
 		if std.is_obj(t) and type(k) == 'string' then
 			ro = t.__ro
 		end
-		if not std.game.initialized and ro then
+		if not std.game and ro then
 			rawset(ro, k, v)
 			return
 		end
@@ -582,7 +581,6 @@ function std:init()
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
 	std.xact = std.ref '@'.iface
-	std.game = std.ref 'game'
 	std.mod_call('init') -- init modules
 	std.initialized = true
 end
@@ -601,7 +599,7 @@ function std:done()
 	std.objects_nr = 0
 	std.files = {}
 	std.initialized = false
-	std.game = {}
+	std.game = nil
 end
 
 function std.dirty(o)
@@ -636,7 +634,7 @@ end
 std.obj = std.class {
 	__obj_type = true;
 	new = function(self, v)
-		if std.game.initialized and not std.__in_new and not std.__in_gamefile then
+		if std.game and not std.__in_new and not std.__in_gamefile then
 			std.err ("Use std.new() to create dynamic objects:"..std.tostr(v), 2)
 		end
 		local oo = std.objects
@@ -1037,11 +1035,11 @@ std.world = std.class({
 			end
 		end)
 
-		if not s.initialized then
+		if not std.game then
 			if type(std.rawget(_G, 'init')) == 'function' then
 				init()
 			end
-			std.rawset(s, 'initialized', true)
+			std.game = s
 		end
 
 		if type(std.rawget(_G, 'start')) == 'function' then
@@ -1632,7 +1630,7 @@ function std.new(fn, ...)
 		std.err ("Constructor did not return object:"..fn.."("..l..")", 2)
 	end
 	rawset(o, '__dynamic', { fn = fn, arg = l })
-	if std.game.initialized then
+	if std.game then
 		o:ini() -- do initialization
 	end
 	return o
