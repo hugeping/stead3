@@ -201,8 +201,10 @@ function std.class(s, inh)
 
 		t:__dirty(true)
 		if ro then
-			if type(v) ~= 'function' then
+			if type(v) ~= 'function' or std.functions[v] then
 				t.__var[k] = true
+			else
+				std.err("Wrong variable operation: "..std.tostr(k), 2)
 			end
 			ro[k] = nil
 		end
