@@ -17,3 +17,10 @@ end;
 walkout = function(...)
 	return std.me():walkout(...)
 end;
+
+std.mod_init(function()
+	declare {
+		game = std.ref 'game',
+		pl = std.ref 'pl',
+	}
+end)

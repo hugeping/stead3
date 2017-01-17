@@ -25,6 +25,7 @@ stead = {
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
 	files = {},
+	game = {}, -- fake one
 }
 
 local std = stead
@@ -74,6 +75,9 @@ end
 
 function std.mod_init(f, ...)
 	__mod_callback_reg(f, 'init', ...)
+	if std.initialized then -- require from game
+		f(...)
+	end
 end
 
 function std.mod_done(f, ...)
@@ -159,7 +163,7 @@ function std.class(s, inh)
 	s.__dirty = function(s, v)
 		local o = rawget(s, '__dirty_flag')
 		if v ~= nil then
-			if std.initialized then
+			if std.game.initialized then
 				rawset(s, '__dirty_flag', v)
 			end
 			return s
@@ -175,7 +179,7 @@ function std.class(s, inh)
 		if v == nil then
 			return s[k]
 		end
-		if std.initialized and type(v) == 'table' then
+		if std.game.initialized and type(v) == 'table' then
 			-- make rw if simple table
 			if type(v.__dirty) ~= 'function' then
 				t.__var[k] = true
@@ -190,7 +194,7 @@ function std.class(s, inh)
 		if std.is_obj(t) and type(k) == 'string' then
 			ro = t.__ro
 		end
-		if not std.initialized and ro then
+		if not std.game.initialized and ro then
 			rawset(ro, k, v)
 			return
 		end
@@ -463,7 +467,6 @@ function std:load(fname) -- load save
 		std.err(err, 2)
 	end
 	f();
-
 	self 'game':ini()
 	return self 'game':lastdisp()
 end
@@ -574,16 +577,17 @@ function std:init()
 			  end
 			  std.err ('Undefined @ act: '..std.tostr(x), 2)
 	end; }
-	std.game { nam = 'game', player = 'player', codepage = 'UTF-8' }
+
+	std.world { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
-	rawset(_G, 'game', std.ref 'game')
 	std.xact = std.ref '@'.iface
 	std.mod_call('init') -- init modules
+	std.initialized = true
+	std.game = std.ref 'game'
 end
 
 function std:done()
-	std.initialized = false
 	std.mod_call('done')
 	local objects = {}
 	std.for_each_obj(function(v)
@@ -596,6 +600,8 @@ function std:done()
 	std.objects = objects
 	std.objects_nr = 0
 	std.files = {}
+	std.initialized = false
+	std.game = {}
 end
 
 function std.dirty(o)
@@ -630,7 +636,7 @@ end
 std.obj = std.class {
 	__obj_type = true;
 	new = function(self, v)
-		if std.initialized and not std.__in_new and not std.__in_gamefile then
+		if std.game.initialized and not std.__in_new and not std.__in_gamefile then
 			std.err ("Use std.new() to create dynamic objects:"..std.tostr(v), 2)
 		end
 		local oo = std.objects
@@ -985,7 +991,7 @@ std.room = std.class({
 	end
 }, std.obj);
 
-std.game = std.class({
+std.world = std.class({
 	__game_type = true;
 	new = function(self, v)
 		if type(v) ~= 'table' then
@@ -1031,11 +1037,11 @@ std.game = std.class({
 			end
 		end)
 
-		if not std.initialized then
-			std.initialized = true
+		if not s.initialized then
 			if type(std.rawget(_G, 'init')) == 'function' then
 				init()
 			end
+			std.rawset(s, 'initialized', true)
 		end
 
 		if type(std.rawget(_G, 'start')) == 'function' then
@@ -1626,7 +1632,7 @@ function std.new(fn, ...)
 		std.err ("Constructor did not return object:"..fn.."("..l..")", 2)
 	end
 	rawset(o, '__dynamic', { fn = fn, arg = l })
-	if std.initialized then
+	if std.game.initialized then
 		o:ini() -- do initialization
 	end
 	return o
@@ -1887,5 +1893,3 @@ iface = {
 require "dlg"
 require "strict"
 require "aliases"
-
---std:init()
