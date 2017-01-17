@@ -413,6 +413,8 @@ std.save_var = function(vv, fp, n)
 		if std.functions[vv] and std.functions[vv] ~= n then
 			local k = std.functions[vv]
 			fp:write(string.format("%s = %s\n", n, k))
+		else
+			std.err("Can not save variable (function): "..n, 2)
 		end
 	elseif type(vv) == 'table' then
 		if std.tables[vv] and std.tables[vv] ~= n then

@@ -48,7 +48,6 @@ function std.declare(n)
 	return __declare(n, 'declare')
 end
 
-
 local function depends(t, tables, deps)
 	if type(t) ~= 'table' then return end
 	if tables[t] then
