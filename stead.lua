@@ -582,9 +582,9 @@ function std:init()
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
 	std.xact = std.ref '@'.iface
+	std.game = std.ref 'game'
 	std.mod_call('init') -- init modules
 	std.initialized = true
-	std.game = std.ref 'game'
 end
 
 function std:done()
