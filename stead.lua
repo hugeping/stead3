@@ -590,9 +590,10 @@ function std:done()
 	local objects = {}
 	std.for_each_obj(function(v)
 		local k = std.deref(v)
-		print("Deleting "..k)
 		if type(k) == 'string' and k:byte(1) == 0x40 then
 			objects[k] = v
+		else
+			print("Deleting "..k)
 		end
 	end)
 	std.objects = objects
