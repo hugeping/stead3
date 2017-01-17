@@ -25,7 +25,7 @@ global {
 }
 global {
 	d = { a },
-	zzz = 1;
+	zzz = true;
 }
 
 global {
@@ -36,6 +36,7 @@ global {
 		};
 	};
 }
+cv = function() end
 
 game:ini()
 func()

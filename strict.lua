@@ -20,8 +20,14 @@ local function __declare(n, t)
 		if declarations[k] then
 			std.err ("Duplicate declaration: "..k, 2)
 		end
+		if type(v) == 'function' then
+			std.functions[v] = k
+		end
 		declarations[k] = {value = v, type = t}
 		if t == 'global' then
+			if type(v) == 'function' then
+				std.err("Use declare to declare function: "..k, 3)
+			end
 			rawset(_G, k, v)
 			variables[k] = true
 		end
@@ -167,7 +173,7 @@ local function mod_init()
 			end
 			return
 		end
-		if type(v) ~= 'function' and not std.is_obj(v) then
+		if std.game or (type(v) ~= 'function' and not std.is_obj(v)) then
 			local f = std.getinfo(2, "S").source
 			if f:byte(1) ~= 0x40 then
 				print ("Set uninitialized variable: "..k.." in "..f)
@@ -186,6 +192,7 @@ local function mod_done()
 		rawset(_G, k, nil)
 	end
 	std.tables = {}
+	std.functions = {}
 	declarations = {}
 	variables = {}
 end
