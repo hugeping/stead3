@@ -408,6 +408,11 @@ std.save_var = function(vv, fp, n)
 	elseif type(vv) == 'string' then
 		fp:write(string.format("%s = ", n))
 		fp:write(string.format("%q\n", vv))
+--	elseif type(vv) == 'function' then
+--		if std.tables[vv] and std.tables[vv] ~= n then
+--			local k = std.tables[vv]
+--			fp:write(string.format("%s = %s\n", n, k))
+--		end
 	elseif type(vv) == 'table' then
 		if std.tables[vv] and std.tables[vv] ~= n then
 			local k = std.tables[vv]
@@ -1528,6 +1533,11 @@ local function __dump(t, nested)
 		rc = std.tostr(t)
 	elseif type(t) == 'boolean' then
 		rc = std.tostr(t)
+--	elseif type(t) == 'function' then
+--		if std.tables[t] and nested then
+--			local k = std.tables[t]
+--			return string.format("%s", k)
+--		end
 	elseif type(t) == 'table' and not t.__visited then
 		t.__visited = true
 		if std.tables[t] and nested then

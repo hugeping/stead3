@@ -8,7 +8,7 @@ room = std.room;
 dlg = std.dlg;
 me = std.me;
 here = std.here;
-walk = function(...);
+walk = function(...)
 	return std.me():walk(...)
 end;
 walkin = function(...)
@@ -17,7 +17,6 @@ end;
 walkout = function(...)
 	return std.me():walkout(...)
 end;
-
 std.mod_init(function()
 	declare {
 		game = std.ref 'game',
