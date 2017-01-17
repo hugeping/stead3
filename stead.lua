@@ -561,6 +561,7 @@ function std:init()
 	if std.ref '@' then
 		std.delete('@')
 	end
+
 	std.obj { nam = '@',
 		  {
 			  iface = {
@@ -578,6 +579,7 @@ function std:init()
 	std.player { nam = 'player', room = 'main' }
 	rawset(_G, 'game', std.ref 'game')
 	std.xact = std.ref '@'.iface
+	std.mod_call('init') -- init modules
 end
 
 function std:done()
@@ -1011,7 +1013,7 @@ std.game = std.class({
 		return ov
 	end;
 	ini = function(s)
-		std.mod_call('init') -- init modules
+--		std.mod_call('init') -- init modules
 
 		s.player = std.ref(s.player) -- init game
 		if not s.player then
@@ -1049,7 +1051,7 @@ std.game = std.class({
 	end;
 	life = function(s)
 		local av, vv
-		s.player:events(false, false)
+		s:events(false, false)
 		local ll = {}
 
 		for i = 1, #s.lifes do
@@ -1061,13 +1063,13 @@ std.game = std.class({
 			local o = ll[i]
 			if not o:disabled() then
 				v, pre = std.method(o, 'life');
-				av, vv = s.player:events()
+				av, vv = s:events()
 				if pre then -- hi-pri msg
 					av = std.par(std.space_delim, av or nil, v)
 				else
 					vv = std.par(std.space_delim, vv or nil, v)
 				end
-				s.player:events(av or false, vv or false)
+				s:events(av or false, vv or false)
 				if pre == false then -- break cycle
 					break
 				end
@@ -1087,14 +1089,14 @@ std.game = std.class({
 	end;
 	disp = function(s, state)
 		local r, l, av, pv
-		local reaction = s.player:reaction() or nil
+		local reaction = s:reaction() or nil
 		r = std.here()
 		if state then
 			reaction = iface:em(reaction)
-			av, pv = s.player:events()
+			av, pv = s:events()
 			av = iface:em(av)
 			pv = iface:em(pv)
-			l = s.player:look()
+			l = s.player:look() -- objects [and scene]
 		end
 		l = std.par(std.scene_delim, reaction or false,
 			    av or false, l or false,
@@ -1103,6 +1105,25 @@ std.game = std.class({
 			s:lastdisp(l)
 		end
 		return l
+	end;
+	reaction = function(s, t)
+		local o = s.__reaction
+		if t == nil then
+			return o
+		end
+		s.__reaction = t or nil
+		return o
+	end;
+	events = function(s, av, pv)
+		local oa = s.__aevents
+		local op = s.__pevents
+		if av ~= nil then
+			s.__aevents = av or nil
+		end
+		if pv ~= nil then
+			s.__pevents = pv or nil
+		end
+		return oa, op
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
@@ -1168,7 +1189,7 @@ std.game = std.class({
 			return r, false -- wrong cmd?
 		end
 		s = std.ref 'game' -- after reset game is recreated
-		s.player:reaction(r or false)
+		s:reaction(r or false)
 		if v then -- game:step
 			pv, av = s:step()
 		end
@@ -1212,25 +1233,6 @@ std.player = std.class ({
 			std.err ("Wrong player location", 2)
 		end
 		std.obj.ini(s)
-	end;
-	events = function(s, av, pv)
-		local oa = s.__aevents
-		local op = s.__pevents
-		if av ~= nil then
-			s.__aevents = av or nil
-		end
-		if pv ~= nil then
-			s.__pevents = pv or nil
-		end
-		return oa, op
-	end;
-	reaction = function(s, t)
-		local o = s.__reaction
-		if t == nil then
-			return o
-		end
-		s.__reaction = t or nil
-		return o
 	end;
 	need_scene = function(s, v)
 		local ov = s.__need_scene or false
@@ -1886,4 +1888,4 @@ require "dlg"
 require "strict"
 require "aliases"
 
-std:init()
+--std:init()

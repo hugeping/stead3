@@ -1,7 +1,6 @@
 local std = stead
 
-instead = {
-}
+std.rawset(_G, 'instead', {})
 
 iface.inv_delim = '\n'
 iface.hinv_delim = ' | '
