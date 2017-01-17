@@ -10,7 +10,7 @@ local table = std.table
 local next = std.next
 
 local function __declare(n, t)
-	if stead.initialized then
+	if stead.game then
 		std.err ("Use "..t.." only in global context", 2)
 	end
 	if type(n) ~= 'table' then
@@ -134,7 +134,7 @@ local function mod_init()
 	__index = function(_, n)
 		local d = declarations[n]
 		if d then --
-			if std.initialized and (d.type ~= 'const') then
+			if std.game and (d.type ~= 'const') then
 				rawset(_, n, d.value)
 			end
 			return d.value
@@ -155,7 +155,7 @@ local function mod_init()
 			if v == d.value then
 				return --nothing todo
 			end
-			if not std.initialized then
+			if not std.game then
 				d.value = v
 				return
 			end

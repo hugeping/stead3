@@ -459,15 +459,15 @@ end
 
 function std:load(fname) -- load save
 	self:reset()
-	self 'game':ini()
+	std.ref 'game':ini()
 
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
 		std.err(err, 2)
 	end
 	f();
-	self 'game':ini()
-	return self 'game':lastdisp()
+	std.ref 'game':ini()
+	return self.game:lastdisp()
 end
 
 function std:gamefile(fn, reset) -- load game file
@@ -479,8 +479,8 @@ function std:gamefile(fn, reset) -- load game file
 		if fn ~= 'main.lua' then
 			std.startfile = fn -- another start file
 		end
-		self 'game':ini()
-		self 'game'.player:need_scene(true)
+		std.ref 'game':ini()
+		self.game.player:need_scene(true)
 		return
 	end
 	local f, err = std.loadfile(fn)
@@ -490,7 +490,7 @@ function std:gamefile(fn, reset) -- load game file
 	std.__in_gamefile = true
 	f() -- loaded!
 	std.__in_gamefile = false
-	self 'game':ini()
+	std.ref 'game':ini()
 	table.insert(std.files, fn) -- remember it
 end
 
