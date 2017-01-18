@@ -1,4 +1,7 @@
 local std = stead
+local type = std.type
+local table = std.table
+
 std.phrase_prefix = '-- '
 std.dlg = std.class({
 	__dlg_type = true;
@@ -28,30 +31,53 @@ std.dlg = std.class({
 	end;
 }, std.room)
 
-function std.phr(...)
-	local disabled
-	local a = {...}
-	local o = {
-	}
-	for i = 1, #a do
-		local v = a[i]
-		if i == 1 and type(v) == 'boolean' then
-			if not v then
-				disabled = true
-			else
-				o.always = true
+std.phr = std.class({
+	new = function(s, v)
+		local disabled
+		local a = v
+		local o = {
+			phr = {}
+		}
+		for i = 1, #a do
+			local v = a[i]
+			if i == 1 and type(v) == 'boolean' then
+				if not v then
+					disabled = true
+				else
+					o.always = true
+				end
+			elseif o.tag == nil and v ~= nil then
+				if not std.is_tag(v) then
+					std.err("Wrong tag: "..std.tostr(v), 2)
+				end
+				o.tag = v
+			elseif o.dsc == nil and v ~= nil then
+				o.dsc = v
+			elseif std.is_tag(v) then
+				table.insert(o.phr, v)
+			elseif o.act == nil and v ~= nil then
+				o.act = v
 			end
-		elseif o.tag == nil and v ~= nil then
-			o.tag = v
-		elseif o.dsc == nil and v ~= nil then
-			o.dsc = v
-		elseif o.act == nil and v ~= nil then
-			o.act = v
-		else
-
 		end
-	end
-end
+		if o.dsc ~= nil and o.act == nil then
+			o.act = o.dsc
+			o.dsc = nil
+		end
+		if o.act == nil then
+			std.err("Wrong phrase (no act)", 2)
+		end
+		o.ph_act = o.act
+		o = std.obj(o)
+		std.setmt(v, s)
+		if disabled then o = o:disable() end
+		return o
+	end,
+	act = function(s, ...)
+		local r, v = std.call(s, 'ph_act', ...)
+		return r, v
+	end,
+}, std.obj)
+
 --[[
 false -- выключена (disabled)
 true -- всегда (always = true)

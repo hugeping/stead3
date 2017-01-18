@@ -1276,10 +1276,14 @@ std.player = std.class ({
 			return r, v
 		end
 		r, v = s:where().way:lookup(w)
-		if not r or r:disabled() or r:closed() then
-			return
+		if r and not r:disabled() and not r:closed() then
+			return r, s:where()
 		end
-		return r, s:where()
+		r, v = s:seen(w)
+		if r ~= nil then
+			return r, v
+		end
+		return
 	end;
 	have = function(s, w)
 		local o, i = s:inventory():lookup(w)
