@@ -771,6 +771,9 @@ std.obj = std.class {
 			local l = list[i]
 			local ll = l.__list
 			o = ll[1]
+			if not w then
+				break
+			end
 			for k = 1, #ll do
 				table.insert(r, ll[k])
 			end
@@ -876,6 +879,9 @@ std.obj = std.class {
 		end
 		o = s.obj:lookup(w)
 		if o then
+			if o:disabled() then
+				return
+			end
 			return o, s
 		end
 		for i = 1, #s.obj do
