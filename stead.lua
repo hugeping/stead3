@@ -345,6 +345,17 @@ std.list = std.class {
 		end
 		return o
 	end;
+	for_each = function(s, fn, ...)
+		if type(fn) ~= 'function' then
+			std.err("Wrong parameter to list:for_each: "..std.tostr(fn), 2)
+		end
+		for i = 1, #s do
+			local r, v = fn(s[i], ...)
+			if r ~= nil or v ~= nil then
+				return r, v
+			end
+		end
+	end;
 	lookup = function(s, n)
 		local o, tag
 		if std.is_tag(n) then
@@ -905,6 +916,18 @@ std.obj = std.class {
 			end
 		end
 	end;
+	for_each = function(s, fn, ...)
+		local r, v = s.obj:for_each(fn, ...)
+		if r ~= nil or v == false then
+			return r, v
+		end
+		for i = 1, #s.obj do
+			r, v = s.obj[i]:for_each(fn, ...)
+			if r ~= nil then
+				return r, v
+			end
+		end
+	end;
 	dump = function(s)
 		local rc
 		for i = 1, #s.obj do
@@ -934,8 +957,8 @@ std.obj = std.class {
 
 std.room = std.class({
 	__room_type = true;
-	from  = function(self)
-		return s.__where or self
+	from  = function(s)
+		return s.__from or s
 	end;
 	new = function(self, v)
 		if type(v) ~= 'table' then
@@ -1148,6 +1171,7 @@ std.world = std.class({
 	end;
 	cmd = function(s, cmd)
 		local r, v, pv, av
+		s.player:moved(false)
 		s.player:need_scene(false)
 		if cmd[1] == nil or cmd[1] == 'look' then
 			s.player:need_scene(true)
@@ -1254,6 +1278,18 @@ std.player = std.class ({
 			std.err ("Wrong player location", 2)
 		end
 		std.obj.ini(s)
+	end;
+	moved = function(s, v)
+		local ov = s.__moved or false
+		if v == nil then
+			return ov
+		end
+		if type(v) ~= 'boolean' then
+			std.err("Wrong parameter to player:moved: "..std.tostr(v), 2)
+		end
+		if v == false then v = nil end
+		s.__moved = v
+		return ov
 	end;
 	need_scene = function(s, v)
 		local ov = s.__need_scene or false
@@ -1421,7 +1457,6 @@ std.player = std.class ({
 				return t, true
 			end
 		end
-
 		if v ~= true then
 			if not noexit then
 				r, v = std.call(s:where(), 'onexit', s.__in_walk)
@@ -1453,6 +1488,7 @@ std.player = std.class ({
 		s.room = s.__in_walk
 		s.__in_walk = nil
 		s:need_scene(true)
+		s:moved(true)
 		return t, true
 	end;
 	go = function(s, w)
@@ -1526,10 +1562,10 @@ std.pclr = function()
 end
 
 std.pget = function()
-	return std.cctx().txt or '';
+	return std.cctx().txt;
 end
 
-std.p = function(...)
+std.pr = function(...)
 	local a = {...}
 	if std.cctx() == nil then
 		error ("Call from global context.", 2);
@@ -1537,7 +1573,24 @@ std.p = function(...)
 	for i = 1, #a do
 		std.cctx().txt = std.par('', std.cctx().txt, std.tostr(a[i]));
 	end
+--	std.cctx().txt = std.cat(std.cctx().txt, std.space_delim);
+end
+
+std.p = function(...)
+	std.pr(...)
 	std.cctx().txt = std.cat(std.cctx().txt, std.space_delim);
+end
+
+std.pn = function(...)
+	std.pr(...)
+	std.cctx().txt = std.cat(std.cctx().txt, '^');
+end
+
+std.pf = function(fmt, ...)
+	if type(ftm) ~= 'string' then
+		std.err("Wrong argument to std.pf: "..std.tostr(fmt))
+	end
+	std.pr(string.format(fmt, ...))
 end
 
 local function __dump(t, nested)
@@ -1763,6 +1816,9 @@ std.method = function(v, n, ...)
 end
 
 std.call = function(v, n, ...)
+	if type(v) ~= 'table' then
+		std.err("Call on non table object: "..std.tostr(n), 2)
+	end
 	local r, v = std.method(v, n, ...)
 	if type(r) == 'string' then
 		if v == nil then v = true end
@@ -1912,6 +1968,19 @@ iface = {
 		return str
 	end;
 };
+-- some internal aliases
+std.from = function(...)
+	return std.here():from()
+end;
+std.walk = function(...)
+	return std.me():walk(...)
+end;
+std.walkin = function(...)
+	return std.me():walkin(...)
+end;
+std.walkout = function(...)
+	return std.me():walkout(...)
+end;
 
 -- require "ext/gui"
 require "dlg"
