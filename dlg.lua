@@ -3,6 +3,16 @@ local type = std.type
 local table = std.table
 
 std.phrase_prefix = '-- '
+
+local function phr_prefix(d, nr)
+	if type(std.phrase_prefix) == 'string' then
+		d = std.phrase_prefix .. d
+	elseif type(std.phrase_prefix) == 'function' then
+		d = std.phrase_prefix(nr) .. d
+	end
+	return d
+end
+
 std.dlg = std.class({
 	__dlg_type = true;
 	new = function(s, v)
@@ -17,6 +27,7 @@ std.dlg = std.class({
 		return v
 	end;
 	onenter = function(s, ...)
+		s.current = s.obj[1] -- todo
 		s:for_each(function(s) s:open() end) -- open all phrases
 		if not s:select(s.current) then
 			std.err("Wrong dialog: "..std.tostr(s), 2)
@@ -56,13 +67,14 @@ std.dlg = std.class({
 		if not p then
 			p = s.obj[1]
 		end
+
 		local c = s:lookup(p)
 
 		if not c then
 			std.err("Wrong dlg:select argumant: "..std.tostr(p), 2)
 		end
-		if c:disabled() or c:closed() then
-			return false
+		if c:disabled() then
+			c:enable()
 		end
 		if #c.obj == 0 then -- no choices
 			return false
@@ -86,11 +98,7 @@ std.dlg = std.class({
 			if not o:disabled() and not o:closed() then
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
-					if type(std.phrase_prefix) == 'string' then
-						d = std.phrase_prefix .. d
-					elseif type(std.phrase_prefix) == 'function' then
-						d = std.phrase_prefix(nr) .. d
-					end
+					d = phr_prefix(d, nr)
 					d = o:xref(d)
 					r = (r or '').. d
 					nr = nr + 1
@@ -167,11 +175,22 @@ std.phr = std.class({
 		if not s.always then
 			s:close()
 		end
+
 		local cur = std.here().current
 		local r, v = std.call(s, 'dsc')
-		t = std.par(std.scene_delim, t, r)
+
+		if type(r) == 'string' then
+			r = phr_prefix(r)
+			t = std.par(std.scene_delim, t, r)
+		end
+
 		r, v = std.call(s, 'ph_act', ...)
-		t = std.par(std.scene_delim, t, r)
+
+		if type(r) == 'string' then
+			t = std.par(std.scene_delim, t, r)
+		end
+
+		if type(t) == 'string' then r = t end
 
 		if std.me():moved() or cur ~= std.here().current then
 			return r, v
@@ -181,7 +200,7 @@ std.phr = std.class({
 				std.walkout(std.here():from())
 			end
 		end
-		return t, v
+		return r, v
 	end,
 	select = function(s)
 	end;
