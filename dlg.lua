@@ -26,6 +26,13 @@ std.dlg = std.class({
 		std.setmt(v, s)
 		return v
 	end;
+	onact = function(s, w) -- show dsc by default
+		local r, v = std.call(w, 'dsc')
+		if type(r) == 'string' then
+			-- phr_prefix(r) -- TODO
+		end
+		return r, v
+	end;
 	onenter = function(s, ...)
 		s.current = s.obj[1] -- todo
 		s:for_each(function(s) s:open() end) -- open all phrases
@@ -35,36 +42,42 @@ std.dlg = std.class({
 		return std.call(s, s.dlg_onenter, ...)
 	end;
 	push = function(s, p)
+		local c = s.current
 		local r = s:select(p)
 		if r ~= false then
-			table.insert(s.stack, r)
+			table.insert(s.stack, c)
 		end
 		return r
 	end;
-	peek = function(s)
+	pop = function(s, phr)
 		if #s.stack == 0 then
 			return false
 		end
-		return s.stack[#s.stack]
-	end;
-	pop = function(s)
-		if #s.stack == 0 then
-			return false
+
+		if phr then
+			local l = {}
+			for i = 1, #s.stack do
+				table.insert(l, s.stack[i])
+				if s.stack[i] == phr then
+					break
+				end
+			end
+			s.stack = l
 		end
 		local p
 		while #s.stack > 0 do
-			p = table.remove(s.stack, #s.stack)
-			if not p:empty() then
-				break
+			p = table.remove(s.stack, #s.stack) -- remove top
+			p = s:select(p)
+			if p then
+				return p
 			end
 		end
-		return s:select(p)
 	end;
 	select = function(s, p)
 		if #s.obj == 0 then
 			return false
 		end
-		if not p then
+		if not p then -- get first one
 			p = s.obj[1]
 		end
 
@@ -73,11 +86,13 @@ std.dlg = std.class({
 		if not c then
 			std.err("Wrong dlg:select argumant: "..std.tostr(p), 2)
 		end
-		if c:disabled() then
-			c:enable()
-		end
-		if #c.obj == 0 then -- no choices
+
+		if c:empty() then -- no choices
 			return false
+		end
+
+		if c:disabled() then -- select always enables phrase
+			c:enable()
 		end
 --		c:select()
 		s.current = c
@@ -177,20 +192,8 @@ std.phr = std.class({
 		end
 
 		local cur = std.here().current
-		local r, v = std.call(s, 'dsc')
 
-		if type(r) == 'string' then
-			r = phr_prefix(r)
-			t = std.par(std.scene_delim, t, r)
-		end
-
-		r, v = std.call(s, 'ph_act', ...)
-
-		if type(r) == 'string' then
-			t = std.par(std.scene_delim, t, r)
-		end
-
-		if type(t) == 'string' then r = t end
+		local r, v = std.call(s, 'ph_act', ...)
 
 		if std.me():moved() or cur ~= std.here().current then
 			return r, v

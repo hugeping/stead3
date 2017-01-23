@@ -1546,7 +1546,7 @@ end
 
 std.callpush = function(v, ...)
 	std.call_top = std.call_top + 1;
-	std.call_ctx[std.call_top] = { txt = nil, self = v, action = false };
+	std.call_ctx[std.call_top] = { txt = nil, self = v };
 end
 
 std.callpop = function()
@@ -1802,6 +1802,9 @@ std.method = function(v, n, ...)
 		local a, b = v[n](v, ...);
 		if type(a) ~= 'string' then
 			a, b = std.pget(), a
+			if b == nil then
+				b = true -- the fact of call
+			end
 		end
 		std.callpop()
 		return a, b
