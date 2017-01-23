@@ -684,6 +684,9 @@ std.obj = std.class {
 		local vars = {}
 		local raw = {}
 		for i = 1, #v do
+			if type(v[i]) ~= 'table' then
+				std.err("Wrong declaration: "..std.tostr(v[i]), 2)
+			end
 			for key, val in pairs(v[i]) do
 				if type(key) ~= 'string' then
 					std.err("Wrong var name: "..std.tostr(key), 2)

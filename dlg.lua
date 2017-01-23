@@ -98,6 +98,8 @@ std.dlg = std.class({
 			std.err("Wrong dlg:select argumant: "..std.tostr(p), 2)
 		end
 
+		c:select()
+
 		if c:empty() then -- no choices
 			return false
 		end
@@ -105,7 +107,6 @@ std.dlg = std.class({
 		if c:disabled() then -- select always enables phrase
 			c:enable()
 		end
---		c:select()
 		s.current = c
 		return c
 	end;
@@ -121,6 +122,7 @@ std.dlg = std.class({
 				r = r .. '^'
 			end
 			local o = oo.obj[i]
+			o:check()
 			if not o:disabled() and not o:closed() then
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
@@ -164,6 +166,13 @@ std.phr = std.class({
 				table.insert(o.obj, v)
 			end
 		end
+
+		for k, v in std.pairs(a) do
+			if type(k) == 'string' then
+				o[k] = v
+			end
+		end
+
 		if o.dsc ~= nil and o.act == nil then
 			o.act = o.dsc
 			o.dsc = nil
@@ -178,6 +187,15 @@ std.phr = std.class({
 		if disabled then o = o:disable() end
 		return o
 	end,
+	check = function(s)
+		if type(s.cond) == 'function' then
+			if s:cond() then
+				s:enable()
+			else
+				s:disable()
+			end
+		end
+	end;
 	empty = function(s)
 		for i = 1, #s.obj do
 			local o = s.obj[i]
@@ -200,6 +218,7 @@ std.phr = std.class({
 		if std.me():moved() or cur ~= std.here().current then
 			return r, v
 		end
+
 		if not std.here():push(s) then
 			if std.here().current:empty() and not std.here():pop() then
 				std.walkout(std.here():from())
@@ -208,6 +227,9 @@ std.phr = std.class({
 		return r, v
 	end,
 	select = function(s)
+		for i = 1, #s.obj do
+			s.obj[i]:check()
+		end
 	end;
 }, std.obj)
 
