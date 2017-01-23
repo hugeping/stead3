@@ -26,14 +26,25 @@ std.dlg = std.class({
 		std.setmt(v, s)
 		return v
 	end;
+	scene = function(s)
+		local title, dsc, lact
+		title = iface:title(std.titleof(s))
+		dsc = std.call(s, 'dsc')
+		if not std.me():moved() then
+			s.lact = std.game:lastreact() or s.lact
+			lact = iface:em(s.lact)
+		end
+		return std.par(std.scene_delim, title, lact or false, dsc)
+	end;
 	onact = function(s, w) -- show dsc by default
 		local r, v = std.call(w, 'dsc')
 		if type(r) == 'string' then
-			-- phr_prefix(r) -- TODO
+			return phr_prefix(r)
 		end
 		return r, v
 	end;
 	onenter = function(s, ...)
+		s.lact = false
 		s.current = s.obj[1] -- todo
 		s:for_each(function(s) s:open() end) -- open all phrases
 		if not s:select(s.current) then
@@ -134,29 +145,20 @@ std.phr = std.class({
 		}
 		for i = 1, #a do
 			local v = a[i]
-			print("i = ", i)
 			if i == 1 and type(v) == 'boolean' then
 				if not v then
 					disabled = true
 				else
 					o.always = true
 				end
-				print("always = ", v)
 			elseif o.tag == nil and v ~= nil and std.is_tag(v) then
 				o.tag = v
-				print("tag = ", v)
 			elseif o.dsc == nil and v ~= nil then
 				o.dsc = v
-				print("dsc = ", v)
 			elseif o.act == nil and v ~= nil then
 				o.act = v
-				print("act = ", v)
 			elseif type(v) == 'table' then
 				if not std.is_obj(v, 'phr') then
-					print ("Before:", i)
-					for kk, vv in ipairs(v) do
-						print(kk, vv)
-					end
 					v = s:new(v)
 				end
 				table.insert(o.obj, v)

@@ -1145,10 +1145,15 @@ std.world = std.class({
 		l = std.par(std.scene_delim, reaction or false,
 			    av or false, l or false,
 			    pv or false) or ''
-		if state then
-			s:lastdisp(l)
-		end
 		return l
+	end;
+	lastreact = function(s, t)
+		local o = s.__lreaction
+		if t == nil then
+			return o
+		end
+		s.__lreaction = t or nil
+		return o
 	end;
 	reaction = function(s, t)
 		local o = s.__reaction
@@ -1170,7 +1175,7 @@ std.world = std.class({
 		return oa, op
 	end;
 	cmd = function(s, cmd)
-		local r, v, pv, av
+		local r, v
 		s.player:moved(false)
 		s.player:need_scene(false)
 		if cmd[1] == nil or cmd[1] == 'look' then
@@ -1236,9 +1241,14 @@ std.world = std.class({
 		s = std.ref 'game' -- after reset game is recreated
 		s:reaction(r or false)
 		if v then -- game:step
-			pv, av = s:step()
+			s:step()
 		end
-		return s:disp(v), true
+		r = s:disp(v)
+		if v then
+			s:lastreact(s:reaction() or false)
+			s:lastdisp(r)
+		end
+		return r, true
 	end;
 }, std.obj);
 
@@ -1364,20 +1374,20 @@ std.player = std.class ({
 
 		local r, v, t
 		r, v = std.call(std.ref 'game', 'on'..m, w, w2, ...)
-		t = std.par(std.space_delim, t, r)
+		t = std.par(std.scene_delim, t, r)
 		if v == false then
 			return t, true
 		end
 		if v ~= true then
 			r, v = std.call(s, 'on'..m, w, w2, ...)
-			t = std.par(std.space_delim, t, r)
+			t = std.par(std.scene_delim, t, r)
 			if v == false then
 				return t, true
 			end
 		end
 		if v ~= true then
 			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
-			t = std.par(std.space_delim, t, r)
+			t = std.par(std.scene_delim, t, r)
 			if v == false then
 				return t, true
 			end
@@ -1389,12 +1399,12 @@ std.player = std.class ({
 			end
 		end
 		r, v = std.call(w, m, w, w2, ...)
-		t = std.par(std.space_delim, t, r)
+		t = std.par(std.scene_delim, t, r)
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
 		r, v = std.call(std.ref 'game', m, w, w2, ...)
-		t = std.par(std.space_delim, t, r)
+		t = std.par(std.scene_delim, t, r)
 		return t, v
 	end;
 	action = function(s, w, ...)
