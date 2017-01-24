@@ -45,20 +45,33 @@ std.dlg = std.class({
 	end;
 	onenter = function(s, ...)
 		s.lact = false
-		s.current = s.obj[1] -- todo
+		s.stack = {}
+		s.current = nil
+
 		s:for_each(function(s) s:open() end) -- open all phrases
-		if not s:select(s.current) then
+		local r, v = std.call(s, s.dlg_onenter, ...)
+		if v == false then
+			return r, v
+		end
+		local rr, vv = s:push()
+		if not vv then
 			std.err("Wrong dialog: "..std.tostr(s), 2)
 		end
-		return std.call(s, s.dlg_onenter, ...)
+		return std.par(std.scene_delim, r, rr), v
 	end;
 	push = function(s, p)
 		local c = s.current
 		local r = s:select(p)
+		local t
 		if r ~= false then
-			table.insert(s.stack, c)
+			if c then
+				table.insert(s.stack, c)
+			end
+			if r.dsc ~= nil and r.ph_act == nil and r.next == nil then -- no rection
+				t = std.call(r, 'dsc')
+			end
 		end
-		return r
+		return t, r ~= false
 	end;
 	pop = function(s, phr)
 		if #s.stack == 0 then
@@ -117,12 +130,14 @@ std.dlg = std.class({
 		if not oo then -- nothing to show
 			return
 		end
+
+		oo:select() -- to recheck all
+
 		for i = 1, #oo.obj do
 			if r then
 				r = r .. '^'
 			end
 			local o = oo.obj[i]
-			o:check()
 			if not o:disabled() and not o:closed() then
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
@@ -153,17 +168,17 @@ std.phr = std.class({
 				else
 					o.always = true
 				end
+			elseif type(v) == 'table' then
+				if not std.is_obj(v, 'phr') then
+					v = s:new(v)
+				end
+				table.insert(o.obj, v)
 			elseif o.tag == nil and v ~= nil and std.is_tag(v) then
 				o.tag = v
 			elseif o.dsc == nil and v ~= nil then
 				o.dsc = v
 			elseif o.act == nil and v ~= nil then
 				o.act = v
-			elseif type(v) == 'table' then
-				if not std.is_obj(v, 'phr') then
-					v = s:new(v)
-				end
-				table.insert(o.obj, v)
 			end
 		end
 
@@ -173,15 +188,12 @@ std.phr = std.class({
 			end
 		end
 
-		if o.dsc ~= nil and o.act == nil then
-			o.act = o.dsc
-			o.dsc = nil
-		end
-		if o.act == nil then
-			std.err("Wrong phrase (no act)", 2)
-		end
+--		if o.act == nil then
+--			std.err("Wrong phrase (no act)", 2)
+--		end
 		o.ph_act = o.act
 		o.act = nil
+
 		o = std.obj(o)
 		std.setmt(o, s)
 		if disabled then o = o:disable() end
@@ -206,7 +218,7 @@ std.phr = std.class({
 		return true
 	end;
 	act = function(s, ...)
-		local t
+		local n = s
 		if not s.always then
 			s:close()
 		end
@@ -219,12 +231,19 @@ std.phr = std.class({
 			return r, v
 		end
 
-		if not std.here():push(s) then
+		if std.is_tag(s.next) then
+			n = s.next
+		end
+
+		cur:select() -- conditions
+
+		local rr, vv = std.here():push(n)
+		if not vv then
 			if std.here().current:empty() and not std.here():pop() then
 				std.walkout(std.here():from())
 			end
 		end
-		return r, v
+		return std.par(std.scene_delim, r, rr), v
 	end,
 	select = function(s)
 		for i = 1, #s.obj do
