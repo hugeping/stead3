@@ -237,13 +237,22 @@ std.phr = std.class({
 
 		cur:select() -- conditions
 
+		local te
+		if cur:empty() then
+			te = std.call(cur, 'onempty')
+		end
+
+		if std.me():moved() or cur ~= std.here().current then
+			return std.par(std.scene_delim, r or false, te or false), v
+		end
+
 		local rr, vv = std.here():push(n)
 		if not vv then
 			if std.here().current:empty() and not std.here():pop() then
 				std.walkout(std.here():from())
 			end
 		end
-		return std.par(std.scene_delim, r, rr), v
+		return std.par(std.scene_delim, r or false, te or false, rr or false), v
 	end,
 	select = function(s)
 		for i = 1, #s.obj do
