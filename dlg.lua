@@ -34,7 +34,7 @@ std.dlg = std.class({
 			s.lact = std.game:lastreact() or s.lact
 			lact = iface:em(s.lact)
 		end
-		return std.par(std.scene_delim, title, lact or false, dsc)
+		return std.par(std.scene_delim, title or false, lact or false, dsc)
 	end;
 	onact = function(s, w) -- show dsc by default
 		local r, v = std.call(w, 'dsc')
@@ -42,6 +42,19 @@ std.dlg = std.class({
 			return phr_prefix(r)
 		end
 		return r, v
+	end;
+	empty = function(s, w)
+		if not w then
+			if not s.current then
+				return true
+			end
+			return s.current:empty()
+		end
+		w = s:lookup(w)
+		if not w then
+			return true
+		end
+		return w:empty()
 	end;
 	onenter = function(s, ...)
 		s.lact = false
@@ -134,11 +147,12 @@ std.dlg = std.class({
 		oo:select() -- to recheck all
 
 		for i = 1, #oo.obj do
-			if r then
-				r = r .. '^'
-			end
 			local o = oo.obj[i]
 			if not o:disabled() and not o:closed() then
+				if r then
+					r = r .. '^'
+				end
+				o = o:__alias()
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
 					d = phr_prefix(d, nr)
@@ -199,7 +213,18 @@ std.phr = std.class({
 		if disabled then o = o:disable() end
 		return o
 	end,
+	__alias = function(s)
+		if s.alias ~= nil then
+			local ss = std.here():lookup(s.alias)
+			if not std.is_obj(ss) then
+				std.err("Wrong alias: "..std.tostr(s.alias), 3)
+			end
+			s = ss
+		end
+		return s
+	end;
 	check = function(s)
+		s = s:__alias()
 		if type(s.cond) == 'function' then
 			if s:cond() then
 				s:enable()
@@ -219,10 +244,10 @@ std.phr = std.class({
 	end;
 	act = function(s, ...)
 		local n = s
+		s = s:__alias()
 		if not s.always then
 			s:close()
 		end
-
 		local cur = std.here().current
 
 		local r, v = std.call(s, 'ph_act', ...)

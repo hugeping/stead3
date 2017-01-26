@@ -816,18 +816,22 @@ std.obj = std.class {
 	end;
 	close = function(s)
 		s.__closed = true
+		return s
 	end;
 	open = function(s)
 		s.__closed = false
+		return s
 	end;
 	closed = function(s)
 		return s.__closed
 	end;
 	disable = function(s)
 		s.__disabled = true
+		return s
 	end;
 	enable = function(s)
 		s.__disabled = false
+		return s
 	end;
 	disabled = function(s)
 		return s.__disabled
@@ -1005,7 +1009,7 @@ std.room = std.class({
 		local title, dsc, objs
 		title = iface:title(std.titleof(s))
 		dsc = std.call(s, 'dsc')
-		return std.par(std.scene_delim, title, dsc)
+		return std.par(std.scene_delim, title or false, dsc)
 	end;
 	display = function(s)
 		return s.obj:display()
@@ -1112,9 +1116,9 @@ std.world = std.class({
 				v, pre = std.method(o, 'life');
 				av, vv = s:events()
 				if pre then -- hi-pri msg
-					av = std.par(std.space_delim, av or nil, v)
+					av = std.par(std.space_delim, av or false, v)
 				else
-					vv = std.par(std.space_delim, vv or nil, v)
+					vv = std.par(std.space_delim, vv or false, v)
 				end
 				s:events(av or false, vv or false)
 				if pre == false then -- break cycle
@@ -1182,8 +1186,13 @@ std.world = std.class({
 		s.player:moved(false)
 		s.player:need_scene(false)
 		if cmd[1] == nil or cmd[1] == 'look' then
-			s.player:need_scene(true)
-			v = true
+			if not s.started then
+				s.started = true
+				r, v = s.player:walk 'main'
+			else
+				s.player:need_scene(true)
+				v = true
+			end
 --			r, v = s.player:look()
 		elseif cmd[1] == 'act' then
 			local o = std.ref(cmd[2]) -- on what?
@@ -1377,20 +1386,20 @@ std.player = std.class ({
 
 		local r, v, t
 		r, v = std.call(std.ref 'game', 'on'..m, w, w2, ...)
-		t = std.par(std.scene_delim, t, r)
+		t = std.par(std.scene_delim, t or false, r)
 		if v == false then
 			return t, true
 		end
 		if v ~= true then
 			r, v = std.call(s, 'on'..m, w, w2, ...)
-			t = std.par(std.scene_delim, t, r)
+			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
 				return t, true
 			end
 		end
 		if v ~= true then
 			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
-			t = std.par(std.scene_delim, t, r)
+			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
 				return t, true
 			end
@@ -1402,12 +1411,12 @@ std.player = std.class ({
 			end
 		end
 		r, v = std.call(w, m, w, w2, ...)
-		t = std.par(std.scene_delim, t, r)
+		t = std.par(std.scene_delim, t or false, r)
 		if v ~= nil or r ~= nil then
 			return t, v
 		end
 		r, v = std.call(std.ref 'game', m, w, w2, ...)
-		t = std.par(std.scene_delim, t, r)
+		t = std.par(std.scene_delim, t or false, r)
 		return t, v
 	end;
 	action = function(s, w, ...)
@@ -1455,7 +1464,7 @@ std.player = std.class ({
 		local r, v, t
 		local f = s:where()
 		r, v = std.call(std.ref 'game', 'onwalk', s.__in_walk)
-		t = std.par(std.scene_delim, t, r)
+		t = std.par(std.scene_delim, t or false, r)
 
 		if v == false then -- stop walk
 			s.__in_walk = nil
@@ -1464,7 +1473,7 @@ std.player = std.class ({
 
 		if v ~= true then
 			r, v = std.call(s, 'onwalk', s.__in_walk)
-			t = std.par(std.scene_delim, t, r)
+			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
 				s.__in_walk = nil
 				return t, true
@@ -1473,7 +1482,7 @@ std.player = std.class ({
 		if v ~= true then
 			if not noexit then
 				r, v = std.call(s:where(), 'onexit', s.__in_walk)
-				t = std.par(std.scene_delim, t, r)
+				t = std.par(std.scene_delim, t or false, r)
 				if v == false then
 					s.__in_walk = nil
 					return t, true
@@ -1481,7 +1490,7 @@ std.player = std.class ({
 			end
 			if not noenter then
 				r, v = std.call(s.__in_walk, 'onenter', s:where())
-				t = std.par(std.scene_delim, t, r)
+				t = std.par(std.scene_delim, t or false, r)
 				if v == false then
 					s.__in_walk = nil
 					return t, true
@@ -1490,13 +1499,13 @@ std.player = std.class ({
 		end
 		if not noexit then
 			r, v = std.call(s:where(), 'exit', s.__in_walk)
-			t = std.par(std.scene_delim, t, r)
+			t = std.par(std.scene_delim, t or false, r)
 		end
 		if not noenter then
 			s.room = s.__in_walk
 			s.room.__from = f
 			r, v = std.call(s.__in_walk, 'enter', f)
-			t = std.par(std.scene_delim, t, r)
+			t = std.par(std.scene_delim, t or false, r)
 		end
 		s.room = s.__in_walk
 		s.__in_walk = nil
@@ -1584,7 +1593,7 @@ std.pr = function(...)
 		error ("Call from global context.", 2);
 	end
 	for i = 1, #a do
-		std.cctx().txt = std.par('', std.cctx().txt, std.tostr(a[i]));
+		std.cctx().txt = std.par('', std.cctx().txt or false, std.tostr(a[i]));
 	end
 --	std.cctx().txt = std.cat(std.cctx().txt, std.space_delim);
 end
