@@ -94,8 +94,12 @@ std.dlg = std.class({
 				return t
 			end
 			if r:empty() then
-				local tt = s:pop()
+				local tt, vv = s:pop()
 				t = std.par(std.scene_delim, t or false, tt or false)
+				if not vv then
+					tt = std.walkout(std.here():from())
+					t = std.par(std.scene_delim, t or false, tt or false)
+				end
 			end
 		end
 		return t, r ~= false
@@ -298,15 +302,3 @@ std.phr = std.class({
 		end
 	end;
 }, std.obj)
-
---[[
-false -- выключена (disabled)
-true -- всегда (always = true)
-nil -- обычная фраза, которая пропадает
-                nam =,        act =,                obj =,
-{ false | true, 'знакомство', 'Привет, что нового?',  '#привет', '#пока'  }
-   nam =,    dsc = ,          act =,
-{ '#привет', 'И тебе привет!', 'Я уже поздоровался' }
-{ '#пока', 'Я устал я ухожу', 'Ну пока тогда' }
-
-]]--
