@@ -1774,6 +1774,9 @@ function std.dispof(o)
 			o = o.tag:sub(2)
 			return o
 		end
+		if type(o.nam) == 'number' then
+			return std.tostr(o.nam)
+		end
 		std.err("No nam nor disp are specified for obj: "..std.tostr(o.nam), 2)
 	end
 	return o.nam

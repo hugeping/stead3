@@ -167,11 +167,11 @@ std.dlg = std.class({
 
 		for i = 1, #oo.obj do
 			local o = oo.obj[i]
+			o = o:__alias()
 			if not o:disabled() and not o:closed() then
 				if r then
 					r = r .. '^'
 				end
-				o = o:__alias()
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
 					d = phr_prefix(d, nr)
@@ -243,7 +243,7 @@ std.phr = std.class({
 		return s
 	end;
 	check = function(s)
-		s = s:__alias()
+--		s = s:__alias()
 		if type(s.cond) == 'function' then
 			if s:cond() then
 				s:enable()
@@ -263,7 +263,7 @@ std.phr = std.class({
 	end;
 	act = function(s, ...)
 		local n = s
-		s = s:__alias()
+--		s = s:__alias()
 		if not s.always then
 			s:close()
 		end
@@ -292,7 +292,9 @@ std.phr = std.class({
 	end,
 	select = function(s)
 		for i = 1, #s.obj do
-			s.obj[i]:check()
+			local o = s.obj[i]
+			o = o:__alias()
+			o:check()
 		end
 	end;
 }, std.obj)
