@@ -1993,7 +1993,7 @@ iface = std.obj {
 			r, v = std.ref 'game':cmd(cmd)
 		end
 		if v == false then
-			return iface:fmt(r), false
+			return iface:fmt(r, cmd[1] == 'load'), false
 		end
 		if v == true then
 			r = iface:fmt(r, true)
