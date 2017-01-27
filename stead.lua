@@ -453,9 +453,8 @@ std.save_var = function(vv, fp, n)
 	end
 end
 
-std.save_table = function(vv, fp, n)
+std.save_members = function(vv, fp, n)
 	local l
-	fp:write(string.format("%s = {}\n", n))
 	for k, v in pairs(vv) do
 		l = nil
 		if type(k) == 'number' then
@@ -466,6 +465,11 @@ std.save_table = function(vv, fp, n)
 			std.save_var(v, fp, l)
 		end
 	end
+end
+
+std.save_table = function(vv, fp, n)
+	fp:write(string.format("%s = {}\n", n))
+	std.save_members(vv, fp, n)
 end
 
 function std:reset() -- reset state
@@ -1953,9 +1957,15 @@ function std.cacheable(n, f)
 	end
 end
 
-iface = {
+iface = std.obj {
+	nam = '@iface';
+	fading = 4;
+	{
+		curcmd = {};
+	};
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
+		self.curcmd = cmd
 		print(inp)
 		if not cmd then
 			return "Error in cmd arguments", false

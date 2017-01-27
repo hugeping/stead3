@@ -40,6 +40,12 @@ function instead.get_picture()
 end
 
 function instead.get_fading()
+	if std.me():moved() or iface.curcmd[1] == 'load' then
+		if not iface.fading or iface.fading == 0 then
+			return false
+		end
+		return true, iface.fading
+	end
 end
 
 function instead.get_restart()
