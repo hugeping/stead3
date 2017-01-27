@@ -4,24 +4,6 @@
 require "dlg"
 
 std.delete 'main'
-local phr = std.phr
-
-local closed = function(w)
-	return here():lookup(w):closed()
-end
-
-local enable = function(w)
-	print("lookup ", w, here():lookup(w))
-	return here():lookup(w):enable()
-end
-
-local pop = function(w)
-	local r = here():pop(w)
-	if type(r) == 'string' then
-		std.p(r)
-	end
-	return r
-end
 
 dlg {
 	nam = 'main';
