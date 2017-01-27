@@ -67,11 +67,23 @@ function iface:title() -- hide title
 	return
 end
 
+std.stat = std.class({
+	__stat_type = true;
+	new = function(self, v)
+		if type(v) ~= 'table' then
+			std.err ("Wrong argument to std.stat:"..std.tostr(v), 2)
+		end
+		v = std.obj(v)
+		std.setmt(v, self)
+		return v
+	end;
+}, std.obj);
+
 function iface:xref(str, o, ...)
 	if std.type(str) ~= 'string' then
 		std.err ("Wrong parameter to iface:xref: "..std.tostr(str), 2)
 	end
-	if not std.is_obj(o) then
+	if not std.is_obj(o) or std.is_obj(o, 'stat') then
 		return str
 	end
 	local a = { ... }

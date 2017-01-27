@@ -6,6 +6,7 @@ pr = std.pr
 pn = std.pn
 pf = std.pf
 obj = std.obj
+stat = std.stat
 room = std.room
 dlg = std.dlg
 me = std.me
