@@ -819,22 +819,22 @@ std.obj = std.class {
 		return s
 	end;
 	open = function(s)
-		s.__closed = false
+		s.__closed = nil
 		return s
 	end;
 	closed = function(s)
-		return s.__closed
+		return s.__closed or false
 	end;
 	disable = function(s)
 		s.__disabled = true
 		return s
 	end;
 	enable = function(s)
-		s.__disabled = false
+		s.__disabled = nil
 		return s
 	end;
 	disabled = function(s)
-		return s.__disabled
+		return s.__disabled or false
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create

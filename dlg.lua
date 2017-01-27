@@ -22,6 +22,13 @@ std.dlg = std.class({
 		v.dlg_onenter = v.onenter
 		v.onenter = nil
 		v.stack = {}
+		if type(v.obj) == 'table' then
+			for i = 1, #v.obj do
+				if not std.is_obj(v.obj[i]) then
+					v.obj[i] = std.phr(v.obj[i])
+				end
+			end
+		end
 		v = std.room(v)
 		std.setmt(v, s)
 		return v
@@ -83,6 +90,13 @@ std.dlg = std.class({
 			if r.dsc ~= nil and r.ph_act == nil and r.next == nil then -- no rection
 				t = std.call(r, 'dsc')
 			end
+			if s.current ~= r or std.me():moved() then
+				return t
+			end
+			if r:empty() then
+				local tt = s:pop()
+				t = std.par(std.scene_delim, t or false, tt or false)
+			end
 		end
 		return t, r ~= false
 	end;
@@ -105,10 +119,19 @@ std.dlg = std.class({
 		while #s.stack > 0 do
 			p = table.remove(s.stack, #s.stack) -- remove top
 			p = s:select(p)
-			if p then
-				return p
+			if not p then
+				return false
+			end
+			if p:empty() then
+				local r, v = std.call(p, 'onempty')
+				if v then
+					return r, p
+				end
+			else
+				return false, p
 			end
 		end
+		return false
 	end;
 	select = function(s, p)
 		if #s.obj == 0 then
@@ -125,10 +148,6 @@ std.dlg = std.class({
 		end
 
 		c:select()
-
-		if c:empty() then -- no choices
-			return false
-		end
 
 		if c:disabled() then -- select always enables phrase
 			c:enable()
@@ -262,22 +281,14 @@ std.phr = std.class({
 
 		cur:select() -- conditions
 
-		local te
-		if cur:empty() then
-			te = std.call(cur, 'onempty')
-		end
-
-		if std.me():moved() or cur ~= std.here().current then
-			return std.par(std.scene_delim, r or false, te or false), v
-		end
+		local t
 
 		local rr, vv = std.here():push(n)
+
 		if not vv then
-			if std.here().current:empty() and not std.here():pop() then
-				std.walkout(std.here():from())
-			end
+			t = std.walkout(std.here():from())
 		end
-		return std.par(std.scene_delim, r or false, te or false, rr or false), v
+		return std.par(std.scene_delim, r or false, rr or false, t or false), v
 	end,
 	select = function(s)
 		for i = 1, #s.obj do
