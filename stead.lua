@@ -69,7 +69,10 @@ function std.mod_call(hook, ...)
 		return
 	end
 	for k, v in ipairs(std.__mod_hooks[hook]) do
-		v(...)
+		local a, b = v(...)
+		if a ~= nil or b ~= nil then
+			return a, b
+		end
 	end
 end
 
@@ -94,6 +97,20 @@ end
 
 function std.mod_save(f, ...)
 	__mod_callback_reg(f, 'save', ...)
+end
+
+function std.hook(o, f)
+	local ff
+	if type(o) ~= 'function' then
+		ff = function()
+			return o
+		end
+	else
+		ff = o
+	end
+	return function(...)
+		return f(ff, ...)
+	end
 end
 
 std.fmt = function(str, state)
@@ -1965,13 +1982,16 @@ iface = std.obj {
 	};
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
-		self.curcmd = cmd
 		print(inp)
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
+		std.cmd = cmd
 		std.cache = {}
-		local r, v = std.ref 'game':cmd(cmd)
+		local r, v = std.mod_call('cmd', cmd)
+		if r == nil and v == nil then
+			r, v = std.ref 'game':cmd(cmd)
+		end
 		if v == false then
 			return iface:fmt(r), false
 		end
@@ -1995,9 +2015,9 @@ iface = std.obj {
 		if type(str) ~= 'string' then
 			return
 		end
-		str = std.fmt(str, state)
 		local s = string.gsub(str,'[\t \n]+', std.space_delim);
 		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+		s = std.fmt(s, state)
 		return std.cat(s, '\n')
 	end;
 	input = function(self)

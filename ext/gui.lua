@@ -2,6 +2,8 @@ local std = stead
 
 std.rawset(_G, 'instead', {})
 
+local iface = std '@iface'
+
 iface.inv_delim = '\n'
 iface.hinv_delim = ' | '
 iface.ways_delim = ' | '
@@ -37,10 +39,11 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 end)
 
 function instead.get_picture()
+
 end
 
 function instead.get_fading()
-	if std.me():moved() or iface.curcmd[1] == 'load' then
+	if std.me():moved() or std.cmd[1] == 'load' then
 		if not iface.fading or iface.fading == 0 then
 			return false
 		end
@@ -118,5 +121,11 @@ end
 function iface:center(str)
 	if std.type(str) == 'string' then
 		return '<c>'..str..'</c>'
+	end
+end
+
+function iface:nb(str)
+	if std.type(str) == 'string' then
+		return "<w:"..str:gsub("\\", "\\\\\\\\"):gsub(">","\\>"):gsub("%^","\\^")..">";
 	end
 end

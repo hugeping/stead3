@@ -2,6 +2,9 @@
 -- $API:stead3$
 
 require "dlg"
+require "format"
+
+format.para = true
 
 std.delete 'main'
 
