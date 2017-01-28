@@ -645,6 +645,8 @@ function std:done()
 	std.files = {}
 	std.initialized = false
 	std.game = nil
+	std.rawset(_G, 'init', nil)
+	std.rawset(_G, 'start', nil)
 end
 
 function std.dirty(o)
@@ -1127,7 +1129,7 @@ std.world = std.class({
 
 		if type(std.rawget(_G, 'start')) == 'function' and not std.__in_load then
 			start() -- start before load
-			std.rawset(_G, 'start', nil)
+--			std.rawset(_G, 'start', nil)
 		end
 	end;
 	lifeon = function(s, w, ...)
