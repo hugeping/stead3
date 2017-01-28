@@ -1147,17 +1147,13 @@ std.world = std.class({
 		end
 	end;
 	lifeon = function(s, w, ...)
-		s.lifes:add(w, ...)
+		return s.lifes:add(w, ...)
 	end;
 	lifeoff = function(s, w)
-		s.lifes:del(w)
+		return s.lifes:del(w)
 	end;
 	live = function(s, w)
-		w = s.lifes:lookup(w)
-		if not w or w:disabled() then
-			return false
-		end
-		return true
+		return s.lifes:lookup(w)
 	end;
 	set_pl = function(s, w)
 		if not std.is_obj(w, 'player') then
