@@ -55,7 +55,10 @@ function enable(w)
 end
 
 function pop(w)
-	local r = here():pop(w)
+	if not std.is_obi(std.here(), 'dlg') then
+		std.err("Call pop() in non-dialog object: "..std.tostr(std.here()), 2)
+	end
+	local r = std.here():pop(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end
@@ -63,7 +66,10 @@ function pop(w)
 end
 
 function push(w)
-	local r = here():push(w)
+	if not std.is_obi(std.here(), 'dlg') then
+		std.err("Call push() in non-dialog object: "..std.tostr(std.here()), 2)
+	end
+	local r = std.here():push(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end

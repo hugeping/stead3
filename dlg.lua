@@ -97,7 +97,7 @@ std.dlg = std.class({
 				local tt, vv = s:pop()
 				t = std.par(std.scene_delim, t or false, tt or false)
 				if not vv then
-					tt = std.walkout(std.here():from())
+					tt = std.walkout(s:from())
 					t = std.par(std.scene_delim, t or false, tt or false)
 				end
 			end
