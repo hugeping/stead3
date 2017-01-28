@@ -9,28 +9,37 @@ local pairs = std.pairs
 local table = std.table
 local next = std.next
 
+local function __declare_one(k, v, t)
+	if declarations[k] then
+		std.err ("Duplicate declaration: "..k, 3)
+	end
+	if type(v) == 'function' then
+		std.functions[v] = k
+	end
+	declarations[k] = {value = v, type = t}
+	if t == 'global' then
+		if type(v) == 'function' then
+			std.err("Use declare to declare function: "..k, 3)
+		end
+		rawset(_G, k, v)
+		variables[k] = true
+	end
+end
+
 local function __declare(n, t)
 	if stead.game then
 		std.err ("Use "..t.." only in global context", 2)
+	end
+	if type(n) == 'string' then
+		return function(v)
+			__declare_one(n, v, t)
+		end
 	end
 	if type(n) ~= 'table' then
 		std.err ("Wrong parameter to "..n, 2)
 	end
 	for k, v in std.pairs(n) do
-		if declarations[k] then
-			std.err ("Duplicate declaration: "..k, 2)
-		end
-		if type(v) == 'function' then
-			std.functions[v] = k
-		end
-		declarations[k] = {value = v, type = t}
-		if t == 'global' then
-			if type(v) == 'function' then
-				std.err("Use declare to declare function: "..k, 3)
-			end
-			rawset(_G, k, v)
-			variables[k] = true
-		end
+		__declare_one(k, v, t)
 	end
 	return n
 end
