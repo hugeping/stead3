@@ -15,25 +15,42 @@ from = std.from
 walk = std.walk
 walkin = std.walkin
 walkout = std.walkout
+new = std.new
+delete = std.delete
+nameof = std.nameof
+dispof = std.dispof
+titleof = std.titleof
 
-function walk(w)
-	local r, v = std.walk(w)
+function from(wh, ...)
+	if not wh then wh = std.here() end
+	wh = std.ref(wh)
+	if not std.is_obj(wh, 'room') then
+		std.err("Wrong argument to from: "..std.tostr(wh), 2)
+	end
+	return wh:from(...)
+end;
+
+function walk(w, ...)
+	local r, v = std.me():walk(w, ...)
 	if type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
 end
 
-function walkin(w)
-	local r, v = std.walkin(w)
+function walkin(w, ...)
+	local r, v = std.me():walkin(w, ...)
 	if type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
 end
 
-function walkout(w)
-	local r, v = std.walkout(w)
+function walkout(w, ...)
+	if not std.is_obj(w, 'room') then
+		std.err("Wrong argument to walkout: "..std.tostr(w), 2)
+	end
+	local r, v = std.me():walkout(w, ...)
 	if type(r) == 'string' then
 		std.p(r)
 	end
@@ -64,6 +81,58 @@ function for_all(fn, ...)
 	for i = 1, #a do
 		fn(a[i])
 	end
+end
+
+function seen(w, wh, ...)
+	if not wh then wh = std.here() end
+	wh = std.ref(wh)
+	if not std.is_obj(wh) then
+		std.err("Wrong 2-nd argument to seen: "..std.tostr(wh), 2)
+	end
+	return wh:seen(w, ...)
+end
+
+function lookup(w, wh, ...)
+	if not wh then wh = std.here() end
+	wh = std.ref(wh)
+	if not std.is_obj(wh) and not std.is_obj(wh, 'list') then
+		std.err("Wrong 2-nd argument to lookup: "..std.tostr(wh), 2)
+	end
+	return wh:lookup(w, ...)
+end
+
+function ways(wh)
+	if not wh then wh = std.here() end
+	wh = std.ref(wh)
+	if not std.is_obj(wh, 'room') then
+		std.err("Wrong 2-nd argument to ways: "..std.tostr(wh), 2)
+	end
+	return wh.way
+end
+
+function objs(wh)
+	if not wh then wh = std.here() end
+	wh = std.ref(wh)
+	if not std.is_obj(wh) then
+		std.err("Wrong 2-nd argument to objs: "..std.tostr(wh), 2)
+	end
+	return wh.obj
+end
+
+function search(w, ...)
+	return std.me():search(w, ...)
+end
+
+function have(w, ...)
+	return std.me():have(w, ...)
+end
+
+function inroom(w, ...)
+	return object(w):room(w, ...)
+end
+
+function where(w, ...)
+	return object(w):where(w, ...)
 end
 
 function closed(w)

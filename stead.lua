@@ -859,7 +859,20 @@ std.obj = std.class {
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create
-			local l = string.format("std.new(%q, %s):renam(%d)\n", s.__dynamic.fn, s.__dynamic.arg, s.nam)
+			local n = std.functions[s.__dynamic.fn]
+			if not n then
+				std.err("Error while saving dynamic object: "..s, 2)
+			end
+			local arg = s.__dynamic.arg
+			local l = ''
+			for i = 1, #arg do
+				l = string.format("%s%s", l, std.dump(arg[i]))
+			end
+			if type(s.nam) == 'number' then
+				l = string.format("std.new(%s, %s):renam(%d)\n", n, l, s.nam)
+			else
+				l = string.format("std.new(%s, %s)\n", n, l, s.nam)
+			end
 			fp:write(l)
 		end
 		for k, v in pairs(s.__ro) do
@@ -1727,31 +1740,22 @@ function std.dump(t)
 end
 
 function std.new(fn, ...)
-	if type(fn) ~= 'string' then
+	if type(fn) ~= 'function' then
 		std.err ("Wrong parameter to std.new", 2)
 	end
+	if not std.functions[fn] then
+		std.err ("Function is not declared in 1-st argument of std.new", 2)
+	end
 	local arg = { ... }
-	local l = ''
-	for i = 1, #arg do
-		if i ~= 1 then
-			l = ", "..l
-		end
-		l = string.format("%s%s", l, std.dump(arg[i]))
-	end
+
 	std.__in_new = true
-	local f, r = std.eval("return "..fn.."("..l..")")
+	local o = fn(...)
 	std.__in_new = false
-	local o
-	if type(r) == 'string' then
-		std.err("Wrong constructor: "..r, 2)
-	end
-	if type(f) == 'function' then
-		o = f()
-	end
+
 	if type(o) ~= 'table' then
-		std.err ("Constructor did not return object:"..fn.."("..l..")", 2)
+		std.err ("Constructor did not return object:"..std.functions[fn], 2)
 	end
-	rawset(o, '__dynamic', { fn = fn, arg = l })
+	rawset(o, '__dynamic', { fn = fn, arg = {...} })
 	if std.game then
 		o:ini() -- do initialization
 	end
@@ -1767,12 +1771,6 @@ function std.delete(s)
 	end
 end
 
-function std.var(v)
-	if type(v) ~= 'table' then
-		std.err ("Wrong argument to std.var:"..std.tostr(v), 2)
-	end
-	return v
-end
 function std.namof(o)
 	o = std.ref(o)
 	if not std.is_obj(o) then
@@ -2026,19 +2024,6 @@ iface = std.obj {
 		return str
 	end;
 };
--- some internal aliases
-std.from = function(...)
-	return std.here():from()
-end;
-std.walk = function(...)
-	return std.me():walk(...)
-end;
-std.walkin = function(...)
-	return std.me():walkin(...)
-end;
-std.walkout = function(...)
-	return std.me():walkout(...)
-end;
 
 -- require "ext/gui"
 require "dlg"
