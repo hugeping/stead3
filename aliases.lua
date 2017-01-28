@@ -183,6 +183,22 @@ function empty(w)
 	return object(w):empty(w)
 end
 
+function lifeon(...)
+	return std.game:lefeon(...)
+end
+
+function lifeoff(...)
+	return std.game:lefeoff(...)
+end
+
+function live(...)
+	return std.game:live(...)
+end
+
+function change_pl(...)
+	return std.game:set_pl(...)
+end
+
 std.mod_init(function()
 	declare {
 		game = std.ref 'game',

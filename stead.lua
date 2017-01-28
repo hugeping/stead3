@@ -1152,6 +1152,20 @@ std.world = std.class({
 	lifeoff = function(s, w)
 		s.lifes:del(w)
 	end;
+	live = function(s, w)
+		w = s.lifes:lookup(w)
+		if not w or w:disabled() then
+			return false
+		end
+		return true
+	end;
+	set_pl = function(s, w)
+		if not std.is_obj(w, 'player') then
+			std.err("Wrong parameter to game:set_pl(): "..std.tostr(w), 2)
+		end
+		s.player = w
+		w:need_scene(true)
+	end;
 	life = function(s)
 		local av, vv
 		s:events(false, false)
