@@ -501,7 +501,9 @@ end
 
 function std:load(fname) -- load save
 	self:reset()
+	std.__in_load = true
 	std.ref 'game':ini()
+	std.__in_load = false
 
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
@@ -1123,7 +1125,7 @@ std.world = std.class({
 			std.game = s
 		end
 
-		if type(std.rawget(_G, 'start')) == 'function' then
+		if type(std.rawget(_G, 'start')) == 'function' and not std.__in_load then
 			start() -- start before load
 			std.rawset(_G, 'start', nil)
 		end
