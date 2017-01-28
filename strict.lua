@@ -10,8 +10,8 @@ local table = std.table
 local next = std.next
 
 local function __declare_one(k, v, t)
-	if not k:find("^[a-zA-Z_][a-zA-Z0-9_]*$") then
---		std.err ("Wrong declaration name: "..k, 3)
+	if type(k) ~= 'string' then -- k:find("^[a-zA-Z_][a-zA-Z0-9_]*$") then
+		std.err ("Wrong declaration name: "..k, 3)
 	end
 	if declarations[k] then
 		std.err ("Duplicate declaration: "..k, 3)
@@ -35,6 +35,9 @@ local function __declare(n, t)
 	end
 	if type(n) == 'string' then
 		return function(v)
+			if v == nil then
+				std.err("Wrong declaration: "..std.tostr(t), 2)
+			end
 			__declare_one(n, v, t)
 		end
 	end

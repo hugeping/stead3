@@ -394,6 +394,9 @@ std.list = std.class {
 --			end
 --		end
 --	end;
+	empty = function(s)
+		return (#s == 0)
+	end;
 	zap = function(s) -- delete all objects
 		local l = {}
 		for i = 1, #s do
@@ -564,25 +567,17 @@ function std:save(fp)
 
 	local oo = std.objects
 
-	for k, v in pairs(oo) do -- save dynamic objects
+	std.for_each_obj(function(v)
 		if v.__dynamic then
-			if type(k) == 'number' then
-				v:save(fp, string.format("std(%d)", k))
-			else
-				v:save(fp, string.format("std %q", k))
-			end
+			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
-	end
+	end)
 
 	std.mod_call('save', fp)
 
 	std.for_each_obj(function(v)
 		if not v.__dynamic then
-			if type(v.nam) == 'number' then
-				v:save(fp, string.format("std(%d)", v.nam))
-			else
-				v:save(fp, string.format("std %q", v.nam))
-			end
+			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
 
@@ -870,6 +865,15 @@ std.obj = std.class {
 	end;
 	disabled = function(s)
 		return s.__disabled or false
+	end;
+	empty = function(s)
+		for i = 1, #s.obj do
+			local o = s.obj[i]
+			if not o:disabled() then
+				return false
+			end
+		end
+		return true
 	end;
 	save = function(s, fp, n)
 		if s.__dynamic then -- create

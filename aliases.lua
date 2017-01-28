@@ -21,13 +21,14 @@ nameof = std.nameof
 dispof = std.dispof
 titleof = std.titleof
 
-function from(wh, ...)
-	if not wh then wh = std.here() end
-	wh = std.ref(wh)
+function from(ww)
+	local wh
+	ww = ww or std.here()
+	wh = std.ref(ww)
 	if not std.is_obj(wh, 'room') then
 		std.err("Wrong argument to from: "..std.tostr(wh), 2)
 	end
-	return wh:from(...)
+	return wh:from()
 end;
 
 function walk(w, ...)
@@ -83,38 +84,42 @@ function for_all(fn, ...)
 	end
 end
 
-function seen(w, wh, ...)
-	if not wh then wh = std.here() end
-	wh = std.ref(wh)
+function seen(w, ww)
+	local wh
+	ww = ww or std.here()
+	wh = std.ref(ww)
 	if not std.is_obj(wh) then
-		std.err("Wrong 2-nd argument to seen: "..std.tostr(wh), 2)
+		std.err("Wrong 2-nd argument to seen: "..std.tostr(ww), 2)
 	end
-	return wh:seen(w, ...)
+	return wh:seen(w)
 end
 
-function lookup(w, wh, ...)
-	if not wh then wh = std.here() end
-	wh = std.ref(wh)
+function lookup(w, ww)
+	local wh
+	ww = ww or std.here()
+	wh = std.ref(ww)
 	if not std.is_obj(wh) and not std.is_obj(wh, 'list') then
-		std.err("Wrong 2-nd argument to lookup: "..std.tostr(wh), 2)
+		std.err("Wrong 2-nd argument to lookup: "..std.tostr(ww), 2)
 	end
-	return wh:lookup(w, ...)
+	return wh:lookup(w)
 end
 
-function ways(wh)
-	if not wh then wh = std.here() end
-	wh = std.ref(wh)
+function ways(ww)
+	local wh
+	ww = ww or std.here()
+	wh = std.ref(ww)
 	if not std.is_obj(wh, 'room') then
-		std.err("Wrong 2-nd argument to ways: "..std.tostr(wh), 2)
+		std.err("Wrong 2-nd argument to ways: "..std.tostr(ww), 2)
 	end
 	return wh.way
 end
 
-function objs(wh)
-	if not wh then wh = std.here() end
-	wh = std.ref(wh)
+function objs(ww)
+	local wh
+	ww = ww or std.here()
+	wh = std.ref(ww)
 	if not std.is_obj(wh) then
-		std.err("Wrong 2-nd argument to objs: "..std.tostr(wh), 2)
+		std.err("Wrong 2-nd argument to objs: "..std.tostr(ww), 2)
 	end
 	return wh.obj
 end
@@ -148,10 +153,11 @@ function enable(w)
 end
 
 function pop(w)
-	if not std.is_obj(std.here(), 'dlg') then
-		std.err("Call pop() in non-dialog object: "..std.tostr(std.here()), 2)
+	local wh = std.here()
+	if not std.is_obj(wh, 'dlg') then
+		std.err("Call pop() in non-dialog object: "..std.tostr(wh), 2)
 	end
-	local r, v = std.here():pop(w)
+	local r, v = wh:pop(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end
@@ -159,14 +165,22 @@ function pop(w)
 end
 
 function push(w)
-	if not std.is_obj(std.here(), 'dlg') then
-		std.err("Call push() in non-dialog object: "..std.tostr(std.here()), 2)
+	local wh = std.here()
+	if not std.is_obj(wh, 'dlg') then
+		std.err("Call push() in non-dialog object: "..std.tostr(wh), 2)
 	end
-	local r, v = std.here():push(w)
+	local r, v = ww:push(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
+end
+
+function empty(w)
+	if not w then
+		return std.here():empty()
+	end
+	return object(w):empty(w)
 end
 
 std.mod_init(function()
