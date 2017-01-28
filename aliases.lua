@@ -16,6 +16,30 @@ walk = std.walk
 walkin = std.walkin
 walkout = std.walkout
 
+function walk(w)
+	local r, v = std.walk(w)
+	if type(r) == 'string' then
+		std.p(r)
+	end
+	return r, v
+end
+
+function walkin(w)
+	local r, v = std.walkin(w)
+	if type(r) == 'string' then
+		std.p(r)
+	end
+	return r, v
+end
+
+function walkout(w)
+	local r, v = std.walkout(w)
+	if type(r) == 'string' then
+		std.p(r)
+	end
+	return r, v
+end
+
 function object(w)
 	local o
 	if std.is_tag(w) then
@@ -55,25 +79,25 @@ function enable(w)
 end
 
 function pop(w)
-	if not std.is_obi(std.here(), 'dlg') then
+	if not std.is_obj(std.here(), 'dlg') then
 		std.err("Call pop() in non-dialog object: "..std.tostr(std.here()), 2)
 	end
-	local r = std.here():pop(w)
+	local r, v = std.here():pop(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end
-	return r
+	return r, v
 end
 
 function push(w)
-	if not std.is_obi(std.here(), 'dlg') then
+	if not std.is_obj(std.here(), 'dlg') then
 		std.err("Call push() in non-dialog object: "..std.tostr(std.here()), 2)
 	end
-	local r = std.here():push(w)
+	local r, v = std.here():push(w)
 	if type(r) == 'string' then
 		std.p(r)
 	end
-	return r
+	return r, v
 end
 
 std.mod_init(function()
