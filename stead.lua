@@ -562,14 +562,14 @@ function std:save(fp)
 		fp:write(string.format("std:gamefile(%q)\n", std.files[i]))
 	end
 
+	std.mod_call('save', fp)
+
 	local oo = std.objects -- save dynamic objects
 	for i = 1, #oo do
 		if oo[i] then
 			oo[i]:save(fp, string.format("std(%d)", i))
 		end
 	end
-
-	std.mod_call('save', fp)
 
 	for k, v in pairs(oo) do -- save static objects
 		if type(k) == 'string' then

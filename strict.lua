@@ -11,7 +11,7 @@ local next = std.next
 
 local function __declare_one(k, v, t)
 	if not k:find("^[a-zA-Z_][a-zA-Z0-9_]*$") then
-		std.err ("Wrong declaration name: "..k, 3)
+--		std.err ("Wrong declaration name: "..k, 3)
 	end
 	if declarations[k] then
 		std.err ("Duplicate declaration: "..k, 3)
