@@ -7,8 +7,6 @@ require "format"
 format.para = true
 format.dash = true
 
-std.delete 'main'
-
 dlg {
 	nam = 'main';
 	disp = '...';

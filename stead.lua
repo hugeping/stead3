@@ -600,19 +600,6 @@ function std.for_each_obj(fn, ...)
 end
 
 function std:init()
-	if std.ref 'game' then
-		std.delete('game')
-	end
-	if std.ref 'main' then
-		std.delete('main')
-	end
-	if std.ref 'player' then
-		std.delete('player')
-	end
-	if std.ref '@' then
-		std.delete('@')
-	end
-
 	std.obj { nam = '@',
 		  {
 			  iface = {
@@ -647,6 +634,18 @@ function std:done()
 	end)
 	std.objects = objects
 	std.objects_nr = 0
+	if std.ref 'game' then
+		std.delete('game')
+	end
+	if std.ref 'main' then
+		std.delete('main')
+	end
+	if std.ref 'player' then
+		std.delete('player')
+	end
+	if std.ref '@' then
+		std.delete('@')
+	end
 	std.files = {}
 	std.initialized = false
 	std.game = nil
@@ -708,7 +707,9 @@ std.obj = std.class {
 			std.err ("Wrong .nam in object.", 2)
 		end
 		if oo[v.nam] then
-			std.err ("Duplicated object: "..v.nam, 2)
+			if v.nam ~= 'main' and v.nam ~= 'player' and v.nam ~= 'game' then
+				std.err ("Duplicated object: "..v.nam, 2)
+			end
 		end
 		local ro = {}
 		local vars = {}
