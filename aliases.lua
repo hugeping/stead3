@@ -155,6 +155,10 @@ function enable(w)
 	return std.object(w):enable()
 end
 
+function actions(w, t)
+	return std.object(w):actions(t)
+end
+
 function pop(w)
 	local wh = std.here()
 	if not std.is_obj(wh, 'dlg') then

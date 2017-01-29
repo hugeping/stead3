@@ -269,15 +269,13 @@ std.list = std.class {
 			s:attach(o)
 		end
 	end;
---[[
 	sort = function(s)
 		std.table.sort(s, function(a, b)
-			local p1 = a.pri or 0
-			local p2 = b.pri or 0
+			local p1 = std.tonum(a.pri) or 0
+			local p2 = std.tonum(b.pri) or 0
 			return p1 < p2
 		end)
 	end;
-]]--
 	display = function(s)
 		local r
 		for i = 1, #s do
@@ -353,6 +351,7 @@ std.list = std.class {
 			s:__dirty(true)
 			s:__attach(o)
 			table.insert(s, o)
+			s:sort()
 			return o
 		end
 		if type(pos) ~= 'number' then
@@ -374,6 +373,7 @@ std.list = std.class {
 		else
 			table.insert(s, o)
 		end
+		s:sort()
 		return o
 	end;
 	for_each = function(s, fn, ...)
@@ -426,6 +426,7 @@ std.list = std.class {
 			s:__dirty(true)
 			s:__detach(o)
 			table.remove(s, i)
+			s:sort()
 			return o
 		end
 	end;
@@ -757,6 +758,13 @@ std.obj = std.class {
 		std.setmt(v, self)
 		return v
 	end;
+	actions = function(s, t)
+		t = t or 'act'
+		if type(t) ~= 'string' then
+			std.err("Wrong argument to obj:actions(): "..std.tostr(t), 2)
+		end
+		return s['__nr_'..t] or 0
+	end;
 	renam = function(s, new)
 		local oo = std.objects
 		if new == s.nam then
@@ -1042,6 +1050,12 @@ std.room = std.class({
 		v = std.obj(v)
 		std.setmt(v, self)
 		return v
+	end;
+	visited = function(s)
+		return s.__visits
+	end;
+	visits = function(s)
+		return s.__visits or 0
 	end;
 	seen = function(self, w)
 		local r, v = std.obj.seen(self, w)
@@ -1477,12 +1491,14 @@ std.player = std.class ({
 		if m == 'use' and w2 then
 			r, v = std.call(w2, 'used', w, ...)
 			if r ~= nil or v ~= nil then
+				w2['__nr_used'] = (w2['__nr_used'] or 0) + 1
 				return r, false -- stop chain
 			end
 		end
 		r, v = std.call(w, m, w, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v ~= nil or r ~= nil then
+			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
 			return t, v
 		end
 		r, v = std.call(std.ref 'game', m, w, w2, ...)
@@ -1578,6 +1594,7 @@ std.player = std.class ({
 			t = std.par(std.scene_delim, t or false, r)
 		end
 		s.room = s.__in_walk
+		s.room.__visits = (s.room.__visits or 0) + 1
 		s.__in_walk = nil
 		s:need_scene(true)
 		s:moved(true)
