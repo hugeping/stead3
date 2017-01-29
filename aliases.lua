@@ -1,6 +1,7 @@
 local std = stead
 local type = std.type
 std.rawset(_G, 'std', stead)
+include = std.include
 p = std.p
 pr = std.pr
 pn = std.pn
@@ -8,6 +9,7 @@ pf = std.pf
 obj = std.obj
 stat = std.stat
 room = std.room
+menu = std.menu
 dlg = std.dlg
 me = std.me
 here = std.here
@@ -73,6 +75,7 @@ function object(w)
 	end
 	return o
 end
+std.object = object
 
 function for_all(fn, ...)
 	if type(fn) ~= 'function' then
@@ -133,23 +136,23 @@ function have(w, ...)
 end
 
 function inroom(w, ...)
-	return object(w):room(w, ...)
+	return std.object(w):room(w, ...)
 end
 
 function where(w, ...)
-	return object(w):where(w, ...)
+	return std.object(w):where(w, ...)
 end
 
 function closed(w)
-	return object(w):closed()
+	return std.object(w):closed()
 end
 
 function disabled(w)
-	return object(w):enabled()
+	return std.object(w):enabled()
 end
 
 function enable(w)
-	return object(w):enable()
+	return std.object(w):enable()
 end
 
 function pop(w)
@@ -180,7 +183,7 @@ function empty(w)
 	if not w then
 		return std.here():empty()
 	end
-	return object(w):empty(w)
+	return std.object(w):empty(w)
 end
 
 function lifeon(...)
@@ -197,6 +200,47 @@ end
 
 function change_pl(...)
 	return std.game:set_pl(...)
+end
+
+function player_moved()
+	return std.me():moved()
+end
+
+function inv(pl)
+	pl = pl or std.me()
+	pl = std.ref(pl)
+	if not std.is_obj(pl, 'player') then
+		std.err("Wrong argument to inv(): "..std.tostr(pl))
+	end
+	return pl:inventory()
+end
+
+function place(w, wh)
+	local o = std.object(w)
+	if not w then
+		std.err("Wrong argument to place: "..std.tostr(w), 2)
+	end
+	o:remove() -- remove object from everywhere
+	wh = wh or std.here()
+	if type(wh) ~= 'table' then
+		wh = std.ref(wh)
+	end
+	if std.is_obj(wh) then
+		wh.obj:add(o)
+	elseif std.is_obj(wh, 'list') then
+		wh:add(o)
+	else
+		std.err("Wrong 2-nd argument to place: "..std.tostr(wh), 2)
+	end
+	return o
+end
+
+function take(w)
+	return place(w, std.me():inventory())
+end
+
+function drop(w, wh)
+	return place(w, wh)
 end
 
 std.mod_init(function()

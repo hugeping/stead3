@@ -8,6 +8,7 @@ stead = {
 	objects_nr = 0;
 	tables = {};
 	functions = {};
+	includes = {};
 	tostr = tostring;
 	tonum = tonumber;
 	type = type;
@@ -23,6 +24,7 @@ stead = {
 	string = string;
 	next = next;
 	loadfile = loadfile;
+	dofile = dofile;
 	getinfo = debug.getinfo;
 	__mod_hooks = {},
 	files = {},
@@ -159,7 +161,10 @@ end
 function std.class(s, inh)
 --	s.__parent = function(s)
 --		return inh
---	end;
+	--	end;
+	s.type = function(s, t)
+		return std.is_obj(s, t)
+	end;
 	s.__call = function(s, ...)
 		local a = { ... }
 		if #a == 1 and type(a[1]) == 'string' then
@@ -495,11 +500,7 @@ end
 function std:reset() -- reset state
 	self:done()
 	self:init()
-	local f, err = std.loadfile('main.lua')
-	if not f then
-		std.err(err, 2)
-	end
-	f()
+	std.dofile('main.lua')
 end
 
 function std:load(fname) -- load save
@@ -530,12 +531,8 @@ function std:gamefile(fn, reset) -- load game file
 		self.game.player:need_scene(true)
 		return
 	end
-	local f, err = std.loadfile(fn)
-	if not f then
-		std.err(err, 2)
-	end
 	std.__in_gamefile = true
-	f() -- loaded!
+	std.dofile(fn)
 	std.__in_gamefile = false
 	std.ref 'game':ini()
 	table.insert(std.files, fn) -- remember it
@@ -647,6 +644,7 @@ function std:done()
 		std.delete('@')
 	end
 	std.files = {}
+	std.includes = {}
 	std.initialized = false
 	std.game = nil
 	std.rawset(_G, 'init', nil)
@@ -1873,7 +1871,7 @@ std.method = function(v, n, ...)
 	if type(v[n]) == 'function' then
 		std.callpush(v, ...)
 		local a, b = v[n](v, ...);
-		if type(a) ~= 'string' then
+		if type(a) ~= 'string' and b == nil then
 			a, b = std.pget(), a
 			if b == nil then
 				b = true -- the fact of call
@@ -2004,9 +2002,6 @@ end
 iface = std.obj {
 	nam = '@iface';
 	fading = 4;
-	{
-		curcmd = {};
-	};
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
 		print(inp)
@@ -2020,6 +2015,9 @@ iface = std.obj {
 			r, v = std.ref 'game':cmd(cmd)
 		end
 		if v == false then
+			if r == true then -- true, false is now menu mode
+				return nil, true -- hack for menu mode
+			end
 			return iface:fmt(r, cmd[1] == 'load'), false
 		end
 		if v == true then
@@ -2054,6 +2052,12 @@ iface = std.obj {
 	end;
 };
 
+function std.include(f)
+	if not std.includes[f] then
+		std.includes[f] = true
+		std.dofile(f)
+	end
+end
 -- require "ext/gui"
 require "dlg"
 require "strict"

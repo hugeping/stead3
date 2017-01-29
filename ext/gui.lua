@@ -88,6 +88,25 @@ std.stat = std.class({
 	end;
 }, std.obj);
 
+std.menu = std.class({
+	__menu_type = true;
+	new = function(self, v)
+		if type(v) ~= 'table' then
+			std.err ("Wrong argument to std.menu:"..std.tostr(v), 2)
+		end
+		v = std.obj(v)
+		std.setmt(v, self)
+		return v
+	end;
+	inv = function(s, ...)
+		local r, v = std.call(s, 'act', ...)
+		if r ~= nil then
+			return r, v
+		end
+		return true, false -- menu mode
+	end;
+}, std.obj);
+
 function iface:xref(str, o, ...)
 	if std.type(str) ~= 'string' then
 		std.err ("Wrong parameter to iface:xref: "..std.tostr(str), 2)
@@ -106,7 +125,7 @@ function iface:xref(str, o, ...)
 	if std.here().way:lookup(o) then
 		return std.string.format("<a:go %s%s>", std.deref_str(o), args)..str.."</a>"
 	end
-	if std.me():lookup(o) then
+	if not o:type 'menu' and std.me():lookup(o) then
 		return std.string.format("<a:%s%s>", std.deref_str(o), args)..str.."</a>"
 	end
 	return std.string.format("<a:act %s%s>", std.deref_str(o), args)..str.."</a>"
@@ -129,3 +148,6 @@ function iface:nb(str)
 		return "<w:"..str:gsub("\\", "\\\\\\\\"):gsub(">","\\>"):gsub("%^","\\^")..">";
 	end
 end
+-- some aliases
+menu = std.menu
+stat = std.stat
