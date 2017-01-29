@@ -3,6 +3,7 @@ local std = stead
 std.rawset(_G, 'instead', {})
 
 local iface = std '@iface'
+local type = std.type
 
 iface.inv_delim = '\n'
 iface.hinv_delim = ' | '
@@ -112,7 +113,7 @@ std.menu = std.class({
 }, std.obj);
 
 function iface:xref(str, o, ...)
-	if std.type(str) ~= 'string' then
+	if type(str) ~= 'string' then
 		std.err ("Wrong parameter to iface:xref: "..std.tostr(str), 2)
 	end
 	if not std.is_obj(o) or std.is_obj(o, 'stat') then
@@ -121,7 +122,7 @@ function iface:xref(str, o, ...)
 	local a = { ... }
 	local args = ''
 	for i = 1, #a do
-		if std.type(a[i]) ~= 'string' and std.type(a[i]) ~= 'number' then
+		if type(a[i]) ~= 'string' and type(a[i]) ~= 'number' then
 			std.err ("Wrong argument to iface:xref: "..std.tostr(a[i]), 2)
 		end
 		args = args .. ' '..std.dump(a[i])
@@ -136,22 +137,129 @@ function iface:xref(str, o, ...)
 end
 
 function iface:em(str)
-	if std.type(str) == 'string' then
+	if type(str) == 'string' then
 		return '<i>'..str..'</i>'
 	end
 end
 
 function iface:center(str)
-	if std.type(str) == 'string' then
+	if type(str) == 'string' then
 		return '<c>'..str..'</c>'
 	end
 end
 
+function iface:just(str)
+	if type(str) == 'string' then
+		return '<j>'..str..'</j>'
+	end
+end
+
+function iface:left(str)
+	if type(str) == 'string' then
+		return '<l>'..str..'</l>'
+	end
+end
+
+function iface:right(str)
+	if type(str) == 'string' then
+		return '<r>'..str..'</r>'
+	end
+end
+
+function iface:bold(str)
+	if type(str) == 'string' then
+		return '<b>'..str..'</b>'
+	end
+end
+
+function iface:top(str)
+	if type(str) == 'string' then
+		return '<t>'..str..'</t>'
+	end
+end
+
+function iface:bottom(str)
+	if type(str) == 'string' then
+		return '<d>'..str..'</d>'
+	end
+end
+
+function iface:middle(str)
+	if type(str) == 'string' then
+		return '<m>'..str..'</m>'
+	end
+end
+
 function iface:nb(str)
-	if std.type(str) == 'string' then
+	if type(str) == 'string' then
 		return "<w:"..str:gsub("\\", "\\\\\\\\"):gsub(">","\\>"):gsub("%^","\\^")..">";
 	end
 end
+
+function iface:anchor()
+	return '<a:#>'
+end
+
+function iface:img(str)
+	if type(str) == 'string' then
+		return "<g:"..str..">"
+	end
+end;
+
+function iface:imgl(str)
+	if type(str) == 'string' then
+		return "<g:"..str.."\\|left>"
+	end
+end;
+
+function iface:imgr(str)
+	if type(str) == 'string' then
+		return "<g:"..str.."\\|right>"
+	end
+end
+
+function iface:under(str)
+	if type(str) == 'string' then
+		return "<u>"..str.."</u>"
+	end
+end;
+
+function iface:st(str)
+	if type(str) == 'string' then
+		return "<s>"..str.."</s>"
+	end
+end
+
+function iface:tab(str, al)
+	if std.tonum(str) then
+		str = std.tostr(str)
+	end
+	if type(str) ~= 'string' then
+		return
+	end
+	if al == 'right' then
+		str = str .. ",right"
+	elseif al == 'center' then
+		str = str .. ",center"
+	end
+	return '<x:'..str..'>'
+end
+
+function iface:y(str, al)
+	if stead.tonum(str) then
+		str = stead.tostr(str)
+	end
+	if stead.type(str) ~= 'string' then
+		return nil;
+	end
+	if al == 'middle' then
+		str = str .. ",middle"
+	elseif al == 'top' then
+		str = str .. ",top"
+	end
+	return '<y:'..str..'>'
+end;
+
 -- some aliases
 menu = std.menu
 stat = std.stat
