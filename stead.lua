@@ -549,11 +549,13 @@ function std:gamefile(fn, reset) -- load game file
 end
 
 function std:save(fp)
+	local close
 	if type(fp) == 'string' then
 		fp = io.open(fp, "wb");
 		if not fp then
 			return nil, false -- can create file
 		end
+		close = true
 	end
 	local n
 	if std.type(std.savename) == 'function' then
@@ -587,9 +589,10 @@ function std:save(fp)
 			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
-
-	fp:flush();
-	fp:close();
+	if close then
+		fp:flush();
+		fp:close();
+	end
 end
 
 function std.for_each_obj(fn, ...)
@@ -1217,6 +1220,13 @@ std.world = std.class({
 		s:life()
 		s.__time = s:time() + 1
 	end;
+	nop = function(s, v)
+		local ov = s.__nop
+		if v ~= nil then
+			s.__nop = v
+		end
+		return ov
+	end;
 	lastdisp = function(s, str)
 		local ov = s.__lastdisp
 		if str ~= nil then
@@ -1271,6 +1281,7 @@ std.world = std.class({
 		local r, v
 		s.player:moved(false)
 		s.player:need_scene(false)
+		std.abort_cmd = false
 		if cmd[1] == nil or cmd[1] == 'look' then
 			if not s.started then
 				s.started = true
@@ -1333,9 +1344,10 @@ std.world = std.class({
 			r = std:load(cmd[2])
 			v = false
 		end
-		if v == false then
+		if v == false or std.abort_cmd then
 			return r, false -- wrong cmd?
 		end
+
 		s = std.ref 'game' -- after reset game is recreated
 		s:reaction(r or false)
 		if v then -- game:step

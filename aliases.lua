@@ -35,7 +35,7 @@ end;
 
 function walk(w, ...)
 	local r, v = std.me():walk(w, ...)
-	if type(r) == 'string' then
+	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
@@ -43,7 +43,7 @@ end
 
 function walkin(w, ...)
 	local r, v = std.me():walkin(w, ...)
-	if type(r) == 'string' then
+	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
@@ -51,7 +51,7 @@ end
 
 function walkout(w, ...)
 	local r, v = std.me():walkout(w, ...)
-	if type(r) == 'string' then
+	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
@@ -162,7 +162,7 @@ function pop(w)
 		std.err("Call pop() in non-dialog object: "..std.tostr(wh), 2)
 	end
 	local r, v = wh:pop(w)
-	if type(r) == 'string' then
+	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
@@ -174,7 +174,7 @@ function push(w)
 		std.err("Call push() in non-dialog object: "..std.tostr(wh), 2)
 	end
 	local r, v = ww:push(w)
-	if type(r) == 'string' then
+	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
 	return r, v
