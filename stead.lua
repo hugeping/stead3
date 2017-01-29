@@ -519,9 +519,7 @@ end
 
 function std:load(fname) -- load save
 	self:reset()
-	std.__in_load = true
-	std.ref 'game':ini()
-	std.__in_load = false
+	std.ref 'game':ini(true)
 
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
@@ -1144,7 +1142,7 @@ std.world = std.class({
 		end
 		return ov
 	end;
-	ini = function(s)
+	ini = function(s, in_load)
 --		std.mod_call('init') -- init modules
 
 		s.player = std.ref(s.player) -- init game
@@ -1169,7 +1167,7 @@ std.world = std.class({
 			end
 			std.game = s
 		end
-		if not std.__in_load then
+		if not in_load then
 			std.mod_call('start')
 			if type(std.rawget(_G, 'start')) == 'function' then
 				start() -- start before load

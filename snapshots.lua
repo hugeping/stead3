@@ -31,9 +31,7 @@ local snap = std.obj {
 			return false
 		end
 		std:reset()
-		std.__in_load = true
-		std.ref 'game':ini()
-		std.__in_load = false
+		std.ref 'game':ini(true)
 
 		local f, err = std.eval(s.data[name])
 		if not f then
