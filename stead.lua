@@ -269,6 +269,15 @@ std.list = std.class {
 			s:attach(o)
 		end
 	end;
+--[[
+	sort = function(s)
+		std.table.sort(s, function(a, b)
+			local p1 = a.pri or 0
+			local p2 = b.pri or 0
+			return p1 < p2
+		end)
+	end;
+]]--
 	display = function(s)
 		local r
 		for i = 1, #s do

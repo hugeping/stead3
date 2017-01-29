@@ -236,7 +236,7 @@ function place(w, wh)
 end
 
 function take(w)
-	return place(w, std.me():inventory())
+	return place(w, std.ref(std.me()):inventory())
 end
 
 function drop(w, wh)
