@@ -2110,6 +2110,6 @@ function std.include(f)
 	end
 end
 -- require "ext/gui"
-require "dlg"
 require "strict"
+require "dlg"
 require "aliases"
