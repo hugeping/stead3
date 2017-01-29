@@ -32,6 +32,10 @@ stead = {
 
 local std = stead
 
+function stead:abort()
+	self.abort_cmd = true
+end
+
 local table = std.table
 local pairs = std.pairs
 local ipairs = std.ipairs

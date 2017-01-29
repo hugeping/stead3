@@ -41,7 +41,7 @@ local snap = std.obj {
 		end
 		f();
 		std.ref 'game':ini()
-		std.abort_cmd = true
+		std:abort()
 		if std.cctx() then
 			std.pr(std.game:lastdisp())
 		end
