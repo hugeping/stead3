@@ -1142,7 +1142,7 @@ std.world = std.class({
 		end
 		return ov
 	end;
-	ini = function(s, in_load)
+	ini = function(s, nostart)
 --		std.mod_call('init') -- init modules
 
 		s.player = std.ref(s.player) -- init game
@@ -1167,7 +1167,7 @@ std.world = std.class({
 			end
 			std.game = s
 		end
-		if not in_load then
+		if not nostart then
 			std.mod_call('start')
 			if type(std.rawget(_G, 'start')) == 'function' then
 				start() -- start before load
