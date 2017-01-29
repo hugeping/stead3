@@ -38,9 +38,13 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	return str
 end)
 
-function instead.get_picture()
-
-end
+instead.get_picture = std.cacheable('pic', function()
+	local s = stead.call(std.here(), 'pic')
+	if not s then
+		s = stead.call(std.ref 'game', 'pic')
+	end
+	return s
+end)
 
 function instead.get_fading()
 	if std.me():moved() or std.cmd[1] == 'load' then
