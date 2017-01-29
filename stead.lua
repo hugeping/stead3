@@ -654,7 +654,7 @@ function std:done()
 		std.delete('@')
 	end
 	std.files = {}
-	std.includes = {}
+--	std.includes = {}
 	std.initialized = false
 	std.game = nil
 	std.rawset(_G, 'init', nil)
@@ -2081,6 +2081,15 @@ iface = std.obj {
 };
 
 function std.include(f)
+	if std.game then
+		std.err("Use include() only in global context", 2)
+	end
+	if type(f) ~= 'string' then
+		std.err("Wrong argument to include(): "..std.tostr(f), 2)
+	end
+	if not f:find("%.lua$") then
+		f = f .. '.lua'
+	end
 	if not std.includes[f] then
 		std.includes[f] = true
 		std.dofile(f)
