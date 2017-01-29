@@ -1162,10 +1162,12 @@ std.world = std.class({
 			end
 			std.game = s
 		end
-
-		if type(std.rawget(_G, 'start')) == 'function' and not std.__in_load then
-			start() -- start before load
---			std.rawset(_G, 'start', nil)
+		if not std.__in_load then
+			std.mod_call('start')
+			if type(std.rawget(_G, 'start')) == 'function' then
+				start() -- start before load
+			--	std.rawset(_G, 'start', nil)
+			end
 		end
 	end;
 	lifeon = function(s, w, ...)
