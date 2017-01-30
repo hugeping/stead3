@@ -1,5 +1,6 @@
 local std = stead
 local type = std.type
+_ = std.ref
 std.rawset(_G, 'std', stead)
 include = std.include
 p = std.p
