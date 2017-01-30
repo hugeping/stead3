@@ -22,6 +22,7 @@ stead = {
 	rawset = rawset;
 	rawget = rawget;
 	io = io;
+	os = os;
 	string = string;
 	next = next;
 	loadfile = loadfile;
