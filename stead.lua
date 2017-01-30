@@ -1326,7 +1326,7 @@ std.world = std.class({
 		if cmd[1] == nil or cmd[1] == 'look' then
 			if not s.started then
 				s.started = true
-				r, v = s.player:walk 'main'
+				r, v = s.player:walk('main', true)
 			else
 				s.player:need_scene(true)
 				v = true
