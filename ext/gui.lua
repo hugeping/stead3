@@ -260,6 +260,39 @@ function iface:y(str, al)
 	return '<y:'..str..'>'
 end;
 
+function iface:input(event, ...)
+	local input = std.ref '@input'
+	if type(input) ~= 'table' then
+		return
+	end
+	if event == 'kbd' then
+		if type(input.key) == 'function' then
+			return input:key(...); -- pressed, event
+		end
+	elseif event == 'mouse' then
+		if type(input.click) == 'function' then
+			return input:click(...); -- pressed, x, y, mb
+		end
+	elseif event == 'finger' then
+		if type(input.finger) == 'function' then
+			return input:finger(...); -- pressed, x, y, finger
+		end
+	elseif event == 'event' then
+		if type(input.event) == 'function' then
+			return input:event(...);
+		end
+	end
+	return
+end
+
+std.obj { -- input object
+	nam = '@input';
+};
+
 -- some aliases
 menu = std.menu
 stat = std.stat
+
+std.mod_init(function()
+	-- todo
+end)
