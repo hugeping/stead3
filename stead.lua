@@ -609,9 +609,11 @@ end
 function std.for_each_obj(fn, ...)
 	local oo = std.objects
 	for k, v in pairs(oo) do
-		local a, b = fn(v, ...)
-		if a ~= nil and b ~= nil then
-			return a, b
+		if std.is_obj(v) then
+			local a, b = fn(v, ...)
+			if a ~= nil and b ~= nil then
+				return a, b
+			end
 		end
 	end
 end
