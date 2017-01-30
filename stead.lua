@@ -5,7 +5,7 @@ stead = {
 	call_top = 0,
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
-	objects_nr = 0;
+	next_dynamic = -1;
 	tables = {};
 	functions = {};
 	includes = {};
@@ -445,7 +445,10 @@ std.list = std.class {
 				std.err ("Can not do deref on: "..std.tostr(s[i]), 2)
 			end
 			if i ~= 1 then
-				fp:write(string.format(", %q", vv))
+				fp:write(string.format(", "))
+			end
+			if type(vv) == 'number' then
+				fp:write(string.format("%d", vv))
 			else
 				fp:write(string.format("%q", vv))
 			end
@@ -514,7 +517,7 @@ end
 function std:reset() -- reset state
 	self:done()
 	self:init()
-	std.dofile('main.lua')
+	std.dofile('main3.lua')
 end
 
 function std:load(fname) -- load save
@@ -536,7 +539,7 @@ function std:gamefile(fn, reset) -- load game file
 	end
 	if reset then
 		std:reset()
-		if fn ~= 'main.lua' then
+		if fn ~= 'main3.lua' then
 			std.startfile = fn -- another start file
 		end
 		std.ref 'game':ini()
@@ -599,14 +602,10 @@ end
 
 function std.for_each_obj(fn, ...)
 	local oo = std.objects
-	for i = 1, #oo do
-		if oo[i] then
-			fn(oo[i], ...)
-		end
-	end
 	for k, v in pairs(oo) do
-		if type(k) ~= 'number' then
-			fn(v, ...)
+		local a, b = fn(v, ...)
+		if a ~= nil and b ~= nil then
+			return a, b
 		end
 	end
 end
@@ -645,7 +644,7 @@ function std:done()
 		end
 	end)
 	std.objects = objects
-	std.objects_nr = 0
+	std.next_dynamic = -1
 	if std.ref 'game' then
 		std.delete('game')
 	end
@@ -695,6 +694,46 @@ function std.varname(k)
 	end
 end
 
+local MAX_DYN = 32767
+
+local function next_dynamic(n)
+	if n then
+		std.next_dynamic = n
+	end
+	std.next_dynamic = std.next_dynamic - 1
+	if std.next_dynamic < -MAX_DYN then
+		std.next_dynamic = - 1
+	end
+	return std.next_dynamic
+end
+
+local function dyn_name()
+	local oo = std.objects
+	if not oo[std.next_dynamic] then
+		local n = std.next_dynamic
+		next_dynamic()
+		return n
+	end
+
+	local on = std.next_dynamic
+	local n = next_dynamic()
+
+	while oo[n] and n ~= on do
+		n = n - 1
+		if n < -MAX_DYN then
+			n = -1
+		end
+	end
+
+	if oo[n] then
+		std.err("No free ids for dynamic objects", 2)
+	end
+
+	next_dynamic(n)
+
+	return n
+end
+
 std.obj = std.class {
 	__obj_type = true;
 	new = function(self, v)
@@ -709,16 +748,17 @@ std.obj = std.class {
 			rawset(v, 'tag', v.nam)
 			rawset(v, 'nam', nil)
 		end
+
 		if v.nam == nil then
-			rawset(v, 'nam', #oo + 1)
-			local nr = #oo
-			if nr > std.objects_nr then
-				std.objects_nr = nr
+			if std.__in_new then
+				rawset(v, 'nam', dyn_name())
+			else
+				rawset(v, 'nam', #oo + 1)
 			end
-		end
-		if type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
+		elseif type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
 			std.err ("Wrong .nam in object.", 2)
 		end
+
 		if oo[v.nam] then
 			if v.nam ~= 'main' and v.nam ~= 'player' and v.nam ~= 'game' then
 				std.err ("Duplicated object: "..v.nam, 2)
@@ -779,13 +819,8 @@ std.obj = std.class {
 			std.err ("Duplicated obj name: "..std.tostr(new), 2)
 		end
 		oo[s.nam] = nil
-		oo[new] = new
-		if type(new) == 'number' then
-			if new > std.objects_nr then
-				std.objects_nr = new
-			end
-		end
-		s.nam = new
+		oo[new] = s
+		rawset(s, 'nam', new)
 		return s
 	end;
 	ini = function(s)
@@ -905,12 +940,12 @@ std.obj = std.class {
 			local arg = s.__dynamic.arg
 			local l = ''
 			for i = 1, #arg do
-				l = string.format("%s%s", l, std.dump(arg[i]))
+				l = ', '..string.format("%s%s", l, std.dump(arg[i]))
 			end
 			if type(s.nam) == 'number' then
-				l = string.format("std.new(%s, %s):renam(%d)\n", n, l, s.nam)
+				l = string.format("std.new(%s%s):renam(%d)\n", n, l, s.nam)
 			else
-				l = string.format("std.new(%s, %s)\n", n, l, s.nam)
+				l = string.format("std.new(%s%s)\n", n, l, s.nam)
 			end
 			fp:write(l)
 		end
@@ -1834,7 +1869,11 @@ end
 function std.delete(s)
 	s = std.ref(s)
 	if std.is_obj(s) then
-		std.objects[s.nam] = nil
+		if type(s.nam) == 'number' and not s.__dynamic then -- static objects
+			std.objects[s.nam] = false
+		else
+			std.objects[s.nam] = nil
+		end
 	else
 		std.err("Delete non object table", 2)
 	end
