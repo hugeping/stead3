@@ -6,6 +6,7 @@ stead = {
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
 	next_dynamic = -1;
+	max_dynamic = 32767;
 	tables = {};
 	functions = {};
 	includes = {};
@@ -26,8 +27,9 @@ stead = {
 	loadfile = loadfile;
 	dofile = dofile;
 	getinfo = debug.getinfo;
-	__mod_hooks = {},
-	files = {},
+	__mod_hooks = {};
+	files = {};
+	busy = function() end;
 }
 
 local std = stead
@@ -581,8 +583,10 @@ function std:save(fp)
 
 	local oo = std.objects
 
+	std:busy(true)
 	std.for_each_obj(function(v)
 		if v.__dynamic then
+			std:busy(true)
 			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
@@ -591,6 +595,7 @@ function std:save(fp)
 
 	std.for_each_obj(function(v)
 		if not v.__dynamic then
+			std:busy(true)
 			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
@@ -598,6 +603,7 @@ function std:save(fp)
 		fp:flush();
 		fp:close();
 	end
+	std:busy(false)
 end
 
 function std.for_each_obj(fn, ...)
@@ -694,14 +700,12 @@ function std.varname(k)
 	end
 end
 
-local MAX_DYN = 32767
-
 local function next_dynamic(n)
 	if n then
 		std.next_dynamic = n
 	end
 	std.next_dynamic = std.next_dynamic - 1
-	if std.next_dynamic < -MAX_DYN then
+	if std.next_dynamic < -std.max_dynamic then
 		std.next_dynamic = - 1
 	end
 	return std.next_dynamic
@@ -720,7 +724,7 @@ local function dyn_name()
 
 	while oo[n] and n ~= on do
 		n = n - 1
-		if n < -MAX_DYN then
+		if n < -std.max_dynamic then
 			n = -1
 		end
 	end
