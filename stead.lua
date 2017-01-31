@@ -1014,7 +1014,7 @@ std.obj = std.class {
 			return
 		end
 
-		if (not std.is_tag(w) and std.ref(w) == s) or w == s.tag then
+		if (not std.is_tag(w) and std.ref(w) == s) or (std.is_tag(w) and w == s.tag) then
 			return s
 		end
 
@@ -1340,9 +1340,12 @@ std.world = std.class({
 				v = true
 			end
 --			r, v = s.player:look()
-		elseif cmd[1] == 'act' or cmd[1] == 'obj' then
+		elseif cmd[1] == 'act' then
+			if #cmd < 2 then
+				return nil, false
+			end
 			local o = std.ref(cmd[2]) -- on what?
-			if std.namof(o) == '@' then
+			if std.is_obj(o) and std.nameof(o) == '@' then
 				local a = {}
 				for i = 3, #cmd do
 					table.insert(a, cmd[i])
@@ -1360,6 +1363,9 @@ std.world = std.class({
 			end
 			-- if s.player:search(o)
 		elseif cmd[1] == 'use' then
+			if #cmd < 2 then
+				return nil, false
+			end
 			local o1 = std.ref(cmd[2])
 			local o2 = std.ref(cmd[3])
 			o1 = s.player:have(o1)
@@ -1375,6 +1381,9 @@ std.world = std.class({
 				r, v = s.player:useon(o1, o2)
 			end
 		elseif cmd[1] == 'go' then
+			if #cmd < 2 then
+				return nil, false
+			end
 			local o = std.ref(cmd[2])
 			if not o then
 				return nil, false -- wrong input
@@ -1387,9 +1396,15 @@ std.world = std.class({
 			r = s.player:where():dump_way()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
+			if #cmd < 2 then
+				return nil, false
+			end
 			r = std:save(cmd[2])
 			v = nil
 		elseif cmd[1] == 'load' then -- todo
+			if #cmd < 2 then
+				return nil, false
+			end
 			r = std:load(cmd[2])
 			v = false
 		end
@@ -1558,7 +1573,7 @@ std.player = std.class ({
 				return r, false -- stop chain
 			end
 		end
-		r, v = std.call(w, m, w, w2, ...)
+		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v ~= nil or r ~= nil then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
@@ -1891,10 +1906,10 @@ function std.delete(s)
 	end
 end
 
-function std.namof(o)
+function std.nameof(o)
 	o = std.ref(o)
 	if not std.is_obj(o) then
-		std.err("Wrong parameter to std.namof: "..std.tostr(o), 2)
+		std.err("Wrong parameter to std.nameof: "..std.tostr(o), 2)
 		return
 	end
 	return o.nam
@@ -2096,14 +2111,12 @@ iface = std.obj {
 	nam = '@iface';
 	fading = 4;
 	cmd = function(self, inp)
-		if inp:find('^[ \t]*"') or inp:find('^[ \t]*-?[0-9]"') then
-			inp = "act "..inp
-		end
 		local cmd = cmd_parse(inp)
 		print(inp)
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
+
 		std.cmd = cmd
 		std.cache = {}
 		local r, v = std.mod_call('cmd', cmd)
