@@ -536,7 +536,7 @@ function std:load(fname) -- load save
 	return self.game:lastdisp()
 end
 
-function std:gamefile(fn, reset) -- load game file
+function std.gamefile(fn, reset) -- load game file
 	if type(fn) ~= 'string' then
 		std.err("Wrong paramter to stead:file: "..std.tostr(f), 2)
 	end
@@ -546,7 +546,7 @@ function std:gamefile(fn, reset) -- load game file
 			std.startfile = fn -- another start file
 		end
 		std.ref 'game':ini()
-		self.game.player:need_scene(true)
+		std.game.player:need_scene(true)
 		return
 	end
 	std.__in_gamefile = true
@@ -579,15 +579,15 @@ function std:save(fp)
 	end
 	-- files
 	for i = 1, #std.files do
-		fp:write(string.format("std:gamefile(%q)\n", std.files[i]))
+		fp:write(string.format("std.gamefile(%q)\n", std.files[i]))
 	end
 
 	local oo = std.objects
 
-	std:busy(true)
+	std.busy(true)
 	std.for_each_obj(function(v)
 		if v.__dynamic then
-			std:busy(true)
+			std.busy(true)
 			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
@@ -596,7 +596,7 @@ function std:save(fp)
 
 	std.for_each_obj(function(v)
 		if not v.__dynamic then
-			std:busy(true)
+			std.busy(true)
 			v:save(fp, string.format("std(%s)", std.deref_str(v)))
 		end
 	end)
@@ -604,7 +604,7 @@ function std:save(fp)
 		fp:flush();
 		fp:close();
 	end
-	std:busy(false)
+	std.busy(false)
 end
 
 function std.for_each_obj(fn, ...)
@@ -2155,6 +2155,19 @@ function std.include(f)
 		std.dofile(f)
 	end
 end
+
+function std.abort()
+	std.abort_cmd = true
+end
+
+function std.nop()
+	std.abort()
+	if std.cctx() then
+		std.pr(std.game:lastdisp())
+	end
+	return std.game:lastdisp(), false
+end
+
 -- require "ext/gui"
 require "strict"
 require "dlg"
