@@ -290,7 +290,7 @@ std.list = std.class {
 				r = r .. std.space_delim
 			end
 			local o = s[i]
-			if not o:disabled() then
+			if o:visible() then
 				local d = o:xref(std.call(s[i], 'dsc'))
 				if type(d) == 'string' then
 					r = (r or '').. d
@@ -1005,21 +1005,26 @@ std.obj = std.class {
 		end
 		return s;
 	end;
+	visible = function(s)
+		return not s:disabled()
+	end;
 	seen = function(s, w)
 		local o
-		if s:disabled() or s:closed() then
+		if not s:visible() then
 			return
 		end
-		o = s.obj:lookup(w)
-		if o then
-			if o:disabled() then
-				return
-			end
-			return o, s
+
+		if (not std.is_tag(w) and std.ref(w) == s) or w == s.tag then
+			return s
 		end
+
+		if s:closed() then
+			return
+		end
+
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			o = v:lookup(w)
+			o = v:seen(w)
 			if o then
 				return o, v
 			end
@@ -1335,7 +1340,7 @@ std.world = std.class({
 				v = true
 			end
 --			r, v = s.player:look()
-		elseif cmd[1] == 'act' then
+		elseif cmd[1] == 'act' or cmd[1] == 'obj' then
 			local o = std.ref(cmd[2]) -- on what?
 			if std.namof(o) == '@' then
 				local a = {}
@@ -1506,7 +1511,7 @@ std.player = std.class ({
 	end;
 	useon = function(s, w1, w2)
 		local r, v, t
-		w1 = std.ref(w)
+		w1 = std.ref(w1)
 		w2 = std.ref(w2)
 
 		if w2 and w1 ~= w2 then
@@ -2091,6 +2096,9 @@ iface = std.obj {
 	nam = '@iface';
 	fading = 4;
 	cmd = function(self, inp)
+		if inp:find('^[ \t]*"') or inp:find('^[ \t]*-?[0-9]"') then
+			inp = "act "..inp
+		end
 		local cmd = cmd_parse(inp)
 		print(inp)
 		if not cmd then

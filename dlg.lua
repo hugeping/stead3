@@ -172,7 +172,7 @@ std.dlg = std.class({
 		for i = 1, #oo.obj do
 			local o = oo.obj[i]
 			o = o:__alias()
-			if not o:disabled() and not o:closed() then
+			if not o:visible() then
 				if r then
 					r = r .. '^'
 				end
@@ -264,6 +264,9 @@ std.phr = std.class({
 			end
 		end
 		return true
+	end;
+	visible = function(s)
+		return not s:disabled() and not s:closed()
 	end;
 	act = function(s, ...)
 		local n = s

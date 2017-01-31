@@ -130,7 +130,7 @@ function iface:xref(str, o, ...)
 	if std.here().way:lookup(o) then
 		return std.string.format("<a:go %s%s>", std.deref_str(o), args)..str.."</a>"
 	end
-	if not o:type 'menu' and std.me():lookup(o) then
+	if not o:type 'menu' and (std.me():lookup(o) or std.here():lookup(o)) then
 		return std.string.format("<a:%s%s>", std.deref_str(o), args)..str.."</a>"
 	end
 	return std.string.format("<a:act %s%s>", std.deref_str(o), args)..str.."</a>"
