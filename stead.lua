@@ -85,6 +85,19 @@ function std.mod_call(hook, ...)
 	end
 end
 
+function std.mod_call_rev(hook, ...)
+	if not std.__mod_hooks[hook] then
+		return
+	end
+	for i = #std.__mod_hooks[hook], 1, -1 do
+		v = std.__mod_hooks[hook][i]
+		local a, b = v(...)
+		if a ~= nil or b ~= nil then
+			return a, b
+		end
+	end
+end
+
 function std.mod_init(f, ...)
 	__mod_callback_reg(f, 'init', ...)
 	if std.initialized then -- require from game
@@ -642,7 +655,7 @@ function std:init()
 end
 
 function std:done()
-	std.mod_call('done')
+	std.mod_call_rev('done')
 	local objects = {}
 	std.for_each_obj(function(v)
 		local k = std.deref(v)
