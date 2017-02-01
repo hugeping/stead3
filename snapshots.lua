@@ -51,3 +51,7 @@ std.mod_cmd(function()
 		SNAPSHOT = nil
 	end
 end)
+
+std.mod_done(function()
+	snap.data = {}
+end)
