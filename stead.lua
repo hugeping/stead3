@@ -90,7 +90,7 @@ function std.mod_call_rev(hook, ...)
 		return
 	end
 	for i = #std.__mod_hooks[hook], 1, -1 do
-		v = std.__mod_hooks[hook][i]
+		local v = std.__mod_hooks[hook][i]
 		local a, b = v(...)
 		if a ~= nil or b ~= nil then
 			return a, b
