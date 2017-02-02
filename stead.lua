@@ -1563,38 +1563,39 @@ std.player = std.class ({
 		r, v = std.call(std.ref 'game', 'on'..m, w, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v == false then
-			return t, true
+			return t or r, true
 		end
 		if v ~= true then
 			r, v = std.call(s, 'on'..m, w, w2, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
-				return t, true
+				return t or r, true
 			end
 		end
 		if v ~= true then
 			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
-				return t, true
+				return t or r, true
 			end
 		end
 		if m == 'use' and w2 then
 			r, v = std.call(w2, 'used', w, ...)
+			t = std.par(std.scene_delim, t or false, r)
 			if r ~= nil or v ~= nil then
 				w2['__nr_used'] = (w2['__nr_used'] or 0) + 1
-				return r, false -- stop chain
+				return t or r, true -- stop chain
 			end
 		end
 		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v ~= nil or r ~= nil then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
-			return t, v
+			return t or r, v
 		end
 		r, v = std.call(std.ref 'game', m, w, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
-		return t, v
+		return t or r, v
 	end;
 	action = function(s, w, ...)
 		return s:call('act', w, ...)
@@ -2020,7 +2021,7 @@ std.call = function(v, n, ...)
 		if v == nil then v = true end
 		return r, v
 	end
-	return nil, v
+	return r or nil, v
 end
 
 local function get_token(inp)
@@ -2126,7 +2127,7 @@ iface = std.obj {
 	fading = 4;
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
-		print(inp)
+		print("input: ", inp)
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
@@ -2137,6 +2138,7 @@ iface = std.obj {
 		if r == nil and v == nil then
 			r, v = std.ref 'game':cmd(cmd)
 		end
+		print("r, v = ", r, v)
 		if v == false then
 			if r == true then -- true, false is now menu mode
 				return nil, true -- hack for menu mode
