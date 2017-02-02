@@ -37,6 +37,7 @@ local preferences = std.obj {
 			for k, v in std.pairs(s.__var) do
 				s[k] = nil
 			end
+			s.__var = {}
 		end
 		return std.os.remove(name);
 	end
