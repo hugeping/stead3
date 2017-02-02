@@ -1630,63 +1630,64 @@ std.player = std.class ({
 			std.err("Wrong parameter to walk: "..std.tostr(w))
 		end
 
-		local inwalk = s.__in_walk
-
-		s.__in_walk = w
-
-		if inwalk then
-			return
-		end
+		local inwalk = w
 
 		local r, v, t
 		local f = s:where()
-		r, v = std.call(std.ref 'game', 'onwalk', s.__in_walk)
+		r, v = std.call(std.ref 'game', 'onwalk', inwalk)
+
 		t = std.par(std.scene_delim, t or false, r)
 
-		if v == false then -- stop walk
-			s.__in_walk = nil
+		if v == false or s:moved() then -- stop walk
 			return t, true
 		end
 
 		if v ~= true then
-			r, v = std.call(s, 'onwalk', s.__in_walk)
+			r, v = std.call(s, 'onwalk', inwalk)
 			t = std.par(std.scene_delim, t or false, r)
-			if v == false then
-				s.__in_walk = nil
+			if v == false or s:moved() then
 				return t, true
 			end
 		end
+
 		if v ~= true then
-			if not noexit then
-				r, v = std.call(s:where(), 'onexit', s.__in_walk)
+			if not noexit and not s.__in_onexit then
+				s.__in_onexit = true
+				r, v = std.call(s:where(), 'onexit', inwalk)
+				s.__in_onexit = false
 				t = std.par(std.scene_delim, t or false, r)
-				if v == false then
-					s.__in_walk = nil
+				if v == false or s:moved() then
 					return t, true
 				end
 			end
 			if not noenter then
-				r, v = std.call(s.__in_walk, 'onenter', s:where())
+				r, v = std.call(inwalk, 'onenter', s:where())
 				t = std.par(std.scene_delim, t or false, r)
-				if v == false then
-					s.__in_walk = nil
+				if v == false or s:moved() then
 					return t, true
 				end
 			end
 		end
-		if not noexit then
-			r, v = std.call(s:where(), 'exit', s.__in_walk)
+		if not noexit and not s.__in_exit then
+			s.__in_exit = true
+			r, v = std.call(s:where(), 'exit', inwalk)
+			s.__in_exit = false
 			t = std.par(std.scene_delim, t or false, r)
+			if s:moved() then
+				return t, true
+			end
 		end
 		if not noenter then
-			s.room = s.__in_walk
+			s.room = inwalk
 			s.room.__from = f
-			r, v = std.call(s.__in_walk, 'enter', f)
+			r, v = std.call(inwalk, 'enter', f)
 			t = std.par(std.scene_delim, t or false, r)
+			if s:moved() then
+				return t, true
+			end
 		end
-		s.room = s.__in_walk
+		s.room = inwalk
 		s.room.__visits = (s.room.__visits or 0) + 1
-		s.__in_walk = nil
 		s:need_scene(true)
 		s:moved(true)
 		return t, true
