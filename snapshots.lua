@@ -6,7 +6,7 @@ local SNAPSHOT = false
 local snap = std.obj {
 	nam = '@snaphots';
 	data = {};
-	make = function(s, name)
+	write = function(s, name)
 		name = name or 'default'
 		local fp = { -- fake file object
 			data = '';
@@ -16,6 +16,9 @@ local snap = std.obj {
 		}
 		std:save(fp)
 		s.data[name] = fp.data
+	end;
+	make = function(s)
+		SNAPSHOT = true
 	end;
 	exist = function(s, name)
 		name = name or 'default'
@@ -47,7 +50,7 @@ snapshots = snap
 
 std.mod_cmd(function()
 	if SNAPSHOT then
-		snap:make(snap.SNAPSHOT)
+		snap:write(snap.SNAPSHOT)
 		SNAPSHOT = nil
 	end
 end)
