@@ -21,6 +21,7 @@ stead = {
 	ipairs = ipairs;
 	rawset = rawset;
 	rawget = rawget;
+	rawequal = rawequal;
 	io = io;
 	os = os;
 	string = string;
@@ -201,6 +202,12 @@ function std.class(s, inh)
 			return t
 		end
 		return std.dispof(self)
+	end;
+	s.__div = function(s, b)
+		if type(b) == 'string' or type(b) == 'number' then
+			return std.rawequal(s.nam, b)
+		end
+		return std.rawequal(s, b)
 	end;
 	s.__dirty = function(s, v)
 		local o = rawget(s, '__dirty_flag')
