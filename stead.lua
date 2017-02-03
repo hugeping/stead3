@@ -1282,13 +1282,6 @@ std.world = std.class({
 		s:life()
 		s.__time = s:time() + 1
 	end;
-	nop = function(s, v)
-		local ov = s.__nop
-		if v ~= nil then
-			s.__nop = v
-		end
-		return ov
-	end;
 	lastdisp = function(s, str)
 		local ov = s.__lastdisp
 		if str ~= nil then
@@ -1344,7 +1337,10 @@ std.world = std.class({
 		s.player:moved(false)
 		s.player:need_scene(false)
 		std.abort_cmd = false
-		if cmd[1] == nil or cmd[1] == 'look' then
+		r, v = std.mod_call('cmd', cmd)
+		if r ~= nil or v ~= nil then
+			;
+		elseif cmd[1] == nil or cmd[1] == 'look' then
 			if not s.started then
 				s.started = true
 				r, v = s.player:walk('main', true)
@@ -1421,6 +1417,7 @@ std.world = std.class({
 			r = std:load(cmd[2])
 			v = false
 		end
+
 		if v == false or std.abort_cmd then
 			return r, false -- wrong cmd?
 		end
@@ -2134,10 +2131,7 @@ iface = std.obj {
 
 		std.cmd = cmd
 		std.cache = {}
-		local r, v = std.mod_call('cmd', cmd)
-		if r == nil and v == nil then
-			r, v = std.ref 'game':cmd(cmd)
-		end
+		local r, v = std.ref 'game':cmd(cmd)
 		print("r, v = ", r, v)
 		if v == false then
 			if r == true then -- true, false is now menu mode

@@ -26,6 +26,9 @@ local timer = std.obj {
 		instead.timer(s.timer)
 		return true
 	end;
+	callback = function(s)
+		return '@timer'
+	end
 }
 
 std.timer = function() -- sdl part call this one
@@ -37,4 +40,20 @@ end
 
 std.mod_done(function(s)
 	timer:stop()
+end)
+
+std.mod_cmd(function(cmd)
+	if cmd[1] ~= '@timer' then
+		return
+	end
+	local r,v
+	if std.here().timer then
+		r, v = std.call(stead.here(), 'timer');
+	elseif std.game.timer then
+		r, v = stead.call(std.game, 'timer');
+	end
+	if r ~= nil or v ~= nil then
+		return r, v
+	end
+	return nil, false
 end)
