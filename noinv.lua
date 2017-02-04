@@ -5,7 +5,7 @@ std.mod_step(function()
 	if std.me():moved() then
 		if std.here().noinv and not std.me().__inv_disabled then
 			std.me():inventory():disable()
-			me().__inv_disabled = true
+			std.me().__inv_disabled = true
 		elseif std.me().__inv_disabled then
 			std.me():inventory():enable()
 			std.me().__inv_disabled = nil
