@@ -656,7 +656,7 @@ function std:init()
 			  end
 			  std.err ('Undefined @ act: '..std.tostr(x), 2)
 	end; }
-
+	std.rawset(_G, 'iface', std.ref '@iface') -- force iface override
 	std.world { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
@@ -2130,7 +2130,7 @@ function std.cacheable(n, f)
 	end
 end
 
-iface = std.obj {
+std.obj {
 	nam = '@iface';
 	fading = 4;
 	cmd = function(self, inp)

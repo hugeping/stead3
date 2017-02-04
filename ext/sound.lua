@@ -2,6 +2,8 @@
 
 local std = stead
 
+local instead = std.ref '@instead'
+
 local snd = std.obj {
 	nam = '@snd';
 }

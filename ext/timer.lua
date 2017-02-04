@@ -3,6 +3,8 @@
 local std = stead
 local type = std.type
 
+local instead = std.ref '@instead'
+
 instead.timer = instead_timer
 
 local timer = std.obj {

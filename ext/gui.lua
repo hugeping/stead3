@@ -1,6 +1,6 @@
 local std = stead
 
-std.rawset(_G, 'instead', {})
+local instead = std.obj { nam = '@instead' }
 
 local iface = std '@iface'
 local type = std.type
@@ -295,5 +295,5 @@ menu = std.menu
 stat = std.stat
 
 std.mod_init(function()
-	-- todo
+	std.rawset(_G, 'instead', instead)
 end)
