@@ -16,6 +16,6 @@ end)
 std.mod_done(function()
 	if std.me().__inv_disabled then
 		std.me():inventory():enable()
-		std.me().__inv_disabled = false
+		std.me().__inv_disabled = nil
 	end
 end)
