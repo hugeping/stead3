@@ -975,7 +975,7 @@ std.obj = std.class {
 			local arg = s.__dynamic.arg
 			local l = ''
 			for i = 1, #arg do
-				l = ', '..string.format("%s%s", l, std.dump(arg[i]))
+				l = l .. ', '..std.dump(arg[i])
 			end
 			if type(s.nam) == 'number' then
 				l = string.format("std.new(%s%s):renam(%d)\n", n, l, s.nam)
@@ -1899,6 +1899,9 @@ function std.dump(t)
 end
 
 function std.new(fn, ...)
+	if not std.game then
+		std.err ("You can not use new() from global context.", 2)
+	end
 	if type(fn) ~= 'function' then
 		std.err ("Wrong parameter to std.new", 2)
 	end
