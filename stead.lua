@@ -1432,6 +1432,10 @@ std.world = std.class({
 			v = false
 		end
 
+		if r == nil and v == nil then
+			return nil, true -- no reaction
+		end
+
 		if v == false or std.abort_cmd then
 			return r, false -- wrong cmd?
 		end
@@ -1602,6 +1606,7 @@ std.player = std.class ({
 		end
 		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
+
 		if v ~= nil or r ~= nil then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
 			return t or r, v
