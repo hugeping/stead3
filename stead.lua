@@ -1350,7 +1350,7 @@ std.world = std.class({
 		std.abort_cmd = false
 		r, v = std.mod_call('cmd', cmd)
 		if r ~= nil or v ~= nil then
-			;
+
 		elseif cmd[1] == nil or cmd[1] == 'look' then
 			if not s.started then
 				s.started = true
