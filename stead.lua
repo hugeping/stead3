@@ -118,6 +118,10 @@ function std.mod_cmd(f, ...)
 	__mod_callback_reg(f, 'cmd', ...)
 end
 
+function std.mod_step(f, ...)
+	__mod_callback_reg(f, 'step', ...)
+end
+
 function std.mod_save(f, ...)
 	__mod_callback_reg(f, 'save', ...)
 end
@@ -1432,9 +1436,11 @@ std.world = std.class({
 			return r, false -- wrong cmd?
 		end
 
-		s = std.ref 'game' -- after reset game is recreated
+		s = std.game -- after reset game is recreated
 		s:reaction(r or false)
+
 		if v then -- game:step
+			std.mod_call('step')
 			s:step()
 		end
 		r = s:disp(v)
