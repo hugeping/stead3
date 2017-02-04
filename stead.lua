@@ -871,7 +871,7 @@ std.obj = std.class {
 			end
 		end
 	end;
-	room = function(s, r)
+	inroom = function(s, r)
 		local rooms = r or {}
 		local ww = {}
 		local o
@@ -1484,8 +1484,8 @@ std.player = std.class ({
 	end;
 	ini = function(s)
 		s.room = std.ref(s.room)
-		if not s.where then
-			std.err ("Wrong player location", 2)
+		if not s.room then
+			std.err ("Wrong player location: "..std.tostr(s), 2)
 		end
 		std.obj.ini(s)
 	end;

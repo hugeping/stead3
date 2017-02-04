@@ -145,7 +145,7 @@ function have(w, ...)
 end
 
 function inroom(w, ...)
-	return std.object(w):room(w, ...)
+	return std.object(w):inroom(w, ...)
 end
 
 function where(w, ...)
