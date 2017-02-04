@@ -205,7 +205,11 @@ function std.class(s, inh)
 	end;
 	s.__div = function(s, b)
 		if type(b) == 'string' or type(b) == 'number' then
-			return std.rawequal(s.nam, b)
+			if std.is_tag(b) then
+				return std.rawequal(s.tag, b)
+			else
+				return std.rawequal(s.nam, b)
+			end
 		end
 		return std.rawequal(s, b)
 	end;
