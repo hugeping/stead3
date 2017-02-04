@@ -172,7 +172,7 @@ std.dlg = std.class({
 		for i = 1, #oo.obj do
 			local o = oo.obj[i]
 			o = o:__alias()
-			if not o:visible() then
+			if o:visible() then
 				if r then
 					r = r .. '^'
 				end
@@ -304,4 +304,4 @@ std.phr = std.class({
 			o:check()
 		end
 	end;
-}, std.obj)
+}, std.menu or std.obj)

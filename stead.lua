@@ -1037,7 +1037,6 @@ std.obj = std.class {
 		if not s:visible() then
 			return
 		end
-
 		if (not std.is_tag(w) and std.ref(w) == s) or (std.is_tag(w) and w == s.tag) then
 			return s
 		end
@@ -2132,7 +2131,6 @@ end
 
 std.obj {
 	nam = '@iface';
-	fading = 4;
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
 		print("input: ", inp)

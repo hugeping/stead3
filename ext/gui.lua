@@ -47,12 +47,28 @@ instead.get_picture = std.cacheable('pic', function()
 	return s
 end)
 
+local last_picture
+
 function instead.get_fading()
-	if std.me():moved() or std.cmd[1] == 'load' then
-		if not iface.fading or iface.fading == 0 then
-			return false
-		end
-		return true, iface.fading
+	if not iface.fading or iface.fading == 0 then
+		return false
+	end
+	if type(iface.fading) == 'function' then
+		local n = iface:fading()
+		if not n or n == 0 then return false end
+		return true, n
+	end
+
+	return true, iface.fading
+end
+
+instead.fading = 4 -- default fading
+
+function iface:fading()
+	local pic = instead.get_picture()
+	if std.me():moved() or std.cmd[1] == 'load' or pic ~= last_picture then
+		last_picture = pic
+		return instead.fading
 	end
 end
 
@@ -296,4 +312,8 @@ stat = std.stat
 
 std.mod_init(function()
 	std.rawset(_G, 'instead', instead)
+end)
+
+std.mod_done(function()
+	last_picture = nil
 end)
