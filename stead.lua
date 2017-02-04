@@ -22,6 +22,7 @@ stead = {
 	rawset = rawset;
 	rawget = rawget;
 	rawequal = rawequal;
+	pcall = pcall;
 	io = io;
 	os = os;
 	string = string;
@@ -1437,7 +1438,7 @@ std.world = std.class({
 		end
 
 		if v == false or std.abort_cmd then
-			return r, false -- wrong cmd?
+			return r, v -- wrong cmd?
 		end
 
 		s = std.game -- after reset game is recreated
@@ -1813,6 +1814,26 @@ std.pf = function(fmt, ...)
 	std.pr(string.format(fmt, ...))
 end
 
+function std.strip(s)
+	if type(s) ~= 'string' and type(s) ~= 'number' then
+		return
+	end
+	s = tostring(s)
+	s = s:gsub("^[ \t]*", ""):gsub("[ \t]*$", "")
+	return s
+end
+
+function std.split(s, sep)
+	local sep, fields = sep or " ", {}
+	local pattern = string.format("([^%s]+)", sep)
+	if type(s) ~= 'string' and type(s) ~= 'number' then
+		return fields
+	end
+	s = tostring(s)
+	s:gsub(pattern, function(c) fields[#fields+1] = std.strip(c) end)
+	return fields
+end
+
 local function __dump(t, nested)
 	local rc = '';
 	if type(t) == 'string' then
@@ -2181,7 +2202,17 @@ std.obj {
 	title = function(self, str)
 		return "[ "..std.tostr(str).." ]"
 	end;
+	raw_mode = function(s, v)
+		local ov = s.__raw
+		if v ~= nil then
+			s.__raw = v or nil
+		end
+		return ov
+	end;
 	fmt = function(self, str, state)
+		if self:raw_mode() then
+			return str
+		end
 		if type(str) ~= 'string' then
 			return
 		end
