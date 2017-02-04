@@ -228,9 +228,18 @@ function inv(pl)
 	return pl:inventory()
 end
 
-function place(w, wh)
+function remove(w, wh)
 	local o = std.object(w)
 	if not w then
+		std.err("Wrong argument to remove(): "..std.tostr(w), 2)
+	end
+	wh = wh and std.object(wh)
+	return o:remove(wh)
+end
+
+function place(w, wh)
+	local o = std.object(w)
+	if not o then
 		std.err("Wrong argument to place(): "..std.tostr(w), 2)
 	end
 	o:remove() -- remove object from everywhere

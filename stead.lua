@@ -1981,6 +1981,9 @@ end
 
 function std.ref(o)
 	if type(o) == 'table' then
+		if not std.is_obj(o) then
+			std.err("Reference to wrong object: "..std.tostr(o), 2)
+		end
 		return o
 	end
 	local oo = std.objects
