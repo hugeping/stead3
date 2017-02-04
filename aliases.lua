@@ -34,8 +34,19 @@ function from(ww)
 	return wh:from()
 end;
 
+local function walkroom(w)
+	if std.is_tag(w) then
+		local ww = std.here().way:lookup(w)
+		if not ww then
+			std.err("Can not found tag: "..std.tostr(w), 3)
+		end
+		return ww
+	end
+	return w
+end
+
 function walk(w, ...)
-	local r, v = std.me():walk(w, ...)
+	local r, v = std.me():walk(walkroom(w), ...)
 	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
@@ -43,7 +54,7 @@ function walk(w, ...)
 end
 
 function walkin(w, ...)
-	local r, v = std.me():walkin(w, ...)
+	local r, v = std.me():walkin(walkroom(w), ...)
 	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
@@ -51,7 +62,7 @@ function walkin(w, ...)
 end
 
 function walkout(w, ...)
-	local r, v = std.me():walkout(w, ...)
+	local r, v = std.me():walkout(walkroom(w), ...)
 	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
