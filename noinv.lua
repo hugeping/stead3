@@ -1,5 +1,4 @@
 local std = stead
-local instead = std.ref '@instead'
 
 std.mod_step(function()
 	if std.me():moved() then
