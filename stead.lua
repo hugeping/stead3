@@ -553,14 +553,14 @@ end
 
 function std:load(fname) -- load save
 	self:reset()
-	std.ref 'game':ini(true)
+	std.ref 'game':ini(false)
 
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
 		std.err(err, 2)
 	end
 	f();
-	std.ref 'game':ini()
+	std.ref 'game':ini(true)
 	return self.game:lastdisp()
 end
 
@@ -1216,7 +1216,7 @@ std.world = std.class({
 		end
 		return ov
 	end;
-	ini = function(s, nostart)
+	ini = function(s, load)
 --		std.mod_call('init') -- init modules
 
 		s.player = std.ref(s.player) -- init game
@@ -1241,10 +1241,10 @@ std.world = std.class({
 			end
 			std.game = s
 		end
-		if not nostart then
-			std.mod_call('start')
+		if load ~= false then
+			std.mod_call('start', load)
 			if type(std.rawget(_G, 'start')) == 'function' then
-				start() -- start before load
+				start(load) -- start after load
 			--	std.rawset(_G, 'start', nil)
 			end
 		end
