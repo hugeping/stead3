@@ -272,7 +272,7 @@ local	commands = {
 					s:printf("%s\n", v)
 					return
 				end
-				if not std.is_obj(r, 'room') then
+				if not std.is_obj(v, 'room') then
 					s:printf("It is not the room.\n")
 					return
 				end
