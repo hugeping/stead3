@@ -212,11 +212,18 @@ local	commands = {
 		{ nam = 'obj',
 			act = function(s, par)
 				if par == '*' then
+					local objs = {}
 					std.for_each_obj(function(v)
 						if not v:type 'room' then
-							show_obj(s, v)
+							table.insert(objs, v)
 						end
 					end)
+					table.sort(objs, function(a, b)
+						return std.tostr(std.nameof(a)) < std.tostr(std.nameof(b))
+					end)
+					for i = 1, #objs do
+						show_obj(s, objs[i])
+					end
 					return
 				end
 				s:printf("[object]\n")
