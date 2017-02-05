@@ -272,6 +272,10 @@ local	commands = {
 					s:printf("%s\n", v)
 					return
 				end
+				if not std.is_obj(r, 'room') then
+					s:printf("It is not the room.\n")
+					return
+				end
 				s:printf("[room]\n    ")
 				show_room(s, v)
 				s:printf("[objects]\n")
@@ -341,7 +345,7 @@ local	commands = {
 			return s:eval(walk, par, true)
 		end;
 	};
-	{ nam = 'cls',
+	{ nam = 'clear',
 		act = function(s)
 			s:cls()
 		end;
@@ -422,6 +426,7 @@ local embed =	{
 	on = false;
 	key_shift = false;
 	key_ctrl = false;
+	cursor = 1;
 	input = '';
 	output = [[INSTEAD dbg 0.1
 Written by Peter Kosyh in 2017
@@ -462,6 +467,11 @@ local dbg = std.obj {
 	--	timer:set(s.last_timer)
 		std.game:lastdisp(s.last_disp)
 	end;
+	inp_split = function(s)
+		local pre = s.input:sub(1, s.cursor - 1);
+		local post = s.input:sub(s.cursor);
+		return pre, post
+	end;
 	eval = function(s, fn, ...)
 		local st, r, v = std.pcall(fn, ...)
 		if not st then
@@ -485,6 +495,7 @@ local dbg = std.obj {
 		if #hint == 1 and edit ~= false then
 			s.input = s.input:gsub("[ \t]+[^ \t]+$", " "):gsub("^[^ \t]+$", "")
 			s.input = s.input .. hint[1]..' '
+			s.cursor = #s.input + 1
 			s:completion(edit)
 			return
 		end
@@ -508,6 +519,7 @@ local dbg = std.obj {
 		s:printf('======== [ '..s.input..' ] ========\n')
 		s.input = ''
 		s.hint = ''
+		s.cursor = 1
 		return c.act(s, par)
 	end;
 	dsc = function(s) -- display debugger
@@ -517,7 +529,8 @@ local dbg = std.obj {
 		else
 			pr (txt:bold ' ')
 		end
-		pr (txt:bold '# '.. txt_esc(s.input) .. txt:bold '|'..'\n')
+		local pre, post = s:inp_split()
+		pr (txt:bold '# '.. txt_esc(pre)..txt:bold '|'..txt_esc(post) ..'\n')
 		pr (s.hint..'\n')
 		pr (txt:anchor())
 	end;
@@ -563,6 +576,7 @@ local timer = std.ref '@timer'
 local function key_xlat(s)
 	local kbd
 
+	if s == 'return' then return '\n' end
 	if s:len() > 1 then
 		return
 	end
@@ -609,33 +623,56 @@ std.mod_cmd(function(cmd)
 		end
 	elseif cmd[2] == 'key' then
 		local key = cmd[3]
-		if key:find 'return' then
+		if key:find 'return' and not dbg.key_ctrl and not dbg.key_alt then
 			local r, v = dbg:exec()
 			if r ~= nil or v ~= nil then
 				return r, v
-			end
-		elseif key:find '^backspace' and dbg.key_ctrl then
-			if dbg.input == '' then
-				return
-			end
-			if dbg.input:find("^[ \t]*[^ \t]+[ \t]*$") then
-				dbg.input = ''
-			else
-				dbg.input = dbg.input:gsub("[ \t]+[^ \t]+[ \t]*$", " ")
 			end
 		elseif key:find '^backspace' then
 			if dbg.input == '' then
 				return
 			end
-			if dbg.input:byte(dbg.input:len()) >= 128 then
-				dbg.input = dbg.input:sub(1, dbg.input:len() - 2);
+			local pre, post = dbg:inp_split()
+			if not pre or pre == '' then
+				return
+			end
+			if dbg.input:byte(pre:len()) >= 128 then
+				dbg.input = dbg.input:sub(1, pre:len() - 2) .. post
+				dbg.cursor = dbg.cursor - 2
 			else
-				dbg.input = dbg.input:sub(1, dbg.input:len() - 1);
+				dbg.input = dbg.input:sub(1, pre:len() - 1) .. post
+				dbg.cursor = dbg.cursor - 1
 			end
 		elseif key:find '^space' then
 			dbg.input = dbg.input .. ' '
+			dbg.cursor = dbg.cursor + 1
 		elseif key:find '^tab' then
 			dbg:completion()
+		elseif key:find 'home' or (key == 'a' and dbg.key_ctrl) then
+			dbg.cursor = 1
+		elseif key:find 'end'  or (key == 'e' and dbg.key_ctrl) then
+			dbg.cursor = #dbg.input + 1
+		elseif (key == 'k' and dbg.key_ctrl) then
+			dbg.cursor = 1
+			dbg.input = ''
+		elseif key:find '^right' then
+			if dbg.cursor <= dbg.input:len() then
+				if dbg.input:byte(dbg.cursor) >= 128 then
+					dbg.cursor = dbg.cursor + 2
+				else
+					dbg.cursor = dbg.cursor + 1
+				end
+			end
+			if dbg.cursor > dbg.input:len() then dbg.cursor = dbg.input:len() + 1 end
+		elseif key:find '^left' then
+			if dbg.cursor > 1 then
+				if dbg.input:byte(dbg.cursor - 1) >= 128 then
+					dbg.cursor = dbg.cursor - 2
+				else
+					dbg.cursor = dbg.cursor - 1
+				end
+			end
+			if dbg.cursor < 1 then dbg.cursor = 1 end
 		elseif key:find '^up' then
 			local s = dbg
 			if #s.history == 0 then
@@ -649,6 +686,7 @@ std.mod_cmd(function(cmd)
 				s.history_pos = 1
 			end
 			s.input = s.history[s.history_pos]
+			s.cursor = #s.input + 1
 		elseif key:find '^down' then
 			local s = dbg
 			if #s.history == 0 or s.history_pos == #s.history then
@@ -659,8 +697,12 @@ std.mod_cmd(function(cmd)
 				s.history_pos = #s.history
 			end
 			s.input = s.history[s.history_pos]
+			s.cursor = #s.input + 1
 		elseif key_xlat(key) then
-			dbg.input = dbg.input .. key_xlat(key)
+			local k = key_xlat(key)
+			local pre, post = dbg:inp_split()
+			dbg.cursor = dbg.cursor + k:len()
+			dbg.input = pre .. k .. post
 		else
 			return nil, false
 		end
