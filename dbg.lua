@@ -278,7 +278,16 @@ local	commands = {
 	};
 	{ nam = 'help',
 		act = function(s)
-			s:printf('Help! Ahhh, nobody hear...\n')
+			s:printf([[Use <tab> key to complete words.
+Use <up>/<down> for history.
+Use ctrl-d or f6 to enter/exit debugger.
+Some useful commands:
+    show obj * - show all objects
+    show room * - show all rooms
+    show obj <name> - show object (in verbose mode)
+    show room <name> - show room
+    walk <name> - walk anywhere
+]]);
 		end;
 	};
 	lookup = function(s, inp)
@@ -342,7 +351,10 @@ local embed =	{
 	key_shift = false;
 	key_ctrl = false;
 	input = '';
-	output = '';
+	output = [[INSTEAD dbg 0.1
+Written by Peter Kosyh in 2017
+Type "help" to see help
+]];
 	hint = '';
 	history = {};
 	history_pos = 1;
