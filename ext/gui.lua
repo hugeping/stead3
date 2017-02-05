@@ -317,3 +317,5 @@ end)
 std.mod_done(function()
 	last_picture = nil
 end)
+
+-- require 'dbg'
