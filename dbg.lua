@@ -160,7 +160,7 @@ local function txt_esc(s)
 	return r
 end
 
-local function show_obj(s, v, pfx)
+local function show_obj(s, v, pfx, verbose)
 	local wh = v:where()
 	if wh then
 		wh = '@'..std.dispof(wh)
@@ -174,6 +174,12 @@ local function show_obj(s, v, pfx)
 		std.tostr(std.nameof(v)), 
 		wh,
 		std.dispof(v), v.tag or 'n/a')
+	if verbose then
+		for k, v in std.pairs(v) do
+			s:printf("*[%s] = %s\n", std.tostr(k), std.dump(v) or 'n/a')
+		end
+		return
+	end
 	for k, v in std.ipairs(v.obj) do
 		pfx = (pfx or '' .. '    ')
 		show_obj(s, v, pfx)
@@ -206,7 +212,7 @@ local	commands = {
 				end
 				s:printf("[object]\n")
 				local st, r = std.pcall(function()
-					show_obj(s, std.object(std.tonum(par) or par), '    ') end)
+					show_obj(s, std.object(std.tonum(par) or par), '    ', true) end)
 				if not st then
 					s:printf("%s\n", r)
 					return
