@@ -3,6 +3,7 @@
 
 require "dlg"
 require "format"
+require "dbg"
 
 format.para = true
 format.dash = true
