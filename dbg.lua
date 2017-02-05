@@ -416,7 +416,6 @@ local dbg = std.obj {
 		pr (txt:anchor())
 	end;
 	key = function(s, press, key)
-		print(s, press, key)
 		if key:find 'shift' then
 			s.key_shift = press
 			return
