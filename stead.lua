@@ -2264,7 +2264,7 @@ function std.nop()
 	if std.cctx() then
 		std.pr(std.game:lastdisp())
 	end
-	return std.game:lastdisp(), false
+	return std.game:lastdisp(), true
 end
 
 -- require "ext/gui"
