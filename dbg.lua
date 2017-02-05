@@ -7,7 +7,7 @@ local okey
 local txt = std.ref '@iface'
 
 local kbden = {
-	shifted = { 
+	shifted = {
 	["1"] = "!",
 	["2"] = "@",
 	["3"] = "#",
@@ -65,7 +65,7 @@ local kbdru = {
 	[","] = "б",
 	["."] = "ю",
 	["`"] = "ё",
-	
+
 	shifted = {
 	["q"] = "Й",
 	["w"] = "Ц",
@@ -167,11 +167,11 @@ local function show_obj(s, v, pfx, verbose)
 	else
 		wh = ''
 	end
-	s:printf("%s%s%snam: %s%s | disp:%s | tag:%s\n", 
-		pfx or '', 
-		v:disabled() and '%' or '', 
+	s:printf("%s%s%snam: %s%s | disp:%s | tag:%s\n",
+		pfx or '',
+		v:disabled() and '%' or '',
 		v:closed() and '-' or '',
-		std.tostr(std.nameof(v)), 
+		std.tostr(std.nameof(v)),
 		wh,
 		std.dispof(v), v.tag or 'n/a')
 	if verbose then
@@ -199,7 +199,7 @@ local function show_room(s, v)
 end
 
 local	commands = {
-	{ nam = 'exit',
+	{ nam = 'quit',
 		act = function(s)
 			s.on = false
 			s:disable();
@@ -227,7 +227,7 @@ local	commands = {
 				return
 			end;
 		},
-		{ nam = 'inv', 
+		{ nam = 'inv',
 			act = function(s)
 				s:printf("[inventory]\n")
 				for k, v in std.ipairs(std.me():inventory()) do
@@ -238,11 +238,18 @@ local	commands = {
 		{ nam = 'room',
 			act = function(s, par)
 				if par == '*' then
+					local rooms = {}
 					std.for_each_obj(function(v)
 						if v:type 'room' then
-							show_room(s, v)
+							table.insert(rooms, v)
 						end
 					end)
+					table.sort(rooms, function(a, b)
+						return std.tostr(std.nameof(a)) < std.tostr(std.nameof(b))
+					end)
+					for i = 1, #rooms do
+						show_room(s, rooms[i])
+					end
 					return
 				end
 				local r, v = std.pcall(function() return par and std.object(par) or std.here() end)
@@ -306,7 +313,7 @@ local	commands = {
 			return s:eval(walk, par, true)
 		end;
 	};
-	{ nam = 'cls', 
+	{ nam = 'cls',
 		act = function(s)
 			s:cls()
 		end;
@@ -473,7 +480,7 @@ local dbg = std.obj {
 		s:printf('======== [ '..s.input..' ] ========\n')
 		s.input = ''
 		s.hint = ''
-		return c.act(s, par) 
+		return c.act(s, par)
 	end;
 	dsc = function(s) -- display debugger
 		pr (txt_esc(s.output))
@@ -508,7 +515,7 @@ local dbg = std.obj {
 			if key == 'q' or key == 'r' then
 				return
 			end
-		end 
+		end
 		if s.key_shift then
 			if key == 'up' or key == 'down' then
 				return
@@ -600,7 +607,7 @@ std.mod_cmd(function(cmd)
 		elseif key:find '^up' then
 			local s = dbg
 			if #s.history == 0 then
-				return 
+				return
 			end
 			if s.history_pos == 0 then
 				s.history_pos = #s.history + 1
