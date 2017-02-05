@@ -226,6 +226,12 @@ local	commands = {
 					end
 					return
 				end
+				if not par then
+					for i = 1, #std.here().obj do
+						show_obj(s, std.here().obj[i])
+					end
+					return
+				end
 				s:printf("[object]\n")
 				local st, r = std.pcall(function()
 					show_obj(s, std.object(std.tonum(par) or par), '    ', true) end)
@@ -608,7 +614,7 @@ std.mod_cmd(function(cmd)
 			if r ~= nil or v ~= nil then
 				return r, v
 			end
-		elseif key:find '^backspace' then
+		elseif key:find '^backspace' and dbg.key_ctrl then
 			if dbg.input == '' then
 				return
 			end
@@ -617,11 +623,15 @@ std.mod_cmd(function(cmd)
 			else
 				dbg.input = dbg.input:gsub("[ \t]+[^ \t]+[ \t]*$", " ")
 			end
---			if dbg.input:byte(dbg.input:len()) >= 128 then
---				dbg.input = dbg.input:sub(1, dbg.input:len() - 2);
---			else
---				dbg.input = dbg.input:sub(1, dbg.input:len() - 1);
---			end
+		elseif key:find '^backspace' then
+			if dbg.input == '' then
+				return
+			end
+			if dbg.input:byte(dbg.input:len()) >= 128 then
+				dbg.input = dbg.input:sub(1, dbg.input:len() - 2);
+			else
+				dbg.input = dbg.input:sub(1, dbg.input:len() - 1);
+			end
 		elseif key:find '^space' then
 			dbg.input = dbg.input .. ' '
 		elseif key:find '^tab' then
