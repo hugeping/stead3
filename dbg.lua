@@ -228,17 +228,6 @@ local	commands = {
 				end
 			end;
 		};
-		{ nam = 'here',
-			act = function(s, cmd)
-				local v = std.here()
-				s:printf("[room]\n    ")
-				show_room(s, v)
-				s:printf("[objects]\n")
-				for k, v in std.ipairs(std.here().obj) do
-					show_obj(s, v, '    ')
-				end
-			end;
-		};
 		{ nam = 'room',
 			act = function(s, par)
 				if par == '*' then
@@ -249,9 +238,9 @@ local	commands = {
 					end)
 					return
 				end
-				local r, v = std.pcall(function() return std.object(par) end)
+				local r, v = std.pcall(function() return par and std.object(par) or std.here() end)
 				if not r then
-					std.printf(v..'\n')
+					s:printf("%s\n", v)
 					return
 				end
 				s:printf("[room]\n    ")
@@ -262,6 +251,23 @@ local	commands = {
 				end
 			end;
 		};
+	};
+	{ nam = 'eval',
+		act = function(s, par)
+			if not par then
+				return
+			end
+			local f, err = std.eval(par)
+			if not f then
+				s:printf("%s\n", err)
+				return
+			end
+			f, err = std.pcall(f)
+			if not f then
+				s:printf("%s\n", err)
+				return
+			end
+		end
 	};
 	{ nam = 'walk',
 		act = function(s, par)
@@ -286,6 +292,7 @@ Some useful commands:
     show room * - show all rooms
     show obj <name> - show object (in verbose mode)
     show room <name> - show room
+    show room - show here
     walk <name> - walk anywhere
 ]]);
 		end;
@@ -371,7 +378,7 @@ local dbg = std.obj {
 	eval = function(s, fn, ...)
 		local st, r, v = std.pcall(fn, ...)
 		if not st then
-			s:printf(r..'\n')
+			s:printf("%s\n", r)
 		else
 			s.on = false
 			iface:raw_mode(false)
@@ -484,7 +491,7 @@ local function key_xlat(s)
 	end
 
 	if not kbd[s] then
-		if input.key_shift then
+		if dbg.key_shift then
 			return s:upper();
 		end
 		return s;
@@ -592,3 +599,5 @@ std.mod_done(function()
 	iface:raw_mode(false)
 	std.rawset(input, 'key', okey)
 end)
+
+-- std.rawset(_G, 'dbg',  std.ref '@dbg')
