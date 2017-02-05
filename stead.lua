@@ -64,14 +64,25 @@ else
 	end
 end
 
-local function __mod_callback_reg(f, hook, ...)
+local function __mod_callback_reg(f, hook, prio, ...)
 	if type(f) ~= 'function' then
-		std.err ("Wrong parameter to mod_"..hook..".", 2);
+		std.err ("Wrong parameter to mod_"..hook..".", 3);
 	end
+
+	if prio and type(prio) ~= 'number' then
+		std.err ("Wrong prio parameter to mod_"..hook..".", 3);
+	end
+
 	if not std.__mod_hooks[hook] then
 		std.__mod_hooks[hook] = {}
 	end
-	table.insert(std.__mod_hooks[hook], f);
+	local i = { fn = f, prio = prio }
+	table.insert(std.__mod_hooks[hook], i);
+	table.sort(std.__mod_hooks[hook], function (a, b)
+		local a = a.prio or 0
+		local b = b.prio or 0
+		return a < b
+	end)
 --	f();
 end
 
@@ -80,7 +91,7 @@ function std.mod_call(hook, ...)
 		return
 	end
 	for k, v in ipairs(std.__mod_hooks[hook]) do
-		local a, b = v(...)
+		local a, b = v.fn(...)
 		if a ~= nil or b ~= nil then
 			return a, b
 		end
@@ -93,7 +104,7 @@ function std.mod_call_rev(hook, ...)
 	end
 	for i = #std.__mod_hooks[hook], 1, -1 do
 		local v = std.__mod_hooks[hook][i]
-		local a, b = v(...)
+		local a, b = v.fn(...)
 		if a ~= nil or b ~= nil then
 			return a, b
 		end

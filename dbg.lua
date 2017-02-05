@@ -199,7 +199,14 @@ local function show_room(s, v)
 end
 
 local	commands = {
-	{ nam = 'show', 
+	{ nam = 'exit',
+		act = function(s)
+			s.on = false
+			s:disable();
+			return std.nop()
+		end;
+	};
+	{ nam = 'show',
 		{ nam = 'obj',
 			act = function(s, par)
 				if par == '*' then
@@ -251,6 +258,28 @@ local	commands = {
 				end
 			end;
 		};
+	};
+	{ nam = 'dump',
+		act = function(s, par)
+			if not par then
+				return
+			end
+			local f, err = std.eval('return ('..par..')')
+			if not f then
+				s:printf("%s\n", err)
+				return
+			end
+			err, f = std.pcall(f)
+			if not err then
+				s:printf("%s\n", f)
+				return
+			end
+			if std.is_obj(f) then
+				show_obj(s, f, '', true)
+			else
+				s:printf("%s\n", std.dump(f))
+			end
+		end
 	};
 	{ nam = 'eval',
 		act = function(s, par)
@@ -351,6 +380,7 @@ Some useful commands:
 		end
 		return var
 	end;
+	save = function() end;
 };
 
 local embed =	{
@@ -370,18 +400,40 @@ Type "help" to see help
 	kbd_alt_xlat = false;
 };
 
+local old_get_picture
+local old_get_fading
+
+
 local dbg = std.obj {
 	pri = 16384;
 	nam = '@dbg';
 	embed;
 	{ commands = commands },
+	enable = function(s)
+		local instead = std.ref '@instead'
+		old_get_picture = instead.get_picture
+		old_get_fading = instead.get_fading
+		std.rawset(instead, 'get_picture', function() end)
+		std.rawset(instead, 'get_fading', function() end)
+--		s.last_timer = timer:get()
+--		timer:stop()
+		s.last_disp = std.game:lastdisp()
+		iface:raw_mode(true)
+	end;
+	disable = function(s)
+		std.rawset(instead, 'get_picture', old_get_picture)
+		std.rawset(instead, 'get_fading', old_get_fading)
+		iface:raw_mode(false)
+--		timer:set(s.last_timer)
+		std.game:lastdisp(s.last_disp)
+	end;
 	eval = function(s, fn, ...)
 		local st, r, v = std.pcall(fn, ...)
 		if not st then
 			s:printf("%s\n", r)
 		else
 			s.on = false
-			iface:raw_mode(false)
+			s:disable()
 			return r, v
 		end
 	end;
@@ -499,9 +551,6 @@ local function key_xlat(s)
 	return kbd[s]
 end
 
-local old_get_picture
-local old_get_fading
-
 std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@dbg' then
 		if dbg.on then
@@ -509,30 +558,18 @@ std.mod_cmd(function(cmd)
 				std.abort()
 				return std.call(dbg, 'dsc')
 			end
-			return false
+			return nil, false
 		end
 		return
 	end
 	if cmd[2] == 'toggle' then
 		dbg.on = not dbg.on
 		if dbg.on then
-			local instead = std.ref '@instead'
-			old_get_picture = instead.get_picture
-			old_get_fading = instead.get_fading
-			std.rawset(instead, 'get_picture', function() end)
-			std.rawset(instead, 'get_fading', function() end)
-			dbg.last_timer = timer:get()
-			timer:stop()
-			dbg.last_disp = std.game:lastdisp()
+			dbg:enable()
 			std.abort()
-			iface:raw_mode(true)
 			return std.call(dbg, 'dsc')
 		else
-			std.rawset(instead, 'get_picture', old_get_picture)
-			std.rawset(instead, 'get_fading', old_get_fading)
-			iface:raw_mode(false)
-			timer:set(dbg.last_timer)
-			std.game:lastdisp(dbg.last_disp)
+			dbg:disable()
 			return std.nop()
 		end
 	elseif cmd[2] == 'key' then
@@ -546,11 +583,16 @@ std.mod_cmd(function(cmd)
 			if dbg.input == '' then
 				return
 			end
-			if dbg.input:byte(dbg.input:len()) >= 128 then
-				dbg.input = dbg.input:sub(1, dbg.input:len() - 2);
+			if dbg.input:find("^[ \t]*[^ \t]+[ \t]*$") then
+				dbg.input = ''
 			else
-				dbg.input = dbg.input:sub(1, dbg.input:len() - 1);
+				dbg.input = dbg.input:gsub("[ \t]+[^ \t]+[ \t]*$", " ")
 			end
+--			if dbg.input:byte(dbg.input:len()) >= 128 then
+--				dbg.input = dbg.input:sub(1, dbg.input:len() - 2);
+--			else
+--				dbg.input = dbg.input:sub(1, dbg.input:len() - 1);
+--			end
 		elseif key:find '^space' then
 			dbg.input = dbg.input .. ' '
 		elseif key:find '^tab' then
@@ -587,13 +629,13 @@ std.mod_cmd(function(cmd)
 		std.abort()
 		return std.call(dbg, 'dsc'), true
 	end
-end)
+end, -1)
 
 std.mod_start(function()
 	iface:raw_mode(false)
 	okey = input.key;
 	std.rawset(input, 'key', function(self, ...) return dbg:key(...) end)
-end)
+end, -1)
 
 std.mod_done(function()
 	iface:raw_mode(false)
