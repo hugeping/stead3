@@ -198,6 +198,8 @@ local function show_room(s, v)
 	s:printf("\n")
 end
 
+local take = take
+
 local	commands = {
 	{ nam = 'quit',
 		act = function(s)
@@ -266,6 +268,19 @@ local	commands = {
 			end;
 		};
 	};
+	{ nam = 'take',
+	  act = function(s, par)
+		if not par then
+			return
+		end
+		local st, r, v = s:eval(take, std.tonum(par) or par)
+		if not st then
+			s:printf("%s\n", r)
+			return
+		end
+		return r, v
+	  end;
+	},
 	{ nam = 'dump',
 		act = function(s, par)
 			if not par then
@@ -431,7 +446,7 @@ local dbg = std.obj {
 		std.rawset(instead, 'get_picture', old_get_picture)
 		std.rawset(instead, 'get_fading', old_get_fading)
 		iface:raw_mode(false)
---		timer:set(s.last_timer)
+	--	timer:set(s.last_timer)
 		std.game:lastdisp(s.last_disp)
 	end;
 	eval = function(s, fn, ...)
@@ -441,7 +456,7 @@ local dbg = std.obj {
 		else
 			s.on = false
 			s:disable()
-			return r, v
+			return std.nop()
 		end
 	end;
 	cls = function(s)
