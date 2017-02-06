@@ -16,16 +16,16 @@ local function __declare_one(k, v, t)
 	if declarations[k] then
 		std.err ("Duplicate declaration: "..k, 3)
 	end
-	if type(v) == 'function' then
-		std.functions[v] = k
-	end
 	declarations[k] = {value = v, type = t}
 	if t == 'global' then
-		if type(v) == 'function' then
+		if type(v) == 'function' and not std.functions[v] then
 			std.err("Use declare to declare function: "..k, 3)
 		end
 		rawset(_G, k, v)
 		variables[k] = true
+	end
+	if type(v) == 'function' and not std.functions[v] then
+		std.functions[v] = k
 	end
 end
 
