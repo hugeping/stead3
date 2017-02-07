@@ -15,7 +15,7 @@ local timer = std.obj {
 		end
 	end;
 	get = function(s)
-		return std.tonum(s.timer) or 0;
+		return s.timer or 0;
 	end;
 	stop = function(s)
 		return s:set(0)

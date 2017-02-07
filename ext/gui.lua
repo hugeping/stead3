@@ -117,7 +117,7 @@ end
 
 function instead.autosave(slot)
 	instead.__autosave = true
-	instead.__autosave_slot = std.tonum(slot)
+	instead.__autosave_slot = slot
 end
 
 function instead.get_autosave()
@@ -292,7 +292,7 @@ function iface:st(str)
 end
 
 function iface:tab(str, al)
-	if std.tonum(str) then
+	if type(str) == 'number' then
 		str = std.tostr(str)
 	end
 	if type(str) ~= 'string' then
