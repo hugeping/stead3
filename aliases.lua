@@ -137,19 +137,19 @@ function objs(ww)
 end
 
 function search(w, ...)
-	return std.me():search(w, ...)
+	return std.me():search(std.object(w), ...)
 end
 
 function have(w, ...)
-	return std.me():have(w, ...)
+	return std.me():have(std.object(w), ...)
 end
 
 function inroom(w, ...)
-	return std.object(w):inroom(w, ...)
+	return std.object(w):inroom(std.object(w), ...)
 end
 
 function where(w, ...)
-	return std.object(w):where(w, ...)
+	return std.object(w):where(std.object(w), ...)
 end
 
 function closed(w)
@@ -199,12 +199,12 @@ function empty(w)
 	return std.object(w):empty(w)
 end
 
-function lifeon(...)
-	return std.game:lefeon(...)
+function lifeon(w, ...)
+	return std.game:lefeon(std.object(w), ...)
 end
 
-function lifeoff(...)
-	return std.game:lefeoff(...)
+function lifeoff(w, ...)
+	return std.game:lefeoff(std.object(w), ...)
 end
 
 function live(...)

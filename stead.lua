@@ -390,8 +390,9 @@ std.list = std.class {
 		end
 	end;
 	add = function(s, n, pos)
-		if s:lookup(n) then
-			return -- already here
+		local o = s:lookup(n)
+		if o then
+			return o -- already here
 		end
 		if not pos then
 			local o = std.ref(n)
@@ -1118,6 +1119,17 @@ std.obj = std.class {
 			end
 		end
 		return rc
+	end;
+	lifeon = function(s)
+		std.game:lifeon(s)
+		return s
+	end;
+	lifeoff = function(s)
+		std.game:lifeoff(s)
+		return s
+	end;
+	live = function(s)
+		return std.game:live(s)
 	end;
 };
 
