@@ -9,11 +9,27 @@ iface.inv_delim = '\n'
 iface.hinv_delim = ' | '
 iface.ways_delim = ' | '
 
+local function get_bool(o, nam)
+	if type(o[nam]) == 'boolean' then
+		return o[nam]
+	end
+	if type(o[nam]) == 'function' then
+		return o:nam()
+	end
+	return nil
+end
+
 instead.get_title = std.cacheable('title', function()
+	if get_bool(iface, 'notitle') then
+		return
+	end
 	return std.titleof(stead.here())
 end)
 
 instead.get_ways = std.cacheable('ways', function()
+	if get_bool(iface, 'noways') then
+		return
+	end
 	local str = iface:cmd("way");
 	if str then
 		str = std.string.gsub(str, '\n$','');
@@ -25,6 +41,9 @@ instead.get_ways = std.cacheable('ways', function()
 end)
 
 instead.get_inv = std.cacheable('inv', function(horiz)
+	if get_bool(iface, 'noinv') then
+		return
+	end
 	local str = iface:cmd("inv");
 	if str then
 		str = std.string.gsub(str, '\n$','');
@@ -40,6 +59,9 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 end)
 
 instead.get_picture = std.cacheable('pic', function()
+	if get_bool(iface, 'nopic') then
+		return
+	end
 	local s = stead.call(std.here(), 'pic')
 	if not s then
 		s = stead.call(std.ref 'game', 'pic')
@@ -73,24 +95,46 @@ function iface:fading()
 end
 
 function instead.get_restart()
-	return false
+	return instead.__restart or false
 end
 
+
 function instead.get_menu()
-	return false
+	return instead.__menu
 end
 
 function instead.isEnableSave()
+	local s = get_bool(instead, 'nosave')
+	if instead.get_autosave() then
+		return true
+	end
+	return not s
 end
 
 function instead.isEnableAutosave()
+	return not get_bool(instead, 'noautosave')
 end
 
-function instead.autosave()
+function instead.autosave(slot)
+	instead.__autosave = true
+	instead.__autosave_slot = std.tonum(slot)
 end
 
 function instead.get_autosave()
-	return false
+	return instead.__autosave or false, instead.__autosave_slot
+end
+
+function instead.menu(n)
+	if n == nil then
+		n = 'main'
+	elseif type(n) ~= 'string' then
+		n = 'toggle'
+	end
+	instead.__menu = n
+end
+
+function instead.restart(v)
+	instead.__restart = (v == false) and false or true
 end
 
 function iface:title() -- hide title
@@ -309,6 +353,7 @@ std.obj { -- input object
 -- some aliases
 menu = std.menu
 stat = std.stat
+txt = iface
 
 std.mod_init(function()
 	std.rawset(_G, 'instead', instead)
@@ -318,4 +363,8 @@ std.mod_done(function()
 	last_picture = nil
 end)
 
+std.mod_save(function()
+	instead.__autosave = nil
+	instead.__autosave_slot = nil
+end)
 -- require 'dbg'
