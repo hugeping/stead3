@@ -1,5 +1,5 @@
 function sandbox()
-	if STANDALONE or not instead_gamepath then -- not standalone or not sdl-instead
+	if STANDALONE or not instead.gamepath then -- not standalone or not sdl-instead
 		return
 	end
 	local check_path = function(realpath, type, find, gsub, savepath, gamepath, path)
@@ -75,16 +75,16 @@ function sandbox()
 	end
 
 	io.open = build_sandbox_open(instead_realpath, error, type, string.find, string.gsub,
-				     instead_savepath(), instead_gamepath());
+				     instead.savepath(), instead.gamepath());
 
 	os.remove = build_sandbox_remove(instead_realpath, error, type, string.find, string.gsub,
-					 instead_savepath(), instead_gamepath());
+					 instead.savepath(), instead.gamepath());
 
 	os.rename = build_sandbox_rename(instead_realpath, error, type, string.find, string.gsub,
-					 instead_savepath(), instead_gamepath());
+					 instead.savepath(), instead.gamepath());
 
 	io.output = build_sandbox_output(instead_realpath, error, type, string.find, string.gsub,
-					 instead_savepath(), instead_gamepath());
+					 instead.savepath(), instead.gamepath());
 
 	os.execute = function(s)
 		print ("Warning: trying to do os.execute: "..s);

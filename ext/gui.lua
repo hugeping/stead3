@@ -1,3 +1,5 @@
+-- sdl-instead specific methods
+
 local std = stead
 
 local instead = std.obj { nam = '@instead' }

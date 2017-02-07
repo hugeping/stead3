@@ -3,7 +3,7 @@ local std = stead
 local preferences = std.obj {
 	nam = '@prefs',
 	load = function(s)
-		local name = instead_savepath() .. '/prefs';
+		local name = stead.savepath() .. '/prefs';
 		local f, err = std.loadfile(name);
 		if not f then
 			return false, err
@@ -19,7 +19,7 @@ local preferences = std.obj {
 		return s:save()
 	end,
 	save = function(s) -- save prefs on every save
-		local name = instead_savepath() .. '/prefs';
+		local name = stead.savepath() .. '/prefs';
 		local name_tmp = name..'.tmp'
 		local fp, err = std.io.open(name_tmp, "wb");
 		if not fp then
@@ -32,7 +32,7 @@ local preferences = std.obj {
 		return std.os.rename(name_tmp, name);
 	end,
 	purge = function(s)
-		local name = instead_savepath() .. '/prefs';
+		local name = stead.savepath() .. '/prefs';
 		if std.type(s.__var) == 'table' then
 			for k, v in std.pairs(s.__var) do
 				s[k] = nil
