@@ -86,15 +86,7 @@ function object(w)
 end
 std.object = object
 
-function for_all(fn, ...)
-	if type(fn) ~= 'function' then
-		std.err("Wrong 1-st argument to for_all(): "..std.tostr(fn), 2)
-	end
-	local a = {...}
-	for i = 1, #a do
-		fn(a[i])
-	end
-end
+for_all = std.for_all
 
 function seen(w, ww)
 	local wh

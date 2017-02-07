@@ -17,6 +17,7 @@ stead = {
 	setmt = setmetatable;
 	getmt = getmetatable;
 	table = table;
+	math = math;
 	pairs = pairs;
 	ipairs = ipairs;
 	rawset = rawset;
@@ -650,6 +651,16 @@ function std:save(fp)
 		fp:close();
 	end
 	std.busy(false)
+end
+
+function std.for_all(fn, ...)
+	if type(fn) ~= 'function' then
+		std.err("Wrong 1-st argument to for_all(): "..std.tostr(fn), 2)
+	end
+	local a = {...}
+	for i = 1, #a do
+		fn(a[i])
+	end
 end
 
 function std.for_each_obj(fn, ...)

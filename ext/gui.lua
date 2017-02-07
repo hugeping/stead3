@@ -68,7 +68,7 @@ instead.get_picture = std.cacheable('pic', function()
 	if not s then
 		s = stead.call(std.ref 'game', 'pic')
 	end
-	return s
+	return std.tostr(s)
 end)
 
 local last_picture
@@ -265,19 +265,19 @@ end
 
 function iface:img(str)
 	if type(str) == 'string' then
-		return "<g:"..str..">"
+		return "<g:"..std.tostr(str)..">"
 	end
 end;
 
 function iface:imgl(str)
 	if type(str) == 'string' then
-		return "<g:"..str.."\\|left>"
+		return "<g:"..std.tostr(str).."\\|left>"
 	end
 end;
 
 function iface:imgr(str)
 	if type(str) == 'string' then
-		return "<g:"..str.."\\|right>"
+		return "<g:"..std.tostr(str).."\\|right>"
 	end
 end
 
