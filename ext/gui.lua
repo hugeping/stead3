@@ -357,6 +357,7 @@ txt = iface
 
 std.mod_init(function()
 	std.rawset(_G, 'instead', instead)
+	require "ext/sandbox"
 end)
 
 std.mod_done(function()
@@ -367,4 +368,5 @@ std.mod_save(function()
 	instead.__autosave = nil
 	instead.__autosave_slot = nil
 end)
+
 -- require 'dbg'
