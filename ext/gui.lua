@@ -68,7 +68,7 @@ instead.get_picture = std.cacheable('pic', function()
 	if not s then
 		s = stead.call(std.ref 'game', 'pic')
 	end
-	return std.tostr(s)
+	return s and std.tostr(s)
 end)
 
 local last_picture
