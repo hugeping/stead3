@@ -482,7 +482,7 @@ std.list = std.class {
 			return o
 		end
 	end;
-	save = function(s, fp, n)
+	__save = function(s, fp, n)
 		if not s:__dirty() then
 			return
 		end
@@ -534,8 +534,8 @@ std.save_var = function(vv, fp, n)
 			else
 				fp:write(string.format("std(%d)\n", d))
 			end
-		elseif type(vv.save) == 'function' then
-			vv:save(fp, n)
+		elseif type(vv.__save) == 'function' then
+			vv:__save(fp, n)
 		else
 			fp:write(string.format("%s = %s\n", n,  std.dump(vv)))
 --			std.save_table(vv, fp, n)
