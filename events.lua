@@ -4,7 +4,7 @@ local type = std.type
 local instead = std.ref '@instead'
 
 function input:event(...)
-	local a 
+	local a
 	for k, v in std.ipairs {...} do
 		a = (a and ', ' or ' ') .. std.dump(v)
 	end
