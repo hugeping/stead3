@@ -207,12 +207,26 @@ function std.class(s, inh)
 	s.type = function(s, t)
 		return std.is_obj(s, t)
 	end;
-	s.__call = function(s, ...)
-		local a = { ... }
-		if #a == 1 and type(a[1]) == 'string' then
-			return std.ref(a[1])
+	s.__call = function(v, n, ...)
+		if std.is_obj(v) and type(n) == 'string' then
+			-- variable access
+			return function(val)
+				if v == nil then
+					local r = rawget(v, n)
+					if r == nil then
+						r = rawget(v.__ro, n)
+					end
+					return r
+				end
+				if std.game then
+					rawset(v.__var, n, true)
+					rawset(v.__ro, n, nil)
+					return rawset(v, n, val)
+				end
+				return rawset(v.__ro, n, val)
+			end
 		end
-		return s:new(...)
+		return v:new(n, ...)
 	end;
 	s.__tostring = function(self)
 		if not std.is_obj(self) then
@@ -582,7 +596,9 @@ function std:load(fname) -- load save
 	if not f then
 		std.err(err, 2)
 	end
-	f();
+
+	local strict = std.nostrict; std.nostrict = true; f(); std.nostrict = strict
+
 	std.ref 'game':ini(true)
 	return self.game:lastdisp()
 end
