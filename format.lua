@@ -17,8 +17,8 @@ stead.fmt = stead.hook(stead.fmt, function(f, str, state)
 		utf8 = true
 	end
 	if stead.type(r) == 'string' and state then
-		if stead.type(fmt.filter) == 'function' and stead.state then
-			r = fmt.filter(r);
+		if stead.type(fmt.filter) == 'function' then
+			r = fmt.filter(r, state);
 		end
 		if fmt.dash and utf8 then
 			r = r:gsub('([^-])%-%-([^-])', '%1—%2');
