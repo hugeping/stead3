@@ -21,7 +21,7 @@ std.dlg = std.class({
 		end
 		v.dlg_onenter = v.onenter
 		v.onenter = nil
-		v.stack = {}
+		v.__stack = {}
 		if type(v.obj) == 'table' then
 			for i = 1, #v.obj do
 				if not std.is_obj(v.obj[i]) then
@@ -38,8 +38,8 @@ std.dlg = std.class({
 		title = iface:title(std.titleof(s))
 		dsc = std.call(s, 'dsc')
 		if not std.me():moved() then
-			s.lact = std.game:lastreact() or s.lact
-			lact = iface:em(s.lact)
+			s.__lact = std.game:lastreact() or s.__lact
+			lact = iface:em(s.__lact)
 		end
 		return std.par(std.scene_delim, title or false, lact or false, dsc)
 	end;
@@ -64,10 +64,9 @@ std.dlg = std.class({
 		return w:empty()
 	end;
 	onenter = function(s, ...)
-		s.lact = false
-		s.stack = {}
+		s.__llact = false
+		s.__stack = {}
 		s.current = nil
-
 		s:for_each(function(s) s:open() end) -- open all phrases
 		local r, v = std.call(s, s.dlg_onenter, ...)
 		if v == false then
@@ -85,7 +84,7 @@ std.dlg = std.class({
 		local t
 		if r ~= false then
 			if c then
-				table.insert(s.stack, c)
+				table.insert(s.__stack, c)
 			end
 			if r.dsc ~= nil and r.ph_act == nil and r.next == nil then -- no rection
 				t = std.call(r, 'dsc')
@@ -105,23 +104,23 @@ std.dlg = std.class({
 		return t, r ~= false
 	end;
 	pop = function(s, phr)
-		if #s.stack == 0 then
+		if #s.__stack == 0 then
 			return false
 		end
 
 		if phr then
 			local l = {}
-			for i = 1, #s.stack do
-				table.insert(l, s.stack[i])
+			for i = 1, #s.__stack do
+				table.insert(l, s.__stack[i])
 				if s.stack[i] == phr then
 					break
 				end
 			end
-			s.stack = l
+			s.__stack = l
 		end
 		local p
-		while #s.stack > 0 do
-			p = table.remove(s.stack, #s.stack) -- remove top
+		while #s.__stack > 0 do
+			p = table.remove(s.__stack, #s.__stack) -- remove top
 			p = s:select(p)
 			if not p then
 				return false

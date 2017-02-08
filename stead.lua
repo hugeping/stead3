@@ -245,15 +245,19 @@ function std.class(s, inh)
 		return o
 	end;
 	s.__index = function(t, k)
-		local ro = rawget(t, '__ro')
+		local ro = type(rawget(t, '__ro')) == 'table' and t.__ro
 		local v
 		if ro then
 			v = rawget(ro, k)
 		end
 		if v == nil then
-			return s[k]
+			if std.nostrict or (not ro or std.getmt(s)) then -- not object or have parent
+				return s[k]
+			elseif ro and not t.__var[k] then -- no variable
+				std.err("Read uninitialized variable: "..std.tostr(k).." at "..std.tostr(t), 2)
+			end
 		end
-		if std.game and type(v) == 'table' then
+		if ro and std.game and type(v) == 'table' then
 			-- make rw if simple table
 			if type(v.__dirty) ~= 'function' then
 				t.__var[k] = true
@@ -264,21 +268,22 @@ function std.class(s, inh)
 		return v
 	end;
 	s.__newindex = function(t, k, v)
-		local ro
-		if std.is_obj(t) and type(k) == 'string' then
-			ro = t.__ro
-		end
-		if not std.game and ro then
+		local ro = std.is_obj(t) and t.__ro
+
+		if ro and not std.game then
 			rawset(ro, k, v)
 			return
 		end
 
 		t:__dirty(true)
 		if ro then
-			if type(v) ~= 'function' or std.functions[v] then
+			if (type(v) == 'function' and not std.functions[v]) then
+				std.err("Wrong variable operation: "..std.tostr(k).. " at "..std.tostr(t), 2)
+			end
+			if std.nostrict or (type(k) == 'string' and k:find('^__')) or t.__var[k] or ro[k] ~= nil then
 				t.__var[k] = true
 			else
-				std.err("Wrong variable operation: "..std.tostr(k), 2)
+				std.err("Set unitialized variable: "..std.tostr(k).." at "..std.tostr(t), 2)
 			end
 			ro[k] = nil
 		end
@@ -1342,7 +1347,7 @@ std.world = std.class({
 		end
 		return ov
 	end;
-	disp = function(s, state)
+	display = function(s, state)
 		local r, l, av, pv
 		local reaction = s:reaction() or nil
 		r = std.here()
@@ -1394,8 +1399,8 @@ std.world = std.class({
 		if r ~= nil or v ~= nil then
 
 		elseif cmd[1] == nil or cmd[1] == 'look' then
-			if not s.started then
-				s.started = true
+			if not s.__started then
+				s.__started = true
 				r, v = s.player:walk('main', true)
 			else
 				s.player:need_scene(true)
@@ -1486,7 +1491,7 @@ std.world = std.class({
 			std.mod_call('step')
 			s:step()
 		end
-		r = s:disp(v)
+		r = s:display(v)
 		if v then
 			s:lastreact(s:reaction() or false)
 			s:lastdisp(r)

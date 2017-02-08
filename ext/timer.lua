@@ -10,12 +10,12 @@ instead.timer = instead_timer
 local timer = std.obj {
 	nam = '@timer';
 	ini = function(s)
-		if s.timer then
-			s:set(s.timer)
+		if s.__timer then
+			s:set(s.__timer)
 		end
 	end;
 	get = function(s)
-		return s.timer or 0;
+		return s.__timer or 0;
 	end;
 	stop = function(s)
 		return s:set(0)
@@ -24,8 +24,8 @@ local timer = std.obj {
 		if type(v) ~= 'number' then
 			std.err("Wrong argument to timer:set(): "..std.tostr(v), 2)
 		end
-		s.timer = v
-		instead.timer(s.timer)
+		s.__timer = v
+		instead.timer(s.__timer)
 		return true
 	end;
 	callback = function(s)

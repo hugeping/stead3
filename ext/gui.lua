@@ -21,12 +21,16 @@ local function get_bool(o, nam)
 	return nil
 end
 
+iface.notitle = false
+
 instead.get_title = std.cacheable('title', function()
 	if get_bool(iface, 'notitle') then
 		return
 	end
 	return std.titleof(stead.here())
 end)
+
+iface.noways = false
 
 instead.get_ways = std.cacheable('ways', function()
 	if get_bool(iface, 'noways') then
@@ -41,6 +45,8 @@ instead.get_ways = std.cacheable('ways', function()
 	end
 	return str
 end)
+
+iface.noinv = false
 
 instead.get_inv = std.cacheable('inv', function(horiz)
 	if get_bool(iface, 'noinv') then
@@ -59,6 +65,8 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	end
 	return str
 end)
+
+iface.nopic = false
 
 instead.get_picture = std.cacheable('pic', function()
 	if get_bool(iface, 'nopic') then
