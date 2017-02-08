@@ -211,7 +211,7 @@ function theme.snd.click()
 end
 
 -- sprites
-
+instead.ticks = instead_ticks
 instead.font_load = instead_font_load
 instead.font_free = instead_font_free
 instead.font_scaled_size = instead_font_scaled_size
