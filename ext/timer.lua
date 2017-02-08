@@ -48,14 +48,12 @@ std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@timer' then
 		return
 	end
-	local r,v
-	if std.here().timer then
-		r, v = std.call(stead.here(), 'timer');
-	elseif std.game.timer then
+	local r, v = std.call(stead.here(), 'timer');
+	if not v then
 		r, v = stead.call(std.game, 'timer');
 	end
-	if r ~= nil or v ~= nil then
-		return r, v
+	if r == nil and v == true then
+		return nil, false
 	end
-	return nil, false
+	return r, v
 end)

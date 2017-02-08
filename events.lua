@@ -6,7 +6,7 @@ local instead = std.ref '@instead'
 function input:event(...)
 	local a
 	for k, v in std.ipairs {...} do
-		a = (a and ', ' or ' ') .. std.dump(v)
+		a = (a and (a..', ') or ' ') .. std.dump(v)
 	end
 	return '@user_event'.. a or ''
 end
@@ -15,5 +15,9 @@ std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@user_event' then
 		return
 	end
-	return std.call(instead, 'event', cmd[2])
+	local r, v =  std.call(instead, 'event', cmd[2])
+	if r == nil and v == true then -- nothing todo
+		return nil, false
+	end
+	return r, v
 end)
