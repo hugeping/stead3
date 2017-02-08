@@ -14,40 +14,37 @@ instead.sound_load_mem = instead_sound_load_mem
 instead.music_callback = instead_music_callback
 instead.is_sound = instead_sound
 
-local snd = std.obj {
-	nam = '@snd';
-}
 
 function instead.get_music()
-	return snd.__music, snd.__music_loop
+	return instead.__music, instead.__music_loop
 end
 
 function instead.set_music(mus, loop)
-	snd.__music = mus
-	snd.__loop = loop or 0
+	instead.__music = mus
+	instead.__loop = loop or 0
 end
 
 function instead.get_music_fading()
-	return snd.__music_fadeout, snd.__music_fadein
+	return instead.__music_fadeout, instead.__music_fadein
 end
 
 function instead.set_music_fading(o, i)
 	if o == 0 or not o then o = -1 end
 	if i == 0 or not i then i = -1 end
-	snd.__music_fadeout = o
-	snd.__music_fadein = i or o
+	instead.__music_fadeout = o
+	instead.__music_fadein = i or o
 end
 
 function instead.finish_music()
-	if (snd.__music_loop or 0) == 0 then
+	if (instead.__music_loop or 0) == 0 then
 		return false
 	end
-	snd.__music_loop = -1
+	instead.__music_loop = -1
 	return true
 end
 
 function instead.get_sound()
-	return snd.__sound, snd.__sound_channel, snd.__sound_loop
+	return instead.__sound, instead.__sound_channel, instead.__sound_loop
 end
 
 function instead.add_sound(s, chan, loop)
@@ -63,13 +60,13 @@ function instead.add_sound(s, chan, loop)
 	if std.tonum(loop) then
 		s = s..','..std.tostr(loop)
 	end
-	instead.set_sound(instead.__sound..';'..s, snd.__sound_channel, snd.__sound);
+	instead.set_sound(instead.__sound..';'..s, instead.__sound_channel, instead.__sound);
 end
 
 function instead.set_sound(sound, chan, loop)
-	snd.__sound = sound
-	snd.__sound_loop = loop or 1
-	snd.__sound_channel = chan or -1
+	instead.__sound = sound
+	instead.__sound_loop = loop or 1
+	instead.__sound_channel = chan or -1
 end
 
 function instead.stop_sound(chan, fo)
@@ -104,41 +101,69 @@ std.mod_cmd(function(s)
 end)
 
 -- aliases
-
-snd.set = instead.set_sound
-snd.play = instead.add_sound
-snd.stop = instead.stop_sound
-snd.music = instead.set_music
-snd.stop_music = instead.stop_music
-snd.music_fading = instead.music_fading
-
-function snd.load(a, b, t)
-	if type(a) == 'string' then
-		return instead.sound_load(a);
-	elseif type(t) == 'table' then
-		return instead.sound_load_mem(a, b, t) -- hz, channel, t
+local snd = {
+	__gc = function(s)
+		instead.sound_free(s.snd)
+	end;
+	__tostring = function(s)
+		return s.snd
 	end
+}
+snd.__index = snd;
+
+function snd:play(...)
+	instead.add_sound(self.snd)
 end
 
-function snd.music_callback(...)
+function snd:new(a, b, t)
+	local o = {
+		__save = function() end;
+	}
+	if type(a) == 'string' then
+		o.snd = instead.sound_load(a);
+	elseif type(t) == 'table' then
+		o.snd = instead.sound_load_mem(a, b, t) -- hz, channel, t
+	end
+	if not o.snd then
+		return
+	end
+	return std.setmt(o, self)
+end
+
+local sound = std.obj {
+	nam = '@sound';
+}
+
+sound.set = instead.set_sound
+sound.play = instead.add_sound
+sound.stop = instead.stop_sound
+sound.music = instead.set_music
+sound.stop_music = instead.stop_music
+sound.music_fading = instead.music_fading
+
+function sound.new(...)
+	return snd:new(...)
+end
+
+function sound.music_callback(...)
 	return instead.music_callback(...)
 end
 
-function snd.free(key)
+function sound.free(key)
 	return instead.sound_free(key);
 end
 
-function snd.playing(s,...)
+function sound.playing(s,...)
 	if type(s) ~= 'number' then
 		return instead.is_sound()
 	end
 	return instead.sound_channel(s,...)
 end
 
-function snd.pan(c, l, r, ...)
+function sound.pan(c, l, r, ...)
 	return instead.sound_panning(c, l, r, ...)
 end
 
-function snd.vol(v, ...)
+function sound.vol(v, ...)
 	return instead.sound_volume(v, ...)
 end
