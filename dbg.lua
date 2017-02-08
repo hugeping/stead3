@@ -462,13 +462,17 @@ local dbg = std.obj {
 --		timer:stop()
 		s.__last_disp = std.game:lastdisp()
 		s.__nostrict = std.nostrict or false
-		s.__direct = instead.theme_var('scr.gfx.mode')
-		instead.theme_var('scr.gfx.mode', 'embedded')
+		s.__direct = (instead.theme_var('scr.gfx.mode') == 'direct')
+		if s.__direct then
+			instead.theme_var('scr.gfx.mode', 'embedded')
+		end
 		std.nostrict = true
 		iface:raw_mode(true)
 	end;
 	disable = function(s)
-		instead.theme_var('scr.gfx.mode', s.__direct)
+		if s.__direct then
+			instead.theme_var('scr.gfx.mode', 'direct')
+		end
 		std.nostrict = s.__nostrict
 		std.rawset(instead, 'get_picture', old_get_picture)
 		std.rawset(instead, 'get_fading', old_get_fading)
