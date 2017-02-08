@@ -439,6 +439,7 @@ Type "help" to see help
 	key_ctrl = false;
 	kbd_alt_xlat = false;
 	__last_disp = false;
+	__nostrict = false;
 };
 
 local old_get_picture
@@ -459,9 +460,12 @@ local dbg = std.obj {
 --		s.last_timer = timer:get()
 --		timer:stop()
 		s.__last_disp = std.game:lastdisp()
+		s.__nostrict = std.nostrict or false
+		std.nostrict = true
 		iface:raw_mode(true)
 	end;
 	disable = function(s)
+		std.nostrict = s.__nostrict
 		std.rawset(instead, 'get_picture', old_get_picture)
 		std.rawset(instead, 'get_fading', old_get_fading)
 		iface:raw_mode(false)
@@ -578,6 +582,7 @@ local function key_xlat(s)
 	local kbd
 
 	if s == 'return' then return '\n' end
+	if s == 'space' then return ' ' end
 	if s:len() > 1 then
 		return
 	end
@@ -644,9 +649,6 @@ std.mod_cmd(function(cmd)
 				dbg.input = dbg.input:sub(1, pre:len() - 1) .. post
 				dbg.cursor = dbg.cursor - 1
 			end
-		elseif key:find '^space' then
-			dbg.input = dbg.input .. ' '
-			dbg.cursor = dbg.cursor + 1
 		elseif key:find '^tab' then
 			dbg:completion()
 		elseif key:find 'home' or (key == 'a' and dbg.key_ctrl) then
