@@ -15,8 +15,8 @@ std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@user_event' then
 		return
 	end
-	local r, v =  std.call(instead, 'event', cmd[2])
-	if r == nil and v == true then -- nothing todo
+	local r, v =  std.call(instead, 'onevent', cmd[2])
+	if r == nil then -- nothing todo
 		return nil, false
 	end
 	return r, v
