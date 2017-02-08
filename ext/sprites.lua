@@ -233,6 +233,14 @@ instead.sprites_free = instead_sprites_free
 instead.sprite_colorkey = instead_sprite_colorkey
 instead.sprite_pixels = instead_sprite_pixels
 
+instead.mouse_pos = instead_mouse_pos
+instead.mouse_show = instead_mouse_show
+instead.mouse_filter = instead_mouse_filter
+
+instead.finger_pos = instead_finger_pos
+
+std.busy = instead_busy
+
 local spr = {
 	__gc = function(s)
 		instead.sprite_free(s.spr)
