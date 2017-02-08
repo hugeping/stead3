@@ -251,7 +251,7 @@ function std.class(s, inh)
 			v = rawget(ro, k)
 		end
 		if v == nil then
-			if std.nostrict or (not ro or std.getmt(s)) then -- not object or have parent
+			if std.nostrict or (type(k) == 'string' and k:find('^__')) or (not ro or std.getmt(s)) then -- not object or have parent
 				return s[k]
 			elseif ro and not t.__var[k] then -- no variable
 				std.err("Read uninitialized variable: "..std.tostr(k).." at "..std.tostr(t), 2)
