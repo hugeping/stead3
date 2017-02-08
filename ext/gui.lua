@@ -379,4 +379,6 @@ std.mod_save(function()
 	instead.__autosave_slot = nil
 end)
 
--- require 'dbg'
+if DEBUG then
+	require 'dbg'
+end

@@ -438,6 +438,7 @@ Type "help" to see help
 	key_alt = false;
 	key_ctrl = false;
 	kbd_alt_xlat = false;
+	__last_disp = false;
 };
 
 local old_get_picture
@@ -457,7 +458,7 @@ local dbg = std.obj {
 		std.rawset(instead, 'get_fading', function() end)
 --		s.last_timer = timer:get()
 --		timer:stop()
-		s.last_disp = std.game:lastdisp()
+		s.__last_disp = std.game:lastdisp()
 		iface:raw_mode(true)
 	end;
 	disable = function(s)
@@ -465,7 +466,7 @@ local dbg = std.obj {
 		std.rawset(instead, 'get_fading', old_get_fading)
 		iface:raw_mode(false)
 	--	timer:set(s.last_timer)
-		std.game:lastdisp(s.last_disp)
+		std.game:lastdisp(s.__last_disp)
 	end;
 	inp_split = function(s)
 		local pre = s.input:sub(1, s.cursor - 1);
