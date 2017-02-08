@@ -406,8 +406,69 @@ function sprite.font_scaled_size(size)
 	return instead.font_scaled_size(size);
 end
 
+std.obj(sprite)
+
+instead.sprite_pixels = instead_sprite_pixels
+
+local pfnt = {
+}
+
+pfnt.__index = pfnt
+std.setmt(pfnt, fnt)
+
+local pxl = {
+}
+
+pxl.__index = pxl
+
+function pxl:dup()
+	local w, h, s = self:size()
+	local p = instead.sprite_pixels(w, h, s)
+	if p then
+		self:copy(p)
+	end
+	return self:new(p)
+end
+
+function pxl:sprite()
+	return sprite.new(self)
+end
+
+function pxl:new(p)
+	if type(p) ~= 'userdata' then
+		return
+	end
+	local t = getmetatable(p).__index
+	setmetatable(t, self)
+	return p
+end
+
+function pfnt:new(nam)
+	return fnt.new(self, nam)
+end
+
+function pfnt:text(text, col, style, ...)
+	local s = self
+	return pxl:new(instead.sprite_pixels(instead.sprite_text(s.fnt, text, col, style, ...)))
+end
+
+local pixels = {
+	nam = '@pixels';
+}
+
+function pixels.fnt(name, sz, ...)
+	if not std.tonum(sz) then
+		error("No font size specified.", 2)
+	end
+	return pfnt:new(instead.font_load(name, -sz, ...))
+end
+
+function pixels.new(...)
+	return pxl:new(instead.sprite_pixels(...))
+end
+
+std.obj (pixels)
+
 stead.mod_done(function()
 	instead.sprites_free();
 end)
-
-std.obj(sprite)

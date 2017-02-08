@@ -5,7 +5,7 @@ local input = std.ref '@input'
 local string = std.string
 local okey
 local txt = std.ref '@iface'
-
+local instead = std.ref '@instead'
 local kbden = {
 	shifted = {
 	["1"] = "!",
@@ -440,6 +440,7 @@ Type "help" to see help
 	kbd_alt_xlat = false;
 	__last_disp = false;
 	__nostrict = false;
+	__direct = false;
 };
 
 local old_get_picture
@@ -461,10 +462,13 @@ local dbg = std.obj {
 --		timer:stop()
 		s.__last_disp = std.game:lastdisp()
 		s.__nostrict = std.nostrict or false
+		s.__direct = instead.theme_var('scr.gfx.mode')
+		instead.theme_var('scr.gfx.mode', 'embedded')
 		std.nostrict = true
 		iface:raw_mode(true)
 	end;
 	disable = function(s)
+		instead.theme_var('scr.gfx.mode', s.__direct)
 		std.nostrict = s.__nostrict
 		std.rawset(instead, 'get_picture', old_get_picture)
 		std.rawset(instead, 'get_fading', old_get_fading)
