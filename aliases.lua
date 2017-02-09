@@ -192,11 +192,11 @@ function empty(w)
 end
 
 function lifeon(w, ...)
-	return std.game:lefeon(std.object(w), ...)
+	return std.game:lefeon(w and std.object(w), ...)
 end
 
 function lifeoff(w, ...)
-	return std.game:lefeoff(std.object(w), ...)
+	return std.game:lefeoff(w and std.object(w), ...)
 end
 
 function live(...)
