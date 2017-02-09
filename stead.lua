@@ -1150,15 +1150,18 @@ std.obj = std.class {
 		return rc
 	end;
 	lifeon = function(s)
-		std.game:lifeon(s)
+		local game = std.ref 'game'
+		game:lifeon(s)
 		return s
 	end;
 	lifeoff = function(s)
-		std.game:lifeoff(s)
+		local game = std.ref 'game'
+		game:lifeoff(s)
 		return s
 	end;
 	live = function(s)
-		return std.game:live(s)
+		local game = std.ref 'game'
+		return game:live(s)
 	end;
 };
 
@@ -1305,16 +1308,21 @@ std.world = std.class({
 	lifeon = function(s, w, ...)
 		if not w then
 			s.__lifeoff = nil
+			return
 		end
 		return s.lifes:add(w, ...)
 	end;
 	lifeoff = function(s, w)
 		if not w then
 			s.__lifeoff = true
+			return
 		end
 		return s.lifes:del(w)
 	end;
 	live = function(s, w)
+		if not w then
+			return not s.__lifeoff
+		end
 		return s.lifes:lookup(w)
 	end;
 	set_pl = function(s, w)

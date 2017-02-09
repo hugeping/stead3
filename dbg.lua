@@ -726,7 +726,7 @@ end, -1)
 std.mod_start(function()
 	iface:raw_mode(false)
 	okey = input.key;
-	std.rawset(input, 'key', function(self, ...) return dbg:key(...) or okey(input, ...) end)
+	std.rawset(input, 'key', function(self, ...) return dbg:key(...) or (okey and okey(input, ...)) end)
 end, -1)
 
 std.mod_done(function()
