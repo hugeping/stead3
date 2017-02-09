@@ -264,6 +264,21 @@ function drop(w, wh)
 	return place(w, wh)
 end
 
+local xact = (std.menu or std.obj) {
+	nam = '@';
+	{
+		methods = {}
+	};
+	act = function(s, w, ...)
+		if type(s.methods[w]) ~= 'function' then
+			std.err ("Wrong method to xact", 2)
+		end
+		return s.methods[w](...)
+	end
+}
+
+std.rawset(_G, 'xact', xact.methods)
+
 std.mod_init(function()
 	declare {
 		game = std.ref 'game',
