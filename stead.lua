@@ -167,7 +167,7 @@ local function xref_prep(str)
 	if not i then
 		return str
 	end
-	oo = s:sub(1, i - 1)
+	oo = std.strip(s:sub(1, i - 1))
 	s = s:sub(i + 1)
 	if oo:find('@', 1, true) == 1 then -- call '@' obj (aka xact)
 		local o = std.split(oo)[1]
@@ -218,8 +218,8 @@ std.fmt = function(str, fmt, state)
 	local refs = {}
 
 	local function prep(str)
-		str = str:gsub("^{", ""):gsub("}$", "")
-		local s = str:gsub('\\?[\\'..std.delim..']',
+		local s = str:gsub("^{", ""):gsub("}$", "")
+		s = s:gsub('\\?[\\'..std.delim..']',
 			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
 		local l = s:find('\001')
 		if not l or l == 1 then
@@ -234,7 +234,6 @@ std.fmt = function(str, fmt, state)
 	if type(fmt) == 'function' then
 		s = fmt(s, state)
 	end
-
 	local function post(str)
 		local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
 			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
