@@ -157,9 +157,59 @@ function std.hook(o, f)
 	end
 end
 
-std.fmt = function(str, state)
-	str = stead.obj.xref('<empty>', str)
-	return str
+std.fmt = function(str, fmt)
+	if type(str) ~= 'string' then
+		return
+	end
+
+	local xref = std.xref_prep
+
+	local s = string.gsub(str, '[\t \n]+', std.space_delim);
+	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+
+	if type(fmt) == 'function' then
+		s = fmt(s)
+	end
+
+	s = string.gsub(s, '\\?[\\{}..'..std.delim..']',
+		{ ['{'] = '\001', ['}'] = '\002', [std.delim] = '\003', [ '\\{' ] = '{', [ '\\}' ] = '}', [ '\\'..std.delim ] = std.delim });
+
+	s = s:gsub('\001([^\002]+)\002', xref):gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
+
+	return s
+end
+
+function std.xref_prep(str)
+	local oo, self
+	local a = {}
+	local s = string.gsub(str,'[\001\002]','');
+	local i = s:find('\003', 1, true)
+	if not i then
+		return str
+	end
+	oo = s:sub(1, i - 1)
+	s = s:sub(i + 1)
+	if oo:find('@', 1, true) == 1 then -- call '@' obj (aka xact)
+		local o = std.split(oo)[1]
+		local i = oo:find("[ \t]")
+		if i then
+			a = std.strip(oo:sub(i))
+			a = std.cmd_parse(a)
+		end
+		self = std.ref(o)
+	else
+		if oo:find("^# [0-9-]+") then
+			self = std.ref(std.tonum(oo:sub(3)))
+		elseif std.is_tag(oo) then -- #tag?
+			self = std.here():lookup(oo)
+		else
+			self = std.ref(oo)
+		end
+	end
+	if not std.is_obj(self) then
+		std.err("Wrong object in xref: "..std.tostr(oo), 2)
+	end
+	return iface:xref(s, self, std.unpack(a));
 end
 
 local lua_keywords = {
@@ -1037,43 +1087,27 @@ std.obj = std.class {
 		end
 	end;
 	xref = function(self, str)
-		local function xrefrep(str)
-			local oo = self
-			local a = {}
-			local s = string.gsub(str,'[\001\002]','');
-			s = s:gsub('\\?[\\'..std.delim..']', { [ std.delim ] = '\001', [ '\\'..std.delim ] = std.delim });
-			local i = s:find('\001', 1, true)
-			if i then -- xact
-				oo = s:sub(1, i - 1)
-				s = s:sub(i + 1)
-				if oo:find('@', 1, true) == 1 then -- call '@' obj (aka xact)
-					local o = std.split(oo)[1]
-					local i = oo:find("[ \t]")
-					if i then
-						a = std.strip(oo:sub(i))
-						a = std.cmd_parse(a)
-					end
-					self = std.ref(o)
-				else
-					if std.is_tag(oo) then -- #tag?
-						self = std.here():lookup(oo)
-					else
-						self = std.ref(oo)
-					end
-				end
-			end
-			if not std.is_obj(self) then
-				std.err("Wrong object in xref: "..std.tostr(oo), 2)
-			end
-			return iface:xref(s, self, std.unpack(a));
-		end
 		if type(str) ~= 'string' then
 			return
 		end
-		local s = string.gsub(str, '\\?[\\{}]',
-			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' }):gsub('\001([^\002]+)\002', xrefrep):gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+
+		local nam = self.nam
+
+		if type(nam) == 'number' then
+			nam = '# '..std.tostr(nam)
+		end
+
+		local s = string.gsub(str, '\\?[\\{}'..std.delim..']',
+			{ ['{'] = '\001',
+				['}'] = '\002',
+				[std.delim] = '\003',
+				[ '\\{' ] = '{',
+				[ '\\}' ] = '}',
+				[ '\\'..std.delim ] = std.delim }):
+				gsub('\001([^\002\003]+)\002', '\001'..nam..'\003%1\002'):
+				gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
 		if s == str then
-			return iface:xref(s, self)
+			return ("{"..nam..std.delim..s.."}")
 		end
 		return s;
 	end;
@@ -2281,18 +2315,12 @@ std.obj {
 		return ov
 	end;
 	fmt = function(self, str, state)
-		if self:raw_mode() then
+		if self:raw_mode() or type(str) ~= 'string' then
 			return str
 		end
-		if type(str) ~= 'string' then
-			return
-		end
-		local s = string.gsub(str,'[\t \n]+', std.space_delim);
-		s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-		s = std.fmt(s, state)
-		return std.cat(s, '\n')
-	end;
-	input = function(self)
+		str = std.fmt(str, std.format)
+
+		return std.cat(str, '\n')
 	end;
 	em = function(self, str)
 		return str
