@@ -192,6 +192,36 @@ local function xref_prep(str)
 	return iface:xref(s, self, std.unpack(a));
 end
 
+local fmt_refs
+
+local function fmt_prep(str)
+	local s = str:gsub("^{", ""):gsub("}$", "")
+	s = s:gsub('\\?[\\'..std.delim..']',
+		   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+	local l = s:find('\001')
+	if not l or l == 1 then
+		return str
+	end
+	table.insert(fmt_refs, s:sub(1, l - 1))
+	local n = string.format("%d%s", #fmt_refs, std.delim)
+	return "{"..n..s:sub(l + 1).."}"
+end
+
+local function fmt_post(str)
+	local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
+		   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+	local l = s:find('\001')
+	if not l or l == 1 then
+		return str
+	end
+	local n = std.tonum(s:sub(1, l - 1)) or 0
+	if not fmt_refs[n] then
+		return str
+	end
+	s = fmt_refs[n]..std.delim..s:sub(l + 1)
+	return xref_prep(s)
+end
+
 function std.for_each_xref(s, fn)
 	s = string.gsub(s, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' });
@@ -215,41 +245,15 @@ std.fmt = function(str, fmt, state)
 	local s = string.gsub(str, '[\t \n]+', std.space_delim);
 	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
 
-	local refs = {}
+	fmt_refs = {}
 
-	local function prep(str)
-		local s = str:gsub("^{", ""):gsub("}$", "")
-		s = s:gsub('\\?[\\'..std.delim..']',
-			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
-		local l = s:find('\001')
-		if not l or l == 1 then
-			return str
-		end
-		table.insert(refs, s:sub(1, l - 1))
-		local n = string.format("%d%s", #refs, std.delim)
-		return "{"..n..s:sub(l + 1).."}"
-	end
-	s = std.for_each_xref(s, prep) -- rename all {}
+	s = std.for_each_xref(s, fmt_prep) -- rename all {}
 
 	if type(fmt) == 'function' then
 		s = fmt(s, state)
 	end
-	local function post(str)
-		local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
-			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
-		local l = s:find('\001')
-		if not l or l == 1 then
-			return str
-		end
-		local n = std.tonum(s:sub(1, l - 1)) or 0
-		if not refs[n] then
-			return str
-		end
-		s = refs[n]..std.delim..s:sub(l + 1)
-		return xref_prep(s)
-	end
 
-	s = std.for_each_xref(s, post) -- rename and xref
+	s = std.for_each_xref(s, fmt_post) -- rename and xref
 
 	return s
 end
