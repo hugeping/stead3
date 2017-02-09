@@ -157,33 +157,13 @@ function std.hook(o, f)
 	end
 end
 
-std.fmt = function(str, fmt)
-	if type(str) ~= 'string' then
-		return
-	end
-
-	local xref = std.xref_prep
-
-	local s = string.gsub(str, '[\t \n]+', std.space_delim);
-	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-
-	if type(fmt) == 'function' then
-		s = fmt(s)
-	end
-
-	s = string.gsub(s, '\\?[\\{}..'..std.delim..']',
-		{ ['{'] = '\001', ['}'] = '\002', [std.delim] = '\003', [ '\\{' ] = '{', [ '\\}' ] = '}', [ '\\'..std.delim ] = std.delim });
-
-	s = s:gsub('\001([^\002]+)\002', xref):gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
-
-	return s
-end
-
-function std.xref_prep(str)
+local function xref_prep(str)
 	local oo, self
 	local a = {}
-	local s = string.gsub(str,'[\001\002]','');
-	local i = s:find('\003', 1, true)
+	local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
+		{ [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+
+	local i = s:find('\001', 1, true)
 	if not i then
 		return str
 	end
@@ -211,6 +191,70 @@ function std.xref_prep(str)
 	end
 	return iface:xref(s, self, std.unpack(a));
 end
+
+function std.for_each_xref(s, fn)
+	s = string.gsub(s, '\\?[\\{}]',
+			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' });
+	local function prep(s)
+		s = s:gsub("[\001\002]", "")
+		s = fn('{'..s..'}')
+		return s
+	end
+	s = string.gsub(s, '(\001[^\002]+\002)', prep)
+	s = s:gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+	return s
+end
+
+std.fmt = function(str, fmt, state)
+	if type(str) ~= 'string' then
+		return
+	end
+
+	local xref = xref_prep
+
+	local s = string.gsub(str, '[\t \n]+', std.space_delim);
+	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
+
+	local refs = {}
+
+	local function prep(str)
+		str = str:gsub("^{", ""):gsub("}$", "")
+		local s = str:gsub('\\?[\\'..std.delim..']',
+			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+		local l = s:find('\001')
+		if not l or l == 1 then
+			return str
+		end
+		table.insert(refs, s:sub(1, l - 1))
+		local n = string.format("%d%s", #refs, std.delim)
+		return "{"..n..s:sub(l + 1).."}"
+	end
+	s = std.for_each_xref(s, prep) -- rename all {}
+
+	if type(fmt) == 'function' then
+		s = fmt(s, state)
+	end
+
+	local function post(str)
+		local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
+			   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+		local l = s:find('\001')
+		if not l or l == 1 then
+			return str
+		end
+		local n = std.tonum(s:sub(1, l - 1)) or 0
+		if not refs[n] then
+			return str
+		end
+		s = refs[n]..std.delim..s:sub(l + 1)
+		return xref_prep(s)
+	end
+
+	s = std.for_each_xref(s, post) -- rename and xref
+
+	return s
+end
+
 
 local lua_keywords = {
 	["and"] = true,
@@ -2318,7 +2362,7 @@ std.obj {
 		if self:raw_mode() or type(str) ~= 'string' then
 			return str
 		end
-		str = std.fmt(str, std.format)
+		str = std.fmt(str, std.format, state)
 
 		return std.cat(str, '\n')
 	end;

@@ -199,7 +199,7 @@ function iface:xref(str, o, ...)
 	end
 	if std.cmd[1] == 'way' then
 		return std.string.format("<a:go %s%s>", std.deref_str(o), args)..str.."</a>"
-	elseif o:type 'menu' then
+	elseif o:type 'menu' or std.is_system(o) then
 		return std.string.format("<a:act %s%s>", std.deref_str(o), args)..str.."</a>"
 	elseif std.cmd[1] == 'inv' then
 		return std.string.format("<a:%s%s>", std.deref_str(o), args)..str.."</a>"

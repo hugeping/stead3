@@ -12,21 +12,7 @@ local fmt = std.obj {
 	filter = nil;
 }
 
-local function utffmt(r)
-	if fmt.dash then
-		r = r:gsub('([^-])%-%-([^-])', '%1—%2');
-		r = r:gsub('^%-%-([^-])', '—%1'):gsub("^—[ \t]+", "— ");
-	end
-
-	if fmt.quotes then
-		r = r:gsub('_"','«'):gsub('"_',"»");
-		r = r:gsub('"([^"]*)"','«%1»');
-		r = r:gsub(',,','„'):gsub("''",'”');
-	end
-	return r
-end
-
-std.format = function(r)
+std.format = function(r, state)
 	local utf8 = (game.codepage == 'UTF-8' or game.codepage == 'utf-8')
 
 	if type(r) ~= 'string' then
@@ -34,16 +20,24 @@ std.format = function(r)
 	end
 
 	if type(fmt.filter) == 'function' then
-		r = fmt.filter(r)
+		r = fmt.filter(r, state)
 	end
 
 	if utf8 then
-		r = string.gsub(r, '\\?[\\{}]',
-			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' });
-		r = r:gsub("[^\002]+\001", utffmt)
-		r = r:gsub("\002[^\001]+", utffmt)
-		r = r:gsub("^[^\001\002]+$", utffmt)
-		r = r:gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+		if fmt.dash then
+			r = r:gsub('([^-])%-%-([^-])', '%1—%2');
+			r = r:gsub('^%-%-([^-])', '—%1'):gsub("^—[ \t]+", "— ");
+		end
+
+		if fmt.quotes then
+			r = r:gsub('_"','«'):gsub('"_',"»");
+			r = r:gsub('"([^"]*)"','«%1»');
+			r = r:gsub(',,','„'):gsub("''",'”');
+		end
+	end
+
+	if not state then
+		return r
 	end
 
 	if fmt.para then
