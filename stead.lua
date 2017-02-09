@@ -1303,9 +1303,15 @@ std.world = std.class({
 		end
 	end;
 	lifeon = function(s, w, ...)
+		if not w then
+			s.__lifeoff = nil
+		end
 		return s.lifes:add(w, ...)
 	end;
 	lifeoff = function(s, w)
+		if not w then
+			s.__lifeoff = true
+		end
 		return s.lifes:del(w)
 	end;
 	live = function(s, w)
@@ -1321,6 +1327,9 @@ std.world = std.class({
 	life = function(s)
 		local av, vv
 		s:events(false, false)
+		if s.__lifeoff then
+			return
+		end
 		local ll = {}
 
 		for i = 1, #s.lifes do
