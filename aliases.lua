@@ -229,19 +229,21 @@ function remove(w, wh)
 	return o:remove(wh)
 end
 
-function place(w, wh)
+local function __place(w, wh, remove)
 	local o = std.object(w)
 	if not o then
-		std.err("Wrong argument to place(): "..std.tostr(w), 2)
+		std.err("Wrong argument to place(): "..std.tostr(w), 3)
 	end
-	o:remove() -- remove object from everywhere
+	if remove then
+		o:remove() -- remove object from everywhere
+	end
 	wh = wh or std.here()
 	if type(wh) ~= 'table' then
 		wh = std.ref(wh)
 	end
 	if o:type 'player' then
 		if not std.is_obj(wh) then
-			std.err("Wrong 2-nd argument to place(): "..std.tostr(wh), 2)
+			std.err("Wrong 2-nd argument to place(): "..std.tostr(wh), 3)
 		end
 		o:walk(wh, false, false)
 		return o
@@ -251,9 +253,17 @@ function place(w, wh)
 	elseif std.is_obj(wh, 'list') then
 		wh:add(o)
 	else
-		std.err("Wrong 2-nd argument to place(): "..std.tostr(wh), 2)
+		std.err("Wrong 2-nd argument to place(): "..std.tostr(wh), 3)
 	end
 	return o
+end
+
+function place(w, wh)
+	return __place(w, wh, true)
+end
+
+function put(w, wh)
+	return __place(w, wh, false)
 end
 
 function take(w)
