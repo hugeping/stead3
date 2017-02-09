@@ -720,7 +720,7 @@ function std:done()
 		if std.is_system(v) then
 			objects[k] = v
 		else
-			print("Deleting "..k)
+			-- print("Deleting "..k)
 		end
 	end)
 	std.objects = objects
@@ -2242,7 +2242,7 @@ std.obj {
 	nam = '@iface';
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
-		print("input: ", inp)
+		-- print("input: ", inp)
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
@@ -2250,7 +2250,7 @@ std.obj {
 		std.cmd = cmd
 		std.cache = {}
 		local r, v = std.ref 'game':cmd(cmd)
-		print("r, v = ", r, v)
+		-- print("r, v = ", r, v)
 		if v == false then
 			if r == true then -- true, false is now menu mode
 				return nil, true -- hack for menu mode
@@ -2260,7 +2260,7 @@ std.obj {
 		if v == true then
 			r = iface:fmt(r, true)
 		end
-		print(r, v)
+		-- print(r, v)
 		return r, v
 	end;
 	xref = function(self, str, obj)
