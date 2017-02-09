@@ -2328,6 +2328,6 @@ function std.nop()
 end
 
 -- require "ext/gui"
-require "strict"
+require "declare"
 require "dlg"
 require "aliases"
