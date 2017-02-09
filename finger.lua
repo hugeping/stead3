@@ -21,7 +21,7 @@ function finger:add(press, fid, x, y, px, py)
 			v.x, v.y, v.px, v.py = x, y, px, py
 		else
 			table.insert(s.fingers_list,
-				 { id = fid, x = x, y = y, px = px, py = py })
+				{ id = fid, x = x, y = y, px = px, py = py })
 		end
 		return
 	end
