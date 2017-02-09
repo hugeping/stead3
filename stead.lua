@@ -195,10 +195,10 @@ std.setmt(stead, {
 
 
 function std.is_system(v)
-	local n = v.nam
 	if not std.is_obj(v) then
 		return false
 	end
+	local n = v.nam
 	if type(n) == 'string' then
 		if n:byte(1) == 0x40 then
 			return true
