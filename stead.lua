@@ -193,6 +193,20 @@ std.setmt(stead, {
 	end;
 })
 
+
+function std.is_system(v)
+	local n = v.nam
+	if not std.is_obj(v) then
+		return false
+	end
+	if type(n) == 'string' then
+		if n:byte(1) == 0x40 then
+			return true
+		end
+	end
+	return false
+end
+
 function std.is_obj(v, t)
 	if type(v) ~= 'table' then
 		return false
@@ -690,23 +704,10 @@ function std.for_each_obj(fn, ...)
 end
 
 function std:init()
-	std.obj { nam = '@',
-		  {
-			  iface = {
-			  };
-		  };
-		  act = function(s, x)
-			  local cmd = std.cmd_parse(x)
-			  if s.iface[cmd[1]] then
-				  return std.call(s.iface, std.unpack(cmd))
-			  end
-			  std.err ('Undefined @ act: '..std.tostr(x), 2)
-	end; }
 	std.rawset(_G, 'iface', std.ref '@iface') -- force iface override
 	std.world { nam = 'game', player = 'player', codepage = 'UTF-8' }
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
-	std.xact = std.ref '@'.iface
 	std.mod_call('init') -- init modules
 	std.initialized = true
 end
@@ -716,7 +717,7 @@ function std:done()
 	local objects = {}
 	std.for_each_obj(function(v)
 		local k = std.deref(v)
-		if type(k) == 'string' and k:byte(1) == 0x40 then
+		if std.is_system(v) then
 			objects[k] = v
 		else
 			print("Deleting "..k)
@@ -732,9 +733,6 @@ function std:done()
 	end
 	if std.ref 'player' then
 		std.delete('player')
-	end
-	if std.ref '@' then
-		std.delete('@')
 	end
 	std.files = {}
 --	std.includes = {}
@@ -1041,16 +1039,20 @@ std.obj = std.class {
 	xref = function(self, str)
 		local function xrefrep(str)
 			local oo = self
-			local a
+			local a = {}
 			local s = string.gsub(str,'[\001\002]','');
 			s = s:gsub('\\?[\\'..std.delim..']', { [ std.delim ] = '\001', [ '\\'..std.delim ] = std.delim });
 			local i = s:find('\001', 1, true)
 			if i then -- xact
 				oo = s:sub(1, i - 1)
 				s = s:sub(i + 1)
-				if oo:find("@", 1, true) == 1 then -- call '@' obj (aka xact)
-					local o = '@'
-					a = oo:sub(2)
+				if oo:find('@', 1, true) == 1 then -- call '@' obj (aka xact)
+					local o = std.split(oo)[1]
+					local i = oo:find("[ \t]")
+					if i then
+						a = std.strip(oo:sub(i))
+						a = std.cmd_parse(a)
+					end
 					self = std.ref(o)
 				else
 					if std.is_tag(oo) then -- #tag?
@@ -1063,7 +1065,7 @@ std.obj = std.class {
 			if not std.is_obj(self) then
 				std.err("Wrong object in xref: "..std.tostr(oo), 2)
 			end
-			return iface:xref(s, self, a);
+			return iface:xref(s, self, std.unpack(a));
 		end
 		if type(str) ~= 'string' then
 			return
@@ -1438,7 +1440,7 @@ std.world = std.class({
 				return nil, false
 			end
 			local o = std.ref(cmd[2]) -- on what?
-			if std.is_obj(o) and std.nameof(o) == '@' then
+			if std.is_system(o) then
 				local a = {}
 				for i = 3, #cmd do
 					table.insert(a, cmd[i])
