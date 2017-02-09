@@ -8,9 +8,9 @@ instead.theme_name = instead_theme_name
 
 local theme = std.obj {
 	nam = '@theme';
+	vars = {};
+	reset_vars = {};
 	{
-		vars = {};
-		reset_vars = {};
 		win = { gfx = {}};
 		inv = { gfx = {}};
 		menu = { gfx = {}};
@@ -18,6 +18,17 @@ local theme = std.obj {
 		snd = {};
 	};
 }
+
+function theme.restore(name)
+	if type(name) ~= 'string' then
+		std.err("Wrong parameter to theme.restore", 2)
+	end
+	v = theme.vars[name]
+	if not v then
+		return
+	end
+	instead.theme_var(name, v);
+end
 
 function theme.set(name, val)
 	if type(name) ~= 'string' or val == nil then
