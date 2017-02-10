@@ -160,9 +160,7 @@ end
 local function xref_prep(str)
 	local oo, self
 	local a = {}
-	local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
-		{ [std.delim] = '\001', ['\\'..std.delim] = std.delim });
-
+	local s = str
 	local i = s:find('\001', 1, true)
 	if not i then
 		return str
@@ -196,8 +194,7 @@ local fmt_refs
 
 local function fmt_prep(str)
 	local s = str:gsub("^{", ""):gsub("}$", "")
-	s = s:gsub('\\?[\\'..std.delim..']',
-		   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+	s = s:gsub('\\?['..std.delim..']', { [std.delim] = '\001' });
 	local l = s:find('\001')
 	if not l or l == 1 then
 		return str
@@ -208,8 +205,8 @@ local function fmt_prep(str)
 end
 
 local function fmt_post(str)
-	local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?[\\'..std.delim..']',
-		   { [std.delim] = '\001', ['\\'..std.delim] = std.delim });
+	local s = str:gsub("^{", ""):gsub("}$", ""):gsub('\\?['..std.delim..']',
+		{ [std.delim] = '\001' } );
 	local l = s:find('\001')
 	if not l or l == 1 then
 		return str
@@ -218,13 +215,13 @@ local function fmt_post(str)
 	if not fmt_refs[n] then
 		return str
 	end
-	s = fmt_refs[n]..std.delim..s:sub(l + 1)
-	return xref_prep(s)
+	s = fmt_refs[n]..s:sub(l)
+	return xref_prep(std.unesc(s))
 end
 
 function std.for_each_xref(s, fn)
 	s = string.gsub(s, '\\?[\\{}]',
-			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '{', [ '\\}' ] = '}' });
+			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '\\{', [ '\\}' ] = '\\}' });
 	local function prep(s)
 		s = s:gsub("[\001\002]", "")
 		s = fn('{'..s..'}')
@@ -239,22 +236,20 @@ std.fmt = function(str, fmt, state)
 	if type(str) ~= 'string' then
 		return
 	end
-
 	local xref = xref_prep
-
 	local s = string.gsub(str, '[\t \n]+', std.space_delim);
-	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^', ['\\\\'] = '\\'} );
-
+	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^'} );
 	fmt_refs = {}
 
 	s = std.for_each_xref(s, fmt_prep) -- rename all {}
-
 	if type(fmt) == 'function' then
 		s = fmt(s, state)
 	end
-
 	s = std.for_each_xref(s, fmt_post) -- rename and xref
-
+	s = s:gsub('\\?'..'[{}]', { ['\\{'] = '{', ['\\}'] = '}' })
+	if state then
+		s = s:gsub('\\?'..std.delim, { ['\\'..std.delim] = std.delim })
+	end
 	return s
 end
 
@@ -459,7 +454,7 @@ std.list = std.class {
 			end
 			local o = s[i]
 			if o:visible() then
-				local d = o:xref(std.call(s[i], 'dsc'))
+				local d = o:__xref(std.call(s[i], 'dsc'))
 				if type(d) == 'string' then
 					r = (r or '').. d
 				end
@@ -576,14 +571,13 @@ std.list = std.class {
 			end
 		end
 	end;
---	seen = function(s, n)
---		for i = 1, #s do
---			local o = std.ref(s[i])
---			if std.dispof(o) == n then
---				return o, i
---			end
---		end
---	end;
+	seen = function(s, n)
+		local o = s:lookup(n)
+		if not o or not o:visible() then
+			return false
+		end
+		return o
+	end;
 	empty = function(s)
 		return (#s == 0)
 	end;
@@ -605,6 +599,34 @@ std.list = std.class {
 			s:sort()
 			return o
 		end
+	end;
+	__dump = function(s, recurse)
+		local rc
+		for i = 1, #s do
+			local v = s[i]
+			if std.is_obj(v) and v:visible() then
+				local vv, n
+				if rc then
+					rc = rc .. std.delim
+				else
+					rc = ''
+				end
+				if type(v.nam) == 'number' then
+					n = '# '..std.tostr(v.nam)
+				else
+					n = v.nam
+				end
+				vv = '{'..std.esc(n)..std.delim..std.esc(std.dispof(v))..'}'
+				rc = rc .. vv
+				if recurse and not v:closed() then
+					vv = v:__dump(recurse)
+					if vv then
+						rc = rc .. std.delim .. vv
+					end
+				end
+			end
+		end
+		return rc
 	end;
 	__save = function(s, fp, n)
 		if not s:__dirty() then
@@ -963,6 +985,9 @@ std.obj = std.class {
 		v.obj = std.list(v.obj)
 --		v.obj:attach(v)
 		for key, val in pairs(v) do
+			if type(self[key]) == 'function' and type(val) ~= 'function' then
+				std.err("Overwrited object method: '"..std.tostr(key).. "' in: "..std.tostr(v.nam), 2)
+			end
 			if not raw[key] then
 				ro[key] = val
 				rawset(v, key, nil)
@@ -1133,7 +1158,7 @@ std.obj = std.class {
 			std.save_var(s[k], fp, l)
 		end
 	end;
-	xref = function(self, str)
+	__xref = function(self, str)
 		if type(str) ~= 'string' then
 			return
 		end
@@ -1143,18 +1168,13 @@ std.obj = std.class {
 		if type(nam) == 'number' then
 			nam = '# '..std.tostr(nam)
 		end
-
 		local s = string.gsub(str, '\\?[\\{}'..std.delim..']',
 			{ ['{'] = '\001',
-				['}'] = '\002',
-				[std.delim] = '\003',
-				[ '\\{' ] = '{',
-				[ '\\}' ] = '}',
-				[ '\\'..std.delim ] = std.delim }):
-				gsub('\001([^\002\003]+)\002', '\001'..nam..'\003%1\002'):
-				gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
+				['}'] = '\002', [std.delim] = '\003' }):
+			gsub('\001([^\002\003]+)\002', '\001'..std.esc(nam)..'\003%1\002'):
+			gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
 		if s == str then
-			return ("{"..nam..std.delim..s.."}")
+			return '{'..(std.esc(nam)..std.delim..std.esc(s))..'}'
 		end
 		return s;
 	end;
@@ -1207,30 +1227,8 @@ std.obj = std.class {
 			end
 		end
 	end;
-	dump = function(s)
-		local rc
-		for i = 1, #s.obj do
-			local v = s.obj[i]
-			if std.is_obj(v) and not v:disabled() then
-				local vv
-				if rc then
-					rc = rc .. std.delim
-				else
-					rc = ''
-				end
-				vv = iface:xref(std.dispof(v), v)
-				vv = vv:gsub('\\?'..std.delim,
-					     { [std.delim] = '\\'..std.delim });
-				rc = rc .. vv
-				if not v:closed() then
-					vv = v:dump()
-					if vv then
-						rc = rc .. std.delim .. vv
-					end
-				end
-			end
-		end
-		return rc
+	__dump = function(s)
+		return s.obj:__dump(true)
 	end;
 	lifeon = function(s)
 		local game = std.ref 'game'
@@ -1306,25 +1304,11 @@ std.room = std.class({
 	display = function(s)
 		return s.obj:display()
 	end;
-	dump_way = function(s)
-		local rc
-		for i = 1, #s.way do
-			local v = s.way[i]
-			if std.is_obj(v, 'room')
-			and not v:disabled() and not v:closed() then
-				local vv
-				if rc then
-					rc = rc .. std.delim
-				else
-					rc = ''
-				end
-				vv = iface:xref(std.dispof(v), v)
-				vv = vv:gsub('\\?'..std.delim,
-					     { [std.delim] = '\\'..std.delim });
-				rc = rc .. vv
-			end
-		end
-		return rc
+	visible = function(s)
+		return not s:disabled() and not s:closed()
+	end;
+	__dump = function(s)
+		return s.way:__dump()
 	end
 }, std.obj);
 
@@ -1566,10 +1550,10 @@ std.world = std.class({
 			end
 			r, v = s.player:go(o)
 		elseif cmd[1] == 'inv' then -- show inv
-			r = s.player:dump() -- just info
+			r = s.player:__dump() -- just info
 			v = nil
 		elseif cmd[1] == 'way' then -- show ways
-			r = s.player:where():dump_way()
+			r = s.player:where():__dump()
 			v = nil
 		elseif cmd[1] == 'save' then -- todo
 			if #cmd < 2 then
@@ -1584,19 +1568,18 @@ std.world = std.class({
 			r = std:load(cmd[2])
 			v = false
 		end
-
 		if r == nil and v == nil then
-			return nil, true -- no reaction
+			v = false -- no reaction
 		end
 
 		if v == false or std.abort_cmd then
 			return r, v -- wrong cmd?
 		end
-
+-- v is true or nil
 		s = std.game -- after reset game is recreated
 		s:reaction(r or false)
 
-		if v then -- game:step
+		if v then
 			std.mod_call('step')
 			s:step()
 		end
@@ -1605,7 +1588,7 @@ std.world = std.class({
 			s:lastreact(s:reaction() or false)
 			s:lastdisp(r)
 		end
-		return r, true
+		return r, v
 	end;
 }, std.obj);
 
@@ -1986,6 +1969,19 @@ function std.split(s, sep)
 	return fields
 end
 
+function std.esc(s, sym)
+	sym = sym or std.delim
+	if type(s) ~= 'string' then return s end
+	s = s:gsub("\\?["..sym.."]", { [sym] = '\\'..sym, ['\\'..sym] = '\\\\'..sym})
+	return s
+end
+
+function std.unesc(s, sym)
+	sym = sym or std.delim
+	s = s:gsub("\\?[\\"..sym.."]", { ['\\'..sym] = sym, ['\\\\'] = '\\' })
+	return s
+end
+
 local function __dump(t, nested)
 	local rc = '';
 	if type(t) == 'string' then
@@ -2130,7 +2126,8 @@ function std.dispof(o)
 		return
 	end
 	if o.disp ~= nil then
-		return std.call(o, 'disp')
+		local d = std.call(o, 'disp')
+		return d
 	end
 	if type(o.nam) ~= 'string' then
 		if std.is_tag(o.tag) then
@@ -2331,17 +2328,10 @@ std.obj {
 		std.cmd = cmd
 		std.cache = {}
 		local r, v = std.ref 'game':cmd(cmd)
-		-- print("r, v = ", r, v)
-		if v == false then
-			if r == true then -- true, false is now menu mode
-				return nil, true -- hack for menu mode
-			end
-			return iface:fmt(r, cmd[1] == 'load'), false
+		if r == true and v == false then
+			return nil, true -- hack for menu mode
 		end
-		if v == true then
-			r = iface:fmt(r, true)
-		end
-		-- print(r, v)
+		r = iface:fmt(r, v or cmd[1] == 'load') -- to force fmt
 		return r, v
 	end;
 	xref = function(self, str, obj)
