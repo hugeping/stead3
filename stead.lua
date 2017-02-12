@@ -34,6 +34,7 @@ stead = {
 	__mod_hooks = {};
 	files = {};
 	busy = function() end;
+	debug_xref = true;
 }
 
 local std = stead
@@ -185,7 +186,12 @@ local function xref_prep(str)
 		end
 	end
 	if not std.is_obj(self) then
-		std.err("Wrong object in xref: "..std.tostr(oo), 2)
+		if std.debug_xref then
+			std.err("Wrong object in xref: "..std.tostr(oo), 2)
+		else
+			print("Wrong xref: "..std.tostr(oo))
+			return s
+		end
 	end
 	return iface:xref(s, self, std.unpack(a));
 end
@@ -1583,6 +1589,7 @@ std.world = std.class({
 		end
 
 		if v == false or std.abort_cmd then
+			std.mod_call('step', false)
 			return r, v -- wrong cmd?
 		end
 -- v is true or nil
@@ -1590,7 +1597,7 @@ std.world = std.class({
 		s:reaction(r or false)
 
 		if v then
-			std.mod_call('step')
+			std.mod_call('step', v)
 			s:step()
 		end
 		r = s:display(v)
@@ -1968,6 +1975,15 @@ function std.strip(s)
 	return s
 end
 
+function std.join(a, sep)
+	sep = sep or ' '
+	local rc
+	for i = 1, #a do
+		rc = (rc and rc .. sep or '') .. a[i]
+	end
+	return rc
+end
+
 function std.split(s, sep)
 	local sep, fields = sep or " ", {}
 	local pattern = string.format("([^%s]+)", sep)
@@ -2333,7 +2349,9 @@ std.obj {
 	nam = '@iface';
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
-		-- print("input: ", inp)
+		if std.debug_input then
+			print("* input: ", inp)
+		end
 		if not cmd then
 			return "Error in cmd arguments", false
 		end
@@ -2345,6 +2363,9 @@ std.obj {
 			return nil, true -- hack for menu mode
 		end
 		r = iface:fmt(r, v) -- to force fmt
+		if std.debug_output then
+			print("* output: ", r, v)
+		end
 		return r, v
 	end;
 	xref = function(self, str, obj)
@@ -2408,4 +2429,4 @@ end
 -- require "ext/gui"
 require "declare"
 require "dlg"
-require "aliases"
+require "stdlib"
