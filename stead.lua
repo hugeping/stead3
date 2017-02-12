@@ -431,7 +431,7 @@ std.list = std.class {
 			local k = s[i]
 			s[i] = std.ref(k)
 			if not std.is_obj(s[i]) then
-				std.err("Wrong item in list: "..std.tostr(k), 2)
+				std.err("Wrong item in list: "..std.tostr(k).." in "..std.dispof(o), 2)
 			end
 			s:__attach(s[i])
 		end
@@ -454,7 +454,8 @@ std.list = std.class {
 			end
 			local o = s[i]
 			if o:visible() then
-				local d = o:__xref(std.call(s[i], 'dsc'))
+				local disp = o:display()
+				local d = o:__xref(disp)
 				if type(d) == 'string' then
 					r = (r or '').. d
 				end
@@ -686,6 +687,8 @@ std.save_var = function(vv, fp, n)
 			fp:write(string.format("%s = %s\n", n,  std.dump(vv)))
 --			std.save_table(vv, fp, n)
 		end
+	elseif vv == nil then
+		fp:write(string.format("%s = nil\n", n))
 	end
 end
 
@@ -1158,6 +1161,10 @@ std.obj = std.class {
 			std.save_var(s[k], fp, l)
 		end
 	end;
+	display = function(self)
+		local d = std.call(self, 'dsc')
+		return d
+	end;
 	__xref = function(self, str)
 		if type(str) ~= 'string' then
 			return
@@ -1302,7 +1309,8 @@ std.room = std.class({
 		return std.par(std.scene_delim, title or false, dsc)
 	end;
 	display = function(s)
-		return s.obj:display()
+		local deco = std.call(s, 'decor'); -- static decorations
+		return std.par(std.scene_delim, deco or false, s.obj:display())
 	end;
 	visible = function(s)
 		return not s:disabled() and not s:closed()
@@ -1321,11 +1329,11 @@ std.world = std.class({
 		if not v.player then
 			v.player = 'player'
 		end
-		v = std.obj(v)
 		if v.lifes == nil then
 			rawset(v, 'lifes', {})
 		end
 		v.lifes = std.list(v.lifes)
+		v = std.obj(v)
 		std.setmt(v, self)
 		return v
 	end;
@@ -1412,10 +1420,10 @@ std.world = std.class({
 		end
 
 		for i = 1, #ll do
-			local v, pre
+			local v, pre, st
 			local o = ll[i]
 			if not o:disabled() then
-				v, pre = std.method(o, 'life');
+				v, st, pre = std.method(o, 'life');
 				av, vv = s:events()
 				if pre then -- hi-pri msg
 					av = std.par(std.space_delim, av or false, v)
@@ -1423,7 +1431,7 @@ std.world = std.class({
 					vv = std.par(std.space_delim, vv or false, v)
 				end
 				s:events(av or false, vv or false)
-				if pre == false then -- break cycle
+				if st == false then -- break cycle
 					break
 				end
 			end
@@ -1560,13 +1568,15 @@ std.world = std.class({
 				return nil, false
 			end
 			r = std:save(cmd[2])
-			v = nil
+			v = true
+			std.abort()
 		elseif cmd[1] == 'load' then -- todo
 			if #cmd < 2 then
 				return nil, false
 			end
 			r = std:load(cmd[2])
-			v = false
+			v = true
+			std.abort()
 		end
 		if r == nil and v == nil then
 			v = false -- no reaction
@@ -2187,15 +2197,18 @@ std.method = function(v, n, ...)
 	end
 	if type(v[n]) == 'function' then
 		std.callpush(v, ...)
+		local c
 		local a, b = v[n](v, ...);
+		c = b
 		if type(a) ~= 'string' and b == nil then
 			a, b = std.pget(), a
+			c = b
 			if b == nil then
 				b = true -- the fact of call
 			end
 		end
 		std.callpop()
-		return a, b
+		return a, b, c
 	end
 	if type(v[n]) == 'boolean' then
 		return v[n], true
@@ -2331,7 +2344,7 @@ std.obj {
 		if r == true and v == false then
 			return nil, true -- hack for menu mode
 		end
-		r = iface:fmt(r, v or cmd[1] == 'load') -- to force fmt
+		r = iface:fmt(r, v) -- to force fmt
 		return r, v
 	end;
 	xref = function(self, str, obj)

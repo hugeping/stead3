@@ -23,6 +23,7 @@ delete = std.delete
 nameof = std.nameof
 dispof = std.dispof
 titleof = std.titleof
+gamefile = std.gamefile
 
 function from(ww)
 	local wh
@@ -43,6 +44,16 @@ local function walkroom(w)
 		return ww
 	end
 	return w
+end
+
+function visits(w)
+	if not w then return std.here():visits() end
+	return std.object(walkroom(w)):visits()
+end
+
+function visited(w)
+	if not w then return std.here():visited() end
+	return std.object(walkroom(w)):visited()
 end
 
 function walk(w, ...)
@@ -73,6 +84,12 @@ function object(w)
 	local o
 	if std.is_tag(w) then
 		o = std.here():lookup(w)
+		if not o then
+			o = std.ways():lookup(w)
+		end
+		if not o then
+			o = std.me():lookup(w)
+		end
 		if not o then
 			std.err("Wrong tag: "..w, 3)
 		end
@@ -169,6 +186,18 @@ function enable(w)
 	return std.object(w):enable()
 end
 
+function disable(w)
+	return std.object(w):enable()
+end
+
+function open(w)
+	return std.object(w):open()
+end
+
+function close(w)
+	return std.object(w):close()
+end
+
 function actions(w, t)
 	return std.object(w):actions(t)
 end
@@ -205,11 +234,11 @@ function empty(w)
 end
 
 function lifeon(w, ...)
-	return std.game:lefeon(w and std.object(w), ...)
+	return std.game:lifeon(w and std.object(w), ...)
 end
 
 function lifeoff(w, ...)
-	return std.game:lefeoff(w and std.object(w), ...)
+	return std.game:lifeoff(w and std.object(w), ...)
 end
 
 function live(...)
