@@ -4,6 +4,7 @@ format.para = true
 --std.debug_output = true
 --std.debug_input = true
 
+game.inv = [[Зачем мне это?]];
 -- nouse
 game.use = function(s, w, ww)
 	local r, v
