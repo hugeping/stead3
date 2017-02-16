@@ -6,16 +6,38 @@ format.para = true
 
 -- nouse
 game.use = function(s, w, ww)
+	local r, v
 	if w.nouse then
-		return std.call(w, 'nouse', ww)
+		r, v = std.call(w, 'nouse', ww)
+	end
+	if v == true then
+		return r, v
 	end
 	if w.noused then
-		return std.call(ww, 'noused', w)
+		r, v = std.call(ww, 'noused', w)
+	end
+	if v == true then
+		return r, v
 	end
 	p [[Гм... Мне кажется, здесь это не поможет.]]
 end
 
 game.act = 'Ничего не произошло...'
+
+function human(v)
+	v.human = true
+	if not v.female then
+		v.female = false
+	end
+	v.noused = function(s)
+		if s.female then
+			p [[Ей это не понравится.]]
+		else
+			p [[Ему это не понравится.]]
+		end
+	end
+	return obj(v)
+end
 
 -- create own class container
 cont = std.class({
@@ -122,7 +144,7 @@ dlg {
 	end;
 	'Ну хорошо, я схожу и куплю тебе еды.',
 	function() p '-- Спасибо! Давай, скорее, он скоро закроется!';
-		walkout(); enable 'здание' end 
+		walkout(); enable 'здание' end
 	};
 	{ 'Что то я не вижу вывески.', '-- Но магазин то там есть! Я точно знаю, я часто клянчу там вып... гм.. еду.' };
 	onempty = function()
@@ -160,14 +182,35 @@ room {
 	obj = { floor(),
 		obj {
 			nam = 'монета';
+			name = false;
+			readed = false;
 			dsc = [[На полу я вижу что-то {блестящее}.]];
 			tak = [[Я поднял с пола предмет. Гм, похоже это золотая монета! Или подделка?]];
 			nouse = [[Деньги не всегда решают проблемы.]];
-			inv = [[Какая красивая вещица!]];
+			inv = function(s)
+				p [[Какая красивая вещица!]];
+				if s.name then
+					s.readed = true
+					pn [[Я внимательно повертел ее перед глазами. О нет! На обратной стороне я прочитал:]]
+					pn [["Вадим Владимирович, 1977 года рождения. UID: 7099931130045. 305. Миссия ,,поиск''".]];
+					p "Что за?..."
+				end
+			end;
 			use = function(s, w)
 				if w/'#люди' then
 					p [[Я сунул монету какому-то толстому мужчине. -- У меня такая-же -- промычал он мне и отвернулся.]]
+					return
 				end
+				if w.human then
+					if w.female then
+						p [[Я сунул ей монету.]]
+					else
+						p [[Я попытался сунуть ему монету.]]
+					end
+					p [[Никакой реакции.]]
+					return
+				end
+				return false
 			end;
 		}
 	};
@@ -253,9 +296,70 @@ obj {
 	nam = '#стул';
 	dsc = [[Рядом со столом есть один свободный {стул}.]];
 	act = function(s)
+		walkin "За столом"
 	end
 }:disable()}
-
+obj {
+	nam = 'еда';
+}
+room {
+	nam = 'За столом';
+	enter = [[Я подошел к столу и нагло сел на свободный стул. Кажется, никто не обратил на это ни малейшего внимания.]];
+	decor = [[Напротив себя я вижу полного {#мужчина|мужчину}, который о чем-то разговаривает с {#женщина|женщиной},
+которая сидит справа от него. Рядом со мной сидит {#парень|молодой парень}, лет 20 и что-то пишет на клочке бумаги. На другом
+конце стола я вижу очень худого {#странный|человека} неопределенного возраста, который поглощен едой. На столе полно {#еда|еды}.]];
+	way = { room {nam = "Встать из-за стола", onenter = function() walkout "гостиная" end} };
+}:with {
+	obj {
+		nam = '#еда';
+		act = function(s)
+			p [[Может, водочки? Гм.. Нет. Я вообще тут задержался.]]
+			if not was('еда', 'take') then
+				pn [[Интересно, а что если вместо хлеба взять пару бутербродов с икрой? Я думаю, нищему это понравится.]]
+				take 'еда'
+				p [[Я взял немного еды со стола.]]
+			end
+		end;
+	};
+	human {
+		nam = "#мужчина";
+		act = function(s)
+		end;
+	};
+	human {
+		nam = "#женщина";
+		female = true;
+		act = function(s)
+		end;
+	};
+	human {
+		nam = "#парень";
+		used = function(s, w)
+			if w/'монета' then
+				if w.readed then
+					p [[Парень только отмахнулся от меня. -- Не мешай, у меня расчеты.. ]];
+					return
+				end
+				w.name = true
+				pn [[Я сунул монету парню под нос. Он рассеяно посмотрел на нее.]]
+				pn [[-- Гм, Вадим Владимирович, не отвлекайте меня, мне нужно найти решение!]]
+				p [[Как он узнал мое имя?!!!]]
+				return
+			end
+			return false
+		end;
+		act = function(s)
+			pn [[-- Послушайте...]]
+			p [[-- Ох, не мешайте мне!]];
+		end;
+	};
+	human {
+		nam = "#странный";
+		used = function(s, w)
+			p [[Он слишком далеко от меня.]]
+		end;
+	};
+}
 
 function start()
 end
