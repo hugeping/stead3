@@ -576,7 +576,7 @@ room {
 		};
 	};
 	onexit = function(s, t)
-		if t/'2-й этаж' and have 'шланг' and not transport then
+		if t/'2-й этаж' and have 'шланг' and not transport and door_try then
 			p [[Когда я спускался на второй этаж, по зданию раздался громкий сигнал и женский голос произнес:^]]
 			p [[-- ВНИМАНИЕ! ГОТОВНОСТЬ К ТРАНСПОРТИРОВКЕ! ВСТРЕЧА В ХОЛЛЕ ПЕРВОГО ЭТАЖА!]];
 			transport = true
