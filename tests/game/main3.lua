@@ -119,9 +119,12 @@ for_all(take,
 			if s.to > 0 then
 				s.to = s.to - 1
 				if s.to == 0 then
-					p [[Голова прошла!]]
-					lifeoff(s)
-					return
+					if _'колбаса'.eaten then
+						p [[Голова прошла!]]
+						lifeoff(s)
+						return
+					end
+					s.to = 5
 				end
 			end
 			if visited 'myroom' then
@@ -622,7 +625,16 @@ dlg {
 
 obj {
 	nam = 'колбаса';
-	inv = [[Предательский запах!]];
+	eaten = false;
+	inv = function(s)
+		if live 'таблетки' then
+			remove(s)
+			p [[Я подкрепился колбасой.]]
+			s.eaten = true
+			return
+		end
+		p [[Предательский запах!]];
+	end;
 }
 
 room {
