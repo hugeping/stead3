@@ -303,22 +303,19 @@ room {
 	title = 'Холл';
 	enter = function(s, f)
 		p [[Я очутился в довольно просторном холле.]];
+	end;
+	life = function(s)
 		local t = lookup '#часы'
 		if transport then
 			t.time1 = 0
 			t.time2 = 0;
-			return
+		elseif t.time1 > 0 or t.time2 > 15 then
+			t.time2 = t.time2 - 1
+			if t.time2 == 0 then
+				t.time1 = 0
+				t.time2 = 59
+			end
 		end
-		if t.time1 == 0 and t.time2 < 15 then
-			return
-		end
-		t.time2 = t.time2 - 1
-		if t.time2 == 0 then
-			t.time1 = 0
-			t.time2 = 59
-		end
-	end;
-	life = function(s)
 		if here()/'здание' then
 			p [[Мне кажется, я слышу какой-то шум, который доносится с конца коридора.]]
 		elseif here() == s then
@@ -336,7 +333,7 @@ room {
 			nam = '#часы';
 			act = function(s)
 				p [[На табло красным горят цифры: ]]
-				p (s.time1, ":", s.time2)
+				pf ("%02d:%02d", s.time1, s.time2)
 			end;
 		};
 		obj {
