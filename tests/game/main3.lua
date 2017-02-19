@@ -313,6 +313,7 @@ room {
 		if transport then
 			t.time1 = 0
 			t.time2 = 0;
+			lifeoff(s)
 		elseif (t.time1 > 0 or t.time2 > 15) and player_moved() then
 			t.time2 = t.time2 - 1
 			if t.time2 == 0 then
@@ -581,7 +582,6 @@ room {
 			p [[Когда я спускался на второй этаж, по зданию раздался громкий сигнал и женский голос произнес:^]]
 			p [[-- ВНИМАНИЕ! ГОТОВНОСТЬ К ТРАНСПОРТИРОВКЕ! ВСТРЕЧА В ХОЛЛЕ ПЕРВОГО ЭТАЖА!]];
 			transport = true
-			lifeoff 'зал'
 			place ('люди', 'зал')
 		end
 	end;
