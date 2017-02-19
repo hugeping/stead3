@@ -15,23 +15,32 @@ end
 
 std.dlg = std.class({
 	__dlg_type = true;
+	ini = function(s, ...)
+		std.room.ini(s, ...)
+	end;
 	new = function(s, v)
 		if v.current == nil then
 			v.current = false
 		end
-		v.dlg_onenter = v.onenter
-		v.onenter = nil
+		v.dlg_enter = v.enter
+		v.enter = nil
 		v.__stack = {}
-		if type(v.obj) == 'table' then
-			for i = 1, #v.obj do
-				if not std.is_obj(v.obj[i]) then
-					v.obj[i] = std.phr(v.obj[i])
-				end
-			end
-		end
 		v = std.room(v)
 		std.setmt(v, s)
+		v:__recreate()
 		return v
+	end;
+	__recreate = function(s)
+		for i = 1, #s.obj do
+			if not std.is_obj(s.obj[i]) then
+				s.obj[i] = std.phr(s.obj[i])
+			end
+		end
+	end;
+	with = function(self, ...)
+		std.room.with(self, ...)
+		self:__recreate()
+		return self
 	end;
 	scene = function(s)
 		local title, dsc, lact
@@ -63,20 +72,20 @@ std.dlg = std.class({
 		end
 		return w:empty()
 	end;
-	onenter = function(s, ...)
+	enter = function(s, ...)
 		s.__llact = false
 		s.__stack = {}
-		s.current = nil
+    		s.current = nil
 		s:for_each(function(s) s:open() end) -- open all phrases
-		local r, v = std.call(s, s.dlg_onenter, ...)
-		if v == false then
+		local r, v = std.call(s, 'dlg_enter', ...)
+		if std.here() ~= s or #s.__stack > 0 then
 			return r, v
 		end
-		local rr, vv = s:push()
+		local rr, vv = s:push(s.current)
 		if not vv then
 			std.err("Wrong dialog: "..std.tostr(s), 2)
 		end
-		return std.par(std.scene_delim, r, rr), v
+		return std.par(std.scene_delim, r or false, rr or false), v
 	end;
 	push = function(s, p)
 		local c = s.current
@@ -102,6 +111,10 @@ std.dlg = std.class({
 			end
 		end
 		return t, r ~= false
+	end;
+	reset = function(s, phr)
+		s.__stack = {}
+		return s:push(phr)
 	end;
 	pop = function(s, phr)
 		if #s.__stack == 0 then
@@ -297,13 +310,13 @@ std.phr = std.class({
 		local t
 
 		local rr, vv = std.here():push(n)
-
 		if not vv then
 			t = std.walkout(std.here():from())
 		end
 		return std.par(std.scene_delim, r or false, rr or false, t or false), v
 	end,
 	select = function(s)
+		s:close()
 		for i = 1, #s.obj do
 			local o = s.obj[i]
 			o = o:__alias()

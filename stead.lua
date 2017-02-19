@@ -158,6 +158,8 @@ function std.hook(o, f)
 	end
 end
 
+local substs
+
 local function xref_prep(str)
 	local oo, self
 	local a = {}
@@ -168,7 +170,7 @@ local function xref_prep(str)
 	end
 	oo = std.strip(s:sub(1, i - 1))
 	s = s:sub(i + 1)
-	if oo:find('@', 1, true) == 1 then -- call '@' obj (aka xact)
+	if oo:find('@', 1, true) == 1 or oo:find('$', 1, true) then -- call '@' obj (aka xact) or '$' aka subst
 		local o = std.split(oo)[1]
 		local i = oo:find("[ \t]")
 		if i then
@@ -193,6 +195,15 @@ local function xref_prep(str)
 			return s
 		end
 	end
+	if type(self.nam) == 'string' and self.nam:find('$', 1, true) == 1 then -- subst
+		table.insert(a, s)
+		substs = true
+		local r, v = std.method(self, 'act', std.unpack(a))
+		if not v then
+			return s
+		end
+		return std.tostr(r)
+	end
 	return iface:xref(s, self, std.unpack(a));
 end
 
@@ -201,10 +212,14 @@ local fmt_refs
 local function fmt_prep(str)
 	local s = str:gsub("^{", ""):gsub("}$", "")
 	s = s:gsub('\\?['..std.delim..']', { [std.delim] = '\001' });
-	local l = s:find('\001')
-	if not l or l == 1 then
+	local l = s:find('\001', 1, true)
+	if l == 1 then
 		return str
 	end
+	if not l then
+		s = s .. '\001'
+	end
+	l = s:find('\001', 1, true)
 	table.insert(fmt_refs, s:sub(1, l - 1))
 	local n = string.format("%d%s", #fmt_refs, std.delim)
 	return "{"..n..s:sub(l + 1).."}"
@@ -225,6 +240,39 @@ local function fmt_post(str)
 	return xref_prep(std.unesc(s))
 end
 
+function std.for_each_xref_outer(s, fn)
+	s = string.gsub(s, '\\?[\\{}]',
+			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '\\{', [ '\\}' ] = '\\}' });
+	local start
+	while true do
+		start = s:find('\001')
+		if not start then break end
+		local idx = 1
+		local n = start
+		while idx > 0 do
+			n = s:find('[\001\002]', n + 1)
+			if not n then
+				break
+			end
+			if s:sub(n, n) == '\001' then
+				idx = idx + 1
+			else
+				idx = idx - 1
+			end
+		end
+		if idx == 0 then
+			local new = fn(s:sub(start, n):gsub('[\001\002]', {['\001'] = '{', ['\002'] = '}'}))
+			if start == 1 then
+				s = new..s:sub(n + 1)
+			else
+				s = s:sub(1, start - 1)..new..s:sub(n + 1)
+			end
+		end
+	end
+	s = s:gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
+	return s
+end
+
 function std.for_each_xref(s, fn)
 	s = string.gsub(s, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '\\{', [ '\\}' ] = '\\}' });
@@ -233,7 +281,7 @@ function std.for_each_xref(s, fn)
 		s = fn('{'..s..'}')
 		return s
 	end
-	s = string.gsub(s, '(\001[^\002]+\002)', prep)
+	s = string.gsub(s, '(\001[^\001\002]+\002)', prep)
 	s = s:gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
 	return s
 end
@@ -243,15 +291,21 @@ std.fmt = function(str, fmt, state)
 		return
 	end
 	local xref = xref_prep
-	local s = string.gsub(str, '[\t \n]+', std.space_delim);
+	local s = str
+	s = string.gsub(s, '[\t \n]+', std.space_delim);
 	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^'} );
-	fmt_refs = {}
-
-	s = std.for_each_xref(s, fmt_prep) -- rename all {}
-	if type(fmt) == 'function' then
-		s = fmt(s, state)
+	while true do
+		fmt_refs = {}
+		substs = false
+		s = std.for_each_xref(s, fmt_prep) -- rename all {}
+		if type(fmt) == 'function' then
+			s = fmt(s, state)
+		end
+		s = std.for_each_xref(s, fmt_post) -- rename and xref
+		if not substs then
+			break
+		end
 	end
-	s = std.for_each_xref(s, fmt_post) -- rename and xref
 	s = s:gsub('\\?'..'[{}]', { ['\\{'] = '{', ['\\}'] = '}' })
 	if state then
 		s = s:gsub('\\?'..std.delim, { ['\\'..std.delim] = std.delim })
@@ -298,7 +352,7 @@ function std.is_system(v)
 	end
 	local n = v.nam
 	if type(n) == 'string' then
-		if n:byte(1) == 0x40 then
+		if n:byte(1) == 0x40 or n:byte(1) == 0x24 then
 			return true
 		end
 	end
@@ -468,7 +522,7 @@ std.list = std.class {
 				if not o:closed() then
 					d = o.obj:display()
 					if type(d) == 'string' then
-						r = (r or '') .. d
+						r = (r and (r .. std.space_delim) or '') .. d
 					end
 				end
 			end
@@ -613,18 +667,21 @@ std.list = std.class {
 			local v = s[i]
 			if std.is_obj(v) and v:visible() then
 				local vv, n
-				if rc then
-					rc = rc .. std.delim
-				else
-					rc = ''
-				end
 				if type(v.nam) == 'number' then
 					n = '# '..std.tostr(v.nam)
 				else
 					n = v.nam
 				end
-				vv = '{'..std.esc(n)..std.delim..std.esc(std.dispof(v))..'}'
-				rc = rc .. vv
+				local disp = std.dispof(v)
+				if disp then
+					if rc then
+						rc = rc .. std.delim
+					else
+						rc = ''
+					end
+					vv = '{'..std.esc(n)..std.delim..std.esc(disp)..'}'
+					rc = rc .. vv
+				end
 				if recurse and not v:closed() then
 					vv = v:__dump(recurse)
 					if vv then
@@ -848,7 +905,7 @@ function std:done()
 		if std.is_system(v) then
 			objects[k] = v
 		else
-			-- print("Deleting "..k)
+--			print("Deleting "..k)
 		end
 	end)
 	std.objects = objects
@@ -939,6 +996,19 @@ end
 
 std.obj = std.class {
 	__obj_type = true;
+	with = function(self, ...)
+		local a = {...}
+		for i = 1, #a do
+			if type(a[i]) == 'table' then
+				for k = 1, #a[i] do
+					table.insert(self.obj, a[i][k])
+				end
+			else
+				table.insert(self.obj, a[i])
+			end
+		end
+		return self
+	end;
 	new = function(self, v)
 		if std.game and not std.__in_new and not std.__in_gamefile then
 			std.err ("Use std.new() to create dynamic objects:"..std.tostr(v), 2)
@@ -962,7 +1032,7 @@ std.obj = std.class {
 			std.err ("Wrong .nam in object.", 2)
 		end
 
-		if oo[v.nam] then
+		if oo[v.nam] and not std.is_system(oo[v.nam]) then
 			if v.nam ~= 'main' and v.nam ~= 'player' and v.nam ~= 'game' then
 				std.err ("Duplicated object: "..v.nam, 2)
 			end
@@ -1009,14 +1079,18 @@ std.obj = std.class {
 		std.setmt(v, self)
 		return v
 	end;
-	actions = function(s, t)
+	actions = function(s, t, v)
 		t = t or 'act'
 		if type(t) ~= 'string' then
 			std.err("Wrong argument to obj:actions(): "..std.tostr(t), 2)
 		end
-		return s['__nr_'..t] or 0
+		local ov = s['__nr_'..t] or 0
+		if type(v) == 'number' or v == false then
+			s['__nr_'..t] = v or nil
+		end
+		return ov
 	end;
-	renam = function(s, new)
+	__renam = function(s, new)
 		local oo = std.objects
 		if new == s.nam then
 			return
@@ -1149,7 +1223,7 @@ std.obj = std.class {
 				l = l .. ', '..std.dump(arg[i])
 			end
 			if type(s.nam) == 'number' then
-				l = string.format("std.new(%s%s):renam(%d)\n", n, l, s.nam)
+				l = string.format("std.new(%s%s):__renam(%d)\n", n, l, s.nam)
 			else
 				l = string.format("std.new(%s%s)\n", n, l, s.nam)
 			end
@@ -1181,13 +1255,28 @@ std.obj = std.class {
 		if type(nam) == 'number' then
 			nam = '# '..std.tostr(nam)
 		end
-		local s = string.gsub(str, '\\?[\\{}'..std.delim..']',
-			{ ['{'] = '\001',
-				['}'] = '\002', [std.delim] = '\003' }):
-			gsub('\001([^\002\003]+)\002', '\001'..std.esc(nam)..'\003%1\002'):
-			gsub('[\001\002\003]', { ['\001'] = '{', ['\002'] = '}', ['\003'] = std.delim });
-		if s == str then
-			return '{'..(std.esc(nam)..std.delim..std.esc(s))..'}'
+		local rep = false
+		local s = std.for_each_xref_outer(str, function(str)
+			rep = true
+			local s = str:gsub("^{", ""):gsub("}$", "")
+			local test = string.gsub(s, '\\?[\\{}'..std.delim..']',
+				{ ['{'] = '\001', ['}'] = '\003',
+				  [std.delim] = '\002' });
+			while true do
+				local s = test:gsub("\001[^\001\003]+\003", "")
+				if s == test then
+					break
+				end
+				test = s
+			end
+			local a = test:find('\002', 1, true)
+			if not a or test:byte(a) == 1 then -- need to be |
+				return '{'..(std.esc(nam)..std.delim..s)..'}'
+			end
+			return str
+		end)
+		if not rep then -- nothing todo?
+			return '{'..(std.esc(nam)..std.delim..s)..'}'
 		end
 		return s;
 	end;
@@ -1429,7 +1518,7 @@ std.world = std.class({
 			local v, pre, st
 			local o = ll[i]
 			if not o:disabled() then
-				v, st, pre = std.method(o, 'life');
+				v, st, pre = std.call(o, 'life');
 				av, vv = s:events()
 				if pre then -- hi-pri msg
 					av = std.par(std.space_delim, av or false, v)
@@ -1733,34 +1822,34 @@ std.player = std.class ({
 		r, v = std.call(std.ref 'game', 'on'..m, w, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v == false then
-			return t or r, true
+			return t or r, true, false
 		end
 		if v ~= true then
 			r, v = std.call(s, 'on'..m, w, w2, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
-				return t or r, true
+				return t or r, true, false
 			end
 		end
 		if v ~= true then
 			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == false then
-				return t or r, true
+				return t or r, true, false
 			end
 		end
 		if m == 'use' and w2 then
 			r, v = std.call(w2, 'used', w, ...)
 			t = std.par(std.scene_delim, t or false, r)
-			if r ~= nil or v ~= nil then
+			if v == true then -- false from used --> pass to use
 				w2['__nr_used'] = (w2['__nr_used'] or 0) + 1
-				return t or r, true -- stop chain
+				return t or r, v -- stop chain
 			end
 		end
 		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
-
-		if v ~= nil or r ~= nil then
+		if (m == 'use' and v == true) or
+			(m ~= 'use' and type(v) == 'boolean') then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
 			return t or r, v
 		end
@@ -1775,14 +1864,14 @@ std.player = std.class ({
 		return s.obj
 	end;
 	take = function(s, w, ...)
-		local r, v = s:call('tak', w, ...)
-		if v == true then -- take it!
+		local r, v, c = s:call('tak', w, ...)
+		if v == true and c ~= false then -- take it!
 			w = std.ref(w)
 			local o = w:remove()
 			s:inventory():add(o)
 			return r, v
 		end
-		if v == false then -- forbidden take
+		if v == false or c == false then -- forbidden take
 			return r, true
 		end
 		return r, v
@@ -2216,12 +2305,12 @@ std.method = function(v, n, ...)
 		local c
 		local a, b = v[n](v, ...);
 		c = b
-		if type(a) ~= 'string' and b == nil then
+		if b == nil and type(a) ~= 'string' then
 			a, b = std.pget(), a
 			c = b
-			if b == nil then
-				b = true -- the fact of call
-			end
+		end
+		if b == nil then
+			b = true -- the fact of call
 		end
 		std.callpop()
 		return a, b, c
@@ -2239,12 +2328,12 @@ std.call = function(v, n, ...)
 	if type(v) ~= 'table' then
 		std.err("Call on non table object: "..std.tostr(n), 2)
 	end
-	local r, v = std.method(v, n, ...)
+	local r, v, c = std.method(v, n, ...)
 	if type(r) == 'string' then
-		if v == nil then v = true end
-		return r, v
+		r = r:gsub("[%^]+$", "") -- extra trailing ^
+		return r, v, c
 	end
-	return r or nil, v
+	return r or nil, v, c
 end
 
 local function get_token(inp)
@@ -2310,10 +2399,10 @@ local function cmd_parse(inp)
 	while true do
 		inp = inp:gsub("^[ ,\t]*","")
 		local v, i = get_token(inp)
-		inp = inp:sub(i)
 		if v == nil or v == '' then
 			break
 		end
+		inp = inp:sub(i)
 		table.insert(cmd, v)
 	end
 	return cmd

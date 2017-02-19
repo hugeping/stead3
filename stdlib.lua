@@ -148,6 +148,7 @@ function ways(ww)
 	end
 	return wh.way
 end
+std.ways = ways
 
 function objs(ww)
 	local wh
@@ -180,7 +181,7 @@ function closed(w)
 end
 
 function disabled(w)
-	return std.object(w):enabled()
+	return std.object(w):disabled()
 end
 
 function enable(w)
@@ -188,7 +189,7 @@ function enable(w)
 end
 
 function disable(w)
-	return std.object(w):enable()
+	return std.object(w):disable()
 end
 
 function open(w)
@@ -199,11 +200,17 @@ function close(w)
 	return std.object(w):close()
 end
 
-function actions(w, t)
-	return std.object(w):actions(t)
+function actions(w, t, v)
+	return std.object(w):actions(t, v)
 end
 
-function pop(w)
+function pop(w, ww)
+	if not std.is_tag(w) and type(w) == 'string' then
+		return function()
+			p(w)
+			pop(ww)
+		end
+	end
 	local wh = std.here()
 	if not std.is_obj(wh, 'dlg') then
 		std.err("Call pop() in non-dialog object: "..std.tostr(wh), 2)
@@ -220,7 +227,7 @@ function push(w)
 	if not std.is_obj(wh, 'dlg') then
 		std.err("Call push() in non-dialog object: "..std.tostr(wh), 2)
 	end
-	local r, v = ww:push(w)
+	local r, v = wh:push(w)
 	if std.cctx() and type(r) == 'string' then
 		std.p(r)
 	end
@@ -310,22 +317,58 @@ function put(w, wh)
 end
 
 function take(w)
+	local o = std.object(w)
+	if o then
+		o:actions('take', 1 + o:actions 'take')
+	end
 	return place(w, std.ref(std.me()):inventory())
 end
 
+function was(w, n)
+	return actions(w, n) ~= 0
+end
+
 function drop(w, wh)
+	local o = std.object(w)
+	if o then
+		o:actions('drop', 1 + o:actions 'drop')
+	end
 	return place(w, wh)
 end
 
-function path(t, s, w)
+function path(t)
+	if type(t) ~= 'table' then
+		std.err("Wrong path() argument", 2)
+	end
+	local n, s, w = t[1], t[2], t[3]
 	if not w then
-		s, w = t, s
+		s, w = n, s
+		n = nil
 	end
 	return room {
-		nam = t;
-		disp = s;
+		nam = n or t.nam;
+		before = s;
+		disp = function(s)
+			if disabled(s.walk) or closed(s.walk) then
+				return false
+			end
+			if s.after ~= nil and visited(w) then
+				return std.call(s, 'after')
+			end
+			return std.call(s, 'before')
+		end;
+		after = t.after;
+		walk = w;
 		onenter = function(s)
-			walk(w)
+			if disabled(s.walk) or closed(s.walk) then
+				return false
+			end
+			if type(s.walk) == 'function' then
+				walk(s.walk())
+			else
+				walk(s.walk)
+			end
+			return false
 		end
 	}
 end

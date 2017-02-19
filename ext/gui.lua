@@ -29,7 +29,7 @@ instead.get_title = std.cacheable('title', function()
 	if get_bool(iface, 'notitle') then
 		return
 	end
-	return std.titleof(stead.here())
+	return iface:fmt(std.titleof(stead.here()), false)
 end)
 
 iface.noways = false
@@ -277,19 +277,19 @@ function iface:anchor()
 end
 
 function iface:img(str)
-	if type(str) == 'string' then
+	if str then
 		return "<g:"..std.tostr(str)..">"
 	end
 end;
 
 function iface:imgl(str)
-	if type(str) == 'string' then
+	if str then
 		return "<g:"..std.tostr(str).."\\|left>"
 	end
 end;
 
 function iface:imgr(str)
-	if type(str) == 'string' then
+	if str then
 		return "<g:"..std.tostr(str).."\\|right>"
 	end
 end
