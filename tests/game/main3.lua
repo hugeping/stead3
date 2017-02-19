@@ -305,11 +305,11 @@ room {
 		p [[Я очутился в довольно просторном холле.]];
 	end;
 	life = function(s)
-		local t = lookup '#часы'
+		local t = lookup ('#часы', s)
 		if transport then
 			t.time1 = 0
 			t.time2 = 0;
-		elseif t.time1 > 0 or t.time2 > 15 then
+		elseif (t.time1 > 0 or t.time2 > 15) and player_moved() then
 			t.time2 = t.time2 - 1
 			if t.time2 == 0 then
 				t.time1 = 0
