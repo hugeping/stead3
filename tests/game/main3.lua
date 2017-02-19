@@ -1,3 +1,7 @@
+--$Name:Проводник
+--$Info:Демонстрационная игра\nна STEAD3
+--$Author:Peter Kosyh, 2017
+--$Version:0.1
 require "format"
 require "noinv"
 format.para = true
