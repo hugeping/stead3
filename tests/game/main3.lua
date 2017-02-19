@@ -402,6 +402,10 @@ room {
 				return false
 			end;
 			act = function(s)
+				if transport then
+					p [[Я стучался в разные двери, но никто не открыл.]]
+					return
+				end
 				s.try = s.try + 1
 				if s.try ~= 5 then
 					p [[Я выбрал одну из дверей и постучался.]]
@@ -549,6 +553,10 @@ room {
 				return false
 			end;
 			act = function(s)
+				if transport then
+					p [[Я стучался в разные двери, но никто не открыл.]]
+					return
+				end
 				s.try = s.try + 1
 				if s.try ~= 4 then
 					p [[Я выбрал одну из дверей и постучался.]]
