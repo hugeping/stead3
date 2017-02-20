@@ -179,6 +179,10 @@ std.dlg = std.class({
 		return
 	end;
 	display = function(s)
+		local deco = std.call(s, 'decor'); -- static decorations
+		return std.par(std.scene_delim, deco or false, s:ph_display())
+	end;
+	ph_display = function(s)
 		local r, nr
 		nr = 1
 		local oo = s.current
@@ -198,7 +202,7 @@ std.dlg = std.class({
 				local d = std.call(o, 'dsc')
 				if type(d) == 'string' then
 					d = phr_prefix(d, nr)
-					d = o:__xref(d)
+					d = o:__xref(d, true)
 					r = (r or '').. d
 					nr = nr + 1
 				end

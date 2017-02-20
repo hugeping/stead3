@@ -9,6 +9,7 @@ stead = {
 	max_dynamic = 32767;
 	tables = {};
 	functions = {};
+	modules = {};
 	includes = {};
 	tostr = tostring;
 	tonum = tonumber;
@@ -30,6 +31,7 @@ stead = {
 	next = next;
 	loadfile = loadfile;
 	dofile = dofile;
+	doencfile = doencfile;
 	getinfo = debug.getinfo;
 	__mod_hooks = {};
 	files = {};
@@ -82,14 +84,31 @@ local function __mod_callback_reg(f, hook, prio, ...)
 	if not std.__mod_hooks[hook] then
 		std.__mod_hooks[hook] = {}
 	end
-	local i = { fn = f, prio = prio }
+	local i = { fn = f, prio = prio, unload = std.__in_include }
 	table.insert(std.__mod_hooks[hook], i);
-	table.sort(std.__mod_hooks[hook], function (a, b)
+	std.sort(std.__mod_hooks[hook], function (a, b)
 		local a = a.prio or 0
 		local b = b.prio or 0
+		if a == b then
+			return nil
+		end
 		return a < b
 	end)
 --	f();
+end
+
+function std.mod_unload()
+	local new = {}
+	for k, v in pairs(std.__mod_hooks) do
+		local list = {}
+		for kk, vv in ipairs(v) do
+			if not vv.unload then
+				table.insert(list, vv)
+			end
+		end
+		new[k] = list
+	end
+	std.__mod_hooks = new
 end
 
 function std.mod_call(hook, ...)
@@ -473,6 +492,25 @@ function std.is_tag(n)
 	return type(n) == 'string' and n:byte(1) == 0x23
 end
 
+function std.sort(t, fn)
+	local prio = {}
+	local v
+	for i = 1, #t do
+		v = t[i]
+		prio[i] = { v = v, i = i }
+	end
+	table.sort(prio, function(a, b)
+		local r = fn(a.v, b.v)
+		if type(r) == 'boolean' then
+			return r
+		end
+		return a.i < b.i
+	end)
+	for i = 1, #prio do
+		t[i] = prio[i].v
+	end
+end
+
 std.list = std.class {
 	__list_type = true;
 	new = function(s, v)
@@ -498,11 +536,13 @@ std.list = std.class {
 		if o then
 			s:attach(o)
 		end
+		s:sort()
 	end;
 	sort = function(s)
-		std.table.sort(s, function(a, b)
+		std.sort(s, function(a, b)
 			local p1 = std.tonum(a.pri) or 0
 			local p2 = std.tonum(b.pri) or 0
+			if p1 == p2 then return nil end
 			return p1 < p2
 		end)
 	end;
@@ -795,6 +835,15 @@ function std:load(fname) -- load save
 	return self.game:lastdisp()
 end
 
+local function in_section(name, fn)
+	name = "__in_"..name
+	local old = std[name]
+	std[name] = true
+	local r, v = fn()
+	std[name] = old or false
+	return r, v
+end
+
 function std.gamefile(fn, reset) -- load game file
 	if type(fn) ~= 'string' then
 		std.err("Wrong paramter to stead:file: "..std.tostr(f), 2)
@@ -808,9 +857,7 @@ function std.gamefile(fn, reset) -- load game file
 		std.game.player:need_scene(true)
 		return
 	end
-	std.__in_gamefile = true
-	std.dofile(fn)
-	std.__in_gamefile = false
+	in_section ('gamefile', function() std.dofile(fn) end)
 	std.ref 'game':ini()
 	table.insert(std.files, fn) -- remember it
 end
@@ -899,6 +946,7 @@ end
 
 function std:done()
 	std.mod_call_rev('done')
+	std.mod_unload() -- unload hooks from includes
 	local objects = {}
 	std.for_each_obj(function(v)
 		local k = std.deref(v)
@@ -920,7 +968,8 @@ function std:done()
 		std.delete('player')
 	end
 	std.files = {}
---	std.includes = {}
+--	std.modules = {}
+	std.includes = {}
 	std.initialized = false
 	std.game = nil
 	std.rawset(_G, 'init', nil)
@@ -1245,7 +1294,7 @@ std.obj = std.class {
 		local d = std.call(self, 'dsc')
 		return d
 	end;
-	__xref = function(self, str)
+	__xref = function(self, str, force)
 		if type(str) ~= 'string' then
 			return
 		end
@@ -1275,7 +1324,7 @@ std.obj = std.class {
 			end
 			return str
 		end)
-		if not rep then -- nothing todo?
+		if not rep and force then -- nothing todo?
 			return '{'..(std.esc(nam)..std.delim..s)..'}'
 		end
 		return s;
@@ -1597,7 +1646,7 @@ std.world = std.class({
 		elseif cmd[1] == nil or cmd[1] == 'look' then
 			if not s.__started then
 				s.__started = true
-				r, v = s.player:walk('main', true)
+				r, v = s.player:walk(s.player.room, true)
 			else
 				s.player:need_scene(true)
 				v = true
@@ -2049,7 +2098,7 @@ std.pn = function(...)
 end
 
 std.pf = function(fmt, ...)
-	if type(ftm) ~= 'string' then
+	if type(fmt) ~= 'string' then
 		std.err("Wrong argument to std.pf: "..std.tostr(fmt))
 	end
 	std.pr(string.format(fmt, ...))
@@ -2199,9 +2248,7 @@ function std.new(fn, ...)
 	end
 	local arg = { ... }
 
-	std.__in_new = true
-	local o = fn(...)
-	std.__in_new = false
+	local o = in_section ('new', function() return fn(std.unpack(arg)) end)
 
 	if type(o) ~= 'table' then
 		std.err ("Constructor did not return object:"..std.functions[fn], 2)
@@ -2487,8 +2534,24 @@ std.obj {
 	end;
 };
 
+function std.loadmod(f)
+	if std.game and not not std.__in_gamefile then
+		std.err("Use loadmod() only in global context", 2)
+	end
+	if type(f) ~= 'string' then
+		std.err("Wrong argument to loadmod(): "..std.tostr(f), 2)
+	end
+	if not f:find("%.lua$") then
+		f = f .. '.lua'
+	end
+	if not std.modules[f] then
+		std.modules[f] = true
+		std.dofile(f)
+	end
+end
+
 function std.include(f)
-	if std.game then
+	if std.game and not std.__in_gamefile then
 		std.err("Use include() only in global context", 2)
 	end
 	if type(f) ~= 'string' then
@@ -2499,7 +2562,9 @@ function std.include(f)
 	end
 	if not std.includes[f] then
 		std.includes[f] = true
-		std.dofile(f)
+		in_section('include', function()
+			std.dofile(f)
+		end)
 	end
 end
 

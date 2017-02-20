@@ -1,8 +1,8 @@
 local std = stead
 local type = std.type
-_ = std.ref
 std.rawset(_G, 'std', stead)
 include = std.include
+loadmod = std.loadmod
 p = std.p
 pr = std.pr
 pn = std.pn
@@ -21,6 +21,7 @@ nameof = std.nameof
 dispof = std.dispof
 titleof = std.titleof
 gamefile = std.gamefile
+player = std.player
 
 function from(ww)
 	local wh
@@ -103,6 +104,7 @@ function object(w)
 	return o
 end
 std.object = object
+_ = std.object
 
 for_all = std.for_all
 
@@ -169,11 +171,11 @@ function have(w, ...)
 end
 
 function inroom(w, ...)
-	return std.object(w):inroom(std.object(w), ...)
+	return std.object(w):inroom(...)
 end
 
 function where(w, ...)
-	return std.object(w):where(std.object(w), ...)
+	return std.object(w):where(...)
 end
 
 function closed(w)
@@ -391,6 +393,6 @@ std.rawset(_G, 'xact', xact.methods)
 std.mod_init(function()
 	declare {
 		game = std.ref 'game',
-		pl = std.ref 'pl',
+		pl = std.ref 'player',
 	}
 end)
