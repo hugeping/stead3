@@ -969,7 +969,7 @@ bottle = obj {
 			s.water = false
 			return
 		end
-		if w/'#ванная' then
+		if w/'#ванная' or w/'#унитаз' then
 			if s.spirt then
 				p [[В бутылке спирт. Я не хочу заливать это водой.]]
 			elseif s.parfum then
