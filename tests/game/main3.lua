@@ -1377,6 +1377,11 @@ room {
 			enable '#ремни'
 			return false
 		end;
+		if stuar.step < 10 then
+			p [[Я встал с кресла и стал следить за стюардессой.]]
+			walk 'badend'
+			return false
+		end
 	end;
 	way = { path {'Встать с кресла', 'inair2'} };
 	decor = [[Я сижу в кресле авиалайнера. Мое место прямо возле {#проход|прохода} ведущего в кабину пилотов.
