@@ -925,13 +925,35 @@ bottle = obj {
 			p 'бутылка';
 		end
 	end;
+	burn = false;
 	full = true;
 	drink = false;
 	water = false;
 	molotov = false;
 	spirt = false;
 	parfum = false;
+	life = function(s)
+		s.burn = s.burn - 1
+		if not (here()/'inair') and not (here()/'inair2') then
+			lifeoff(s)
+			return
+		end
+		if s.burn == 0 then
+			game:reaction(false)
+			game:events(false, false)
+			walk ('burnend', false)
+			game:lifeoff()
+			return false
+		end
+	end;
 	inv = function(s)
+		if s.molotov then
+			p [[Теперь это оружие партизанской войны!]]
+			if s.burn then
+				p [[И у него горит фитиль!]]
+			end
+			return
+		end
 		if s.full then
 			if s.drink then
 				p [[В бутылке оставалось немного вина и я допил его.]]
@@ -961,6 +983,19 @@ bottle = obj {
 				return
 			end
 		end
+	end;
+	used = function(s, w)
+		if w == light then
+			if s.burn then
+				p [[То, что горит -- не нужно поджигать снова!]]
+				return
+			end
+			lifeon(s)
+			s.burn = 5
+			p [[Я поджег фитиль. Он загорелся очень хорошо! У меня совсем мало времени, чтобы выбрать цель!]]
+			return
+		end
+		return false
 	end;
 	use = function(s, w)
 		if w/'бумага' then
@@ -1309,11 +1344,16 @@ light =	obj {
 	nam = 'зажигалка';
 	inv = [[Полезная вещь, особенно для тех, кто не курит.]];
 	use = function(s, w)
+		if w.human then
+			p [[В этой игре нельзя поджигать людей зажигалкой!]]
+			return
+		end
 		p [[Не стоит это поджигать...]]
 	end;
 }
-stuar = obj {
+stuar = human {
 	step = 0;
+	female = true;
 	dsc = function(s)
 		if s.step >= 5 and s.step < 8 then
 			p [[В конце прохода я вижу {стюардессу}, которая направляется сюда.]]
@@ -1331,14 +1371,22 @@ stuar = obj {
 		return
 	end;
 	act = function(s)
-		if s.step >= 5 and s.step < 10 then
+		if s.step >= 5 and s.step < 8 then
 			p [[-- Эй! Помогите, мне плохо! -- мой голос, казалось, был едва слышен, и тогда я поднял руку, чтобы меня заметили.]]
-			walk 'badend'
+			walk ('badend', false)
 			return
 		end
 		if s.step >= 12 then
 			p [[-- Эй! Помогите, мне плохо! -- мой голос, казалось, был едва слышен, и тогда я поднял руку, чтобы меня заметили.]]
-			walk 'badend2'
+			walk ('badend2', false)
+			return
+		end
+		if _'#сумочка'.know then
+			p [[Нужно что-то предпринять! Срочно! От бешеного пульса голова вот-вот разорвется от боли.]]
+		else
+			p [[-- У вас есть что-нибудь от головной боли? -- неуверенно спросил я стюардессу.]];
+			walk ('badend', false)
+			return
 		end
 	end;
 	life = function(s)
@@ -1348,8 +1396,8 @@ stuar = obj {
 			place(stuar)
 			return true
 		end
-		if s.step >= 12 then
-			walk 'badend2'
+		if s.step > 12 then
+			walk ('badend2', false)
 			s.step = 12
 			game:events(false, false)
 			game:reaction(false)
@@ -1359,7 +1407,15 @@ stuar = obj {
 }: with {
 	obj {
 		nam = '#сумочка';
-		act = [[Кажется, в ее руке я вижу шприц! Мне это не нравится!]]
+		know = false;
+		act = function(s)
+			if where(s).step >=10  then
+				s.know = true;
+				p [[Мне кажется я что-то заметил! Она прячет в сумочке шприц, который держит в правой руке. Это для меня?]]
+			else
+				p [[Она держит правую руку в сумочке. Что она прячет? Отсюда не разглядеть.]]
+			end
+		end
 	}
 }
 
@@ -1374,10 +1430,14 @@ room {
 		end
 		lifeon(stuar);
 	end;
-	onexit = function(s, t)
-		if t/'badend' or t/'badend2' then
-			return
+	onuse = function(s, w, ww)
+		if w == bottle and w.burn and ww ~= stuar then
+			walk ('burnend2', false)
+			game:lifeoff()
+			return false
 		end
+	end;
+	onexit = function(s, t)
 		if not seen(stuar) then
 			p [[Мне не хочется сейчас вставать. Нужно придти в себя.]]
 			return false
@@ -1389,12 +1449,16 @@ room {
 		end;
 		if stuar.step < 10 then
 			p [[Я встал с кресла и стал следить за стюардессой.]]
-			walk 'badend'
+			walk ('badend', false)
 			return false
 		end
-		if actions('#сумочка') == 0 then
-			p [[Я вскочил с кресла и уставился на стюардессу.]]
-			walk 'badend'
+		if not _'#сумочка'.know then
+			if bottle.burn then
+				p [[Я вскочил с кресла, держа горящую бутылку с коктейлем Молотова а руке.]]
+			else
+				p [[Я зачем то вскочил с кресла и уставился на стюардессу.]]
+			end
+			walk ('badend', false)
 			return false
 		end
 		stuar:lifeoff()
@@ -1472,13 +1536,28 @@ shpric = obj {
 	nam = 'шприц';
 	inv = [[На 5 милилитров. Интересно, что внутри?]];
 }
+
 guards = obj {
+	pri = -1;
 	step = 0;
+	panic = false;
 	dsc = function(s)
-		p [[Я вижу вооруженных {людей} в конце прохода.]];
-		if s.step > 3 then
-			p [[Один из них целится в меня из пистолета!]];
+		if s.panic then
+			p [[Я вижу как двое {людей} борются с пламенем.]]
+			return
 		end
+		p [[Я вижу двух вооруженных {людей} в конце прохода.]];
+		if s.step > 3 then
+			p [[Один из {них} целится в меня из пистолета!]];
+		end
+	end;
+	act = function(s)
+		if s.panic then
+			return "Им лучше не мешать"
+		end
+		p [[Они одеты во всю ту же синюю униформу, которую я видел в зале ожидания.]]
+		p [[Нужно что-то предпринять. Пока я ничего не придумал, кроме того, чтобы закричать:^]]
+		p [[-- Что вам нужно!? -- не похоже, чтобы они меня слушали.]]
 	end;
 	life = function(s)
 		s.step = s.step + 1
@@ -1487,19 +1566,54 @@ guards = obj {
 			place(s)
 			return true
 		end;
+		if s.step > 5 then
+			game:lifeoff()
+			game:reaction(false)
+			game:events(false, false)
+			walk('killed', false)
+			return true
+		end
 	end;
+	used = function(s, w)
+		if w == bottle then
+			if not w.burn then
+				p [[Коктейль Молотова нужно поджечь.]]
+				return
+			end
+			s.panic = true
+			remove(w)
+			lifeoff(s)
+			lifeoff(w)
+			enable('#кабина')
+			p [[Я размахнулся и со всей силой бросил бутылку в их сторону. Бутылка, ударившись о что-то твердое, разбилась
+и горящий уайт-спирит залил ковер под ногами мужчин. Они закричали.]];
+			return
+		end
+		p [[Они далеко.]]
+		return false
+	end
 }
+
 room {
 	nam = 'inair2';
 	title = 'В самолете';
+	onuse = function(s, w, ww)
+		if w == bottle and ww ~= guards then
+			walk ('burnend3', false)
+			game:lifeoff()
+			return false
+		end
+	end;
 	enter = function(s)
 		p [[Когда стюардесса была совсем рядом, я резко, насколько смог, вскочил с кресла и схватил ее за руку, не давая воспользоваться шприцем.]]
 		p [[Стюардесса попыталась выкрутить руку, но пока ей это не удалось...]];
 		lifeon '#стю';
 	end;
+	way = { path {'#кабина', 'К кабине пилота', 'У кабины пилота'}:disable() };
 }: with
 {
-	obj {
+	human {
+		female = true;
 		nam = '#стю';
 		step = 0;
 		shlang = false;
@@ -1533,10 +1647,10 @@ room {
 				game:events(false)
 				lifeoff(s)
 				if s.shlang and not have(shpric) then
-					walk 'badend4'
+					walk ('badend4', false)
 					return false
 				end
-				walk 'badend3'
+				walk ('badend3', false)
 				return false
 			end
 			if s.shlang then
@@ -1553,7 +1667,7 @@ room {
 				end
 				s.shlang = true;
 				p [[Я выхватил шланг, оттолкнул стюардессу от себя и набросил шланг ей на шею,
-быстро схватив его второй рукой и затянув.]];
+быстро схватил его второй рукой и затянул вокруг ее шеи.]];
 				remove(w)
 				return
 			end
@@ -1574,9 +1688,16 @@ room {
 room {
 	nam = 'badend';
 	title = false;
-	decor = [[-- Спокойно, оставайтесь на месте!!! -- Стюардесса ускорила свой шаг и через мгновенье оказалась у моего кресла.
+	decor = function(s)
+		if stuar.step >= 10 then
+			p [[-- Спокойно, расслабьтесь!!! -- Голос стюардессы был вежливо-холодным.^
+В этот момент мою шею пронзила боль. Я успел заметить шприц в ее руках и меня захлестнула волна паники, а потом наступила тьма...]];
+		else
+			p [[-- Спокойно, оставайтесь на месте!!! -- Стюардесса ускорила свой шаг и через мгновенье оказалась у моего кресла.
 -- Расслабьтесь.^
 В этот момент мою шею пронзила боль. Я успел заметить шприц в руках стюардессы и меня захлестнула волна паники, а потом наступила тьма...]];
+		end
+	end;
 	obj = {
 		obj {
 			dsc = [[А может быть, {все было не так}?]];
@@ -1602,7 +1723,7 @@ room {
 room {
 	nam = 'badend3';
 	title = false;
-	decor = [[В конце прохода появились два вооруженных человека. Они были одеты в туже синюю униформу, которую я уже видел раньше.^
+	decor = [[Пока я боролся со стюардессой, в конце прохода появились два вооруженных человека. Они были одеты в туже синюю униформу, которую я уже видел раньше.^
 Один из них прицелился и выстре...]];
 	obj = {
 		obj {
@@ -1624,9 +1745,46 @@ room {
 		}
 	}
 }
-
 room {
-	nam = 'badend5';
+	nam = 'burnend';
+	title = false;
+	decor = [[Коктейль Молотова вспыхнул в моих руках. Я закричал от боли и уронил бутылку на что-то твердое, так как
+бутылка разбилась от такого, довольно слабого, удара и залила горящим уайт-спиритом пол под моими ногами...]];
+	obj = {
+		obj {
+			dsc = [[А может быть, {все было не так}?]];
+			act = function() snapshots:restore() end;
+		}
+	}
+}
+room {
+	nam = 'burnend2';
+	title = false;
+	decor = [[Мой недальновидный план не имел успеха. Горящий уайт-спирит добавил хаоса в ситуацию,
+но на крики стюардессы в салон ворвались вооруженные люди. Они потушили пламя, а потом один из них взял пистолет,
+прицелился и выстре...]];
+	obj = {
+		obj {
+			dsc = [[А может быть, {все было не так}?]];
+			act = function() snapshots:restore() end;
+		}
+	}
+}
+room {
+	nam = 'burnend3';
+	title = false;
+	decor = [[Мой недальновидный план не имел успеха. Горящий уайт-спирит добавил хаоса в ситуацию,
+но вооруженные люди потушили пламя, а потом один из них взял пистолет,
+прицелился и выстре...]];
+	obj = {
+		obj {
+			dsc = [[А может быть, {все было не так}?]];
+			act = function() snapshots:restore() end;
+		}
+	}
+}
+room {
+	nam = 'killed';
 	title = false;
 	decor = [[Прозвучал звук выстре....]];
 	obj = {
@@ -1637,6 +1795,65 @@ room {
 	}
 }
 
+pistol = obj {
+	disp = 'пистолет';
+	inv = [[Странная у него конструкция...]];
+	dsc = [[Под ногами валяется {пистолет}.]];
+	tak = [[Я побыстрее забрал пистолет себе.]];
+	use = function(s)
+	end;
+}
+
+guard = obj {
+	step = 0;
+	dsc = function(s)
+		if live(s) then
+			p [[Я вижу перед собой {вооруженного человека}, который целится в меня из пистолета.]]
+		else
+			p [[Я вижу перед собой {вооруженного человека}, который, скорчившись, держится за свое левое плечо.]]
+		end
+	end;
+	used = function(s, w)
+		if w/'шланг' then
+			lifeoff(s)
+			p [[Я размахнулся и изо всех сил ударил его шлангом от душа.
+Тяжелая металлическая насадка на конце шланга еще усилила удар, так что я не без удовольствия
+увидел, как вооруженный человек уронил пистолет и скорчился от боли.]];
+			drop(pistol)
+			return
+		end
+		return false
+	end;
+	act = [[Нужно что-то делать! Быстро!]];
+	life = function(s)
+		s.step = s.step + 1
+		if s.step > 4 then
+			lifeoff(s)
+			walk('killed', false)
+			return
+		end
+	end;
+}
+
+room {
+	nam = 'У кабины пилота';
+	onenter = function(s)
+		lifeon(guard)
+	end;
+	enter = [[Не теряя времени я побежал вперед. Там должна была быть кабина пилота.
+Впереди пылало пламя. Один из людей боролся с ним с помощью огнетушителя. А второй, снова обратив на меня внимание,
+поднял руку с пистолетом...]];
+	obj = {
+		guard,
+		obj {
+			dsc = [[Второй {человек} в униформе, отчаянно борется с {#пламя|пламенем}.]];
+			act = [[Ему лучше не мешать!]];
+		};
+		obj {
+			nam = '#пламя';
+			act = [[Хорошо разгорелось!]];
+		}
+	}
+}
 function start()
 end
-dprint( "hello", false)
