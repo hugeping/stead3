@@ -3,6 +3,8 @@ local type = std.type
 std.rawset(_G, 'std', stead)
 include = std.include
 loadmod = std.loadmod
+rnd = std.rnd
+rnd_seed = std.rnd_seed
 p = std.p
 pr = std.pr
 pn = std.pn
@@ -22,6 +24,7 @@ dispof = std.dispof
 titleof = std.titleof
 gamefile = std.gamefile
 player = std.player
+dprint = std.dprint
 
 function from(ww)
 	local wh
@@ -375,7 +378,7 @@ function path(t)
 	}
 end
 
-local xact = (std.menu or std.obj) {
+local xact = std.obj {
 	nam = '@';
 	{
 		methods = {}

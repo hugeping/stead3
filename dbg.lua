@@ -6,6 +6,7 @@ local string = std.string
 local okey
 local txt = std.ref '@iface'
 local instead = std.ref '@instead'
+
 local kbden = {
 	shifted = {
 	["1"] = "!",
@@ -31,125 +32,7 @@ local kbden = {
 	}
 }
 
-local kbdru = {
-	["q"] = "й",
-	["w"] = "ц",
-	["e"] = "у",
-	["r"] = "к",
-	["t"] = "е",
-	["y"] = "н",
-	["u"] = "г",
-	["i"] = "ш",
-	["o"] = "щ",
-	["p"] = "з",
-	["["] = "х",
-	["]"] = "ъ",
-	["a"] = "ф",
-	["s"] = "ы",
-	["d"] = "в",
-	["f"] = "а",
-	["g"] = "п",
-	["h"] = "р",
-	["j"] = "о",
-	["k"] = "л",
-	["l"] = "д",
-	[";"] = "ж",
-	["'"] = "э",
-	["z"] = "я",
-	["x"] = "ч",
-	["c"] = "с",
-	["v"] = "м",
-	["b"] = "и",
-	["n"] = "т",
-	["m"] = "ь",
-	[","] = "б",
-	["."] = "ю",
-	["`"] = "ё",
-
-	shifted = {
-	["q"] = "Й",
-	["w"] = "Ц",
-	["e"] = "У",
-	["r"] = "К",
-	["t"] = "Е",
-	["y"] = "Н",
-	["u"] = "Г",
-	["i"] = "Ш",
-	["o"] = "Щ",
-	["p"] = "З",
-	["["] = "Х",
-	["]"] = "Ъ",
-	["a"] = "Ф",
-	["s"] = "Ы",
-	["d"] = "В",
-	["f"] = "А",
-	["g"] = "П",
-	["h"] = "Р",
-	["j"] = "О",
-	["k"] = "Л",
-	["l"] = "Д",
-	[";"] = "Ж",
-	["'"] = "Э",
-	["z"] = "Я",
-	["x"] = "Ч",
-	["c"] = "С",
-	["v"] = "М",
-	["b"] = "И",
-	["n"] = "Т",
-	["m"] = "Ь",
-	[","] = "Б",
-	["."] = "Ю",
-	["`"] = "Ё",
-	["1"] = "!",
-	["2"] = "@",
-	["3"] = "#",
-	["4"] = ";",
-	["5"] = "%",
-	["6"] = ":",
-	["7"] = "?",
-	["8"] = "*",
-	["9"] = "(",
-	["0"] = ")",
-	["-"] = "_",
-	["="] = "+",
-	}
-}
-
-local kbdlower = {
-	['А'] = 'а',
-	['Б'] = 'б',
-	['В'] = 'в',
-	['Г'] = 'г',
-	['Д'] = 'д',
-	['Е'] = 'е',
-	['Ё'] = 'ё',
-	['Ж'] = 'ж',
-	['З'] = 'з',
-	['И'] = 'и',
-	['Й'] = 'й',
-	['К'] = 'к',
-	['Л'] = 'л',
-	['М'] = 'м',
-	['Н'] = 'н',
-	['О'] = 'о',
-	['П'] = 'п',
-	['Р'] = 'р',
-	['С'] = 'с',
-	['Т'] = 'т',
-	['У'] = 'у',
-	['Ф'] = 'ф',
-	['Х'] = 'х',
-	['Ц'] = 'ц',
-	['Ч'] = 'ч',
-	['Ш'] = 'ш',
-	['Щ'] = 'щ',
-	['Ъ'] = 'ъ',
-	['Э'] = 'э',
-	['Ь'] = 'ь',
-	['Ю'] = 'ю',
-	['Я'] = 'я',
-}
-
+local kbdalt = false
 
 local function txt_esc(s)
 	local rep = function(s)
@@ -160,20 +43,30 @@ local function txt_esc(s)
 	return r
 end
 
+local function dispof(v)
+	local d = std.titleof(v) or std.dispof(v)
+	if not d then
+		d = v.tag or 'n/a'
+	else
+		d = d..((v.tag and '/'..v.tag) or '')
+	end
+	return d
+end
+
 local function show_obj(s, v, pfx, verbose)
 	local wh = v:where()
 	if wh then
-		wh = '@'..std.tostr(std.nameof(wh))..'['..std.titleof(wh)..']'
+		wh = '@'..std.tostr(std.nameof(wh))..'['..(dispof(wh))..']'
 	else
 		wh = ''
 	end
-	s:printf("%s%s%snam: %s%s | disp:%s | tag:%s\n",
+	s:printf("%s%s%snam: %s%s | disp:%s\n",
 		pfx or '',
 		v:disabled() and '%' or '',
 		v:closed() and '-' or '',
 		std.tostr(std.nameof(v)),
 		wh,
-		std.dispof(v), v.tag or 'n/a')
+		dispof(v))
 	if verbose then
 		for k, v in std.pairs(v) do
 			s:printf("*[%s] = %s\n", std.tostr(k), std.dump(v) or 'n/a')
@@ -187,13 +80,13 @@ local function show_obj(s, v, pfx, verbose)
 end
 
 local function show_room(s, v)
-	s:printf("nam: %s | title: %s | disp: %s | tag: %s\n", std.tostr(std.nameof(v)), std.titleof(v), std.dispof(v), v.tag or 'n/a')
+	s:printf("nam: %s | title: %s | disp: %s\n", std.tostr(std.nameof(v)), std.titleof(v) or 'n/a', dispof(v))
 	s:printf("    way: ")
 	for k, v in std.ipairs(v.way) do
 		if k ~= 1 then
 			s:printf(" | ")
 		end
-		s:printf("%s ", std.tostr(std.nameof(v)))
+		s:printf("%s[%s]", std.tostr(std.nameof(v)), dispof(v))
 	end
 	s:printf("\n")
 end
@@ -207,6 +100,46 @@ local	commands = {
 			s:disable();
 			return std.nop()
 		end;
+	};
+	{ nam = 'find',
+		{ nam = 'obj',
+			act = function(s, par)
+				if not par then
+					return
+				end
+				std.for_each_obj(function(v)
+					if v == s then
+						return
+					end
+					local disp = dispof(v)
+					local nam = std.tostr(std.nameof(v))
+					if disp:find(par, 1, true) or nam:find(par, 1, true) then
+						s:printf("nam: %s disp: %s\n", nam, disp)
+					end
+				end)
+			end
+		};
+		{ nam = 'dsc',
+			act = function(s, par)
+				if not par then
+					return
+				end
+				std.for_each_obj(function(v)
+					if v == s then
+						return
+					end
+					local dsc = std.par(' ', std.call(v, 'dsc'), std.call(v, 'decor')) or ''
+					local st, e = dsc:find(par, 1, true)
+					if st then
+						local nam = std.tostr(std.nameof(v))
+						local disp = dispof(v)
+						st = st - 32
+						if st < 0 then st = 1 end
+						s:printf("nam: %s disp: %s dsc: %s\n", nam, disp, dsc:sub(st, e + 32))
+					end
+				end)
+			end
+		};
 	};
 	{ nam = 'show',
 		{ nam = 'obj',
@@ -416,6 +349,8 @@ Use ctrl-d or f6 to enter/exit debugger.
 Some useful commands:
     show obj * - show all objects
     show room * - show all rooms
+    find obj <string> - search obj
+    find dsc <string> - search obj (in dsc and decor)
     show obj <name> - show object (in verbose mode)
     show room <name> - show room
     show room - show here
@@ -498,12 +433,53 @@ Type "help" to see help
 	kbd_alt_xlat = false;
 	__last_disp = false;
 	__nostrict = false;
-	__direct = false;
 };
 
-local old_get_picture
-local old_get_fading
+local theme = {}
 
+local function theme_var(a, b)
+	local ov = instead.theme_var(a)
+	if b then
+		theme[a] = ov
+		return instead.theme_var(a, b)
+	end
+	return ov
+end
+
+local function theme_reset(a)
+	for k, v in std.pairs(theme) do
+		instead.theme_var(k, v)
+	end
+	theme = {}
+end
+
+local funcs = {}
+
+local function instead_func(a)
+	local ov = instead[a]
+	funcs[a] = ov
+	std.rawset(instead, a, function() end)
+end
+
+local function instead_reset(a)
+	for k, v in std.pairs(funcs) do
+		std.rawset(instead, k, v)
+	end
+	funcs = {}
+end
+
+local std_dbg = {}
+
+local function std_debug(a)
+	if not a then
+		for k, v in pairs(std_dbg) do
+			std['debug_'..k] = v
+		end
+		return
+	end
+	std_dbg[a] = std['debug_'..a]
+	std['debug_'..a] = false
+end
 
 local dbg = std.obj {
 	pri = 16384;
@@ -512,28 +488,42 @@ local dbg = std.obj {
 	{ commands = commands },
 	enable = function(s)
 		local instead = std.ref '@instead'
-		old_get_picture = instead.get_picture
-		old_get_fading = instead.get_fading
-		std.rawset(instead, 'get_picture', function() end)
-		std.rawset(instead, 'get_fading', function() end)
+		instead_func('get_picture')
+		instead_func('get_fading')
+		instead_func('get_title')
+		instead_func('get_ways')
 --		s.last_timer = timer:get()
 --		timer:stop()
+		std_debug('input')
+		std_debug('output')
+		std_debug('xref')
 		s.__last_disp = std.game:lastdisp()
 		s.__nostrict = std.nostrict or false
-		s.__direct = (instead.theme_var('scr.gfx.mode') == 'direct')
-		if s.__direct then
-			instead.theme_var('scr.gfx.mode', 'embedded')
-		end
+
+		local w, h = std.tonum(theme_var 'scr.w'), std.tonum(theme_var 'scr.h')
+		theme_var('scr.gfx.mode', 'embedded')
+		theme_var('scr.gfx.bg', '')
+		theme_var('scr.col.bg', 'white')
+		theme_var('win.col.fg', 'black')
+		theme_var('inv.mode', 'disabled')
+		local padw = w > 320 and 16 or 0
+		local padh = h > 320 and 16 or 0
+		theme_var('win.x', padw)
+		theme_var('win.y', padh)
+		theme_var('win.w', w - padw)
+		theme_var('win.h', h - padh)
+		theme_var('menu.button.x', w)
+		theme_var('menu.button.y', h)
+		theme_var('win.fnt.size', 16)
+		theme_var('win.scroll.mode', 3)
 		std.nostrict = true
 		iface:raw_mode(true)
 	end;
 	disable = function(s)
-		if s.__direct then
-			instead.theme_var('scr.gfx.mode', 'direct')
-		end
+		theme_reset()
+		std_debug()
 		std.nostrict = s.__nostrict
-		std.rawset(instead, 'get_picture', old_get_picture)
-		std.rawset(instead, 'get_fading', old_get_fading)
+		instead_reset()
 		iface:raw_mode(false)
 	--	timer:set(s.last_timer)
 		std.game:lastdisp(s.__last_disp)
@@ -546,8 +536,8 @@ local dbg = std.obj {
 	eval = function(s, fn, ...)
 		local st, r, v = std.pcall(fn, ...)
 		if not st then
-			s:printf("%s\n", r)
-			return false
+--			s:printf("%s\n", r)
+			return false, r
 		else
 			s.on = false
 			s:disable()
@@ -592,7 +582,7 @@ local dbg = std.obj {
 			table.insert(s.history, s.input)
 		end
 		s.history_pos = 0
-		s:printf('======== [ '..s.input..' ] ========\n')
+		s:printf('$ '..s.input..'\n')
 		s.input = ''
 		s.hint = ''
 		s.cursor = 1
@@ -606,8 +596,9 @@ local dbg = std.obj {
 			pr (txt:bold ' ')
 		end
 		local pre, post = s:inp_split()
-		pr (txt:bold '# '.. txt_esc(pre)..txt:bold '|'..txt_esc(post) ..'\n')
-		pr (s.hint..'\n')
+		pr (txt:bold '$ '.. txt:bold(txt_esc(pre))..txt:bold '|'..txt:bold(txt_esc(post)) ..'\n')
+		if s.hint == '' then s.hint = '?' end
+		pr (s.hint ..'\n')
 		pr (txt:anchor())
 	end;
 	key = function(s, press, key)
@@ -620,7 +611,7 @@ local dbg = std.obj {
 		elseif key:find 'alt' then
 			s.key_alt = press
 			if s.on then
-				if not press then
+				if not press and kbdalt then
 					s.kbd_alt_xlat = not s.kbd_alt_xlat
 				end
 				return 'look'
@@ -652,6 +643,37 @@ local dbg = std.obj {
 		end
 	end;
 }
+
+local function utf_bb(b, pos)
+	if type(b) ~= 'string' or b:len() == 0 then
+		return 0
+	end
+	local utf8 = (std.game.codepage == 'UTF-8' or std.game.codepage == 'utf-8')
+	if not utf8 then return 1 end
+	local i = pos or b:len()
+	local l = 0
+	while b:byte(i) >= 0x80 and b:byte(i) <= 0xbf do
+		i = i - 1
+		l = l + 1
+	end
+	return l + 1
+end
+
+local function utf_ff(b, pos)
+	if type(b) ~= 'string' or b:len() == 0 then
+		return 0
+	end
+	local utf8 = (std.game.codepage == 'UTF-8' or std.game.codepage == 'utf-8')
+	if not utf8 then return 1 end
+	local i = pos or 1
+	local l = 0
+	while b:byte(i) >= 0x80 and b:byte(i) <= 0xbf do
+		i = i + 1
+		l = l + 1
+	end
+	return l + 1
+end
+
 local timer = std.ref '@timer'
 
 local function key_xlat(s)
@@ -663,8 +685,8 @@ local function key_xlat(s)
 		return
 	end
 
-	if dbg.kbd_alt_xlat and (std.game.codepage == 'UTF-8' or std.game.codepage == 'utf-8') then
-		kbd = kbdru;
+	if dbg.kbd_alt_xlat and (std.game.codepage == 'UTF-8' or std.game.codepage == 'utf-8') and kbdalt then
+		kbd = kbdalt
 	else
 		kbd = kbden
 	end
@@ -712,19 +734,17 @@ std.mod_cmd(function(cmd)
 			end
 		elseif key:find '^backspace' then
 			if dbg.input == '' then
-				return
+				std.abort()
+				return std.call(dbg, 'dsc'), true
 			end
 			local pre, post = dbg:inp_split()
 			if not pre or pre == '' then
-				return
+				std.abort()
+				return std.call(dbg, 'dsc'), true
 			end
-			if dbg.input:byte(pre:len()) >= 128 then
-				dbg.input = dbg.input:sub(1, pre:len() - 2) .. post
-				dbg.cursor = dbg.cursor - 2
-			else
-				dbg.input = dbg.input:sub(1, pre:len() - 1) .. post
-				dbg.cursor = dbg.cursor - 1
-			end
+			local i = utf_bb(dbg.input)
+			dbg.input = dbg.input:sub(1, pre:len() - i) .. post
+			dbg.cursor = dbg.cursor - i
 		elseif key:find '^tab' then
 			dbg:completion()
 		elseif key:find 'home' or (key == 'a' and dbg.key_ctrl) then
@@ -736,20 +756,14 @@ std.mod_cmd(function(cmd)
 			dbg.input = ''
 		elseif key:find '^right' then
 			if dbg.cursor <= dbg.input:len() then
-				if dbg.input:byte(dbg.cursor) >= 128 then
-					dbg.cursor = dbg.cursor + 2
-				else
-					dbg.cursor = dbg.cursor + 1
-				end
+				local i = utf_ff(dbg.input, dbg.cursor)
+				dbg.cursor = dbg.cursor + i
 			end
 			if dbg.cursor > dbg.input:len() then dbg.cursor = dbg.input:len() + 1 end
 		elseif key:find '^left' then
 			if dbg.cursor > 1 then
-				if dbg.input:byte(dbg.cursor - 1) >= 128 then
-					dbg.cursor = dbg.cursor - 2
-				else
-					dbg.cursor = dbg.cursor - 1
-				end
+				local i = utf_bb(dbg.input, dbg.cursor - 1)
+				dbg.cursor = dbg.cursor - i
 			end
 			if dbg.cursor < 1 then dbg.cursor = 1 end
 		elseif key:find '^up' then
@@ -791,7 +805,34 @@ std.mod_cmd(function(cmd)
 	end
 end, -1)
 
-std.mod_start(function()
+function std.dprint(...)
+	local a = { ... }
+	dbg:printf("dbg> ");
+	for i = 1, #a do
+		if i ~= 1 then
+			dbg:printf("%s", ' ')
+			std.io.stderr:write(' ')
+		end
+		dbg:printf("%s", std.tostr(a[i]))
+		std.io.stderr:write(std.tostr(a[i]))
+	end
+	dbg:printf("\n")
+	std.io.stderr:write('\n')
+	std.io.stderr:flush()
+end
+
+dprint = std.dprint
+local oldlang
+std.mod_start(function(load)
+	local st, r
+	if oldlang ~= LANG then
+		st, r = std.pcall(function() return require ('dbg-'..LANG) end)
+		if st and r then
+			std.dprint("dbg: Using '"..LANG.."' keyboard layout.")
+			kbden, kbdalt = r.main, r.alt
+		end
+	end
+	oldlang = LANG
 	iface:raw_mode(false)
 	okey = input.key;
 	std.rawset(input, 'key', function(self, ...) return dbg:key(...) or (okey and okey(input, ...)) end)
@@ -800,6 +841,6 @@ end, -1)
 std.mod_done(function()
 	iface:raw_mode(false)
 	std.rawset(input, 'key', okey)
-end)
+end, -1)
 
 -- std.rawset(_G, 'dbg',  std.ref '@dbg')

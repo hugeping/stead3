@@ -3,6 +3,7 @@ local type = std.type
 local table = std.table
 
 std.phrase_prefix = '-- '
+std.phrase_show = true
 
 local function phr_prefix(d, nr)
 	if type(std.phrase_prefix) == 'string' then
@@ -25,6 +26,12 @@ std.dlg = std.class({
 		v.dlg_enter = v.enter
 		v.enter = nil
 		v.__stack = {}
+		if type(v.phr) == 'table' then
+			if not v.obj then v.obj = {} end
+			if type(v.obj) == 'table' then
+				table.insert(v.obj, 1, v.phr)
+			end
+		end
 		v = std.room(v)
 		std.setmt(v, s)
 		v:__recreate()
@@ -53,6 +60,9 @@ std.dlg = std.class({
 		return std.par(std.scene_delim, title or false, lact or false, dsc)
 	end;
 	onact = function(s, w) -- show dsc by default
+		if not std.phrase_show then
+			return
+		end
 		local r, v = std.call(w, 'dsc')
 		if type(r) == 'string' then
 			return phr_prefix(r)
@@ -75,7 +85,7 @@ std.dlg = std.class({
 	enter = function(s, ...)
 		s.__llact = false
 		s.__stack = {}
-    		s.current = nil
+		s.current = nil
 		s:for_each(function(s) s:open() end) -- open all phrases
 		local r, v = std.call(s, 'dlg_enter', ...)
 		if std.here() ~= s or #s.__stack > 0 then
@@ -294,7 +304,15 @@ std.phr = std.class({
 	act = function(s, ...)
 		local n = s
 --		s = s:__alias()
-		if not s.always then
+		local w = s:where()
+		if w and w.only then -- only one choice
+			for i = 1, #w.obj do
+				local o = w.obj[i]
+				if not o.always then
+					o:close()
+				end
+			end
+		elseif not s.always then
 			s:close()
 		end
 		local cur = std.here().current
@@ -327,4 +345,4 @@ std.phr = std.class({
 			o:check()
 		end
 	end;
-}, std.menu or std.obj)
+}, std.obj)

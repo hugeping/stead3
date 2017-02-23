@@ -37,9 +37,37 @@ stead = {
 	files = {};
 	busy = function() end;
 	debug_xref = true;
+	random = instead_random;
+	randomseed = instead_srandom;
 }
 
 local std = stead
+
+function std.dprint(...)
+	local a = { ... }
+	for i = 1, #a do
+		if i ~= 1 then
+			std.io.stderr:write(' ')
+		end
+		std.io.stderr:write(std.tostr(a[i]))
+	end
+	std.io.stderr:write('\n')
+	std.io.stderr:flush()
+end
+
+std.rnd = function(...)
+	if std.random then
+		return std.random(...)
+	end
+	return std.math.random(...);
+end
+
+std.rnd_seed = function(...)
+	if std.randomseed then
+		return std.randomseed(...)
+	end
+	std.math.randomseed(...)
+end
 
 function stead:abort()
 	self.abort_cmd = true
@@ -210,7 +238,7 @@ local function xref_prep(str)
 		if std.debug_xref then
 			std.err("Wrong object in xref: "..std.tostr(oo), 2)
 		else
-			print("Wrong xref: "..std.tostr(oo))
+			dprint("Wrong xref: "..std.tostr(oo))
 			return s
 		end
 	end
@@ -935,11 +963,17 @@ function std.for_each_obj(fn, ...)
 	end
 end
 
+local rnd_seed = 1980 + 1978
+
 function std:init()
 	std.rawset(_G, 'iface', std.ref '@iface') -- force iface override
-	std.world { nam = 'game', player = 'player', codepage = 'UTF-8' }
+	std.world { nam = 'game', player = 'player', codepage = 'UTF-8', dsc = [[STEAD3, 2017 by Peter Kosyh^http://instead.syscall.ru^^]] };
 	std.room { nam = 'main' }
 	std.player { nam = 'player', room = 'main' }
+
+	rnd_seed = (std.os.time(stead.os.date("*t")) + rnd_seed)
+	std.rnd_seed(rnd_seed)
+
 	std.mod_call('init') -- init modules
 	std.initialized = true
 end
@@ -1522,6 +1556,8 @@ std.world = std.class({
 				start(load) -- start after load
 			--	std.rawset(_G, 'start', nil)
 			end
+			local d = std.method(s, 'dsc')
+			return std.fmt(d)
 		end
 	end;
 	lifeon = function(s, w, ...)
@@ -2486,7 +2522,7 @@ std.obj {
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
 		if std.debug_input then
-			print("* input: ", inp)
+			dprint("* input: ", inp)
 		end
 		if not cmd then
 			return "Error in cmd arguments", false
@@ -2500,7 +2536,7 @@ std.obj {
 		end
 		r = iface:fmt(r, v) -- to force fmt
 		if std.debug_output then
-			print("* output: ", r, v)
+			dprint("* output: ", r, v)
 		end
 		return r, v
 	end;
