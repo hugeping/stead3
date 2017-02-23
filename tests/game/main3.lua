@@ -1957,6 +1957,7 @@ room {
 		act = function(s)
 			where(s).pos = where(s).pos + 1
 			if where(s).pos > #where(s).text then
+				snapshots:remove()
 				gamefile('part2.lua', true)
 				return
 			end
