@@ -290,7 +290,7 @@ room {
 	nam = 'end2';
 	title = false;
 	enter = function()
-		game.pic = 'gfx/ring.png'
+		game.pic = 'gfx/coin.png'
 	end;
 	decor = function(s)
 		pn [[Я должен спасти ее!...]]
