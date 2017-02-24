@@ -1460,7 +1460,11 @@ room {
 		lifeon(stuar);
 	end;
 	onuse = function(s, w, ww)
-		if w == bottle and w.burn and ww ~= stuar then
+		if w == bottle and not w.burn then
+			p [[Коктейль Молотова нужно поджечь.]]
+			return false
+		end
+		if w == bottle and ww ~= stuar then
 			walk ('burnend2', false)
 			game:lifeoff()
 			return false
@@ -1627,7 +1631,11 @@ room {
 	nam = 'inair2';
 	title = 'В самолете';
 	onuse = function(s, w, ww)
-		if w == bottle and w.burn and ww ~= guards then
+		if w == bottle and not w.burn then
+			p [[Коктейль Молотова нужно поджечь.]]
+			return false
+		end
+		if w == bottle and ww ~= guards then
 			walk ('burnend3', false)
 			game:lifeoff()
 			return false
