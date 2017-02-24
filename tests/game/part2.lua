@@ -1,7 +1,4 @@
-require "prefs"
 game.pic = false
-prefs.choice = false
-
 dlg {
 	nam = 'main';
 	title = '???';

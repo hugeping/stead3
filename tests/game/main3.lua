@@ -5,6 +5,8 @@
 require "format"
 require "noinv"
 require "snapshots"
+require "prefs"
+prefs.choice = false
 format.para = true
 std.debug_xref = false
 --std.debug_output = true
@@ -1625,7 +1627,7 @@ room {
 	nam = 'inair2';
 	title = 'В самолете';
 	onuse = function(s, w, ww)
-		if w == bottle and ww ~= guards then
+		if w == bottle and w.burn and ww ~= guards then
 			walk ('burnend3', false)
 			game:lifeoff()
 			return false
