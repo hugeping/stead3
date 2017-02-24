@@ -9,7 +9,7 @@ format.para = true
 std.debug_xref = false
 --std.debug_output = true
 --std.debug_input = true
-
+game.pic = 'gfx/street.png'
 game.inv = [[Зачем мне это?]];
 -- nouse
 game.use = function(s, w, ww)
@@ -255,6 +255,7 @@ room {
 		if not visited() then
 			p [[Я открыл массивную деревянную дверь и очутился в темном коридоре. Было
 темно и тихо.]]
+			game.pic = 'gfx/inside.png'
 			lifeon 'зал'
 		end
 	end;
@@ -396,6 +397,9 @@ room {
 			p [[Я спустился на второй этаж.]]
 		elseif f/'зал' then
 			p [[Я осторожно поднялся на второй этаж.]]
+			if not visited(s) then
+				game.pic = 'gfx/stairs.png'
+			end
 		end
 	end;
 	decor = [[Я вижу коридор, уходящий по обе стороны от лестницы. Вдоль коридора расположены {#двери|дверные проемы}. Странно, но в концах коридора я не вижу окон.]];
@@ -861,6 +865,7 @@ room {
 		if not visited() then
 			p [[Не без трепета я вошел в залитую светом гостиную. Свет и шум застолья взбудоражил и застал меня врасплох.
 Гостиная была великолепна! В ее центре был расположен стол, за которым сидели люди.]]
+			game.pic = 'gfx/table.png'
 		end
 	end;
 	decor = function(s)
