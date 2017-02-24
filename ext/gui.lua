@@ -115,15 +115,18 @@ function instead.get_menu()
 	return instead.__menu
 end
 
+instead.nosave = false
+instead.noautosave = false
+
 function instead.isEnableSave()
 	local s = get_bool(instead, 'nosave')
-	if instead.get_autosave() then
-		return true
-	end
 	return not s
 end
 
 function instead.isEnableAutosave()
+	if instead.get_autosave() then
+		return true
+	end
 	return not get_bool(instead, 'noautosave')
 end
 
@@ -210,7 +213,7 @@ function iface:xref(str, o, ...)
 	elseif o:type 'menu' or std.is_system(o) then
 		return std.string.format("<a:act %s>", xref)..str.."</a>"
 	elseif std.cmd[1] == 'inv' then
-		return std.string.format("<a:%s>", xref)..str.."</a>"
+		return std.string.format("<a:use %s>", xref)..str.."</a>"
 	end
 	return std.string.format("<a:obj/act %s>", xref)..str.."</a>"
 end

@@ -417,6 +417,7 @@ function std.class(s, inh)
 --	s.__parent = function(s)
 --		return inh
 	--	end;
+	s.nam = '*class*';
 	s.type = function(s, t)
 		return std.is_obj(s, t)
 	end;
@@ -842,10 +843,13 @@ std.save_table = function(vv, fp, n)
 	std.save_members(vv, fp, n)
 end
 
-function std:reset() -- reset state
+function std:reset(fn) -- reset state
 	self:done()
 	self:init()
-	std.dofile('main3.lua')
+	if fn ~= 'main3.lua' then
+		std.startfile = fn -- another start file
+	end
+	std.dofile(fn or 'main3.lua')
 end
 
 function std:load(fname) -- load save
@@ -874,16 +878,17 @@ end
 
 function std.gamefile(fn, reset) -- load game file
 	if type(fn) ~= 'string' then
-		std.err("Wrong paramter to stead:file: "..std.tostr(f), 2)
+		std.err("Wrong paramter to stead:file: "..std.tostr(fn), 2)
 	end
 	if reset then
-		std:reset()
-		if fn ~= 'main3.lua' then
-			std.startfile = fn -- another start file
-		end
+		std:reset(fn)
 		std.ref 'game':ini()
-		std.game.player:need_scene(true)
-		return
+		std.ref 'game'.__started = true
+		local r, v = std.game.player:walk(std.game.player.room, false)
+		if type(r) == 'string' and std.cctx() then
+			std.pr(r)
+		end
+		return r, v
 	end
 	in_section ('gamefile', function() std.dofile(fn) end)
 	std.ref 'game':ini()
@@ -910,6 +915,7 @@ function std:save(fp)
 	-- reset
 	if std.startfile then
 		fp:write(string.format("std:reset(%q)\n", std.startfile))
+		fp:write(string.format("std 'game':ini(false)\n"))
 	end
 	-- files
 	for i = 1, #std.files do
@@ -1682,7 +1688,7 @@ std.world = std.class({
 		elseif cmd[1] == nil or cmd[1] == 'look' then
 			if not s.__started then
 				s.__started = true
-				r, v = s.player:walk(s.player.room, true)
+				r, v = s.player:walk(s.player.room, false)
 			else
 				s.player:need_scene(true)
 				v = true
@@ -1962,15 +1968,21 @@ std.player = std.class ({
 		return r, v
 	end;
 	walkin = function(s, w)
-		return s:walk(w, true, false)
+		return s:walk(w, false)
 	end;
 	walkout = function(s, w)
 		if w == nil then
 			w = s:where():from()
 		end
-		return s:walk(w, false, true)
+		return s:walk(w, true, false)
 	end;
-	walk = function(s, w, noexit, noenter)
+	walk = function(s, w, doexit, doenter)
+		local noexit = (doexit == false)
+		local noenter = (doenter == false)
+		local moved = s:moved()
+		if moved then
+			s:moved(false)
+		end
 		w = std.ref(w)
 		if not w then
 			std.err("Wrong parameter to walk: "..std.tostr(w))
@@ -1985,6 +1997,7 @@ std.player = std.class ({
 		t = std.par(std.scene_delim, t or false, r)
 
 		if v == false or s:moved() then -- stop walk
+			if not s:moved() then s:moved(moved) end
 			return t, true
 		end
 
@@ -1992,6 +2005,7 @@ std.player = std.class ({
 			r, v = std.call(s, 'onwalk', inwalk)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == false or s:moved() then
+				if not s:moved() then s:moved(moved) end
 				return t, true
 			end
 		end
@@ -2003,6 +2017,7 @@ std.player = std.class ({
 				s.__in_onexit = false
 				t = std.par(std.scene_delim, t or false, r)
 				if v == false or s:moved() then
+					if not s:moved() then s:moved(moved) end
 					return t, true
 				end
 			end
@@ -2010,6 +2025,7 @@ std.player = std.class ({
 				r, v = std.call(inwalk, 'onenter', s:where())
 				t = std.par(std.scene_delim, t or false, r)
 				if v == false or s:moved() then
+					if not s:moved() then s:moved(moved) end
 					return t, true
 				end
 			end
@@ -2204,7 +2220,7 @@ local function __dump(t, nested)
 			local d = std.deref(t)
 			if type(d) == 'number' then
 				rc = string.format("std(%d)", d)
-			else
+			elseif type(d) == 'string' then
 				rc = string.format("std %q", d)
 			end
 			return rc
