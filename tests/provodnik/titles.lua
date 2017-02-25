@@ -70,6 +70,9 @@ local ww, hh
 
 function game:timer()
 	local scr = sprite.scr()
+	if line == false then
+		return
+	end
 	-- scroll
 	scr:copy(0, 1, w, h - 1, scr, 0, 0)
 
