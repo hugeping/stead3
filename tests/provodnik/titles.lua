@@ -118,6 +118,10 @@ room {
 		theme.set('scr.gfx.bg', '')
 		theme.set('scr.col.bg', 'black')
 		theme.set('menu.button.x', w)
+		theme.set('win.down.x', w)
+		theme.set('win.up.x', w)
+		theme.set('inv.down.x', w)
+		theme.set('inv.up.x', w)
 		timer:set(1000)
 	end;
 	timer = function(s)
