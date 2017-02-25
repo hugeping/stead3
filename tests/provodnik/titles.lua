@@ -135,7 +135,7 @@ room {
 function end_titles()
 	offset = 0
 	ontitles = true
-	if true or not sprite.direct(true) then
+	if not sprite.direct(true) then
 		timer:stop()
 		instead.fading = 32
 		walk ('legacy_titles', false)
