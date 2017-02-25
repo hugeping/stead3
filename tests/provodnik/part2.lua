@@ -1,3 +1,5 @@
+include 'titles'
+
 game.pic = false
 dlg {
 	nam = 'main';
@@ -288,6 +290,11 @@ room {
 	title = false;
 	enter = function()
 		game.pic = 'gfx/coin.png'
+		timer:set(5000)
+	end;
+	timer = function()
+		timer:stop()
+		end_titles()
 	end;
 	decor = function(s)
 		pn [[Я должен спасти ее!...]]
@@ -300,6 +307,11 @@ room {
 	title = false;
 	enter = function()
 		game.pic = 'gfx/ring.png'
+		timer:set(5000)
+	end;
+	timer = function()
+		timer:stop()
+		end_titles()
 	end;
 	decor = function(s)
 		pn [[Ох, ребята, уже поздно, мне надо идти... Домой...]]
@@ -308,6 +320,9 @@ room {
 }
 
 function start()
+	if ontitles then
+		end_titles()
+	end
 end
 
 function init()

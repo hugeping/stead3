@@ -6,6 +6,7 @@ require "format"
 require "noinv"
 require "snapshots"
 require "prefs"
+
 prefs.choice = false
 format.para = true
 std.debug_xref = false
@@ -2033,6 +2034,5 @@ room {
 		end;
 	}
 }
-
 function start()
 end
