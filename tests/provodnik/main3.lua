@@ -6,6 +6,7 @@ require "format"
 require "noinv"
 require "snapshots"
 require "prefs"
+require "timer"
 
 prefs.choice = false
 format.para = true
@@ -2034,5 +2035,7 @@ room {
 		end;
 	}
 }
+
 function start()
+	timer:stop()
 end
