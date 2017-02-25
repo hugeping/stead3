@@ -110,21 +110,42 @@ room {
 }
 
 global 'ontitles' (false)
+local activated
+room {
+	title = false;
+	nam = 'black';
+	onenter = function()
+		theme.set('scr.gfx.bg', '')
+		theme.set('scr.col.bg', 'black')
+		theme.set('menu.button.x', w)
+		timer:set(1000)
+	end;
+	timer = function(s)
+		if activated then
+			return false
+		end
+		activated = true
+		timer:set(30)
+		sprite.direct(true)
+		sprite.scr():fill 'black'
+		return false
+	end;
+}
 
 function end_titles()
 	offset = 0
 	ontitles = true
-	if not sprite.direct(true) then
+	if true or not sprite.direct(true) then
+		timer:stop()
 		instead.fading = 32
 		walk ('legacy_titles', false)
 		return
 	end
-	walk ('legacy_titles', false)
+	sprite.direct(false)
+	instead.fading = 32
 	w, h = std.tonum(theme.get 'scr.w'), std.tonum(theme.get 'scr.h')
 	local fn = theme.get('win.fnt.name')
 	font = sprite.fnt(fn, 16)
 	font_height = font:height()
-	sprite.scr():fill 'black'
-	timer:set(30)
-	return true
+	walk ('black', false)
 end
