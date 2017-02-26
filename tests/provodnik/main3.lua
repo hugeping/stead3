@@ -2,14 +2,14 @@
 --$Info:Демонстрационная игра\nна STEAD3
 --$Author:Peter Kosyh, 2017
 --$Version:0.1
-require "format"
+require "fmt"
 require "noinv"
 require "snapshots"
 require "prefs"
 require "timer"
 
 prefs.choice = false
-format.para = true
+fmt.para = true
 std.debug_xref = false
 --std.debug_output = true
 --std.debug_input = true
@@ -1263,7 +1263,7 @@ room {
 				end
 				if bottle.molotov and have(bottle) then
 					p [[Коктейль Молотова -- уже что-то, но может быть мне подыскать еще что-нибудь в комнатах?^]]
-					p (txt:bold[[От автора: ладно, быстрее бегите в туалет и возьмите необходимый предмет там. :)]])
+					p (fmt.b[[От автора: ладно, быстрее бегите в туалет и возьмите необходимый предмет там. :)]])
 				end
 				p [[Нужно смастерить что-то из подручных средств.]]
 				return false

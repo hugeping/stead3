@@ -100,7 +100,7 @@ instead.fading = 4 -- default fading
 
 function iface:fading()
 	local pic = instead.get_picture()
-	if std.me():moved() or std.cmd[1] == 'load' or pic ~= last_picture then
+	if std.me():need_scene() or std.cmd[1] == 'load' or pic ~= last_picture then
 		last_picture = pic
 		return instead.fading
 	end
@@ -396,7 +396,6 @@ std.obj { -- input object
 -- some aliases
 menu = std.menu
 stat = std.stat
-txt = iface
 
 std.mod_init(function()
 	std.rawset(_G, 'instead', instead)

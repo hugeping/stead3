@@ -114,7 +114,7 @@ room {
 		instead.noautosave = false
 	end;
 	decor = function()
-		p(txt:center((txt:y('50%','middle')..'{@ walk "В кафе"|Прошло 5 лет...}')))
+		p(fmt.c((fmt.y('50%','middle')..'{@ walk "В кафе"|Прошло 5 лет...}')))
 	end;
 };
 
@@ -126,7 +126,7 @@ room {
 		instead.noautosave = false
 	end;
 	decor = function()
-		p(txt:center((txt:y('50%','middle')..'{@ walk "На улице"|Прошло 5 лет...}')))
+		p(fmt.c((fmt.y('50%','middle')..'{@ walk "На улице"|Прошло 5 лет...}')))
 	end;
 };
 
@@ -279,11 +279,11 @@ room {
 	}
 }
 local titles = function(s)
-	pn(txt:y ('30%', 'bottom'))
-	pn(txt:center(txt:bold 'ПРОВОДНИК'))
-	pn(txt:center('Игра Петра Косых на движке STEAD3'))
-	pn(txt:center('Февраль 2017'))
-	pn(txt:center 'КОНЕЦ')
+	pn(fmt.y ('30%', 'bottom'))
+	pn(fmt.c(fmt.b 'ПРОВОДНИК'))
+	pn(fmt.c('Игра Петра Косых на движке STEAD3'))
+	pn(fmt.c('Февраль 2017'))
+	pn(fmt.c 'КОНЕЦ')
 end
 room {
 	nam = 'end2';

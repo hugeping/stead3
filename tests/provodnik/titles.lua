@@ -1,4 +1,4 @@
-require "sprites"
+require "sprite"
 require "theme"
 require "timer"
 local w, h
@@ -112,11 +112,11 @@ room {
 	decor = function(s)
 		for k, v in ipairs(text) do
 			if v.style == 1 then
-				pn(txt:center(txt:bold(v[1] or '')))
+				pn(fmt.c(fmt.b(v[1] or '')))
 			elseif v.style == 2 then
-				pn(txt:center(txt:em(v[1] or '')))
+				pn(fmt.c(fmt.em(v[1] or '')))
 			else
-				pn(txt:center(v[1] or ''))
+				pn(fmt.c(v[1] or ''))
 			end
 		end
 	end;
