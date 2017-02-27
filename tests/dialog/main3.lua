@@ -2,9 +2,9 @@
 -- $API:stead3$
 
 require "dlg"
-require "format"
-format.para = true
-format.dash = true
+require "fmt"
+fmt.para = true
+fmt.dash = true
 
 dlg {
 	nam = 'main';
