@@ -385,7 +385,7 @@ room {
 				p [[Мне кажется, сначала нужно поискать магазин на 1-м этаже...]]
 				return false
 			end
-			if actions('еда', 'take') ~= 0 then
+			if actions('еда', 'take') == 0 then
 				p [[Может, взять еду из гостиной?]]
 				return false
 			end
@@ -782,7 +782,7 @@ room {
 				act = function(s)
 					if actions(s) > 0 then
 						p [[Я не стал пользоваться унитазом.]]
-						if actions('бумага', 'take') ~= 0 then
+						if actions('бумага', 'take') == 0 then
 							p [[Но, немного подумав, я взял моток туалетной бумаги.]]
 							take 'бумага'
 						end
