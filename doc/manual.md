@@ -1659,7 +1659,7 @@ end
 use = function(s, w)
 	if w/'окно' then
 		-- действие на окно
-		local ww = way 'В окно'
+		local ww = lookup 'В окно'
 		ww.passage = true
 		enable(ww);
         p 'Я разбил окно!'
