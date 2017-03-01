@@ -575,7 +575,11 @@ std.list = std.class {
 			local k = s[i]
 			s[i] = std.ref(k)
 			if not std.is_obj(s[i]) then
-				std.err("Wrong item in list: "..std.tostr(k).." in "..std.dispof(o), 2)
+				if not o then
+					std.err("Wrong item in list: "..std.tostr(k), 2)
+				else
+					std.err("Wrong item in list: "..std.tostr(k).." in "..std.dispof(o), 2)
+				end
 			end
 			s:__attach(s[i])
 		end
@@ -666,6 +670,9 @@ std.list = std.class {
 		end
 		if not pos then
 			local o = std.ref(n)
+			if not o then
+				std.err("Wrong argument to list:add(): "..std.tostr(n), 2)
+			end
 			s:__dirty(true)
 			s:__attach(o)
 			table.insert(s, o)
@@ -719,14 +726,25 @@ std.list = std.class {
 		end
 	end;
 	seen = function(s, n)
-		local o = s:lookup(n)
+		local o, i = s:lookup(n)
 		if not o or not o:visible() then
-			return false
+			return
 		end
-		return o
+		return o, i
 	end;
 	empty = function(s)
 		return (#s == 0)
+	end;
+	cat = function(s, from, pos)
+		if not std.is_obj(from, 'list') then
+			std.err("Wrong argument to list:cat(): "..std.tostr(from), 2)
+		end
+		if not pos then pos = #s + 1 end
+		for k, v in ipairs(from) do
+			s:add(v, pos)
+			pos = pos + 1
+		end
+		return s
 	end;
 	zap = function(s) -- delete all objects
 		local l = {}
@@ -736,6 +754,7 @@ std.list = std.class {
 		for i = 1, #l do
 			s:del(l[i])
 		end
+		return s
 	end;
 	del = function(s, n)
 		local o, i = s:lookup(n)
@@ -744,7 +763,13 @@ std.list = std.class {
 			s:__detach(o)
 			table.remove(s, i)
 			s:sort()
-			return o
+			return o, i
+		end
+	end;
+	replace = function(s, n, w)
+		local o, i = s:del(n)
+		if o then
+			return s:add(w, i)
 		end
 	end;
 	__dump = function(s, recurse)
@@ -1246,6 +1271,14 @@ std.obj = std.class {
 		end
 		return o
 	end;
+	__where = function(s) -- lists
+		local list = s.__list
+		local r = { }
+		for i = 1, #list do
+			table.insert(r, list[i])
+		end
+		return r
+	end;
 	where = function(s, w)
 		local list = s.__list
 		local r = w or { }
@@ -1267,24 +1300,25 @@ std.obj = std.class {
 		return o
 	end;
 	remove = function(s, w)
-		local o = std.ref(s)
-		if not s then
-			std.err ("Wrong object in remove: "..std.tostr(s), 2)
-		end
 		if w then
 			w = std.ref(w)
 			if not w then
-				std.err ("Wrong where in remove", 2)
+				std.err ("Wrong where in obj:remove()", 2)
 			end
-			w.obj:del(o)
-			return o
+			local o, l = w:lookup(s)
+			if not o then
+				return o
+			end
+			l:del(o)
+			return o, { w }
 		end
 		local where = {}
 		s:where(where)
-		for i = 1, #where do
-			where[i].obj:del(o)
+		local lists = s:__where()
+		for i = 1, #lists do
+			lists[i]:del(s)
 		end
-		return o, where
+		return s, where
 	end;
 	close = function(s)
 		s.__closed = true
@@ -1390,36 +1424,39 @@ std.obj = std.class {
 		return not s:disabled()
 	end;
 	seen = function(s, w)
-		local o
-		if not s:visible() then
+		local o, l, i
+
+		if not s:visible() or s:closed() then
 			return
-		end
-		if (not std.is_tag(w) and std.ref(w) == s) or (std.is_tag(w) and w == s.tag) then
-			return s
 		end
 
-		if s:closed() then
-			return
+		l = s.obj
+
+		o, i = l:seen(w)
+
+		if o then
+			return o, l, i
 		end
 
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			o = v:seen(w)
+			o, l, i = v:seen(w)
 			if o then
-				return o, v
+				return o, l, i
 			end
 		end
 	end;
 	lookup = function(s, w)
-		local o = s.obj:lookup(w)
+		local l = s.obj
+		local o, i = l:lookup(w)
 		if o then
-			return o, s
+			return o, l, i
 		end
 		for i = 1, #s.obj do
 			local v = s.obj[i]
-			o = v:lookup(w)
+			o, l, i = v:lookup(w)
 			if o then
-				return o, v
+				return o, l, i
 			end
 		end
 	end;
@@ -1482,26 +1519,26 @@ std.room = std.class({
 		return s.__visits or 0
 	end;
 	seen = function(self, w)
-		local r, v = std.obj.seen(self, w)
+		local r, v, i = std.obj.seen(self, w)
 		if std.is_obj(r) then
-			return r, v
+			return r, v, i
 		end
 		r, v = self.way:lookup(w)
 		if not std.is_obj(r) or r:disabled() or r:closed() then
 			return
 		end
-		return r, self.way
+		return r, self.way, v
 	end;
 	lookup = function(self, w)
-		local r, v = std.obj.lookup(self, w)
+		local r, v, i = std.obj.lookup(self, w)
 		if std.is_obj(r) then
-			return r, v
+			return r, v, i
 		end
 		r, v = self.way:lookup(w)
 		if std.is_obj(r) then
-			return r, self.way
+			return r, self.way, v
 		end
-		return r, v
+		return
 	end;
 	scene = function(s)
 		local title, dsc, objs
@@ -1876,18 +1913,14 @@ std.player = std.class ({
 		return std.par(std.scene_delim, scene or false, r:display())
 	end;
 	search = function(s, w)
-		local r, v
-		r, v = s:where():seen(w)
+		local r, v, i
+		r, v, i = s:where():seen(w)
 		if r ~= nil then
-			return r, v
+			return r, v, i
 		end
-		r, v = s:where().way:lookup(w)
-		if r and not r:disabled() and not r:closed() then
-			return r, s:where()
-		end
-		r, v = s:seen(w)
+		r, v, i = s:seen(w)
 		if r ~= nil then
-			return r, v
+			return r, v, i
 		end
 		return
 	end;
@@ -1932,19 +1965,15 @@ std.player = std.class ({
 		if v == false then
 			return t or r, true, false
 		end
-		if v ~= true then
-			r, v = std.call(s, 'on'..m, w, w2, ...)
-			t = std.par(std.scene_delim, t or false, r)
-			if v == false then
-				return t or r, true, false
-			end
+		r, v = std.call(s, 'on'..m, w, w2, ...)
+		t = std.par(std.scene_delim, t or false, r)
+		if v == false then
+			return t or r, true, false
 		end
-		if v ~= true then
-			r, v = std.call(s:where(), 'on'..m, w, w2, ...)
-			t = std.par(std.scene_delim, t or false, r)
-			if v == false then
-				return t or r, true, false
-			end
+		r, v = std.call(s:where(), 'on'..m, w, w2, ...)
+		t = std.par(std.scene_delim, t or false, r)
+		if v == false then
+			return t or r, true, false
 		end
 		if m == 'use' and w2 then
 			r, v = std.call(w2, 'used', w, ...)
@@ -2018,13 +2047,11 @@ std.player = std.class ({
 			return t, true
 		end
 
-		if v ~= true then
-			r, v = std.call(s, 'onwalk', inwalk)
-			t = std.par(std.scene_delim, t or false, r)
-			if v == false or s:moved() then
-				if not s:moved() then s:moved(moved) end
-				return t, true
-			end
+		r, v = std.call(s, 'onwalk', inwalk)
+		t = std.par(std.scene_delim, t or false, r)
+		if v == false or s:moved() then
+			if not s:moved() then s:moved(moved) end
+			return t, true
 		end
 
 		if v ~= true then

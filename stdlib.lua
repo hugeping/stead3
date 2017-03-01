@@ -90,9 +90,6 @@ function object(w)
 	if std.is_tag(w) then
 		o = std.here():lookup(w)
 		if not o then
-			o = std.ways():lookup(w)
-		end
-		if not o then
 			o = std.me():lookup(w)
 		end
 		if not o then
@@ -138,10 +135,6 @@ function lookup(w, ww)
 		std.err("Wrong 2-nd argument to lookup(): "..std.tostr(ww), 2)
 	end
 	return wh:lookup(w)
-end
-
-function way(w, wh)
-	return lookup(w, ways(wh))
 end
 
 function ways(ww)
@@ -294,7 +287,7 @@ local function __place(w, wh, remove)
 	end
 	wh = wh or std.here()
 	if type(wh) ~= 'table' then
-		wh = std.ref(wh)
+		wh = std.object(wh)
 	end
 	if o:type 'player' then
 		if not std.is_obj(wh) then
@@ -313,6 +306,39 @@ local function __place(w, wh, remove)
 	return o
 end
 
+function replace(w, ww, wh)
+	local o = std.object(w)
+	if not o then
+		std.err("Wrong argument to replace(): "..std.tostr(w), 2)
+	end
+	local oo = std.object(ww)
+	if not oo then
+		std.err("Wrong argument to replace(): "..std.tostr(ww), 2)
+	end
+	if not wh then -- replace all
+		local l = o:__where()
+		for k, v in std.ipairs(l) do
+			v:replace(o, oo)
+		end
+		return oo
+	end
+	if type(wh) ~= 'table' then
+		wh = std.object(wh)
+	end
+	if std.is_obj(wh) then
+		local ob, l = wh:lookup(o)
+		if l then
+			l:replace(o, oo)
+			return oo
+		end
+	elseif std.is_obj(wh, 'list') then
+		wh:replace(o, oo)
+		return oo
+	else
+		std.err("Wrong 3-rd argument to replace(): "..std.tostr(wh), 3)
+	end
+end
+
 function place(w, wh)
 	return __place(w, wh, true)
 end
@@ -327,10 +353,6 @@ function take(w)
 		o:actions('take', 1 + o:actions 'take')
 	end
 	return place(w, std.ref(std.me()):inventory())
-end
-
-function was(w, n)
-	return actions(w, n) ~= 0
 end
 
 function drop(w, wh)
@@ -376,6 +398,10 @@ function path(t)
 			return false
 		end
 	}
+end
+
+function time(...)
+	return std.ref 'game':time(...)
 end
 
 local xact = std.obj {
