@@ -4110,27 +4110,29 @@ instead.ticks(). Функция возвращает число миллисек
 момента старта игры.
 
 
-TODO
-===== Музыкальный плеер =====
+## Музыкальный плеер
 
 Вы можете написать для игры свой проигрыватель музыки, создав его на основе живого объекта, например:
-<code lua>
--- играет треки в случайном порядке, начиная со 2-го
-mplayer = obj {
+
+```
+-- играет треки в случайном порядке
+require "snd"
+obj {
+	{
         tracks = {"mus/astro2.mod",
                    "mus/aws_chas.xm",
                    "mus/dmageofd.xm",
                    "mus/doomsday.s3m"};
+	};
 	nam = 'плеер';
 	life = function(s)
-                if not is_music() then
-	                local n = tracks[rnd(#s.tracks)]
-			set_music(n, 1);
+		if not snd.music_playing() then
+	        local n = s.tracks[rnd(#s.tracks)]
+			snd.music(n, 1);
 		end
 	end;
-};
-lifeon('mplayer');
-</code>
+}:lifeon();
+```
 
 Ниже приводится пример более сложного плеера. Меняем трек только если он закончился или прошло более 2 минут и игрок перешел из комнаты в комнату. В каждом треке можно указать число проигрываний (0 - зацикленный трек):
 <code lua>
