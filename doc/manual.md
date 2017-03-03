@@ -4224,6 +4224,7 @@ end
 
 game.onkey = function(s, press, key)
 	dprint("pressed: ", key)
+	return false
 end
 ```
 
