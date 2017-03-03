@@ -4134,74 +4134,112 @@ obj {
 }:lifeon();
 ```
 
-Ниже приводится пример более сложного плеера. Меняем трек только если он закончился или прошло более 2 минут и игрок перешел из комнаты в комнату. В каждом треке можно указать число проигрываний (0 - зацикленный трек):
-<code lua>
+Ниже приводится пример более сложного плеера. Меняем трек только если
+он закончился или прошло более 2 минут и игрок перешел из комнаты в
+комнату. В каждом треке можно указать число проигрываний (0 -
+зацикленный трек):
+
+```
 require "timer"
 global { track_time = 0 };
 
-music_player = obj {
+obj {
 	nam = 'player';
-	var { pos = 0; };
-	playlist = { '01 Frozen sun.ogg', 0,
-		'02 Thinking.ogg', 0,
-		'03 Melancholy.ogg', 0,
-		'04 Everyday happiness.ogg', 0,
-		'10 Good morning again.ogg', 1,
-		'15 [Bonus track] The end (demo cover).ogg', 1};
-	life = function(s)
-		if is_music() and ( track_time < 120 or not player_moved() ) then
+	pos = 0;
+	{
+		playlist = { '01 Frozen sun.ogg', 0,
+			'02 Thinking.ogg', 0,
+			'03 Melancholy.ogg', 0,
+			'04 Everyday happiness.ogg', 0,
+			'10 Good morning again.ogg', 1,
+			'15 [Bonus track] The end (demo cover).ogg', 1
+		};
+	};
+	tick = function(s)
+		if snd.music_playing() and ( track_time < 120 or not player_moved() ) then
 			return
 		end
 		track_time = 0
-                if s.pos == 0 then
-                        s.pos = 1
-                else
-                        s.pos = s.pos + 2
-                end
+        if s.pos == 0 then
+			s.pos = 1
+        else
+            s.pos = s.pos + 2
+        end
 		if s.pos > #s.playlist then
 			s.pos = 1
 		end
-		set_music('mus/'..s.playlist[s.pos], s.playlist[s.pos + 1]);
+		snd.music('mus/'..s.playlist[s.pos], s.playlist[s.pos + 1]);
 	end;
 }
 
 game.timer = function(s)
 	track_time = track_time + 1
-	music_player:life();
+	music_player:tick();
 end
 
 function init()
         timer:set(1000)
 end
-</code>
+```
 
-===== Живые объекты =====
+## Живые объекты
 
-Если вашему герою нужен друг, одним из способов может стать метод ''life'' этого персонажа, который всегда переносит объект в локацию игрока:
-<code lua>
-horse = obj {
+Если вашему герою нужен друг, одним из способов может стать метод
+'life' этого персонажа, который всегда переносит объект в локацию
+игрока:
+
+```
+obj {
 	nam = 'лошадь';
 	dsc = 'Рядом со мной стоит {лошадь}.';
-        act = [[Моя лошадка.]];
+    act = [[Моя лошадка.]];
 	life = function(s)
 		if player_moved() then
-			move(s, here(), where(s));
+			place(s);
 		end
 	end;
-};
+}
+
 function init()
-    put (horse, main); -- только в этом случае where() будет работать
-    lifeon(horse); -- сразу оживим лошадь
+    lifeon 'лошадь'; -- сразу оживим лошадь
 end
-</code>
+```
 
-===== Клавиатура =====
+## Клавиатура
 
-Вы можете перехватывать события клавиатуры с помощью модуля "kbd".
+Вы можете перехватывать события клавиатуры с помощью модуля "keys".
 
 Обычно, перехват клавиш имеет смысл использовать для организации текстового ввода.
 
-За описанием, обращайтесь к документации модуля "kbd".
+За описанием, обращайтесь к документации модуля "keys".
+
+Ниже приводится простой пример:
+
+```
+require "keys"
+
+function keys:filter(press, key)
+	return press -- ловим все нажатия
+end
+
+game.onkey = function(s, press, key)
+	dprint("pressed: ", key)
+end
+```
+
+Еще пример:
+
+
+```
+require "keys"
+
+game.timer = function(s) -- показываем состояние клавиши курсор вправо
+	dprint("state of 'right' key: ", keys:state 'right')
+end
+
+timer:set(30)
+
+```
 
 ===== Мышь =====
 
