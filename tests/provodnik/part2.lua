@@ -113,7 +113,7 @@ room {
 	onenter = function()
 		instead.nosave = false
 		instead.noautosave = false
-		snd.music 'mus/bensound-memories.ogg'
+		snd.music 'mus/bensound-goinghigher.ogg'
 	end;
 	decor = function()
 		p(fmt.c((fmt.y('50%','middle')..'{@ walk "В кафе"|Прошло 5 лет...}')))
