@@ -154,12 +154,12 @@ function end_titles()
 	ontitles = true
 	if not sprite.direct(true) then
 		timer:stop()
-		instead.fading = 32
+		instead.fading_value = 32
 		walk ('legacy_titles', false)
 		return
 	end
 	sprite.direct(false)
-	instead.fading = 32
+	instead.fading_value = 32
 	w, h = std.tonum(theme.get 'scr.w'), std.tonum(theme.get 'scr.h')
 	local fn = theme.get('win.fnt.name')
 	font = sprite.fnt(fn, 16)
