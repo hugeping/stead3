@@ -19,12 +19,41 @@ here = std.here
 from = std.from
 new = std.new
 delete = std.delete
-nameof = std.nameof
-dispof = std.dispof
-titleof = std.titleof
+-- nameof = std.nameof
+-- dispof = std.dispof
+-- titleof = std.titleof
 gamefile = std.gamefile
 player = std.player
 dprint = std.dprint
+
+local function _pfn(f1, f2, ...)
+	local a = {...}
+	if type(f2) == 'string' then
+		return function()
+			f1()
+			std.p(f2, std.unpack(a))
+		end
+	end
+	if type(f2) ~= 'function' then
+		return f1()
+	end
+	return function(f3, ...)
+		return _pfn(function()
+			f1()
+			f2(std.unpack(a))
+		end, f3, ...)
+	end
+end
+
+function pfn(f, ...)
+	local a = {...}
+	if type(f) == 'function' then
+		return _pfn(function() end, f, ...)
+	end
+	return function()
+		std.p(f, std.unpack(a))
+	end
+end
 
 function from(ww)
 	local wh
@@ -63,6 +92,12 @@ function walk(w, ...)
 		std.p(r)
 	end
 	return r, v
+end
+
+function life_walk(w, ...)
+	game:reaction(false)
+	game:events(false, false)
+	return walk(w, ...)
 end
 
 function walkin(w, ...)
@@ -203,12 +238,6 @@ function actions(w, t, v)
 end
 
 function pop(w, ww)
-	if not std.is_tag(w) and type(w) == 'string' then
-		return function()
-			p(w)
-			pop(ww)
-		end
-	end
 	local wh = std.here()
 	if not std.is_obj(wh, 'dlg') then
 		std.err("Call pop() in non-dialog object: "..std.tostr(wh), 2)
@@ -220,7 +249,7 @@ function pop(w, ww)
 	return r, v
 end
 
-function push(w)
+function push(w, ww)
 	local wh = std.here()
 	if not std.is_obj(wh, 'dlg') then
 		std.err("Call push() in non-dialog object: "..std.tostr(wh), 2)
@@ -240,22 +269,27 @@ function empty(w)
 end
 
 function lifeon(w, ...)
-	return std.game:lifeon(w and std.object(w), ...)
+	return std 'game':lifeon(w and std.object(w), ...)
 end
 
 function lifeoff(w, ...)
-	return std.game:lifeoff(w and std.object(w), ...)
+	return std 'game':lifeoff(w and std.object(w), ...)
 end
 
 function live(...)
-	return std.game:live(...)
+	return std 'game':live(...)
 end
 
 function change_pl(...)
-	return std.game:set_pl(...)
+	return std 'game':set_pl(...)
 end
 
-function player_moved()
+function player_moved(pl)
+	pl = pl or std.me()
+	pl = std.ref(pl)
+	if not std.is_obj(pl, 'player') then
+		std.err("Wrong argument to player_moved(): "..std.tostr(pl))
+	end
 	return std.me():moved()
 end
 

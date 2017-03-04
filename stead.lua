@@ -445,9 +445,9 @@ function std.class(s, inh)
 				if std.game then
 					rawset(v.__var, n, true)
 					rawset(v.__ro, n, nil)
-					return rawset(v, n, val)
+					return rawset(v, n, val or false)
 				end
-				return rawset(v.__ro, n, val)
+				return rawset(v.__ro, n, val or false)
 			end
 		end
 		return v:new(n, ...)
@@ -489,11 +489,7 @@ function std.class(s, inh)
 			v = rawget(ro, k)
 		end
 		if v == nil then
-			if std.nostrict or (type(k) == 'string' and k:find('^__')) or (not ro or std.getmt(s)) then -- not object or have parent
-				return s[k]
-			elseif ro and not t.__var[k] then -- no variable
-				std.err("Read uninitialized variable: "..std.tostr(k).." at "..std.tostr(t), 2)
-			end
+			return s[k]
 		end
 		if ro and std.game and type(v) == 'table' then
 			-- make rw if simple table
@@ -921,6 +917,9 @@ end
 function std.gamefile(fn, reset) -- load game file
 	if type(fn) ~= 'string' then
 		std.err("Wrong paramter to stead:file: "..std.tostr(fn), 2)
+	end
+	if not fn:find("%.lua$") then
+		fn = fn .. '.lua'
 	end
 	if reset then
 		std:reset(fn)
@@ -1775,7 +1774,7 @@ std.world = std.class({
 					return nil, false -- wrong input
 				end
 				r, v = s.player:take(o)
-				if not v then
+				if not r and not v then
 					r, v = s.player:action(o)
 				end
 			end
@@ -1786,7 +1785,7 @@ std.world = std.class({
 			end
 			local o1 = std.ref(cmd[2])
 			local o2 = std.ref(cmd[3])
-			o1 = s.player:have(o1)
+			o1 = s.player:seen(o1)
 			if not o1 then
 				return nil, false -- wrong input
 			end
@@ -2044,6 +2043,10 @@ std.player = std.class ({
 			std.err("Wrong parameter to walk: "..std.tostr(w))
 		end
 
+--		if w == std.here() then -- nothing todo
+--			return
+--		end
+
 		local inwalk = w
 
 		local r, v, t
@@ -2095,7 +2098,9 @@ std.player = std.class ({
 		end
 		if not noenter then
 			s.room = inwalk
-			s.room.__from = f
+			if f ~= inwalk or not s.room.__from then -- brake self-recursion
+				s.room.__from = f
+			end
 			r, v = std.call(inwalk, 'enter', f)
 			t = std.par(std.scene_delim, t or false, r)
 			if s:moved() then

@@ -175,9 +175,9 @@ std.dlg = std.class({
 
 		c:select()
 
-		if c:disabled() then -- select always enables phrase
-			c:enable()
-		end
+		-- if c:disabled() then -- select always enables phrase
+		--	c:enable()
+		-- end
 		s.current = c
 		return c
 	end;
@@ -263,6 +263,8 @@ std.phr = std.class({
 --		end
 		o.ph_act = o.act
 		o.act = nil
+
+		disabled = disabled or (o.hidden == true)
 
 		o = std.obj(o)
 		std.setmt(o, s)
