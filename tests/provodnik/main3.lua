@@ -7,9 +7,12 @@ require "noinv"
 require "snapshots"
 require "prefs"
 require "timer"
+require "snd"
 
 prefs.choice = false
+
 fmt.para = true
+
 std.debug_xref = false
 --std.debug_output = true
 --std.debug_input = true
@@ -56,30 +59,6 @@ function human(v)
 	return obj(v)
 end
 
--- create own class container
-cont = std.class({
-	display = function(s)
-		local d = std.obj.display(s)
-		if s:closed() or #s.obj == 0 then
-			return d
-		end
-		local c = s.cont or 'Здесь есть: '
-		local empty = true
-		for i = 1, #s.obj do
-			local o = s.obj[i]
-			if o:visible() then
-				empty = false
-				if c > 1 then c = c .. ', ' end
-				c = c..std.dispof(o)
-			end
-		end
-		if empty then
-			return d
-		end
-		c = c .. '.'
-		return std.par(std.space_delim, d, c)
-	end
-		 }, std.obj)
 for_all(take,
 	obj {
 		nam = 'мобильник';
@@ -159,11 +138,14 @@ room {
 	nam = 'main';
 	title = 'Улица';
 	disp = 'На улицу';
-	enter = [[Была середина февраля. Редкие, но колючие снежинки кружились в темноте улиц.
+	enter = function()
+		snd.music 'mus/bensound-slowmotion.ogg'
+		p [[Была середина февраля. Редкие, но колючие снежинки кружились в темноте улиц.
 Тусклый свет фонарей разливался по асфальту причудливыми пятнами. Я шел быстрым шагом,
 укутавшись в пальто и рассеяно рассматривая пустынные переулки. На душе было мерзко, свежие воспоминания о ссоре с женой
 жгли мою совесть и погружали мое сознание в беспросветную темноту февральской ночи. В этот момент меня кто-то окликнул.^^
 -- Дай на хлеб, дружок!]];
+	end;
 	decor = [[Я нахожусь на пустынной, слабо-освещенной {#улица|улице}. Справа от себя я вижу коричневую стену старого {#здание|здания}. На улице стоит {#бомж|нищий}, который довольно бесцеремонно меня разглядывает.]];
 	obj = {
 		obj {
@@ -242,12 +224,6 @@ dlg {
 };
 };
 
-floor = function()
-	return cont {
-		nam = '#пол';
-	}
-end
-
 room {
 	nam = 'здание';
 	disp = 'В здание';
@@ -273,7 +249,7 @@ room {
 			return false
 		end
 	end;
-	obj = { floor(),
+	obj = {
 		obj {
 			nam = 'монета';
 			name = false;
@@ -632,6 +608,7 @@ room {
 			p [[Когда я спускался на второй этаж, по зданию раздался громкий сигнал и женский голос произнес:^]]
 			p [[-- ВНИМАНИЕ! ГОТОВНОСТЬ К ТРАНСПОРТИРОВКЕ! ВСТРЕЧА В ХОЛЛЕ ПЕРВОГО ЭТАЖА!]];
 			transport = true
+			snd.music 'mus/bensound-anewbeginning.ogg'
 			place ('люди', 'зал')
 		end
 	end;
@@ -1454,6 +1431,7 @@ room {
 мерцающими пятнами. Но я все-таки приходил в себя. Шум. Неприятный гул. Я лежу в кресле. Надо попытаться
 открыть глаза и я делаю это. Глаза режет от яркого света. Где я? В самолете?]]
 			game.pic = 'gfx/inair.png';
+			snd.music 'mus/bensound-scifi.ogg'
 		end
 		lifeon(stuar);
 	end;
@@ -1943,6 +1921,7 @@ room {
 			used = function(s, w)
 				if w == pistol then
 					p [[Я выстрелил несколько раз в то место двери, где, по моему мнению, находился замок.]]
+					snd.play 'shot.ogg'
 					_'#дверь'.broken = true
 					return
 				end
@@ -1995,6 +1974,7 @@ room {
 		end;
 		act = function()
 			walk 'resolve'
+			snd.music 'mus/bensound-ofeliasdream.ogg'
 		end;
 	}
 }
@@ -2034,4 +2014,5 @@ room {
 
 function start()
 	timer:stop()
+	snd.music_fading(3000)
 end

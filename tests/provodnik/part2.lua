@@ -9,6 +9,7 @@ dlg {
 волнами. По мере того как я приходил в себя, я все больше и больше желал снова впасть в забытье.
 Но я приходил в себя... Нехотя я открыл глаза.]];
 		game.pic = 'gfx/eye.png'
+		snd.music 'mus/bensound-ofeliasdream.ogg'
 	end;
 dsc = [[Передо мной сидела та тварь, и что-то говорила. Хрипловатым, угрюмым голосом.
 Я попытался вникнуть в то, что она или оно говорит...]];
@@ -112,6 +113,7 @@ room {
 	onenter = function()
 		instead.nosave = false
 		instead.noautosave = false
+		snd.music 'mus/bensound-memories.ogg'
 	end;
 	decor = function()
 		p(fmt.c((fmt.y('50%','middle')..'{@ walk "В кафе"|Прошло 5 лет...}')))
@@ -124,6 +126,7 @@ room {
 	onenter = function()
 		instead.nosave = false
 		instead.noautosave = false
+		snd.music 'mus/bensound-sadday.ogg'
 	end;
 	decor = function()
 		p(fmt.c((fmt.y('50%','middle')..'{@ walk "На улице"|Прошло 5 лет...}')))
