@@ -450,7 +450,9 @@ function std.class(s, inh)
 				return rawset(v.__ro, n, val or false)
 			end
 		end
-		return v:new(n, ...)
+		n = v:new(n, ...)
+		std.setmt(n, v)
+		return n
 	end;
 	s.__tostring = function(self)
 		if not std.is_obj(self) then
@@ -563,7 +565,7 @@ std.list = std.class {
 			return v
 		end
 		v.__list = {} -- where is attached
-		std.setmt(v, s)
+		-- std.setmt(v, s)
 		return v
 	end;
 	ini = function(s, o)
@@ -792,7 +794,8 @@ std.list = std.class {
 				if recurse and not v:closed() then
 					vv = v:__dump(recurse)
 					if vv then
-						rc = rc .. std.delim .. vv
+						if rc then rc = rc .. std.delim else rc = '' end
+						rc = rc .. vv
 					end
 				end
 			end
@@ -931,6 +934,7 @@ function std.gamefile(fn, reset) -- load game file
 		end
 		return r, v
 	end
+	std.game = nil
 	in_section ('gamefile', function() std.dofile(fn) end)
 	std.ref 'game':ini()
 	table.insert(std.files, fn) -- remember it
@@ -1206,7 +1210,7 @@ std.obj = std.class {
 		rawset(v, '__var', vars)
 		rawset(v, '__list', {}) -- in what list(s)
 		oo[ro.nam] = v
-		std.setmt(v, self)
+		-- std.setmt(v, self)
 		return v
 	end;
 	actions = function(s, t, v)
@@ -1364,11 +1368,14 @@ std.obj = std.class {
 		if s.__dynamic then -- create
 			local n = std.functions[s.__dynamic.fn]
 			if not n then
-				std.err("Error while saving dynamic object: "..s, 2)
+				std.err("Error while saving dynamic object: "..std.tostr(s), 2)
 			end
 			local arg = s.__dynamic.arg
 			local l = ''
 			for i = 1, #arg do
+				if arg[i] == s then
+					std.err("Error while saving dynamic object: "..std.tostr(s).." Argument is self-obj.", 2)
+				end
 				l = l .. ', '..std.dump(arg[i])
 			end
 			if type(s.nam) == 'number' then
@@ -1470,12 +1477,15 @@ std.obj = std.class {
 		end
 	end;
 	for_each = function(s, fn, ...)
-		local r, v = s.obj:for_each(fn, ...)
-		if r ~= nil or v == false then
-			return r, v
-		end
+		local r, v
 		for i = 1, #s.obj do
-			r, v = s.obj[i]:for_each(fn, ...)
+			r, v = fn(s.obj[i], ...)
+			if r ~= nil then
+				return r, v
+			end
+			if v ~= false then -- recurse
+				r, v = s.obj[i]:for_each(fn, ...)
+			end
 			if r ~= nil then
 				return r, v
 			end
@@ -1518,7 +1528,7 @@ std.room = std.class({
 		v.way = std.list(v.way)
 --		v.way:attach(v)
 		v = std.obj(v)
-		std.setmt(v, self)
+		-- std.setmt(v, self)
 		return v
 	end;
 	visited = function(s)
@@ -1581,7 +1591,7 @@ std.world = std.class({
 		end
 		v.lifes = std.list(v.lifes)
 		v = std.obj(v)
-		std.setmt(v, self)
+		-- std.setmt(v, self)
 		return v
 	end;
 	time = function(s, t)
@@ -1879,7 +1889,7 @@ std.player = std.class ({
 			v.room = 'main'
 		end
 		v = std.obj(v)
-		std.setmt(v, self)
+		-- std.setmt(v, self)
 		return v
 	end;
 	ini = function(s)
@@ -1994,8 +2004,7 @@ std.player = std.class ({
 		end
 		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
-		if (m == 'use' and v == true) or
-			(m ~= 'use' and type(v) == 'boolean') then
+		if v == true or (m ~= 'use' and v == false and r ~= nil) then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
 			return t or r, v
 		end
