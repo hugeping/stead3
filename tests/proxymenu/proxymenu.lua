@@ -5,12 +5,10 @@ stead.proxy_prefix = '   '
 local function proxy_wrap(nam, fwd)
 	if not fwd then fwd = nam end
 	return function(s, ...)
+		local t
 		local o = _(s.ref)
 		local act = s.acts or { }
-		local act = act[nam] or nam
-		local t
-		local react
-
+		act = act[nam] or nam
 		local r, v = std.call(std.game, 'before_'..act, o, ...)
 		t = std.par(std.scene_delim, t or false, r)
 		if v == false then

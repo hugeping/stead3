@@ -51,7 +51,7 @@ function init()
 	place( proxy_menu { 
 		disp = 'ИСПОЛЬЗОВАТЬ';
 		use_mode = true;
-		acts = { use = 'use' };
+		acts = { use = 'use', inv = 'useit' };
 		sources = { inv = true, scene = true };
 	}, me())
 
