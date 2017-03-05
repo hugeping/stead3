@@ -9,6 +9,20 @@ require "prefs"
 require "timer"
 require "snd"
 
+-- call onact/onuse in here()
+local function onaction(m)
+	return function(s, ...)
+		local r, v = std.call(s.player:where(), 'on'..m, ...)
+		if v == false then
+			return r, v
+		end
+		return
+	end
+end
+
+game.onact = onaction('act')
+game.onuse = onaction('use')
+
 prefs.choice = false
 
 fmt.para = true
