@@ -122,7 +122,7 @@ std.proxy_menu = std.class ({
 		else
 			d = std.dispof(s)
 		end
-		s:fill()
+--		s:fill()
 		if not s:closed() then
 			return fmt.u(fmt.b(fmt.nb(d)))
 		else
@@ -209,5 +209,13 @@ std.mod_init(function() -- declarations
 			acts = v.acts;
 		}
 		return std.proxy_menu(vv):close()
+	end)
+end)
+
+std.mod_step(function()
+	me().obj:for_each(function(v)
+		if v:type 'proxy_menu' then
+			v:fill()
+		end
 	end)
 end)
