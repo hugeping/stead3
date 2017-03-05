@@ -1574,7 +1574,7 @@ std.room = std.class({
 	end;
 	__dump = function(s)
 		return s.way:__dump()
-	end
+	end;
 }, std.obj);
 
 std.world = std.class({
@@ -1860,6 +1860,11 @@ std.world = std.class({
 		end
 		return r, v
 	end;
+	aftertak = function(s, w) -- standard take action
+		w = std.ref(w)
+		local o = w:remove()
+		s.player:inventory():add(o)
+	end;
 }, std.obj);
 
 local function array_rw(t)
@@ -1984,33 +1989,34 @@ std.player = std.class ({
 		if v == false then
 			return t or r, true, false
 		end
-		r, v = std.call(s, 'on'..m, w, w2, ...)
-		t = std.par(std.scene_delim, t or false, r)
-		if v == false then
-			return t or r, true, false
-		end
-		r, v = std.call(s:where(), 'on'..m, w, w2, ...)
-		t = std.par(std.scene_delim, t or false, r)
-		if v == false then
-			return t or r, true, false
-		end
+
 		if m == 'use' and w2 then
 			r, v = std.call(w2, 'used', w, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == true then -- false from used --> pass to use
 				w2['__nr_used'] = (w2['__nr_used'] or 0) + 1
-				return t or r, v -- stop chain
+				r, v = std.call(std.ref 'game', 'afteruse', w, w2, ...)
+				t = std.par(std.scene_delim, t or false, r)
+				return t or r, true -- stop chain
 			end
 		end
+
 		r, v = std.call(w, m, w2, ...)
 		t = std.par(std.scene_delim, t or false, r)
-		if v == true or (m ~= 'use' and v == false and r ~= nil) then
+		if v == true then
 			w['__nr_'..m] = (w['__nr_'..m] or 0) + 1
-			return t or r, v
+			r, v = std.call(std.ref 'game', 'after'..m, w, w2, ...)
+			t = std.par(std.scene_delim, t or false, r)
+			return t or r, true
 		end
-		r, v = std.call(std.ref 'game', m, w, w2, ...)
-		t = std.par(std.scene_delim, t or false, r)
-		return t or r, v
+		if not v and not r then -- no reaction
+			r, v = std.call(std.ref 'game', m, w, w2, ...)
+			t = std.par(std.scene_delim, t or false, r)
+			if not v then -- nocact!
+				return
+			end
+		end
+		return t or r, true
 	end;
 	action = function(s, w, ...)
 		return s:call('act', w, ...)
@@ -2019,17 +2025,7 @@ std.player = std.class ({
 		return s.obj
 	end;
 	take = function(s, w, ...)
-		local r, v, c = s:call('tak', w, ...)
-		if v == true and c ~= false then -- take it!
-			w = std.ref(w)
-			local o = w:remove()
-			s:inventory():add(o)
-			return r, v
-		end
-		if v == false or c == false then -- forbidden take
-			return r, true
-		end
-		return r, v
+		return s:call('tak', w, ...)
 	end;
 	walkin = function(s, w)
 		return s:walk(w, false)
@@ -2060,18 +2056,11 @@ std.player = std.class ({
 
 		local r, v, t
 		local f = s:where()
-		r, v = std.call(std.ref 'game', 'onwalk', inwalk)
+		r, v = std.call(std.ref 'game', 'onwalk', f, inwalk)
 
 		t = std.par(std.scene_delim, t or false, r)
 
 		if v == false or s:moved() then -- stop walk
-			if not s:moved() then s:moved(moved) end
-			return t, true
-		end
-
-		r, v = std.call(s, 'onwalk', inwalk)
-		t = std.par(std.scene_delim, t or false, r)
-		if v == false or s:moved() then
 			if not s:moved() then s:moved(moved) end
 			return t, true
 		end
@@ -2105,21 +2094,29 @@ std.player = std.class ({
 				return t, true
 			end
 		end
+		-- enter is done
+		s.room = inwalk
+		if f ~= inwalk or not s.room.__from then -- brake self-recursion
+			s.room.__from = f
+		end
+		s.room.__visits = (s.room.__visits or 0) + 1
+
 		if not noenter then
-			s.room = inwalk
-			if f ~= inwalk or not s.room.__from then -- brake self-recursion
-				s.room.__from = f
-			end
 			r, v = std.call(inwalk, 'enter', f)
 			t = std.par(std.scene_delim, t or false, r)
 			if s:moved() then
 				return t, true
 			end
 		end
-		s.room = inwalk
-		s.room.__visits = (s.room.__visits or 0) + 1
+
 		s:need_scene(true)
 		s:moved(true)
+		if not s.__in_afterwalk then
+			s.__in_afterwalk = true
+			r, v = std.call(std.ref 'game', 'afterwalk', f, inwalk)
+			s.__in_afterwalk = false
+			t = std.par(std.scene_delim, t or false, r)
+		end
 		return t, true
 	end;
 	go = function(s, w)
@@ -2136,7 +2133,7 @@ std.player = std.class ({
 		end
 		return s.room
 	end;
-}, std.obj)
+}, std.obj);
 
 -- merge strings with "space" as separator
 std.par = function(space, ...)
