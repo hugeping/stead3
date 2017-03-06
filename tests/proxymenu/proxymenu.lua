@@ -186,28 +186,30 @@ std.menu_player = std.class ({
 	end;
 }, std.player)
 
+function proxy_obj(v)
+	local vv = {
+		ref = v.ref;
+		use_mode = v.use_mode;
+		sources = v.sources;
+		acts = v.acts;
+	}
+	return std.proxy_obj(vv)
+end
+
+function proxy_menu(v)
+	local vv = {
+		nam = v.nam;
+		disp = v.disp;
+		use_mode = v.use_mode;
+		sources = v.sources;
+		acts = v.acts;
+	}
+	return std.proxy_menu(vv):close()
+end
 
 std.mod_init(function() -- declarations
-	declare 'proxy_obj' (function(v)
-		local vv = {
-			ref = v.ref;
-			use_mode = v.use_mode;
-			sources = v.sources;
-			acts = v.acts;
-		}
-		return std.proxy_obj(vv)
-	end)
-
-	declare 'proxy_menu' (function(v)
-		local vv = {
-			nam = v.nam;
-			disp = v.disp;
-			use_mode = v.use_mode;
-			sources = v.sources;
-			acts = v.acts;
-		}
-		return std.proxy_menu(vv):close()
-	end)
+	declare 'proxy_obj' (proxy_obj)
+	declare 'proxy_menu' (proxy_menu)
 end)
 
 std.mod_step(function()
