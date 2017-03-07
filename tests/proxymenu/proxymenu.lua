@@ -15,13 +15,13 @@ local function proxy_wrap(nam, fwd)
 			return t or r, true
 		end
 
-		if act == 'use' then
+		if nam == 'use' then
 			local oo = {...}
 			oo = oo[1]
 			if oo:type 'proxy' then
 				oo = _(oo.ref)
 			end
-			r, v = std.call(oo, 'used', o, ...)
+			r, v = std.call(oo, s.acts.used or 'used', o, ...)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == true then
 				oo['__nr_used'] = (oo['__nr_used'] or 0) + 1
@@ -179,7 +179,7 @@ std.menu_player = std.class ({
 			v.room = 'main'
 		end
 		v.invent = std.list {}
-		return std.player.new(self, v)
+		return std.player(v)
 	end;
 	inventory = function(s)
 		return s.invent
