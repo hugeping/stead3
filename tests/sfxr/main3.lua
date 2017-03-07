@@ -3,11 +3,12 @@ require "timer"
 
 local sfxr = require("sfxr")
 local last = true
+local wav -- to cache sound
 
 room {
 	nam = 'main';
 	timer = function()
-		if snd.playing(3) then
+		if snd.playing() then
 			p [[PLAYING]]
 			last = true
 			return
@@ -24,8 +25,8 @@ room {
 			local sound = sfxr.newSound()
 			sound:randomize(rnd(32768))
 			local sounddata = sound:generateSoundData(22050)
-			local source = snd.new(22050, 1, sounddata)
-			source:play(3)
+			wav = snd.new(22050, 1, sounddata)
+			wav:play()
 		end
 	}
 }
