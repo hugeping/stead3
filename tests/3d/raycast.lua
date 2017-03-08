@@ -13,8 +13,9 @@ end
 
 local floor = math.floor
 local ceil = math.ceil
---[[
-local function cache(f)
+
+if false then
+function cache(f)
     local c={}
     return function (x)
         local y=c[x]
@@ -25,11 +26,13 @@ local function cache(f)
         return y
     end
 end
-]]--
+else
+    function cache(f) return f end
+end
 
-local sin = math.sin
-local cos = math.cos
-local tan = math.tan
+local sin = cache(math.sin)
+local cos = cache(math.cos)
+local tan = cache(math.tan)
 local atan2 = math.atan2
 
 -- finds the next grid intersection

@@ -16,28 +16,29 @@ declare {
 local stime = 0
 function init()
 if PIXELS then
-	imgWidth = 800;
-	imgHeight = 600;
-	screen = pixels.new(800, 600)
+	imgWidth = 640;
+	imgHeight = 480;
+	screen = pixels.new(640, 480)
 else
-	imgWidth = 800;
-	imgHeight = 600;
+	imgWidth = 640;
+	imgHeight = 480;
 end
 	instead.mouse_show(false)
+	instead.mouse_pos(imgWidth/2, imgHeight/2)
 
-	raycast.init(imgWidth, imgHeight, 200, 0.8, 14)--14)
+	raycast.init(imgWidth, imgHeight, 160, 0.8, 14)--14)
 
 	Player.x = -1
 	Player.y = -1
 	Player.direction = math.pi/4
-	
+
 	map.create(30)
 	--map.print()
 	
 	stime = instead.ticks()
 end
 function start()
-	timer:set(1)
+	timer:set(20)
 end
 function game:timer()
 	local dt = instead.ticks() - stime
@@ -83,7 +84,7 @@ function game:timer()
 	local mx, my = instead.mouse_pos()
 	local turn = (mx - imgWidth/2)*0.05
 	instead.mouse_pos(imgWidth/2, imgHeight/2)
-	
+
 	if math.abs(turn) > 0 then
 		Player.direction = (Player.direction + turn*dt + 2*math.pi)%(2*math.pi)
 	else
