@@ -16,16 +16,16 @@ declare {
 local stime = 0
 function init()
 if PIXELS then
-	imgWidth = 320;
-	imgHeight = 240;
-	screen = pixels.new(320, 240, 2)
+	imgWidth = 800;
+	imgHeight = 600;
+	screen = pixels.new(800, 600)
 else
-	imgWidth = 640;
-	imgHeight = 480;
+	imgWidth = 800;
+	imgHeight = 600;
 end
 	instead.mouse_show(false)
 
-	raycast.init(imgWidth, imgHeight, 80, 0.8, 14)
+	raycast.init(imgWidth, imgHeight, 200, 0.8, 14)--14)
 
 	Player.x = -1
 	Player.y = -1
@@ -86,8 +86,15 @@ function game:timer()
 	
 	if math.abs(turn) > 0 then
 		Player.direction = (Player.direction + turn*dt + 2*math.pi)%(2*math.pi)
+	else
+		if keys:state 'right' then
+			Player.direction = (Player.direction + 1*dt + 2*math.pi)%(2*math.pi)
+		elseif keys:state 'left' then
+			Player.direction = (Player.direction + -1*dt + 2*math.pi)%(2*math.pi)
+		end
 	end
 	draw()
+	return false
 end
 
 function draw()
