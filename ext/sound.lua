@@ -97,8 +97,13 @@ std.mod_done(function(s)
 --	instead.sounds_free();
 end)
 
+local sounds = {}
+
 std.mod_cmd(function(s)
-	instead.set_sound(); -- empty sound
+	if std 'game':time() > 0 then
+		sounds = {}
+		instead.set_sound(); -- empty sound
+	end
 end)
 
 -- aliases
@@ -113,7 +118,7 @@ local snd = {
 snd.__index = snd;
 
 function snd:play(...)
-	instead.add_sound(self.snd)
+	instead.add_sound(self.snd, ...)
 end
 
 function snd:new(a, b, t)
@@ -155,7 +160,9 @@ sound.music_fading = function(o, i)
 end
 
 function sound.new(...)
-	return snd:new(...)
+	local s = snd:new(...)
+	std.table.insert(sounds, s) -- avoid __gc in this step
+	return s
 end
 
 function sound.music_callback(...)
