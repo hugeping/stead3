@@ -4613,3 +4613,145 @@ themes/default. Поддерживается механизм include. При э
 находится, будет загружена тема из стандартных тем INSTEAD (если она
 существует). Далее, в theme.ini можно изменять только те параметры,
 которые требуют изменения.
+
+# 24. Модуль sprite
+
+Модуль sprite позволяет работать с графикой. Прежде чем мы рассмотрим
+его возможности, опишем ситуации, в которых этот модуль применим.
+
+## Функция pic
+
+Функция pic может вернуть спрайт. Вы можете формировать каждый раз
+новый спрайт (что будет не очень эффективно), или можете возвращать
+заранее выделенный спрайт. Если в такой спрайт вносятся изменения, то
+эти изменения будут отражены в следующем кадре игры. Так, меняя спрайт
+по таймеру, можно делать анимацию:
+
+```
+require "sprite"
+require "timer"
+local spr = sprite.new(320, 200)
+
+function game:timer()
+	local col = { 'red', 'green', 'blue'}
+	col = col[rnd(3)]
+	spr:fill(col)
+	return false
+end
+
+game.pic = spr
+
+function start()
+	timer:set(30)
+end
+
+room {
+	nam = 'main';
+	decor = [[ГИПНОЗ!]];
+}
+```
+
+## Подстановки
+
+Вы можете создать свой системный объект - подстановку, и формировать
+графику в выводе игры с помощью img, например:
+
+```
+require "sprite"
+require "timer"
+require "fmt"
+
+obj {
+	nam = '$spr';
+	{
+		["квадрат"] = sprite.new 'box:32x32,red';
+	};
+	act = function(s, w)
+		return fmt.img(s[w])
+	end
+}
+
+room {
+	nam = 'main';
+	decor = [[Сейчас мы вставим спрайт: {$spr|квадрат}.]];
+}
+
+```
+
+## direct режим
+
+В INSTEAD существует режим прямого доступа к графике. В теме он
+задается с помощью параметра:
+
+	scr.gfx.mode = direct
+
+В этом режиме игра имеет прямой доступ ко всему окну и может выполнять
+отрисовку в процедуре таймера, например:
+
+
+```
+require "sprite"
+require "timer"
+require "theme"
+
+sprite.direct(true)
+
+local stars = {}
+local w, h
+local colors = {
+	"red",
+	"green",
+	"blue",
+	"white",
+	"yellow",
+	"cyan",
+	"gray",
+	"#002233",
+}
+function game:timer()
+	local scr = sprite.scr()
+	scr:fill 'black'
+	for i = 1, #stars do
+		local s = stars[i]
+		scr:pixel(s.x, s.y, colors[s.dy])
+		s.y = s.y + s.dy
+		if s.y >= h then
+			s.y = 0
+			s.x = rnd(w) - 1
+			s.dy = rnd(8)
+		end
+	end
+end
+
+function start()
+	w, h = theme.get 'scr.w', theme.get 'scr.h'
+
+	w = std.tonum(w)
+	h = std.tonum(h)
+
+	for i = 1, 100 do
+		table.insert(stars, { x = rnd(w) - 1, y = rnd(h) - 1, dy = rnd(8) })
+	end
+	timer:set(30)
+end
+```
+
+## Использование модуля совместно с модулем theme
+
+В функции start и в обработчиках вы можете менять параметры темы, в
+том числе, используя в качестве графики спрайты, например:
+
+```
+require "sprite"
+require "theme"
+
+function start() -- заменим фон на спрайт
+	local spr = sprite.new(800, 600)
+	spr:fill 'blue'
+	spr:fill (100, 100, 32, 60, 'red')
+	theme.set('scr.gfx.bg', spr)
+end
+
+```
+Используя эту технику, вы можете наносить на фоновое изображение
+статусы, элементы управления или просто менять подложку.
