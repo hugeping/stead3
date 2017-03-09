@@ -38,7 +38,6 @@ end
 	stime = instead.ticks()
 end
 function start(load)
-	print(load)
 	timer:set(20)
 end
 function game:timer()
