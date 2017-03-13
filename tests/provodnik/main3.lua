@@ -1,7 +1,7 @@
 --$Name:Проводник
 --$Info:Демонстрационная игра\nна STEAD3
 --$Author:Peter Kosyh, 2017
---$Version:0.1
+--$Version:0.2
 require "fmt"
 require "noinv"
 require "snapshots"
