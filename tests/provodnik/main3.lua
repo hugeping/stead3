@@ -23,6 +23,19 @@ end
 game.onact = onaction('act')
 game.onuse = onaction('use')
 
+game.timer = function(s)
+	if snd.music_playing() then
+		return false
+	end
+	s.__music = not s.__music
+	if s.__music then
+		snd.music ('mus/provodnik2.ogg', 1)
+	else
+		snd.music ('mus/bensound-slowmotion.ogg', 1)
+	end
+	return false
+end
+
 prefs.choice = false
 
 fmt.para = true
@@ -153,7 +166,8 @@ room {
 	title = 'Улица';
 	disp = 'На улицу';
 	enter = function()
-		snd.music 'mus/bensound-slowmotion.ogg'
+		timer:set(2000)
+		snd.music('mus/bensound-slowmotion.ogg', 1)
 		p [[Была середина февраля. Редкие, но колючие снежинки кружились в темноте улиц.
 Тусклый свет фонарей разливался по асфальту причудливыми пятнами. Я шел быстрым шагом,
 укутавшись в пальто и рассеяно рассматривая пустынные переулки. На душе было мерзко, свежие воспоминания о ссоре с женой
@@ -622,7 +636,8 @@ room {
 			p [[Когда я спускался на второй этаж, по зданию раздался громкий сигнал и женский голос произнес:^]]
 			p [[-- ВНИМАНИЕ! ГОТОВНОСТЬ К ТРАНСПОРТИРОВКЕ! ВСТРЕЧА В ХОЛЛЕ ПЕРВОГО ЭТАЖА!]];
 			transport = true
-			snd.music 'mus/bensound-anewbeginning.ogg'
+			timer:stop()
+			snd.music 'mus/provodnik3.ogg'
 			place ('люди', 'зал')
 		end
 	end;
@@ -1988,7 +2003,7 @@ room {
 		end;
 		act = function()
 			walk 'resolve'
-			snd.music 'mus/bensound-ofeliasdream.ogg'
+			snd.music 'mus/provodnik1.ogg'
 		end;
 	}
 }
@@ -2026,7 +2041,7 @@ room {
 	}
 }
 
-function start()
+function init()
 	timer:stop()
 	snd.music_fading(3000)
 end
