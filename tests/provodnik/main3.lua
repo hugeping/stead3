@@ -903,6 +903,11 @@ obj {
 		if transport and not have(bottle) then
 			take(bottle)
 			p [[Я подошел к столу и забрал свою бутылку.]]
+			if bottle.full then
+				p [[Она оказалась пустой.]]
+				bottle.full = false
+				bottle.drink = false
+			end
 		end
 	end;
 };
