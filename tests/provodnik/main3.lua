@@ -473,6 +473,10 @@ room {
 						p [[Но в бутылке вода! Я не хочу портить горючие свойства жидкости.]]
 						return
 					end
+					if w.full then
+						p [[Как бы не пришлось потом это пить...]];
+						return
+					end
 					w.spirt = true
 					p [[Я вылил содержимое банки в бутылку.]]
 					remove(s)
@@ -903,6 +907,11 @@ obj {
 		if transport and not have(bottle) then
 			take(bottle)
 			p [[Я подошел к столу и забрал свою бутылку.]]
+			if bottle.full then
+				p [[Она оказалась пустой.]]
+				bottle.full = false
+				bottle.drink = false
+			end
 		end
 	end;
 };
@@ -1062,6 +1071,10 @@ bottle = obj {
 			return
 		end
 		if w/'спирт' then
+			if s.full then
+				p [[Как бы не пришлось потом это самому пить...]];
+				return
+			end
 			s.spirt = true
 			p [[Я вылил содержимое банки в бутылку.]]
 			remove(w)
