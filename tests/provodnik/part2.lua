@@ -293,7 +293,7 @@ room {
 	title = false;
 	enter = function()
 		game.pic = 'gfx/coin.png'
-		timer:set(5000)
+		timer:set(10000)
 	end;
 	timer = function()
 		timer:stop()
@@ -310,7 +310,7 @@ room {
 	title = false;
 	enter = function()
 		game.pic = 'gfx/ring.png'
-		timer:set(5000)
+		timer:set(10000)
 	end;
 	timer = function()
 		timer:stop()
