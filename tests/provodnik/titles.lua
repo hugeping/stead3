@@ -89,13 +89,16 @@ local offset = 0
 local pos = 1
 local line
 local ww, hh
-local scr
+
 function game:timer()
+	local scr = sprite.scr()
 	if line == false then
 		return
 	end
 	-- scroll
-	scr:copy(0, 1, w, h - 1, scr, 0, 0)
+	for y = 0, h - 2 do
+		scr:copy(0, y + 1, w, 1, scr, 0, y)
+	end
 
 	if offset >= font_height then
 		pos = pos + 1
@@ -114,9 +117,8 @@ function game:timer()
 	if line then
 		offset = offset + 1
 		scr:fill(0, h - offset, w, offset, 0, 0, 0, 255)
-		line:blend(scr, math.floor((w - ww) / 2), h - offset)
+		line:draw(scr, math.floor((w - ww) / 2), h - offset)
 	end
-	scr:copy_spr(sprite.scr())
 end
 room {
 	nam = 'legacy_titles',
@@ -174,8 +176,7 @@ function end_titles()
 	instead.fading_value = 32
 	w, h = std.tonum(theme.get 'scr.w'), std.tonum(theme.get 'scr.h')
 	local fn = theme.get('win.fnt.name')
-	font = pixels.fnt(fn, 16)
+	font = sprite.fnt(fn, 16)
 	font_height = font:height()
-	scr = pixels.new(w, h)
 	walk('black', false)
 end
