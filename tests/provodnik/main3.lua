@@ -1,7 +1,7 @@
 --$Name:Проводник$
 --$Info:Демонстрационная игра\nна STEAD3$
 --$Author:Peter Kosyh, 2017$
---$Version:0.7$
+--$Version:0.8$
 require "fmt"
 require "noinv"
 require "snapshots"
@@ -1032,6 +1032,10 @@ bottle = obj {
 				p [[То, что горит -- не нужно поджигать снова!]]
 				return
 			end
+			if here()/'inair' and not _'#сумочка'.know then
+				p [[Пока у меня нет повода начинать войну.]]
+				return
+			end
 			lifeon(s)
 			s.burn = 5
 			p [[Я поджег фитиль. Он загорелся очень хорошо! У меня совсем мало времени, чтобы выбрать цель!]]
@@ -1419,7 +1423,13 @@ stuar = human {
 			p [[Я больше не вижу {стюардессу}.]]
 		end
 	end;
-	used = function(s)
+	used = function(s, w)
+		if w == bottle then
+			if not _'#сумочка'.know then
+				p [[Прежде чем проявлять агрессию, мне нужен повод. С чего я взял, что она хочет мне зла?]]
+				return
+			end
+		end
 		p [[Сначала надо встать.]]
 		return
 	end;
@@ -1435,8 +1445,13 @@ stuar = human {
 			return
 		end
 		if _'#сумочка'.know then
-			p [[Нужно что-то предпринять! Срочно! От бешеного пульса голова вот-вот разорвется от боли.]]
+			walk 'inair2'
+			return
 		else
+			if actions '#сумочка' > 0 then
+				p [[Мне интересно, что она прячет в сумочке?]]
+				return
+			end
 			p [[-- У вас есть что-нибудь от головной боли? -- неуверенно спросил я стюардессу.]];
 			walk ('badend', false)
 			return
@@ -1464,7 +1479,7 @@ stuar = human {
 		act = function(s)
 			if where(s).step >=10  then
 				s.know = true;
-				p [[Мне кажется я что-то заметил! Она прячет в сумочке шприц, который держит в правой руке. Это для меня?]]
+				p [[Мне кажется я что-то заметил! Она прячет в сумочке шприц, который держит в правой руке. Это для меня? Нужно действовать!]]
 			else
 				p [[Она держит правую руку в сумочке. Что она прячет? Отсюда не разглядеть.]]
 			end
@@ -1491,6 +1506,10 @@ room {
 			return false
 		end
 		if w == bottle and ww ~= stuar then
+			if not _'#сумочка'.know then
+				p [[Для проявления агрессии мне нужен повод.]]
+				return false
+			end
 			walk ('burnend2', false)
 			game:lifeoff()
 			return false
@@ -1662,7 +1681,11 @@ room {
 			return false
 		end
 		if w == bottle and ww ~= guards then
-			walk ('burnend3', false)
+			if seen(guards) then
+				walk ('burnend3', false)
+			else
+				walk ('burnend2', false)
+			end
 			game:lifeoff()
 			return false
 		end
