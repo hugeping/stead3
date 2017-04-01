@@ -93,7 +93,7 @@ for_all(take,
 			p [[Это бесполезный прибор.]]
 		end;
 		inv = function()
-			if here()/'main' then
+			if here()^'main' then
 				p [[Я хочу позвонить своей жене и попросить прощения, но почему-то не делаю этого...]]
 			else
 				if door_try then
@@ -123,7 +123,7 @@ for_all(take,
 					s.to = 5
 					return
 				else
-					if here()/'гостиная' or here()/'За столом' then
+					if here()^'гостиная' or here()^'За столом' then
 						p [[Я не вижу тут воды, только спиртное. Нельзя смешивать таблетки с алкоголем.]]
 					else
 						p [[Мне нужна вода, чтобы запить таблетки.]]
@@ -194,7 +194,7 @@ room {
 		}
 	};
 	onexit = function(s, t)
-		if t/'здание' then
+		if t^'здание' then
 			return
 		end
 		p [[Я хотел пройти мимо нищего, но тот нагло загородил мне путь.]];
@@ -266,7 +266,7 @@ room {
 	end;
 	decor = [[Я нахожусь в темном длинном коридоре.]];
 	onexit = function(s, t)
-		if t/'main' then
+		if t^'main' then
 			if door_closed then
 				p [[Я попробовал открыть дверь... Она не поддавалась!
 Я налег на нее со всей силой, но ничего не добился! Что за чертовщина?]];
@@ -295,7 +295,7 @@ room {
 				end
 			end;
 			use = function(s, w)
-				if w/'#люди' then
+				if w^'#люди' then
 					p [[Я сунул монету какому-то толстому мужчине. -- У меня такая-же -- промычал он мне и отвернулся.]]
 					return
 				end
@@ -339,7 +339,7 @@ room {
 				t.time2 = 59
 			end
 		end
-		if here()/'здание' then
+		if here()^'здание' then
 			p [[Мне кажется, я слышу какой-то шум, который доносится с конца коридора.]]
 		elseif here() == s then
 			p [[Я слышу шум голосов и звон посуды справа.]]
@@ -380,7 +380,7 @@ room {
 		}:close();
 	};
 	onexit = function(s, t)
-		if t/'2-й этаж' then
+		if t^'2-й этаж' then
 			if not visited 'гостиная' then
 				p [[Мне кажется, сначала нужно поискать магазин на 1-м этаже...]]
 				return false
@@ -403,9 +403,9 @@ global 'transport' (false)
 room {
 	nam = '2-й этаж';
 	enter = function(s, f)
-		if f/'3-й этаж' then
+		if f^'3-й этаж' then
 			p [[Я спустился на второй этаж.]]
-		elseif f/'зал' then
+		elseif f^'зал' then
 			p [[Я осторожно поднялся на второй этаж.]]
 			if not visited(s) then
 				game.pic = 'gfx/stairs.png'
@@ -418,7 +418,7 @@ room {
 			nam = '#двери';
 			try = 0;
 			used = function(s, w)
-				if w/'монета' and w.readed and trap then
+				if w^'монета' and w.readed and trap then
 					p [[Я сверил номер на монете с номерами на дверях. Нет совпадений.]]
 					return
 				end
@@ -591,7 +591,7 @@ global 'trap' (false)
 room {
 	nam = '3-й этаж';
 	enter = function(s, f)
-		if f/'2-й этаж' then
+		if f^'2-й этаж' then
 			p [[Я поднялся на последний -- 3-й этаж.]]
 			if have 'таблетки' then
 				p [[С ужасом я чувствую, как у меня начинается приступ мигрени.]]
@@ -605,7 +605,7 @@ room {
 			nam = '#двери';
 			try = 0;
 			used = function(s, w)
-				if w/'монета' and w.readed and trap then
+				if w^'монета' and w.readed and trap then
 					p [[Я сверил номер на монете с номерами на дверях. Гм... 510317... Есть!]]
 					enable '#510317'
 					return
@@ -636,7 +636,7 @@ room {
 		};
 	};
 	onexit = function(s, t)
-		if t/'2-й этаж' and not transport and door_try and not have 'таблетки' then
+		if t^'2-й этаж' and not transport and door_try and not have 'таблетки' then
 			p [[Когда я спускался на второй этаж, по зданию раздался громкий сигнал и женский голос произнес:^]]
 			p [[-- ВНИМАНИЕ! ГОТОВНОСТЬ К ТРАНСПОРТИРОВКЕ! ВСТРЕЧА В ХОЛЛЕ ПЕРВОГО ЭТАЖА!]];
 			transport = true
@@ -729,12 +729,12 @@ room {
 	nam = 'myroom';
 	title = 'Комната';
 	enter = function(s, f)
-		if f/'3-й этаж' then
+		if f^'3-й этаж' then
 			p [[Я оказался в небольшой, но уютной комнате. Очень странно, но в комнате не оказалось окон!]];
 		end
 	end;
 	onexit = function(s, t)
-		if t/'3-й этаж' then
+		if t^'3-й этаж' then
 			if live 'таблетки' then
 				p [[Я не могу ходить с приступом мигрени. Нужно что-то сделать.]]
 				return false
@@ -756,7 +756,7 @@ room {
 				nam = 'шланг';
 				dsc = [[Мое внимание привлекает блестящий {шланг}.]];
 				tak = function(s)
-					if here()/'inair2' then
+					if here()^'inair2' then
 						p [[Я забрал шланг.]]
 					else
 						p [[Я открутил шланг от смесителя и забрал его с собой.]];
@@ -838,12 +838,12 @@ room {
 					end
 				end;
 				use = function(s, w)
-					if w/'#стол' then
+					if w^'#стол' then
 						place(s, w)
 						p [[Я поставил стакан на стол.]]
 						return
 					end
-					if w/'#ванная' or w/'#унитаз' then
+					if w^'#ванная' or w^'#унитаз' then
 						p [[Я набрал немного воды в стакан.]]
 						s.water = true
 						return
@@ -973,7 +973,7 @@ bottle = obj {
 	parfum = false;
 	life = function(s)
 		s.burn = s.burn - 1
-		if not (here()/'inair') and not (here()/'inair2') then
+		if not (here()^'inair') and not (here()^'inair2') then
 			lifeoff(s)
 			return
 		end
@@ -1032,7 +1032,7 @@ bottle = obj {
 				p [[То, что горит -- не нужно поджигать снова!]]
 				return
 			end
-			if here()/'inair' and not _'#сумочка'.know then
+			if here()^'inair' and not _'#сумочка'.know then
 				p [[Пока у меня нет повода начинать войну.]]
 				return
 			end
@@ -1044,20 +1044,20 @@ bottle = obj {
 		return false
 	end;
 	use = function(s, w)
-		if w/'бумага' then
+		if w^'бумага' then
 			return w:use(s)
 		end
-		if w/'#еда' then
+		if w^'#еда' then
 			remove(s)
 			p [[Я поставил бутылку обратно на стол.]]
 			return
 		end
-		if s.water and (w/'#ванная' or w/'#унитаз') then
+		if s.water and (w^'#ванная' or w^'#унитаз') then
 			p [[Я вылил воду из бутылки.]]
 			s.water = false
 			return
 		end
-		if w/'#ванная' or w/'#унитаз' then
+		if w^'#ванная' or w^'#унитаз' then
 			if s.spirt then
 				p [[В бутылке спирт. Я не хочу заливать это водой.]]
 			elseif s.parfum then
@@ -1068,12 +1068,12 @@ bottle = obj {
 			end
 			return
 		end
-		if w/'парфюм' then
+		if w^'парфюм' then
 			s.parfum = true
 			p [[Я вылил в бутылку 100% арабское масло.]]
 			return
 		end
-		if w/'спирт' then
+		if w^'спирт' then
 			if s.full then
 				p [[Как бы не пришлось потом это самому пить...]];
 				return
@@ -1102,13 +1102,13 @@ room {
 конце стола я вижу очень худого {#странный|человека} неопределенного возраста, который мрачно смотрит перед собой. На столе полно {#еда|еды}.]];
 	way = { path { "Встать из-за стола", "гостиная" } };
 	onexit = function(s, t)
-		if t/'гостиная' and have 'еда' then
+		if t^'гостиная' and have 'еда' then
 			p [[Я уже собрался встать из-за стола, когда глухой, но властный голос окликнул меня.
 -- Куда вы собрались, милейший? Это был худой, угрюмый человек, который находился на другом конце стола.]];
 			walkin 'председатель'
 			return
 		end
-		if t/'гостиная' and have(bottle) then
+		if t^'гостиная' and have(bottle) then
 			if bottle.full then
 				p [[Я уже собрался встать из-за стола, когда меня окликнул проводник. -- А вино?]]
 				return false
@@ -1171,7 +1171,7 @@ room {
 	human {
 		nam = "#парень";
 		used = function(s, w)
-			if w/'монета' then
+			if w^'монета' then
 				if w.readed then
 					p [[Парень только отмахнулся от меня. -- Не мешай, у меня расчеты...]];
 					return
@@ -1282,7 +1282,7 @@ room {
 На платформе стоял небольшой, причудливо выглядящий {#состав|состав}. {#люди|Люди} вереницей скрывались за дверьми вагонов, предварительно
 пройдя через сооружение, напоминающее {#ворота|ворота}.]];
 	onexit = function(s, t)
-		if t/'Вагон' then
+		if t^'Вагон' then
 			if (not have(bottle) or not bottle.molotov) or not have 'шланг' then
 				p [[Мне кажется, будет опрометчивым зайти в этот вагон совсем безоружным.]]
 				if have 'шланг' then
@@ -1330,14 +1330,14 @@ room {
 				dsc = [[В воротах на правой стороне я вижу {прорезь}.]];
 				act = [[Это какой-то феерический бред!]];
 				used = function(s, w)
-					if w/'монета' then
+					if w^'монета' then
 						where(s).opened = true
 						remove(w)
 						p [[С лязгом монета исчезла в недрах ворот.^
 -- Вы распознаны! Прошу на поезд! -- сказал женский голос-автомат.]]
 						return
 					end
-					if w/'колбаса' then
+					if w^'колбаса' then
 						p [[Колбаса не пролезла.]]
 						return
 					end
@@ -1491,7 +1491,7 @@ room {
 	nam = 'inair';
 	title = 'В самолете';
 	enter = function(s, f)
-		if f / 'ship2' then
+		if f ^ 'ship2' then
 			p [[Боль, все заполняющая боль. Снова болит голова. Глаза закрыты. Темнота была заполнена
 мерцающими пятнами. Но я все-таки приходил в себя. Шум. Неприятный гул. Я лежу в кресле. Надо попытаться
 открыть глаза и я делаю это. Глаза режет от яркого света. Где я? В самолете?]]
@@ -1746,7 +1746,7 @@ room {
 			end
 		end;
 		used = function(s, w)
-			if w/'шланг' then
+			if w^'шланг' then
 				if not live(s) then
 					p [[Не я это начал...]]
 					return
@@ -1913,7 +1913,7 @@ pistol = obj {
 	tak = [[Я побыстрее забрал пистолет себе.]];
 	try = 0;
 	use = function(s, w)
-		if w/'#2' then
+		if w^'#2' then
 			return "Нельзя мешать ему тушить пламя. Мы все в одном самолете."
 		end
 		if w == guard then
@@ -1943,7 +1943,7 @@ guard = obj {
 		end
 	end;
 	used = function(s, w)
-		if w/'шланг' then
+		if w^'шланг' then
 			if not live(s) then
 				p [[Я еще раз ударил его шлангом.]]
 				return

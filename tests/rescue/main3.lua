@@ -77,7 +77,7 @@ obj {
 		p [[Магнитная карточка.]]
 	end;
 	use = function(s, w)
-		if w/'#сторож' then
+		if w^'#сторож' then
 			if w.sleep then
 				p [[Стоит ли будить сторожа?]]
 			elseif here().pass then
@@ -86,7 +86,7 @@ obj {
 				p [[-- Михалыч, у меня пропуск есть!^-- Приказ генерала, никого не пускать ночью! -- буркнул Михалыч.]]
 			end
 			return
-		elseif w/'#турникет' then
+		elseif w^'#турникет' then
 			if here().pass then
 				p [[Путь свободен!]]
 			else
@@ -104,7 +104,7 @@ room {
 	pass = false;
 	decor = [[Внутри проходной темно и тихо.]];
 	enter = function(s, f)
-		if f/'r2' then
+		if f^'r2' then
 			_'#сторож'.sleep = true
 		end
 	end;
@@ -112,7 +112,7 @@ room {
 		if s.pass then
 			return
 		end
-		if t/'у кабинета' then
+		if t^'у кабинета' then
 			if not _'#сторож'.sleep then
 				return [[Михалыч неодобрительно смотрит на Петра.]], false
 			end
@@ -228,7 +228,7 @@ obj {
 		end
 	end;
 	use = function(s, w)
-		if w/'#сторож' then
+		if w^'#сторож' then
 			if not w.sleep then
 				if here().pass then
 					p [[Не стоит лишний раз расстраивать Михалыча.]]
@@ -254,13 +254,13 @@ obj {
 				s.photos = true
 			end
 			return
-		elseif w/'дверь1' then
+		elseif w^'дверь1' then
 			if seen 'щиток' and actions(w) > 0 then
 				p [[Петр включил мобильник и положил его около двери в хозяйственное помещение.]]
 				drop(s)
 				return
 			end
-		elseif w/'#тьма' then
+		elseif w^'#тьма' then
 			p [[Петр посветил мобильником. Недалеко он заметил дверь.]]
 			return
 		end
@@ -290,7 +290,7 @@ room {
 		return true
 	end;
 	enter = function(s, f)
-		if f/'проходная' then
+		if f^'проходная' then
 			p [[В институте было темно, но Петр боялся включать свет. Он быстро и бесшумно (если
 не считать проклятого ведра между вторым и третьим этажами) поднялся на пятый этаж, где располагалась
 его лаборатория...]]
@@ -378,9 +378,9 @@ scene {
 }
 
 game.onact = function(s, w)
-	if here()/'Лаборатория' then
+	if here()^'Лаборатория' then
 		if _'#холодильник'.portal then
-			if not (w / '#холодильник') then
+			if not (w ^'#холодильник') then
 				p [[Петра сейчас интересует только портал!]]
 				return false
 			end
@@ -517,7 +517,7 @@ room {
 	nam = 'дерево';
 	title = [[У дерева]];
 	onexit = function(s, w)
-		if w /'Лаборатория' then
+		if w ^'Лаборатория' then
 			p [[Гегелю надо найти человека.]]
 			return false
 		end
