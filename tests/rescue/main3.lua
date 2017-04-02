@@ -537,6 +537,7 @@ room {
 	onexit = function(s, w)
 		if w ^'Лаборатория' then
 			if seen 'чайка' then
+				disable '#наверх'
 				walk 'Повтор'
 				lifeoff 'чайка'
 				remove 'чайка'
