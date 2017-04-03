@@ -175,6 +175,9 @@ std.menu_player = std.class ({
 		if type(v) ~= 'table' then
 			std.err ("Wrong argument to std.menu_player: "..std.tostr(v), 2)
 		end
+		if not v.nam then
+			v.nam = 'menu_player'
+		end
 		if not v.room then
 			v.room = 'main'
 		end
