@@ -33,7 +33,7 @@ local function rename_auto()
 end
 
 std.mod_init(function() -- declarations
-	game.ini = std.hook(_'game'.ini, function(f, self, load, ...)
+	game.ini = std.hook(game.ini, function(f, self, load, ...)
 		local r, v = f(self, load, ...)
 		if not load then
 			rename_auto()
