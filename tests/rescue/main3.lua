@@ -827,6 +827,8 @@ room {
 	}
 };
 
+global 'hidden' (false)
+
 obj {
 	nam = 'паук';
 	attack = false;
@@ -834,7 +836,7 @@ obj {
 	dir = false;
 	life = function(s)
 		if player_moved() then
-			if seen 'паук' then
+			if seen 'паук' and not hidden then
 				s.search = true
 				return
 			end
@@ -844,10 +846,9 @@ obj {
 				return
 			end
 		end
-		if seen 'паук' then
+		if seen 'паук' and s.search then
 			p [[Паук готовится атаковать Гегеля!]]
 			s.attack = true
-			s.search = true
 			return true
 		end
 
@@ -855,8 +856,13 @@ obj {
 			s.dir = true
 			place(s, 'мостик')
 		elseif where(s) ^ 'грузовой отсек' then
-			s.dir = false
-			place(s, 'мостик')
+			if here() ^ 'грузовой отсек' and hidden then
+				place(s, 'логово')
+				p [[Паук ушел по направлению к выходу.]]
+			else
+				s.dir = false
+				place(s, 'мостик')
+			end
 		elseif where(s) ^ 'мостик' then
 			if s.dir then
 				place(s, 'грузовой отсек')
@@ -907,13 +913,31 @@ room {
 
 room {
 	nam = 'грузовой отсек';
+	title = 'Грузовой отсек';
+	decor = [[Гегель находится в длинном помещении, вдоль которого стоят массивные {#контейнеры|контейнеры}.]];
+	onexit = function(s) hidden = false; end;
 	way =  { path { 'В глубь', 'мостик' }, path { 'К выходу', 'логово' } };
+}: with {
+	obj {
+		nam = '#контейнеры';
+		act = function(s)
+			hidden = true
+			p [[Спрятался.]]
+		end;
+	}
 }
 
 room {
 	nam = 'инженерный отсек';
+	title = 'Инженерный отсек';
+	decor = [[Гегель находится в узком помещении, заставленном какими-то странными {#механизмы|механизмами}.]];
 	way = { path { 'В глубь', 'мостик' }, path { 'К выходу', 'логово' } };
-}: with 'паук'
+}: with {
+	'паук';
+	obj {
+		nam = '#механизмы';
+	};
+}
 
 room {
 	nam = 'мостик';
