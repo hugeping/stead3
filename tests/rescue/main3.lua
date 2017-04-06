@@ -220,6 +220,9 @@ obj {
 	end;
 	dsc = [[На полу около {дверь1|двери} лежит включенный {мобильник}.]];
 	inv = function(s)
+		if me() == cat then
+			return [[Зачем это бедному Коту?]]
+		end
 		if idea then
 			if idea == 2 then
 				p [[Петр включил диктофон на запись: -- Это Петр, мне нужна срочная помощь!...^
@@ -244,6 +247,9 @@ obj {
 		end
 	end;
 	use = function(s, w)
+		if me() == cat then
+			return [[Вряд ли Гегель может применить мобильник.]]
+		end
 		if w^'#сторож' then
 			if not w.sleep then
 				if here().pass then
@@ -829,8 +835,14 @@ room {
 room {
 	nam = 'Внутри';
 	enter = function(s, f)
-		if f ^ 'Лес' then
+		if f ^ 'Лес' or f ^ 'тоннель' then
 			lifeon 'паук'
+		end
+	end;
+	onexit = function(s, t)
+		if t ^ 'Лес' and seen 'паутина' then
+			p [[Выход затянут крепкой и липкой паутиной!]]
+			return false
 		end
 	end;
 	exit = function(s, t)
@@ -857,13 +869,18 @@ room {
 		end;
 	};
 	obj {
+		nam = 'паутина';
+		dsc = [[Выход в лес затянут {паутиной}.]];
+		act = [[Выхода нет!]];
+	}:disable();
+	obj {
 		nam = '#дыры';
 		act = [[В стенах и потолке Гегель видит небольшие отверстия.]];
 	};
 	obj {
 		nam = '#воздух';
 		act = [[Гегель чувствует запах человека!!!... И кого-то еще...]];
-	}
+	};
 };
 
 global 'hidden' (false)
@@ -1022,7 +1039,7 @@ scene {
 room {
 	nam = 'В кабине';
 	enter = function(s)
-		lifeoff 'паук'
+		_'паук'.search = false
 		lifeon (s)
 		p [[Петр был подавлен. Многообещающая ночная вылазка, которая началась с потрясающего артефакта в
 виде потерпевшего крушения космического корабля, заканчивалась безвыходной ситуацией. Если не
@@ -1166,6 +1183,8 @@ obj {
 		if w ^ '#отверстие' then
 			lifeoff(here())
 			change_pl(cat)
+			take 'мобильник'
+			enable 'паутина'
 			walk 'В лаз'
 			return
 		end
@@ -1187,10 +1206,35 @@ scene {
 перестал сопротивляться и полез в узкий и темный тоннель...]];
 	next = 'тоннель';
 }
+
 room {
 	nam = 'тоннель';
-	dsc = [[TODO]];
+	title = 'Тоннель';
+	steps = 0;
+	enter = function(s, f)
+		s.steps = s.steps + 1
+		if f == s then
+			if s.steps % 2 == 0 then
+				p [[Гегель прополз еще немного.]]
+			else
+				p [[Гегель снова ползет по трубе.]]
+			end
+		end
+		if s.steps > 6 then
+			disable '#вперед'
+			enable '#вниз';
+			p [[Гегель видит выход из тоннеля!]]
+		end
+	end;
+	decor = [[Гегель ползет по длинной узкой трубе.]];
+	way = {
+		path { '#вперед', 'Вперед', 'тоннель' };
+		path { '#вниз', 'Вниз', 'Внутри' }:disable();
+	};
+}:with {
+
 }
+
 function init()
 	take 'пропуск'
 	take 'мобильник';
