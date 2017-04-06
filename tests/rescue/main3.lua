@@ -389,6 +389,10 @@ game.onact = function(s, w)
 	if here().onact then
 		return std.call(here(), 'onact', w)
 	end
+	if seen 'паук' and _'паук'.attack then
+		p [[Паук вот-вот нападет! Нужно бежать!]]
+		return false
+	end
 	return
 end
 room {
@@ -787,9 +791,137 @@ room {
 
 room {
 	nam = 'Внутри';
+	enter = function(s, f)
+		if f ^ 'Лес' then
+			lifeon 'паук'
+		end
+	end;
+	exit = function(s, t)
+		if t ^ 'Лес' then
+			_'паук'.search = false
+		end
+	end;
+	decor = [[Гегель находится внутри громады. Здесь темно, но света, который льется
+сквозь {#дыры|отверстия} в стенах, достаточно для глаз кота. Спертый {#воздух|воздух} не нравится
+Гегелю.]];
+	way = { path{ 'Дальше внутрь', 'логово' }, path { 'В лес', 'Лес' } };
+}:disable():with {
+	obj {
+		nam = 'тряпка';
+		dsc = [[{тряпка}]];
+		use = function(s, w)
+			p("на ", w)
+		end;
+		act = function(s)
+			p("держу")
+			put(s, me())
+		end;
+	};
+	obj {
+		nam = '#дыры';
+		act = [[В стенах и потолке Гегель видит небольшие отверстия.]];
+	};
+	obj {
+		nam = '#воздух';
+		act = [[Гегель чувствует запах человека!!!... И кого-то еще...]];
+	}
+};
 
-	way = { path { 'Назад', 'Лес' } };
-}:disable();
+obj {
+	nam = 'паук';
+	attack = false;
+	search = false;
+	dir = false;
+	life = function(s)
+		if player_moved() then
+			if seen 'паук' then
+				s.search = true
+				return
+			end
+			if s.search then
+				place(s)
+				s.attack = false
+				return
+			end
+		end
+		if seen 'паук' then
+			p [[Паук готовится атаковать Гегеля!]]
+			s.attack = true
+			s.search = true
+			return true
+		end
+
+		if where(s) ^ 'инженерный отсек' then
+			s.dir = true
+			place(s, 'мостик')
+		elseif where(s) ^ 'грузовой отсек' then
+			s.dir = false
+			place(s, 'мостик')
+		elseif where(s) ^ 'мостик' then
+			if s.dir then
+				place(s, 'грузовой отсек')
+			else
+				place(s, 'инженерный отсек')
+			end
+		elseif where(s) ^ 'логово' then
+			place(s, 'инженерный отсек')
+		elseif where(s) ^ 'Внутри' then
+			place(s, 'логово')
+		end
+		if here() ^ 'логово' then
+			p [[Тонкий слуг Гегеля уловил какой-то шорох.]];
+			if where 'паук' ^ 'инженерный отсек' then
+				p [[Шорох доносится с запада.]]
+			elseif where 'паук' ^ 'грузовой отсек' then
+				p [[Шорох доносится с востока.]]
+			end
+		end
+		print("spider at:", where(s))
+		return
+	end;
+	dsc = function(s)
+		if s.attack then
+			p [[Гегель видит перед собой громадного {паука}.]];
+		else
+			p [[Гегель видит как к нему приближается громадный {паук}.]];
+		end
+	end;
+	act = function(s)
+		p [[Если бы Гегель умел терять сознание, он бы это сделал бы.]]
+	end;
+}
+
+room {
+	nam = 'логово';
+	title = 'Развилка';
+	enter = function(s, f)
+	end;
+	decor = [[Гегель оказался в помещении из которого, кроме пути наружу, есть два {#выходы|выхода}.]];
+	way = { path { 'Запад', 'грузовой отсек' },
+		path { 'Восток', 'инженерный отсек' },
+		path { 'К выходу', 'Внутри' } };
+} : with {
+	obj {
+		nam = '#выходы';
+		act = [[Гегель чувствует запах человека... и не только...]];
+	}
+}
+
+room {
+	nam = 'грузовой отсек';
+	way =  { path { 'В глубь громады', 'мостик' }, path { 'К развилке', 'логово' } };
+}
+
+room {
+	nam = 'инженерный отсек';
+	way = { path { 'В глубь громады', 'мостик' }, path { 'К развилке', 'логово' } };
+}: with 'паук'
+
+room {
+	nam = 'мостик';
+	way = { path { 'Запад', 'грузовой отсек' },
+		path { 'Восток', 'инженерный отсек' } },
+}
 
 function init()
 	take 'пропуск'
