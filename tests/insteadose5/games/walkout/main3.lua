@@ -963,8 +963,10 @@ obj {
 			place(s, 'логово')
 		end
 		if seen 'паук' then
-			p [[Кот видит как из темноты к нему выползает огромный паук!]]
-			s.search = true
+			p [[Кот видит как из темноты выползает огромный паук!]]
+			if not hidden then
+				s.search = true
+			end
 			return true
 		end
 		if here() ^ 'логово' then
