@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Author: MaJoR KolZ, technix, Peter, spline, casper_nn$
+--$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
 require 'snd'
@@ -26,7 +26,7 @@ obj {
 		if s.pos > #s.tracks then
 			s.pos = 1
 		end
-		print("Play: ", s.tracks[s.pos])
+		print("Next track: ", s.tracks[s.pos])
 		snd.music('mus/'..s.tracks[s.pos], 1)
 	end;
 	start = function(s)
@@ -64,6 +64,7 @@ room {
 	decor = function()
 		pn (fmt.c(fmt.b[[ЖУРНАЛ (СОВЕРШЕННО СЕКРЕТНО)]]))
 		pn ()
+		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 	end;
 }
