@@ -66,5 +66,6 @@ room {
 		pn ()
 		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
+		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
 	end;
 }
