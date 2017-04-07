@@ -854,7 +854,7 @@ room {
 room {
 	nam = 'Внутри';
 	onenter = function(s, f)
-		if me() == cat and f ^ 'Лес' then
+		if f ^ 'Лес' and idea then
 			p [[Кот не хочет больше встречаться с пауком.]]
 			return false
 		end
@@ -890,7 +890,7 @@ room {
 	obj {
 		nam = '#дыры';
 		act = function(s)
-			if seen 'паук' and me() == cat then
+			if seen 'паук' and idea then
 				p [[Гегель в отчаянной попытке рванулся к одному из отверстий и протиснулся в него.]]
 				p [[Успел!]]
 				lifeoff 'паук'
@@ -939,7 +939,7 @@ obj {
 			if here() ^ 'грузовой отсек' and hidden then
 				place(s, 'логово')
 				p [[Паук ушел по направлению к выходу.]]
-			elseif me() == cat then
+			elseif idea then
 				s.dir = true
 				place(s, 'логово')
 			else
@@ -953,7 +953,7 @@ obj {
 				place(s, 'инженерный отсек')
 			end
 		elseif where(s) ^ 'логово' then
-			if me() == cat and s.dir then
+			if idea and s.dir then
 				place(s, 'Внутри')
 			else
 				place(s, 'инженерный отсек')
