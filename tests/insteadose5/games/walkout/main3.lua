@@ -9,7 +9,7 @@ require "nolife"
 require "fmt"
 dlg.noinv = true
 dlg.nolife = true
-
+game.pic = 'gfx/tree.png'
 function scene(v)
 	v.noinv = true
 	v.nolife = true
@@ -782,6 +782,7 @@ room {
 в землю врыта какая-то громадина. Она выглядит так, как будто ее сделали люди.
 Гегель думает, что там может быть человек.]];
 			enable 'В лес'
+			game.pic = 'gfx/ship.png';
 		end;
 	}:disable();
 }
