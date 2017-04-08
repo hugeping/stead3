@@ -43,18 +43,22 @@ function show_map()
 	if not enable_map then
 		return 'gfx/ship.png'
 	end
-	local bg = 'gfx/ship.png;gfx/ship_map.png@340,10'
+	local dx = 340
+	if rawget(_G, 'js') then
+		dx = 6
+	end
+	local bg = 'gfx/ship.png;gfx/ship_map.png@'..std.tostr(dx)..',10'
 	local coords = {
-		['Внутри'] = { 366, 120 },
-		['логово'] = { 366, 99 },
-		['грузовой отсек'] = { 354, 60 },
-		['инженерный отсек'] = { 378, 60 },
-		['мостик'] = { 366, 22 },
+		['Внутри'] = { 26, 120 },
+		['логово'] = { 26, 99 },
+		['грузовой отсек'] = { 14, 60 },
+		['инженерный отсек'] = { 38, 60 },
+		['мостик'] = { 26, 22 },
 	}
 	local c = coords[std.nameof(here())]
-	local x, y = c[1] - 2, c[2] - 2
+	local x, y = c[1] - 2 + dx, c[2] - 2
 	if here() ^ 'грузовой отсек' and hidden then
-		x = x - 11
+		x = x - 10
 	end
 	bg = bg ..';gfx/white_dot.png@c'..std.tostr(x)..','..std.tostr(y)
 	local spider
@@ -72,7 +76,7 @@ function show_map()
 		return bg
 	end
 	c = coords[std.nameof(where 'паук')]
-	x, y = c[1] + 2, c[2] + 2
+	x, y = c[1] + 2 + dx, c[2] + 2
 	bg = bg ..';gfx/red_dot.png@c'..std.tostr(x)..','..std.tostr(y)
 	return bg
 end
