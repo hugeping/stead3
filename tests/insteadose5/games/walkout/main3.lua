@@ -10,6 +10,9 @@ require "fmt"
 dlg.noinv = true
 dlg.nolife = true
 game.pic = 'gfx/tree.png'
+
+global 'enable_map' (false)
+
 function scene(v)
 	v.noinv = true
 	v.nolife = true
@@ -34,6 +37,44 @@ function scene(v)
 		}
 	};
 	return room(v)
+end
+
+function show_map()
+	if not enable_map then
+		return 'gfx/ship.png'
+	end
+	local bg = 'gfx/ship.png;gfx/ship_map.png@340,10'
+	local coords = {
+		['Внутри'] = { 366, 120 },
+		['логово'] = { 366, 99 },
+		['грузовой отсек'] = { 354, 60 },
+		['инженерный отсек'] = { 378, 60 },
+		['мостик'] = { 366, 22 },
+	}
+	local c = coords[std.nameof(here())]
+	local x, y = c[1] - 2, c[2] - 2
+	if here() ^ 'грузовой отсек' and hidden then
+		x = x - 11
+	end
+	bg = bg ..';gfx/white_dot.png@c'..std.tostr(x)..','..std.tostr(y)
+	local spider
+	if seen 'паук' then spider = true end
+	for k, v in ipairs(ways()) do
+		if where 'паук' == v or 
+			(v.walk and where 'паук' == std.ref (v.walk)) then
+			if here() ^ 'логово' or where 'паук' == from() then
+				spider = true
+				break
+			end
+		end
+	end
+	if not spider then
+		return bg
+	end
+	c = coords[std.nameof(where 'паук')]
+	x, y = c[1] + 2, c[2] + 2
+	bg = bg ..';gfx/red_dot.png@c'..std.tostr(x)..','..std.tostr(y)
+	return bg
 end
 
 scene {
@@ -853,6 +894,7 @@ room {
 
 room {
 	nam = 'Внутри';
+	pic = show_map;
 	onenter = function(s, f)
 		if f ^ 'Лес' and idea then
 			p [[Кот не хочет больше встречаться с пауком.]]
@@ -914,6 +956,9 @@ obj {
 	search = false;
 	dir = false;
 	life = function(s)
+		if seen 'паук' then
+			enable_map = true
+		end
 		if player_moved() then
 			if seen 'паук' and not hidden then
 				s.search = true
@@ -963,6 +1008,7 @@ obj {
 			place(s, 'логово')
 		end
 		if seen 'паук' then
+			enable_map = true
 			p [[Кот видит как из темноты выползает огромный паук!]]
 			if not hidden then
 				s.search = true
@@ -972,8 +1018,10 @@ obj {
 		if here() ^ 'логово' then
 			p [[Тонкий слуг Гегеля уловил какой-то шорох.]];
 			if where 'паук' ^ 'инженерный отсек' then
+				enable_map = true
 				p [[Шорох доносится с востока.]]
 			elseif where 'паук' ^ 'грузовой отсек' then
+				enable_map = true
 				p [[Шорох доносится с запада.]]
 			end
 		end
@@ -998,6 +1046,7 @@ obj {
 
 room {
 	nam = 'логово';
+	pic = show_map;
 	title = 'Развилка';
 	decor = [[Гегель оказался в помещении из которого, кроме пути наружу, есть два {#выходы|выхода}.]];
 	way = { path { 'Запад', 'грузовой отсек' },
@@ -1012,6 +1061,7 @@ room {
 
 room {
 	nam = 'грузовой отсек';
+	pic = show_map;
 	title = 'Грузовой отсек';
 	decor = [[Гегель находится в длинном помещении, вдоль которого стоят массивные {#контейнеры|контейнеры}.]];
 	onexit = function(s) hidden = false; end;
@@ -1036,6 +1086,7 @@ room {
 
 room {
 	nam = 'инженерный отсек';
+	pic = show_map;
 	title = 'Инженерный отсек';
 	enter = function(s, f)
 		if f ^ 'тоннель' then
@@ -1054,6 +1105,7 @@ room {
 
 room {
 	nam = 'мостик';
+	pic = show_map;
 	title = 'Мостик';
 	decor = [[Гегель оказался в небольшой квадратной комнате. Кроме двух проходов на запад и на восток,
 здесь есть закрытая {#дверь|дверь}.]];
@@ -1311,6 +1363,7 @@ room {
 		pn (fmt.c("{@restart|ВЕРНУТЬСЯ К ЖУРНАЛУ}"))
 	end;
 }
+
 function init()
 	take 'пропуск'
 	take 'мобильник';
