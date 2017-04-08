@@ -37,11 +37,19 @@ obj {
 		snd.music('mus/'..s.tracks[s.pos], 1)
 	end;
 	load = function(s)
+		if rawget(_G, 'js') then
+			s.tracks = {
+				'RoccoW_-_01_-_Welcome.ogg',
+				'RoccoW_-_02_-_Echiptian_Swaggah.ogg', 
+				'RoccoW_-_08_-_Sweet_Self_Satisfaction.ogg', 
+			}
+		else
 		for f in std.readdir 'mus' do
 			if f:find('%.ogg$') then
 				table.insert(s.tracks, f)
 				print("Adding track: ", f)
 			end
+		end
 		end
 		table.sort(s.tracks)
 		return s
