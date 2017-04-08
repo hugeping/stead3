@@ -20,6 +20,11 @@
 require "noinv"
 require "snd"
 require "fmt"
+require "prefs"
+
+prefs.photo = { total = 0; cat = false; selfie = false; profi = false; reader = false; mystery = false; }
+prefs:load();
+
 fmt.para = true
 game.pic = "gfx/smena.png"
 
@@ -97,7 +102,6 @@ glass_dsc = function(s,w)
   end
   p(s.descr .. d)
 end;
-local achievements = { total = 0; cat = false; selfie = false; profi = false; reader = false; mystery = false; }
 glass_act = function(s,w)
   local name = "Стеклянная банка"
   local d = ", совершенно пустая."
@@ -258,10 +262,12 @@ obj {
 };
 
 function get_achievement(t)
+  local achievements = prefs.photo
   if not achievements[t] then
     achievements[t] = true
     achievements.total = achievements.total + 1
     p("^^" .. fmt.u(fmt.nb("Получено достижение: " .. achievement_names[t])))
+    prefs:store()
   end
 end
 
@@ -652,6 +658,7 @@ room {
   noinv = true;
   disp = "Достижения";
   dsc = function()
+    local achievements = prefs.photo
     if (achievements.cat) then pn("^1. " .. fmt.u(achievement_names["cat"]) .. "^ --  cделал котофото. Или фотокото.") else pn "^1. ???" end
     if (achievements.selfie) then pn("^2. " .. fmt.u(achievement_names["selfie"]) .. "^ -- cделал селфи в туалете, опередив моду на два десятилетия.") else pn "^2. ???" end
     if (achievements.profi) then pn("^3. " .. fmt.u(achievement_names["profi"]) .. "^ -- проявил пленку, не допустив ни одной ошибки.") else pn "^3. ???" end
@@ -794,6 +801,7 @@ room {
   ]]))
   end;
   decor = function()
+    local achievements = prefs.photo
     pn("{#достижения|Достижения} (открыто " .. tostring(achievements.total) .. " из 5)");
   end
 }:with{
