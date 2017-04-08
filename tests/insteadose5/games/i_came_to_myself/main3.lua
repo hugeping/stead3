@@ -11,7 +11,7 @@ game.inv = 'Зачем это мне?';
 room {
    nam = 'main',
    disp = '',
---   pic = 'gfx/icame.png',
+   pic = 'gfx/icame.png',
    onenter = function()
       if have 'collar' then
 	 drop('collar', 'lane')
@@ -20,7 +20,7 @@ room {
    end,
    obj = {
       obj {
-	 dsc = fmt.img 'gfx/icame.png'..'^^{Я очнулся…}',
+	 dsc = '{Я очнулся…}',
 	 act = function()
 	    walk 'lane'
 	 end,
