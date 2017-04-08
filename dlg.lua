@@ -56,7 +56,7 @@ std.dlg = std.class({
 		end
 		return std.par(std.scene_delim, title or false, lact or false, dsc)
 	end;
-	onact = function(s, w) -- show dsc by default
+	ph_onact = function(s, w) -- show dsc by default
 		if not std.phrase_show then
 			return
 		end
@@ -183,7 +183,26 @@ std.dlg = std.class({
 		if not oo then
 			return
 		end
-		return oo.obj:srch(w)
+		local r, l, i = s:lookup(w)
+		if not r then
+			return
+		end
+		if not std.is_obj(r, 'phr') then -- simple object
+			return std.room.srch(s, w)
+		end
+		w = oo.obj:for_each(function(v) -- aliases
+			v = v:__alias()
+			if not v:visible() then
+				return
+			end
+			if v == r then
+				return v
+			end
+		end)
+		if not w then
+			return
+		end
+		return r, l, i
 	end;
 	display = function(s)
 		local deco = std.call(s, 'decor'); -- static decorations
@@ -303,6 +322,10 @@ std.phr = std.class({
 	act = function(s, ...)
 		local n = s
 --		s = s:__alias()
+		local onact, v = std.call(std.here(), 'ph_onact', s)
+		if not v then
+			return onact
+		end
 		local w = s:where()
 		if w and w.only then -- only one choice
 			for i = 1, #w.obj do
@@ -317,6 +340,8 @@ std.phr = std.class({
 		local cur = std.here().current
 
 		local r, v = std.call(s, 'ph_act', ...)
+
+		r = std.par(std.scene_delim, onact or false, r or false), v
 
 		if std.me():moved() or cur ~= std.here().current then
 			return r, v

@@ -4,10 +4,45 @@ local std = stead
 
 local instead = std.obj {
 	nam = '@instead';
+
+	version_table = {3, 0, 0};
+
 	ini = function(s) -- after reset always do fade
 		s.need_fading(true)
 	end;
 }
+
+function instead.atleast(...)
+	for k, v in std.ipairs {...} do
+		if std.type(v) ~= 'number' then
+			return false
+		end
+		if v > (instead.version_table[k] or 0) then
+			return false
+		end
+		if v < (instead.version_table[k] or 0) then
+			return true
+		end
+	end
+	return true
+end
+
+function instead.version(...)
+	if #{...} == 0 then
+		return instead.version_table
+	end
+	if not instead.atleast(...) then
+		local v = false
+		for k, n in std.ipairs({...}) do
+			if std.type(n) ~= 'number' then
+				std.err([[Wrong instead.version argument: ]]..std.tostr(n), 2)
+			end
+			v = (v and (v .. '.') or '').. std.tostr(n)
+		end
+		std.err ([[The game requires instead engine of version ]] ..(v or '???').. [[ or higher.
+		http://instead.sourceforge.net]], 2)
+	end
+end
 
 function instead.need_fading(v)
 	local ov = instead.__need_fading
@@ -216,7 +251,7 @@ function iface:xref(str, o, ...)
 	if type(str) ~= 'string' then
 		std.err ("Wrong parameter to iface:xref: "..std.tostr(str), 2)
 	end
-	if not std.is_obj(o) or std.is_obj(o, 'stat') then
+	if not std.is_obj(o) or std.is_obj(o, 'stat') or o:disabled() then
 		return str
 	end
 	local a = { ... }
@@ -450,6 +485,6 @@ std.mod_save(function()
 	instead.__autosave_slot = nil
 end)
 
-if DEBUG then
+if std.rawget(_G, 'DEBUG') then
 	require 'dbg'
 end

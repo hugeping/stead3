@@ -5,6 +5,7 @@ stead = {
 	call_top = 0,
 	call_ctx = { txt = nil, self = nil },
 	objects = {};
+	tags = {};
 	next_dynamic = -1;
 	max_dynamic = 32767;
 	tables = {};
@@ -14,7 +15,6 @@ stead = {
 	tostr = tostring;
 	tonum = tonumber;
 	type = type;
-	err = error;
 	setmt = setmetatable;
 	getmt = getmetatable;
 	table = table;
@@ -28,6 +28,7 @@ stead = {
 	pcall = pcall;
 	io = io;
 	os = os;
+	readdir = instead_readdir,
 	string = string;
 	next = next;
 	loadfile = loadfile;
@@ -43,6 +44,18 @@ stead = {
 }
 
 local std = stead
+
+std.strip_call = true
+
+local error = error
+
+function std.err(msg, lev)
+	if std.noerror then
+		std.dprint(msg)
+	else
+		error(msg, lev)
+	end
+end
 
 function std.dprint(...)
 	local a = { ... }
@@ -357,7 +370,7 @@ std.fmt = function(str, fmt, state)
 	local xref = xref_prep
 	local s = str
 	s = string.gsub(s, '[\t \n]+', std.space_delim);
-	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^'} );
+	s = string.gsub(s, '\\?[\\^]', { ['^'] = '\n', ['\\^'] = '^'} ):gsub("\n[ \t]+", "\n")
 	while true do
 		fmt_refs = {}
 		substs = false
@@ -464,7 +477,7 @@ function std.class(s, inh)
 		end
 		return std.dispof(self)
 	end;
-	s.__div = function(s, b)
+	s.__pow = function(s, b)
 		if type(b) == 'string' or type(b) == 'number' then
 			if std.is_tag(b) then
 				return std.rawequal(s.tag, b)
@@ -894,15 +907,27 @@ function std:reset(fn) -- reset state
 end
 
 function std:load(fname) -- load save
-	self:reset()
-	std.ref 'game':__ini(false)
-
+	if std.rawget(_G, 'DEBUG') or std.ref 'game':time() > 0 then
+		self:reset()
+		std.ref 'game':__ini(false)
+	end
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
 		std.err(err, 2)
 	end
 
-	local strict = std.nostrict; std.nostrict = true; f(); std.nostrict = strict
+	local strict = std.nostrict; std.nostrict = true;
+	if DEBUG then
+		std.noerror = true
+		local st, r = std.pcall(f)
+		if not st then
+			std.dprint(r)
+		end
+		std.noerror = false
+	else
+		f();
+	end
+	std.nostrict = strict
 
 	std.ref 'game':__ini(true)
 	return self.game:lastdisp()
@@ -1042,16 +1067,8 @@ function std:done()
 		end
 	end)
 	std.objects = objects
+	std.tags = {}
 	std.next_dynamic = -1
-	if std.ref 'game' then
-		std.delete('game')
-	end
-	if std.ref 'main' then
-		std.delete('main')
-	end
-	if std.ref 'player' then
-		std.delete('player')
-	end
 	std.files = {}
 --	std.modules = {}
 	std.includes = {}
@@ -1128,6 +1145,16 @@ local function dyn_name()
 	return n
 end
 
+local function tag_name(t)
+	local oo = std.objects
+	local tt = std.tags[t] or {}
+	local n = t:sub(2) .. '#'..std.tonum(#tt)
+	if oo[n] then return #oo + 1 end -- collision
+	table.insert(tt, n)
+	std.tags[t] = tt
+	return n
+end
+
 std.obj = std.class {
 	__obj_type = true;
 	with = function(self, ...)
@@ -1159,11 +1186,16 @@ std.obj = std.class {
 		if v.nam == nil then
 			if std.__in_new then
 				rawset(v, 'nam', dyn_name())
+			elseif std.is_tag(v.tag) then
+				rawset(v, 'nam', tag_name(v.tag))
 			else
 				rawset(v, 'nam', #oo + 1)
 			end
+			rawset(v, '__autoname', true)
 		elseif type(v.nam) ~= 'string' and type(v.nam) ~= 'number' then
 			std.err ("Wrong .nam in object.", 2)
+--		elseif type(v.nam) == 'string' and v.nam:find('#[0-9]+$') then
+--			std.err ("You can not use #<number> in object name: "..v.nam, 2)
 		end
 
 		if oo[v.nam] and not std.is_system(oo[v.nam]) then
@@ -1295,12 +1327,16 @@ std.obj = std.class {
 		for i = 1, #list do
 			local l = list[i]
 			local ll = l.__list
-			o = ll[1]
-			if not w then
-				break
-			end
+
 			for k = 1, #ll do
-				table.insert(r, ll[k])
+				local oo = ll[k]
+				if std.is_obj(oo) and oo:lookup(s) then
+					o = o or oo
+					if o and not w then
+						break
+					end
+					table.insert(r, oo)
+				end
 			end
 		end
 		return o
@@ -1329,12 +1365,9 @@ std.obj = std.class {
 		s:where(where)
 		for i = 1, #where do
 			local o = where[i]
-			o.obj:del(s)
-			if std.is_obj(o, 'room') then
-				o.way:del(s)
-			end
-			if std.is_obj(o, 'player') then
-				o:inventory():del(s)
+			local _, l, i = o:lookup(s)
+			if l then
+				l:del(s)
 			end
 		end
 		return s, where
@@ -1498,6 +1531,9 @@ std.obj = std.class {
 		end
 	end;
 	__dump = function(s)
+		if not s:visible() or s:closed() then
+			return
+		end
 		return s.obj:__dump(true)
 	end;
 	lifeon = function(s)
@@ -1769,6 +1805,9 @@ std.world = std.class({
 	end;
 	cmd = function(s, cmd)
 		local r, v
+		if not std.is_obj(s.player) then
+			std.err("Wrong player object.", 2)
+		end
 		s.player:moved(false)
 		s.player:need_scene(false)
 		std.abort_cmd = false
@@ -1948,6 +1987,17 @@ std.player = std.class ({
 		end
 		return
 	end;
+	lookup = function(self, w)
+		local r, v, i = std.obj.lookup(self, w)
+		if std.is_obj(r) then
+			return r, v, i
+		end
+		r, v = self:inventory():lookup(w)
+		if std.is_obj(r) then
+			return r, self:inventory(), v
+		end
+		return
+	end;
 	have = function(s, w)
 		local o, i = s:inventory():lookup(w)
 		if not o then
@@ -2046,9 +2096,10 @@ std.player = std.class ({
 		if moved then
 			s:moved(false)
 		end
+		local ww = w
 		w = std.ref(w)
 		if not w then
-			std.err("Wrong parameter to walk: "..std.tostr(w))
+			std.err("Wrong parameter to walk: "..std.tostr(ww))
 		end
 
 --		if w == std.here() then -- nothing todo
@@ -2059,6 +2110,7 @@ std.player = std.class ({
 
 		local r, v, t
 		local f = s:where()
+
 		r, v = std.call(std.ref 'game', 'onwalk', f, inwalk)
 
 		t = std.par(std.scene_delim, t or false, r)
@@ -2068,26 +2120,35 @@ std.player = std.class ({
 			return t, true
 		end
 
-		if v ~= true then
-			if not noexit and not s.__in_onexit then
-				s.__in_onexit = true
-				r, v = std.call(s:where(), 'onexit', inwalk)
-				s.__in_onexit = false
-				t = std.par(std.scene_delim, t or false, r)
-				if v == false or s:moved() then
-					if not s:moved() then s:moved(moved) end
-					return t, true
-				end
-			end
-			if not noenter then
-				r, v = std.call(inwalk, 'onenter', s:where())
-				t = std.par(std.scene_delim, t or false, r)
-				if v == false or s:moved() then
-					if not s:moved() then s:moved(moved) end
-					return t, true
-				end
+		r, v = std.call(inwalk, 'onwalk', f)
+
+		t = std.par(std.scene_delim, t or false, r)
+
+		if v == false or s:moved() then -- stop walk
+			if not s:moved() then s:moved(moved) end
+			return t, true
+		end
+
+		if not noexit and not s.__in_onexit then
+			s.__in_onexit = true
+			r, v = std.call(s:where(), 'onexit', inwalk)
+			s.__in_onexit = false
+			t = std.par(std.scene_delim, t or false, r)
+			if v == false or s:moved() then
+				if not s:moved() then s:moved(moved) end
+				return t, true
 			end
 		end
+
+		if not noenter then
+			r, v = std.call(inwalk, 'onenter', s:where())
+			t = std.par(std.scene_delim, t or false, r)
+			if v == false or s:moved() then
+				if not s:moved() then s:moved(moved) end
+				return t, true
+			end
+		end
+
 		if not noexit and not s.__in_exit then
 			s.__in_exit = true
 			r, v = std.call(s:where(), 'exit', inwalk)
@@ -2102,8 +2163,6 @@ std.player = std.class ({
 		if f ~= inwalk or not s.room.__from then -- brake self-recursion
 			s.room.__from = f
 		end
-		s.room.__visits = (s.room.__visits or 0) + 1
-
 		if not noenter then
 			r, v = std.call(inwalk, 'enter', f)
 			t = std.par(std.scene_delim, t or false, r)
@@ -2111,7 +2170,7 @@ std.player = std.class ({
 				return t, true
 			end
 		end
-
+		s.room.__visits = (s.room.__visits or 0) + 1
 		s:need_scene(true)
 		s:moved(true)
 		if not s.__in_afterwalk then
@@ -2280,7 +2339,6 @@ local function __dump(t, nested)
 			return string.format("%s", k)
 		end
 	elseif type(t) == 'table' and not t.__visited then
-		t.__visited = true
 		if std.tables[t] and nested then
 			local k = std.tables[t]
 			return string.format("%s", k)
@@ -2293,6 +2351,7 @@ local function __dump(t, nested)
 			end
 			return rc
 		end
+		t.__visited = true
 		local k,v
 		local nkeys = {}
 		local keys = {}
@@ -2336,6 +2395,8 @@ local function __dump(t, nested)
 			end
 		end
 		rc = rc:gsub(",[ \t]*$", "") .. " }"
+	elseif type(t) == 'table' then -- visited!
+		std.err("Can not save table with cross-references.", 2)
 	end
 	return rc
 end
@@ -2411,7 +2472,7 @@ function std.dispof(o)
 		local d = std.call(o, 'disp')
 		return d
 	end
-	if type(o.nam) ~= 'string' then
+	if o.__autoname then
 		if std.is_tag(o.tag) then
 			o = o.tag:sub(2)
 			return o
@@ -2446,6 +2507,10 @@ function std.ref(o)
 	local oo = std.objects
 	if oo[o] then
 		return oo[o]
+	end
+	if std.noerror then
+		std.dprint("Reference to non-existing object: ", std.tostr(o))
+		return {} -- give fake object
 	end
 end
 
@@ -2496,9 +2561,9 @@ std.call = function(v, n, ...)
 		std.err("Call on non table object: "..std.tostr(n), 2)
 	end
 	local r, v, c = std.method(v, n, ...)
-	if type(r) == 'string' then
-		r = r:gsub("[%^]+$", "") -- extra trailing ^
-		r = r:gsub("[ \t]+$", "") -- and spaces
+	if std.strip_call and type(r) == 'string' then
+		r = r:gsub("^[%^\n\r\t ]+", "") -- extra heading ^ and spaces
+		r = r:gsub("[%^\n\r\t ]+$", "") -- extra trailing ^ and spaces
 		return r, v, c
 	end
 	return r or nil, v, c
@@ -2602,7 +2667,7 @@ function std.cacheable(n, f)
 	end
 end
 
-std.obj {
+local iface = std.obj {
 	nam = '@iface';
 	cmd = function(self, inp)
 		local cmd = cmd_parse(inp)
@@ -2654,6 +2719,29 @@ std.obj {
 		return str
 	end;
 };
+
+local function fmt_stub(self, str)
+	return str
+end
+
+iface.em = fmt_stub
+iface.center = fmt_stub
+iface.just = fmt_stub
+iface.left = fmt_stub
+iface.right = fmt_stub
+iface.bold = fmt_stub
+iface.top = fmt_stub
+iface.bottom = fmt_stub
+iface.middle = fmt_stub
+iface.nb = fmt_stub
+iface.anchor = fmt_stub
+iface.img = fmt_stub
+iface.imgl = fmt_stub
+iface.imgr = fmt_stub
+iface.under = fmt_stub
+iface.st = fmt_stub
+iface.tab = fmt_stub
+iface.y = fmt_stub
 
 function std.loadmod(f)
 	if std.game and not not std.__in_gamefile then

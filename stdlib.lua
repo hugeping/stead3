@@ -261,11 +261,11 @@ function push(w, ww)
 	return r, v
 end
 
-function empty(w)
+function empty(w, ...)
 	if not w then
 		return std.here():empty()
 	end
-	return std.object(w):empty(w)
+	return std.object(w):empty(...)
 end
 
 function lifeon(w, ...)
@@ -432,7 +432,7 @@ function path(t)
 		end;
 		after = t.after;
 		walk = w;
-		onenter = function(s)
+		onwalk = function(s, f)
 			if disabled(s.walk) or closed(s.walk) then
 				return false
 			end
