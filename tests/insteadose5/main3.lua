@@ -82,6 +82,7 @@ obj {
 room {
 	nam = 'main';
 	title = 'ИНСТЕДОЗ 5';
+	pic = 'gfx/fractal.gif';
 	decor = function()
 		pn (fmt.c(fmt.b[[ЖУРНАЛ (СОВЕРШЕННО СЕКРЕТНО)]]))
 		pn ()
