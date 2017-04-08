@@ -1,4 +1,5 @@
 --$Name: Инстедоз 5$
+--$Vrsion: 0.2$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -22,6 +23,12 @@ obj {
 		if snd.music_playing() then
 			return
 		end
+		s:next()
+	end;
+	rand = function(s)
+		s.pos = rnd(#s.tracks)
+	end;
+	next = function(s)
 		s.pos = s.pos + 1
 		if s.pos > #s.tracks then
 			s.pos = 1
@@ -29,24 +36,30 @@ obj {
 		print("Next track: ", s.tracks[s.pos])
 		snd.music('mus/'..s.tracks[s.pos], 1)
 	end;
-	start = function(s)
+	load = function(s)
 		for f in std.readdir 'mus' do
 			if f:find('%.ogg$') then
 				table.insert(s.tracks, f)
+				print("Adding track: ", f)
 			end
 		end
 		table.sort(s.tracks)
+		return s
+	end;
+	start = function(s)
 		if #s.tracks == 0 then
 			return
 		end
+		snd.music('mus/'..s.tracks[s.pos], 1)
 		timer:set(1000)
-	end
-}:start()
+	end;
+}:load():start()
 
 obj {
 	nam = '@game';
 	act = function(s, w)
 		gamefile('games/'..w..'/main3.lua', true)
+		_'@mplayer':rand()
 		_'@mplayer':start()
 	end;
 }
