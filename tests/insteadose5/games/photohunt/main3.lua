@@ -657,6 +657,8 @@ room {
     if (achievements.profi) then pn("^3. " .. fmt.u(achievement_names["profi"]) .. "^ -- проявил пленку, не допустив ни одной ошибки.") else pn "^3. ???" end
     if (achievements.reader) then pn("^4. " .. fmt.u(achievement_names["reader"]) .. "^ -- пролистал все книги в кабинете Петра.") else pn "^4. ???" end
     if (achievements.mystery) then pn("^5. " .. fmt.u(achievement_names["mystery"]) .. "^ -- нашел загадочную записку.") else pn "^5. ???" end
+    pn ()
+    pn (("{@restart|Вернуться к журналу}"))
   end
 }
 
