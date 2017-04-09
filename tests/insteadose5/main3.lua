@@ -67,8 +67,10 @@ obj {
 	nam = '@game';
 	act = function(s, w)
 		gamefile('games/'..w..'/main3.lua', true)
-		_'@mplayer':rand()
-		_'@mplayer':start()
+		if w ~= 'spring' then
+			_'@mplayer':rand()
+			_'@mplayer':start()
+		end
 	end;
 }
 
@@ -88,6 +90,7 @@ room {
 		pn ()
 		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
+		pn (fmt.c [[{@game spring|ВЕСНА}]]);
 		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
 	end;
 }
