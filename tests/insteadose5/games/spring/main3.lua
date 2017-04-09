@@ -1266,7 +1266,7 @@ room {	nam = 'кабинет_генерала';
 					return 'Заходить к генералу с чайником наперевес как-то несолидно.',false
 				end
 				if progress == 0 then 
-					if trns_flag('протокол_1') and trns_flag('протокол_2') and trns_flag('протокол_3') then
+					if trns_flag('протокол_1') and trns_flag('протокол_2') then
 						return 'Закрыто! Похоже генерал уже ушел. Что ж, и мне пора идти в номер и хорошенько выспаться.', false
 					end; 
 				end; --progress 	
