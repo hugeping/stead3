@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.23$
+--$Version: 0.24$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -19,7 +19,11 @@ obj {
 		tracks = {};
 	};
 	pos = 1;
+	curgame = false;
 	timer = function(s)
+		if s.curgame == 'spring' then
+			return
+		end
 		if snd.music_playing() then
 			return
 		end
@@ -58,6 +62,9 @@ obj {
 	nam = '@game';
 	act = function(s, w)
 		gamefile('games/'..w..'/main3.lua', true)
+
+		_'@mplayer'.curgame = w
+
 		if w ~= 'spring' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
