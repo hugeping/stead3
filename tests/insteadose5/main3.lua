@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.25$
+--$Version: 0.26$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -96,3 +96,9 @@ room {
 		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
 	end;
 }
+
+function init()
+	take (stat {
+		disp = [[АВТОРЫ ВЫПУСКА:^Андрей Лобанов (spline), Сергей Можайский (techniX), Башкиров Сергей, Irreman, Михаил Поздняков (casper_nn), Петр Косых^http://instead.syscall.ru^Апрель 2017]];
+	})
+end
