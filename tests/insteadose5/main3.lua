@@ -71,6 +71,9 @@ obj {
 			_'@mplayer':rand()
 			_'@mplayer':start()
 		end
+		if _'game'.pic == nil then
+			_'game' 'pic'('gfx/fractal.gif');
+		end
 	end;
 }
 
@@ -88,6 +91,7 @@ room {
 	decor = function()
 		pn (fmt.c(fmt.b[[ЖУРНАЛ (СОВЕРШЕННО СЕКРЕТНО)]]))
 		pn ()
+		pn (fmt.c [[{@game prolog|ПРОЛОГ}]]);
 		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 		pn (fmt.c [[{@game spring|ВЕСНА}]]);
