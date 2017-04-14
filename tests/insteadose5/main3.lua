@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.26$
+--$Version: 0.27$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -68,6 +68,10 @@ obj {
 		if w ~= 'spring' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
+		else
+			if rawget(_G, 'js') then
+				snd.music('') -- js hack
+			end
 		end
 		if _'game'.pic == nil then
 			_'game' 'pic'('gfx/fractal.gif');
