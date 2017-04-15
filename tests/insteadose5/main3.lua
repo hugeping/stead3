@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.27$
+--$Version: 0.28$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -21,7 +21,7 @@ obj {
 	pos = 1;
 	curgame = false;
 	timer = function(s)
-		if s.curgame == 'spring' then
+		if s.curgame == 'spring' or s.curgame == 'lenochka' then
 			return
 		end
 		if snd.music_playing() then
@@ -65,7 +65,7 @@ obj {
 
 		_'@mplayer'.curgame = w
 
-		if w ~= 'spring' then
+		if w ~= 'spring' and w ~= 'lenochka' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
 		else
@@ -98,6 +98,7 @@ room {
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 		pn (fmt.c [[{@game spring|ВЕСНА}]]);
 		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
+		pn (fmt.c [[{@game lenochka|ЛЕНОЧКА}]]);
 	end;
 }
 
