@@ -61,6 +61,10 @@ obj {
 obj {
 	nam = '@game';
 	act = function(s, w)
+		if rawget(_G, 'js') then
+			snd.music('') -- js hack
+		end
+
 		gamefile('games/'..w..'/main3.lua', true)
 
 		_'@mplayer'.curgame = w
@@ -68,10 +72,6 @@ obj {
 		if w ~= 'spring' and w ~= 'lenochka' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
-		else
-			if rawget(_G, 'js') then
-				snd.music('') -- js hack
-			end
 		end
 		if _'game'.pic == nil then
 			_'game' 'pic'('gfx/fractal.gif');
