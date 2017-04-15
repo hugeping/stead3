@@ -104,6 +104,15 @@ room {
 
 function init()
 	take (stat {
-		disp = [[АВТОРЫ ВЫПУСКА:^Андрей Лобанов (spline), Сергей Можайский (techniX), Башкиров Сергей, Irreman, Михаил Поздняков (casper_nn), Петр Косых^http://instead.syscall.ru^Апрель 2017]];
+		disp = [[АВТОРЫ ВЫПУСКА:^
+Irreman,
+Сергей Можайский (techniX),
+Петр Косых,
+Михаил Поздняков (casper_nn),
+Башкиров Сергей,
+Андрей Лобанов (spline),
+MAlischka^^
+http://instead.syscall.ru^
+Апрель 2017]];
 	})
 end
