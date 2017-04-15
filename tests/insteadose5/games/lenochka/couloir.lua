@@ -4,9 +4,9 @@ room {
     dsc=[[Куда теперь?]];
     decor=function(s,w)
         if have "Лейка" and not have "Бутерброд" then
-            p(false);
+
         elseif  have "Лейка с водой" and not have "Бутерброд" then
-            p(false);
+
         elseif have "Бутерброд" then
             p[[{#кот|Гегель} сидел посреди коридора и молча смотрел на бутерброд в руках девушки.]];
 
