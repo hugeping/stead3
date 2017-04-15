@@ -229,7 +229,7 @@ room {
         nam="#phone";
         act=function(s,w)
             if gift<4 then
-                p[[Два идентичных предмета, похожих на раций.]];
+                p[[Два идентичных предмета. Похожи на рации.]];
                 if s:actions() == 0 then
                     gift=gift+1;
                 end
