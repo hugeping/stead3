@@ -2,19 +2,17 @@ room {
     nam = "couloir1";
     disp = "Коридор";
     dsc=[[Куда теперь?]];
-    decor=function(s,w)
-        if have "Лейка" and not have "Бутерброд" then
-
-        elseif  have "Лейка с водой" and not have "Бутерброд" then
-
-        elseif have "Бутерброд" then
-            p[[{#кот|Гегель} сидел посреди коридора и молча смотрел на бутерброд в руках девушки.]];
-
-        elseif not have ("Лейка" and "Лейка с водой")then
+    onenter = function()
+        if not have ("Лейка") and not have ("Лейка с водой") then
             walkin ("couloir2");
+            return false
         end;
     end;
-
+    decor=function(s,w)
+        if have "Бутерброд" then
+            p[[{#кот|Гегель} сидел посреди коридора и молча смотрел на бутерброд в руках девушки.]];
+        end
+    end;
     way= {"reception","toilet","kitchen","counting","conference","5-floor"};
 }:with
 {
@@ -48,18 +46,18 @@ room {
 room {
     nam = "counting";
     disp = "Бухгалтерия";
-    dsc=function(s,w)
+    onenter = function(s)
         p[[Заперто.^
 Наверное все уже ушли.]];
-        walkin ("couloir1");
+        return false
     end;
 };
 
 room {
     nam = "conference";
     disp = "Ком. для совещаний.";
-    dsc=function(s,w)
+    onenter = function(s)
         p[[Заперто.]];
-        walkin ("couloir1");
+        return false
     end;
 };
