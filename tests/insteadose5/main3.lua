@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.30$
+--$Version: 0.4$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
@@ -21,7 +21,7 @@ obj {
 	pos = 1;
 	curgame = false;
 	timer = function(s)
-		if s.curgame == 'spring' or s.curgame == 'lenochka' then
+		if s.curgame == 'spring' or s.curgame == 'lenochka' or s.curgame == 'structure' then
 			return
 		end
 		if snd.music_playing() then
@@ -65,10 +65,10 @@ obj {
 
 		_'@mplayer'.curgame = w
 
-		if w ~= 'spring' and w ~= 'lenochka' then
+		if w ~= 'spring' and w ~= 'lenochka' and w ~= 'structure' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
-		elseif w == 'spring' then
+		elseif w == 'spring' or w == 'structure' then
 			if rawget(_G, 'js') then
 				snd.music('') -- js hack
 			end
@@ -97,6 +97,7 @@ room {
 		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 		pn (fmt.c [[{@game spring|ВЕСНА}]]);
+		pn (fmt.c [[{@game structure|СТРУКТУРА}]]);
 		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
 		pn (fmt.c [[{@game lenochka|ЛЕНОЧКА}]]);
 	end;
@@ -109,8 +110,8 @@ Irreman,
 Сергей Можайский (techniX),
 Петр Косых,
 Михаил Поздняков (casper_nn),
-Башкиров Сергей,
 Андрей Лобанов (spline),
+Башкиров Сергей,
 MAlischka^^
 http://instead.syscall.ru^
 Апрель 2017]];
