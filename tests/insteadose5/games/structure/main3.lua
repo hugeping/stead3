@@ -770,7 +770,7 @@ room {
 	 nam = 'artefact',
 	 disp = 'артефакт',
 	 dsc = function(s)
-	    if where(s) ^ 'd_factory' then
+	    if where(s) ^ 'in_factory' then
 	       return 'Возле очередного исполина лежит какой-то {предмет}.'
 	    elseif where(s) ^ 'screw' then
 	       if not s.wixed then
