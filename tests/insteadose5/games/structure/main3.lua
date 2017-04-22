@@ -10,6 +10,7 @@ require 'snd'
 game.act = 'Не работает.'
 game.use = 'Это не поможет.'
 game.inv = 'Странная штука.'
+
 game.pic = 'gfx/struct.png'
 
 -- Объект для подстановки. Нужен для принудительных переводов строк в dsc-объектов.
@@ -47,7 +48,7 @@ function init()
    sky_photo = false
    stable_portal = false
    e = -1
-   titles = '^^' .. fmt.b 'Автор игры' .. ': Андрей Лобанов^' .. fmt.b 'Автор INSTEAD' .. ': Пётр Косых^' .. fmt.b 'Музыка' .. ': Mellow-D -- Appelsap track 1^' .. fmt.b 'Тестирование' .. ': Пётр Косых, Сергей Можайский, Kerbal.'
+   titles = '^^' .. fmt.b 'Автор игры' .. ': Андрей Лобанов^' .. fmt.b 'Автор INSTEAD' .. ': Пётр Косых^' .. fmt.b 'Иллюстрация' .. ': Пётр Косых^' .. fmt.b 'Музыка' .. ': Mellow-D -- Appelsap track 1^' .. fmt.b 'Тестирование' .. ': Пётр Косых, Сергей Можайский, Kerbal.'
 end
 
 function time()
@@ -1213,7 +1214,7 @@ room {
 	 nam = 'mess',
 	 dsc = 'В комнате царит бардак. Множество {предметов} самой разной формы и неизвестного назначения валяются то тут, то там.',
 	 act = function(s)
-	    if not have 'record' then
+	    if where 'record' == nil then
 	       take 'record'
 	       mdec(2)
 	       return 'Среди разнообразных предметов неизвестного назначения я нашёл некий предмет, похожий на оптический накопитель.'
