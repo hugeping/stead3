@@ -25,6 +25,10 @@ room {
 	    walk 'lane'
 	 end,
       },
+      obj {
+         nam = 'to_title',
+         dsc = '{@restart|^^ВЕРНУТЬСЯ К ЖУРНАЛУ}',
+      }:disable(),
    },
 }
 
@@ -233,6 +237,7 @@ room {
       obj {
 	 dsc = '{Далее}',
 	 act = function()
+	    enable 'to_title'
 	    walk 'main'
 	 end
       },
@@ -263,6 +268,7 @@ room {
       obj {
 	 dsc = '{Далее}',
 	 act = function()
+	    enable 'to_title'
 	    walk 'main'
 	 end
       },
@@ -278,6 +284,7 @@ room {
       obj {
 	 dsc = '{Далее}',
 	 act = function()
+	    enable 'to_title'
 	    walk 'main'
 	 end
       },
