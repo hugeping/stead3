@@ -21,7 +21,7 @@ obj {
 	pos = 1;
 	curgame = false;
 	timer = function(s)
-		if s.curgame == 'spring' or s.curgame == 'lenochka' or s.curgame == 'structure' then
+		if s.curgame == 'spring' or s.curgame == 'lenochka' or s.curgame == 'structure' or s.curgame == 'spy' then
 			return
 		end
 		if snd.music_playing() then
@@ -65,7 +65,7 @@ obj {
 
 		_'@mplayer'.curgame = w
 
-		if w ~= 'spring' and w ~= 'lenochka' and w ~= 'structure' then
+		if w ~= 'spring' and w ~= 'lenochka' and w ~= 'structure' and w ~= 'spy' then
 			_'@mplayer':rand()
 			_'@mplayer':start()
 		elseif w == 'spring' or w == 'structure' then
