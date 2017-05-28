@@ -93,6 +93,7 @@ room {
 		pn (fmt.c(fmt.b[[ЖУРНАЛ (СОВЕРШЕННО СЕКРЕТНО)]]))
 		pn ()
 		pn (fmt.c [[{@game prolog|ПРОЛОГ}]]);
+		pn (fmt.c [[{@game spy|ШПИОН}]]);
 		pn (fmt.c [[{@game photohunt|ФОТООХОТА}]]);
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 		pn (fmt.c [[{@game spring|ВЕСНА}]]);
