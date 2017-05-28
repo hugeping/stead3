@@ -6,6 +6,8 @@ require 'fmt' -- некоторые функции форматирования
 fmt.para = true -- включить режим параграфов (отступы)
 require 'noinv'
 
+game.pic = 'gfx/topsecret.png'
+
 game.act = 'Не работает.';
 game.use = 'Это не поможет.';
 game.inv = 'Зачем мне это?';
