@@ -97,6 +97,7 @@ room {
 		pn (fmt.c [[{@game walkout|НОЧНАЯ ПРОГУЛКА}]]);
 		pn (fmt.c [[{@game spring|ВЕСНА}]]);
 		pn (fmt.c [[{@game structure|СТРУКТУРА}]]);
+		pn (fmt.c [[{@game exploring|РАЗВЕДКА БОЕМ}]]);
 		pn (fmt.c [[{@game i_came_to_myself|Я ОЧНУЛСЯ}]]);
 		pn (fmt.c [[{@game lenochka|ЛЕНОЧКА}]]);
 		pn()
@@ -138,7 +139,7 @@ room {
 function init()
 	take (stat {
 		disp = [[АВТОРЫ ВЫПУСКА:^
-Irreman,
+Irremann,
 Сергей Можайский (techniX),
 Петр Косых,
 Михаил Поздняков (casper_nn),
