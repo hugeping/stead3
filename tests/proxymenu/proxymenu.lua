@@ -21,15 +21,17 @@ local function proxy_wrap(nam, fwd)
 			if oo:type 'proxy' then
 				oo = _(oo.ref)
 			end
-			r, v = std.call(oo, s.acts.used or 'used', o, ...)
+			r, v = std.call(oo, s.acts.used or 'used', o)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == true then
 				oo['__nr_used'] = (oo['__nr_used'] or 0) + 1
 				return t or r, true
 			end
+			r, v = std.call(o, act, oo)
+		else
+			r, v = std.call(o, act, ...)
 		end
 
-		r, v = std.call(o, act, ...)
 		t = std.par(std.scene_delim, t or false, r)
 
 		if type(v) == 'boolean' then
