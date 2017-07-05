@@ -72,10 +72,14 @@ std.proxy_obj = std.class ({
 	end;
 	disp = function(s)
 		local o = _(s.ref)
-		if have(o) then
-			return stead.proxy_prefix..fmt.em(std.dispof(o))
+		local d = std.dispof(o)
+		if type(d) ~= 'string' then
+			return d
 		end
-		return stead.proxy_prefix..std.dispof(o)
+		if have(o) then
+			return stead.proxy_prefix..fmt.em(d)
+		end
+		return stead.proxy_prefix..d
 	end;
 	act = proxy_wrap ('act');
 	inv = proxy_wrap ('inv');
