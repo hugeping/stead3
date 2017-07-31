@@ -5,7 +5,10 @@ loadmod 'proxymenu'
 
 game.useit = 'Не помогло.'
 game.use = 'Не сработает.'
-game.give = 'Отдать? Ни за что!'
+game.give = function(s, w, ww)
+	p 'Отдать? Ни за что!'
+	p (w, "->", ww)
+end
 game.eat = 'Не буду это есть.'
 game.drop = 'Еще пригодится.'
 game.exam = 'Ничего необычного.'

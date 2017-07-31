@@ -8,29 +8,34 @@ local function proxy_wrap(nam, fwd)
 		local t
 		local o = _(s.ref)
 		local act = s.acts or { }
+		local par = { ... }
+
 		act = act[nam] or nam
-		local r, v = std.call(std.game, 'before_'..act, o, ...)
+
+		if nam == 'use' then
+			local oo = par[1]
+			if oo:type 'proxy' then
+				oo = _(oo.ref)
+				par[1] = oo
+			end
+		end
+
+		local r, v = std.call(std.game, 'before_'..act, o, std.unpack(par))
 		t = std.par(std.scene_delim, t or false, r)
 		if v == false then
 			return t or r, true
 		end
 
 		if nam == 'use' then
-			local oo = {...}
-			oo = oo[1]
-			if oo:type 'proxy' then
-				oo = _(oo.ref)
-			end
-			r, v = std.call(oo, s.acts.used or 'used', o)
+			r, v = std.call(par[1], s.acts.used or 'used', o)
 			t = std.par(std.scene_delim, t or false, r)
 			if v == true then
 				oo['__nr_used'] = (oo['__nr_used'] or 0) + 1
 				return t or r, true
 			end
-			r, v = std.call(o, act, oo)
-		else
-			r, v = std.call(o, act, ...)
 		end
+
+		r, v = std.call(o, act, std.unpack(par))
 
 		t = std.par(std.scene_delim, t or false, r)
 
@@ -43,12 +48,12 @@ local function proxy_wrap(nam, fwd)
 		end
 
 		if v then
-			r, v = std.call(std.game, 'after_'..act, o, ...)
+			r, v = std.call(std.game, 'after_'..act, o, std.unpack(par))
 			t = std.par(std.scene_delim, t or false, r)
 		end
 
 		if not t then -- game action
-			r, v = std.call(game, act, o, ...)
+			r, v = std.call(game, act, o, std.unpack(par))
 			t = std.par(std.scene_delim, t or false, r)
 		end
 		return t or r, true
