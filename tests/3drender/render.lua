@@ -80,7 +80,10 @@ function scene:rotate(hangle, vangle)
 	local qq = maf.rotation()
 	qv:mul(qh, qq)
 	self.quat = qq
-	return qq * maf.vec3(0, 0, 1)
+	local v = qq * maf.vec3(0, 0, 1)
+	v.y = - v.y
+	v.x = - v.x
+	return v
 end
 
 function scene:camera(x, y, z)
