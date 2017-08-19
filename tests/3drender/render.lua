@@ -15,6 +15,82 @@ local object = {
 }
 object.__index = object
 
+local function clamp( x, min, max )
+	if x < min then return min end
+	if x > max then return max end
+	return x
+end
+
+local function KtoRGB(kelvin)
+	local temp = kelvin / 100
+
+	local red, green, blue
+
+	if temp <= 66 then 
+		red = 255
+		green = temp
+		green = 99.4708025861 * math.log(green) - 161.1195681661
+		if temp <= 19 then
+			blue = 0
+		else
+			blue = temp - 10
+			blue = 138.5177312231 * math.log(blue) - 305.0447927307
+		end
+	else
+		red = temp - 60
+		red = 329.698727446 * math.pow(red, -0.1332047592)
+		green = temp - 60
+		green = 288.1221695283 * math.pow(green, -0.0755148492 )
+		blue = 255
+	end
+	return clamp(red, 0, 255), clamp(green, 0, 255), clamp(blue,  0, 255)
+end
+
+
+function render.star(t)
+	local pxl = pixels.new(t.r * 2, t.r * 2)
+	local xc = t.r 
+	local yc = t.r 
+	local r = t.r
+	local tt = t.temp
+	local d = t.r / 4
+
+	for i = 0, d - 1 do
+		pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
+	end
+	pxl:fill_circle(xc, yc, r - d, KtoRGB(tt))
+	d = d / 1.5
+	for y = 0, t.r * 2 do
+		for x = 0, t.r * 2 do
+			if (x - xc) ^ 2 + (y - yc) ^ 2 < (r) ^ 2 and 
+				(x - xc) ^ 2 + (y - yc) ^ 2 > (r - d) ^ 2 then
+				local gr = ((x - xc) ^ 2 + (y - yc) ^ 2) ^ 0.5
+				gr = 1 - (gr - (r - d)) / d 
+				local n = instead.noise3(x / 20, y / 20, z / 20)
+				local rr, gg, bb = pxl:val(x, y)
+				pxl:val(x, y, rr, gg, bb, (n * 127 + 127) * gr)
+			end
+		end
+	end
+
+	d = t.r / 4
+
+	for y = 0, t.r * 2 do
+		for x = 0, t.r * 2 do
+			if (r - x - d) ^ 2 + (r - y - d) ^ 2 < (r - d) ^ 2 then
+				local z = (r ^ 2 - (r - x) ^ 2) ^ 0.5
+				local n = instead.noise3(x / 20, y / 20, z / 20)
+				if n < -0.1 then
+					local rr, gg, bb = KtoRGB(tt + n * 5000)
+					local col = { rr, gg, bb, 255 }
+					pxl:pixel(x + d, y + d, std.unpack(col))
+				end
+			end
+		end
+	end
+
+	return pxl
+end
 
 function render.object()
 	local o = {

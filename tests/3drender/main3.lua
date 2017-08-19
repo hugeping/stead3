@@ -56,9 +56,9 @@ function init()
 	screen:clear(0, 0, 0, 255)
 	scene = r.scene()
 	local o = r.object():circle(0, 0, 200, { 255, 255, 255, 255 })
-	local circle = pixels.new(200, 200)
-	circle:circle(100, 100, 98, 255, 255, 255, 255);
-	local o = r.object():pixels(circle, -100, 100, 1)
+	local star = r.star({r = 160, temp = 4500 })
+--	circle:circle(100, 100, 98, 255, 255, 255, 255);
+	local o = r.object():pixels(star, -160, 160, 1)
 	scene:place(o, 0, 0, 200)
 --	scene:place(o, 0, 0, 5)
 	scene:setfov(160)
