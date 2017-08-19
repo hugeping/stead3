@@ -29,6 +29,11 @@ function object:circle(x, y, r, col)
 	return self
 end
 
+function object:pixels(pixels, x, y, scale)
+	table.insert(self.shapes, { t = 'pixels', pixels = pixels, x = x, y = y, scale = scale or 1 }) 
+	return self
+end
+
 function object:render(screen, fov, x, y, z)
 	local pos = x
 	if type(x) == 'number' then
@@ -38,11 +43,17 @@ function object:render(screen, fov, x, y, z)
 	local xc = math.floor(w / 2)
 	local yc = math.floor(h / 2)
 	for k, o in ipairs(self.shapes) do
-		if o.t == 'circle' and pos.z ~= 0 then
+		if o.t == 'circle' then
 			local nx = fov * (pos.x + o.x) / pos.z
 			local ny = fov * (pos.y + o.y) / pos.z
-			local nr = (o.r) / pos.z
+			local nr = fov * (o.r) / pos.z
 			screen:circle(xc + nx, yc - ny, nr, std.unpack(o.col))
+		elseif o.t == 'pixels' then
+			local nx = fov * (pos.x + o.x) / pos.z
+			local ny = fov * (pos.y + o.y) / pos.z
+			local scale = o.scale * fov / pos.z
+			local pp2 = o.pixels:scale(scale, scale, true)
+			pp2:blend(screen, xc + nx, yc - ny)
 		end
 	end
 end

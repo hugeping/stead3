@@ -2,7 +2,7 @@
 -- https://github.com/bjornbytes/maf
 -- MIT License
 
-local ffi = type(rawget(_G, 'jit')) == 'table' and jit.status() and require 'ffi'
+local ffi = type(rawget(_G, 'jit')) == 'table' and STANDALONE and jit.status() and require 'ffi'
 local vec3, quat
 
 local vtmp1
