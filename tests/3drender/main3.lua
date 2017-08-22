@@ -3,7 +3,7 @@ require "sprite"
 require "keys"
 
 function keys:filter(press, key)
-	return key == "left" or key == "right" or key == "w" or key == "a" or key == "s" or key == "d" or key == "up" or key == "down"
+	return key == "left" or key == "right" or key == "w" or key == "a" or key == "s" or key == "d" or key == "up" or key == "down" or key == "r"
 end
 
 global { hangle = 0, vangle = 0, x = 0, y = 0, z = 0 }
@@ -30,6 +30,11 @@ game.onkey = function(s, press, key)
 		vangle = vangle - (math.pi / 32)
 	elseif key == "down" then
 		vangle = vangle + (math.pi / 32)
+	elseif key == "r" then
+		local star = r.star({r = 160, temp = rnd(1000, 10000), seed = rnd(100) })
+		local o = r.object():pixels(star, -160, 160, 1)
+		scene.objects = {}
+		scene:place(o, 0, 0, 200)
 	end
 	scene:camera(x, y, z)
 	look = scene:rotate(hangle, vangle)

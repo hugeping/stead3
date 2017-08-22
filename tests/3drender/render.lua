@@ -46,8 +46,31 @@ local function KtoRGB(kelvin)
 	return clamp(red, 0, 255), clamp(green, 0, 255), clamp(blue,  0, 255)
 end
 
+local SEED = 1
 
+function render.noise(x)
+	if not x then
+		x = SEED
+	end
+	x = x * 1103515245 + 11;
+	SEED = x
+	return (math.ceil(x / 65536) % 32767);
+end
+
+function render.rnd(n)
+	return math.floor(render.noise() % n) + 1
+end
+
+function render.rndf(n)
+	return (render.rnd(32767) - 16384) / 16384
+end
+
+-- t.r - radius, t.temp -- temperature, t.seed -- seed
 function render.star(t)
+	local seed = t.seed or 1
+	render.noise(seed)
+	local nseed = render.rndf() * 127
+
 	local pxl = pixels.new(t.r * 2, t.r * 2)
 	local xc = t.r 
 	local yc = t.r 
@@ -59,36 +82,49 @@ function render.star(t)
 		pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
 	end
 	pxl:fill_circle(xc, yc, r - d, KtoRGB(tt))
-	d = d / 1.5
-	for y = 0, t.r * 2 do
+
+	d = d / 1.4
+
+	local r2 = r ^ 2
+	local rd2 = (r - d) ^ 2 
+
+	for y = 0, t.r * 2 do -- flames
+		local dy2 = (y - yc) ^ 2
+		local ny = y / (2 * r) * 20
 		for x = 0, t.r * 2 do
-			if (x - xc) ^ 2 + (y - yc) ^ 2 < (r) ^ 2 and 
-				(x - xc) ^ 2 + (y - yc) ^ 2 > (r - d) ^ 2 then
-				local gr = ((x - xc) ^ 2 + (y - yc) ^ 2) ^ 0.5
-				gr = 1 - (gr - (r - d)) / d 
-				local n = instead.noise3(x / 20, y / 20, z / 20)
+			local dx2 = (x - xc) ^2
+			if dx2 + dy2 < r2 and dx2 + dy2 > rd2 then
+				local gr = (dx2 + dy2) ^ 0.5
+				gr = 1 - (gr - (r - d)) / d
+				local nx = x / (2 * r) * 20
+				local n = instead.noise2(nx + nseed, ny + nseed)
 				local rr, gg, bb = pxl:val(x, y)
 				pxl:val(x, y, rr, gg, bb, (n * 127 + 127) * gr)
 			end
 		end
 	end
-
+	local sfactor = 13 + render.rndf() * 3
 	d = t.r / 4
-
-	for y = 0, t.r * 2 do
-		for x = 0, t.r * 2 do
-			if (r - x - d) ^ 2 + (r - y - d) ^ 2 < (r - d) ^ 2 then
-				local z = (r ^ 2 - (r - x) ^ 2) ^ 0.5
-				local n = instead.noise3(x / 20, y / 20, z / 20)
-				if n < -0.1 then
+	r2 = (r - d) ^ 2
+	r = t.r - 2 * d
+	for y = d, t.r * 2 - d do -- surface
+		local dy2 = (y - yc) ^ 2
+		for x = d, t.r * 2 - d do
+			local ny = (y - d) / (2 * r) * sfactor
+			local dx2 = (x - xc) ^2
+			if dx2 + dy2 < r2 then
+				local z = (r2 - dx2 - dy2) ^ 0.5
+				local nx = (x - d) / (2 * r) * sfactor
+				local nz = (z / (2 * r)) * sfactor
+				local n = instead.noise3(nx + nseed, ny + nseed, nz + nseed)
+				if n < - 0.1 then
 					local rr, gg, bb = KtoRGB(tt + n * 5000)
 					local col = { rr, gg, bb, 255 }
-					pxl:pixel(x + d, y + d, std.unpack(col))
+					pxl:pixel(x, y, std.unpack(col))
 				end
 			end
 		end
 	end
-
 	return pxl
 end
 
