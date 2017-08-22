@@ -53,8 +53,8 @@ function render.noise(x)
 		x = SEED
 	end
 	x = x * 1103515245 + 11;
-	SEED = x
-	return (math.ceil(x / 65536) % 32767);
+	SEED = math.ceil(x / 65536) % 32767
+	return SEED;
 end
 
 function render.rnd(n)
@@ -70,6 +70,9 @@ function render.star(t)
 	local seed = t.seed or 1
 	render.noise(seed)
 	local nseed = render.rndf() * 127
+	local blackhole = t.temp == 0
+
+	if blackhole then t.temp = render.rnd(30000) end
 
 	local pxl = pixels.new(t.r * 2, t.r * 2)
 	local xc = t.r 
@@ -78,12 +81,21 @@ function render.star(t)
 	local tt = t.temp
 	local d = t.r / 4
 
-	for i = 0, d - 1 do
-		pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
-	end
-	pxl:fill_circle(xc, yc, r - d, KtoRGB(tt))
+	if blackhole then d = t.r / 4 end
 
-	d = d / 1.4
+	if blackhole then
+		for i = 0, d - 1 do
+			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 1000))
+		end
+		pxl:fill_circle(xc, yc, r - d, 0, 0, 0, 255)
+		d = t.r / 4
+	else
+		for i = 0, d - 1 do
+			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
+		end
+		pxl:fill_circle(xc, yc, r - d, KtoRGB(tt))
+		d = d / 1.4
+	end
 
 	local r2 = r ^ 2
 	local rd2 = (r - d) ^ 2 
@@ -103,6 +115,8 @@ function render.star(t)
 			end
 		end
 	end
+
+if not blackhole then
 	local sfactor = 13 + render.rndf() * 3
 	d = t.r / 4
 	r2 = (r - d) ^ 2
@@ -125,6 +139,9 @@ function render.star(t)
 			end
 		end
 	end
+else -- blackhole
+	pxl:circleAA(xc, yc, r - d, KtoRGB(t.temp))
+end
 	return pxl
 end
 
