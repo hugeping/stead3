@@ -154,12 +154,23 @@ end
 local color_from_height
 
 local mars = {
-	[-1.0] = { 64, 20, 20 };
-	[-0.5] = { 100, 32, 32 };
+	[-1.0] = { 0, 0, 0 };
+	[-0.5] = { 96, 0, 0 };
 	[-0.8] = { 128, 0, 0 };
-	[0.5] = { 200, 50, 50 };
-	[0.7] = { 200, 10, 10 };
-	[1.0] = { 255, 255, 255 };
+	[0.5] = { 210, 10, 10 };
+	[0.7] = { 220, 50, 50 };
+	[1.0] = { 255, 100, 100 };
+}
+
+local earth = {
+	[-1.0] = { 0, 0, 128 };
+	[-0.25] = { 0, 0, 255 };
+	[0] = {0, 128, 255};
+	[0.0625] = { 240, 240, 64};
+	[0.1250] = { 32, 160, 0 };
+	[0.3750] = { 116, 88, 62 }; -- 224, 224, 0 };
+	[0.07500] = { 128, 128, 128 };
+	[1.0] = {255, 255, 255};
 }
 
 local function grad(g, n)
@@ -168,11 +179,16 @@ local function grad(g, n)
 		table.insert(keys, k)
 	end
 	table.sort(keys)
-	local start = 0
+	local start = -1.0
 	local sr, sg, sb = 0, 0, 0
+
+	if g[-1.0] then
+		sr, sg, sb = g[-1.0][1], g[-1.0][2], g[-1.0][3]
+	end
+
 	for v, k in ipairs(keys) do
 		if n <= k then
-			local e = (n - start) / k
+			local e = math.abs(n - start) / math.abs(k - start)
 			local s = 1 - e
 			return s * sr + e * g[k][1], 
 				s * sg + e * g[k][2], 
@@ -183,11 +199,14 @@ local function grad(g, n)
 	end
 end
 local function atmosphere(n)
-	local r, g, b = 0, 0, 255
-	return r, g, b, (1 - n) * 90
+	local r, g, b = 255, 0, 0
+--	local r, g, b = 200, 200, 255
+	return r, g, b, clamp(n * 150, 0, 255)
+--	return r, g, b, (1 - n) * 90
 end
 
 local function shape(n)
+--	return grad(earth, n)
 	return grad(mars, n)
 end
 
@@ -257,7 +276,8 @@ function render.planet(t)
 				local rr = sun:angle(point)
 				rr = clamp(rr / PI, 0, 1) 
 				rr = rr ^ 2 * rfactor
-				pxl:val(x, y, 255, 0, 0, clamp(rr * gr * 150, 0, 255))
+--				atmosphere(rr * gg)
+				pxl:val(x, y, atmosphere(rr * gr) ) --255, 0, 0, clamp(rr * gr * 150, 0, 255))
 			end
 		end
 	end
