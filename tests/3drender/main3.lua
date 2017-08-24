@@ -68,7 +68,7 @@ declare {
 }
 
 function init()
-	screen = pixels.new(640, 480)
+	screen = pixels.new(800, 568)
 	screen:clear(0, 0, 0, 255)
 	scene = r.scene()
 	local starv = r.vec3(-300, 0, 200)

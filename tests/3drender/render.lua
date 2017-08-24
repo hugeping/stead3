@@ -246,7 +246,7 @@ function render.planet(t)
 --		pxl:fill_circle(xc - 1, yc - 1, t.r - i, atmosphere(x))
 --	end
 	local point = maf.vec3()
-
+	std.busy(true)
 	for y = d, t.r * 2 - d do -- surface
 		local dy2 = (y - yc) ^ 2
 		for x = d, t.r * 2 - d do
@@ -268,6 +268,7 @@ function render.planet(t)
 				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
 			end
 		end
+		std.busy(true)
 	end
 	local r2 = t.r ^ 2
 	local rd2 = (t.r - d) ^ 2 
@@ -287,7 +288,9 @@ function render.planet(t)
 				pxl:val(x, y, atmosphere(rr * gr) ) --255, 0, 0, clamp(rr * gr * 150, 0, 255))
 			end
 		end
+		std.busy(true)
 	end
+	std.busy(false)
 
 	return pxl
 end
