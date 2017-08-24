@@ -162,6 +162,7 @@ local mars = {
 	[1.0] = { 255, 100, 100 };
 }
 
+
 local earth = {
 	[-1.0] = { 0, 0, 128 };
 	[-0.25] = { 0, 0, 255 };
@@ -174,11 +175,17 @@ local earth = {
 }
 
 local function grad(g, n)
-	local keys = {}
-	for k, v in pairs(g) do
-		table.insert(keys, k)
+	local keys
+	if not g.sorted then
+		keys = {}
+		for k, v in pairs(g) do
+			table.insert(keys, k)
+		end
+		table.sort(keys)
+		g.sorted = keys
+	else
+		keys = g.sorted
 	end
-	table.sort(keys)
 	local start = -1.0
 	local sr, sg, sb = 0, 0, 0
 
@@ -198,6 +205,7 @@ local function grad(g, n)
 		sr, sg, sb = g[k][1], g[k][2], g[k][3]
 	end
 end
+
 local function atmosphere(n)
 	local r, g, b = 255, 0, 0
 --	local r, g, b = 200, 200, 255
@@ -206,6 +214,7 @@ local function atmosphere(n)
 end
 
 local function shape(n)
+--	n = clamp(n, -1, 1)
 --	return grad(earth, n)
 	return grad(mars, n)
 end
@@ -236,7 +245,7 @@ function render.planet(t)
 --		local x = (d - i) / d
 --		pxl:fill_circle(xc - 1, yc - 1, t.r - i, atmosphere(x))
 --	end
-
+	local point = maf.vec3()
 
 	for y = d, t.r * 2 - d do -- surface
 		local dy2 = (y - yc) ^ 2
@@ -246,25 +255,24 @@ function render.planet(t)
 			if dx2 + dy2 <= r2 then
 				local z = (r2 - dx2 - dy2) ^ 0.5
 				local rc, gc, bc = pxl:val(x, y)
-				local point = maf.vec3(x - t.r, y - t.r, -z)
+				point.x, point.y, point.z = x - t.r, y - t.r, - z
 				local rr = sun:angle(point)
 				rr = clamp(rr / PI, 0, 1) 
 				rr = rr ^ 2 * rfactor
 				local nx = (x - d) / (2 * r) * sfactor
 				local nz = (z / (2 * r)) * sfactor
 				local n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
-					instead.noise3(nx * 2 + nseed, ny *2 + nseed, nz * 2 + nseed) / 2 +
-					instead.noise3(nx * 4 + nseed, ny *4 + nseed, nz * 4 + nseed) / 4
+					instead.noise3(nx * 2 + nseed, ny * 2 + nseed, nz * 2 + nseed) / 2 + 
+					instead.noise3(nx * 4 + nseed, ny * 4 + nseed, nz * 4 + nseed) / 4
 				rc, gc, bc = shape(n, t.t)
 				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
 			end
 		end
 	end
-
 	local r2 = t.r ^ 2
 	local rd2 = (t.r - d) ^ 2 
 
-	for y = 0, t.r * 2 do -- flames
+	for y = 0, t.r * 2 do -- atmosphere
 		local dy2 = (y - yc) ^ 2
 		for x = 0, t.r * 2 do
 			local dx2 = (x - xc) ^2
@@ -272,11 +280,10 @@ function render.planet(t)
 				local gr = (dx2 + dy2) ^ 0.5
 				gr = 1 - (gr - (t.r - d)) / d
 				local z = (r2 - dx2 - dy2) ^ 0.5
-				local point = maf.vec3(x - t.r, y - t.r, -z)
+				point.x, point.y, point.z = x - t.r, y - t.r, - z
 				local rr = sun:angle(point)
 				rr = clamp(rr / PI, 0, 1) 
 				rr = rr ^ 2 * rfactor
---				atmosphere(rr * gg)
 				pxl:val(x, y, atmosphere(rr * gr) ) --255, 0, 0, clamp(rr * gr * 150, 0, 255))
 			end
 		end
