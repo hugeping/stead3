@@ -69,7 +69,7 @@ end
 function render.star(t)
 	local seed = t.seed or 1
 	render.noise(seed)
-	local nseed = render.rndf() * 127
+	local nseed = render.rndf() * 16387
 	local blackhole = t.temp == 0
 
 	if blackhole then t.temp = render.rnd(30000) end
@@ -85,13 +85,15 @@ function render.star(t)
 
 	if blackhole then
 		for i = 0, d - 1 do
-			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 1000))
+			local x = (d - i) / d
+			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
 		end
 		pxl:fill_circle(xc, yc, r - d, 0, 0, 0, 255)
 		d = t.r / 4
 	else
 		for i = 0, d - 1 do
-			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (d - i) * 100))
+			local x = (d - i) / d
+			pxl:fill_circle(xc, yc, r - i, KtoRGB(tt - (x) * 5000))
 		end
 		pxl:fill_circle(xc, yc, r - d, KtoRGB(tt))
 		d = d / 1.4
@@ -134,7 +136,7 @@ if not blackhole then
 				if n < - 0.1 then
 					local rr, gg, bb = KtoRGB(tt + n * 5000)
 					local col = { rr, gg, bb, 255 }
-					pxl:pixel(x, y, std.unpack(col))
+					pxl:val(x, y, std.unpack(col))
 				end
 			end
 		end
@@ -142,6 +144,124 @@ if not blackhole then
 else -- blackhole
 	pxl:circleAA(xc, yc, r - d, KtoRGB(t.temp))
 end
+	return pxl
+end
+
+local function TtoRGB()
+	return 200, 200, 200
+end
+
+local color_from_height
+
+local mars = {
+	[-1.0] = { 64, 20, 20 };
+	[-0.5] = { 100, 32, 32 };
+	[-0.8] = { 128, 0, 0 };
+	[0.5] = { 200, 50, 50 };
+	[0.7] = { 200, 10, 10 };
+	[1.0] = { 255, 255, 255 };
+}
+
+local function grad(g, n)
+	local keys = {}
+	for k, v in pairs(g) do
+		table.insert(keys, k)
+	end
+	table.sort(keys)
+	local start = 0
+	local sr, sg, sb = 0, 0, 0
+	for v, k in ipairs(keys) do
+		if n <= k then
+			local e = (n - start) / k
+			local s = 1 - e
+			return s * sr + e * g[k][1], 
+				s * sg + e * g[k][2], 
+				s * sb + e * g[k][3]
+		end
+		start = k
+		sr, sg, sb = g[k][1], g[k][2], g[k][3]
+	end
+end
+local function atmosphere(n)
+	local r, g, b = 0, 0, 255
+	return r, g, b, (1 - n) * 90
+end
+
+local function shape(n)
+	return grad(mars, n)
+end
+
+function render.planet(t)
+	local seed = t.seed or 1
+	render.noise(seed)
+	local nseed = render.rndf() * 16387
+
+	local r = t.r
+	local pxl = pixels.new(r * 2, r * 2)
+	local xc = t.r
+	local yc = t.r
+	local tt = t.temp
+	local d = t.r / 4
+--	pxl:fill_circle(xc, yc, r, TtoRGB(t.t))
+
+
+
+	local d = r / 6 -- atmosphere
+	local r2 = (r - d) ^ 2
+	r = t.r - 2 * d
+	local sfactor = 8
+	local rfactor = 3 -- reflect
+
+	local sun = t.light or maf.vec3(0.5, 0.5, 1)
+--	for i = 0, d - 1 do
+--		local x = (d - i) / d
+--		pxl:fill_circle(xc - 1, yc - 1, t.r - i, atmosphere(x))
+--	end
+
+
+	for y = d, t.r * 2 - d do -- surface
+		local dy2 = (y - yc) ^ 2
+		for x = d, t.r * 2 - d do
+			local ny = (y - d) / (2 * r) * sfactor
+			local dx2 = (x - xc) ^2
+			if dx2 + dy2 <= r2 then
+				local z = (r2 - dx2 - dy2) ^ 0.5
+				local rc, gc, bc = pxl:val(x, y)
+				local point = maf.vec3(x - t.r, y - t.r, -z)
+				local rr = sun:angle(point)
+				rr = clamp(rr / PI, 0, 1) 
+				rr = rr ^ 2 * rfactor
+				local nx = (x - d) / (2 * r) * sfactor
+				local nz = (z / (2 * r)) * sfactor
+				local n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
+					instead.noise3(nx * 2 + nseed, ny *2 + nseed, nz * 2 + nseed) / 2 +
+					instead.noise3(nx * 4 + nseed, ny *4 + nseed, nz * 4 + nseed) / 4
+				rc, gc, bc = shape(n, t.t)
+				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
+			end
+		end
+	end
+
+	local r2 = t.r ^ 2
+	local rd2 = (t.r - d) ^ 2 
+
+	for y = 0, t.r * 2 do -- flames
+		local dy2 = (y - yc) ^ 2
+		for x = 0, t.r * 2 do
+			local dx2 = (x - xc) ^2
+			if dx2 + dy2 < r2 and dx2 + dy2 > rd2 then
+				local gr = (dx2 + dy2) ^ 0.5
+				gr = 1 - (gr - (t.r - d)) / d
+				local z = (r2 - dx2 - dy2) ^ 0.5
+				local point = maf.vec3(x - t.r, y - t.r, -z)
+				local rr = sun:angle(point)
+				rr = clamp(rr / PI, 0, 1) 
+				rr = rr ^ 2 * rfactor
+				pxl:val(x, y, 255, 0, 0, clamp(rr * gr * 150, 0, 255))
+			end
+		end
+	end
+
 	return pxl
 end
 
@@ -178,11 +298,13 @@ function object:render(screen, fov, x, y, z)
 			local nr = fov * (o.r) / pos.z
 			screen:circle(xc + nx, yc - ny, nr, std.unpack(o.col))
 		elseif o.t == 'pixels' then
-			local nx = fov * (pos.x + o.x) / pos.z
-			local ny = fov * (pos.y + o.y) / pos.z
-			local scale = o.scale * fov / pos.z
-			local pp2 = o.pixels:scale(scale, scale, true)
-			pp2:blend(screen, xc + nx, yc - ny)
+			local scale = o.scale * fov / pos.z -- (pos.x ^ 2 + pos.y ^ 2 + pos.z ^ 2)  ^ 0.5
+			local nx = fov * (pos.x + o.x * o.scale) / pos.z
+			local ny = fov * (pos.y + o.y * o.scale) / pos.z
+			if scale > 0 and scale < 16 then
+				local pp2 = o.pixels:scale(scale, scale, true)
+				pp2:blend(screen, xc + nx, yc - ny)
+			end
 		end
 	end
 end
@@ -196,34 +318,76 @@ function render.scene()
 		objects = {}
 	}
 	setmetatable(o, scene)
-	o:rotate(0, 0)
+	o:look(0, 0, 1)
 	o:camera(0, 0, 0)
 	o:setfov(PI / 4)
 	return o
 end
 
+function scene:light(x, y, z)
+	if type(x) == 'number' then
+		self.light = maf.vec3(x, y, z)
+	else
+		self.light = x
+	end
+end
+
 function scene:setfov(fov)
 	self.fov = fov
 end
+local zvec = maf.vec3(0, 0, 1)
+local xvec = maf.vec3(1, 0, 0)
+local yvec = maf.vec3(0, 1, 0)
 
-function scene:look(angle, x, y, z)
+function scene:climb(look, angle, roll)
+	print("in:", look:unpack())
 	local q = maf.rotation()
-	q:between(maf.vec3(0, 0, 1), x, y, z)
-	self.quat = q
+	local q2 = maf.rotation()
+	local q3 = maf.rotation()
+
+	q:between(zvec, maf.vec3(look.x, 0, look.z))
+	q3:angleAxis(roll, look)
+	local axis = q3 * (q * xvec)
+	q2:angleAxis(angle, axis)
+	print("axis: ", axis:unpack())
+	print("look: ", (q2 * look):unpack())
+	return q2 * look
 end
 
-function scene:rotate(hangle, vangle)
-	local qh = maf.rotation()
-	qh:angleAxis(hangle, 0, 1, 0)
-	local qv = maf.rotation()
-	qv:angleAxis(vangle, 1, 0, 0)
+function scene:roll(look, angle)
+	local q = maf.rotation()
+	q:between(zvec, look)
+--	self.quat:inv(q)
+	local v = q * yvec
+	local q2 = maf.rotation()
+	q2:angleAxis(angle, zvec)
+	q2:mul(q)
+	return q2 * zvec
+end
+
+function scene:look(vec, y, z, angle)
+	print(y)
+	if type(vec) == 'number' then
+		vec = maf.vec3(x, y, z)
+		angle = angle or 0
+	else
+		angle = y or 0
+	end
+	local q = maf.rotation()
+	q:between(vec, zvec)
+	local q2 = maf.rotation()
+--	qq:between(zvec, vec)
+	local q3 = maf.rotation()
 	local qq = maf.rotation()
-	qv:mul(qh, qq)
-	self.quat = qq
-	local v = qq * maf.vec3(0, 0, 1)
-	v.y = - v.y
-	v.x = - v.x
-	return v
+	q:between(maf.vec3(vec.x, 0, vec.z), zvec) -- alpha
+	qq:between(zvec, maf.vec3(vec.x, 0, vec.z)) 
+	print("alpha: ", q:getAngleAxis())
+	print("vec: ", vec:unpack())
+	print("zvec: ", (q * zvec):unpack())
+	q2:between(vec, qq * zvec) -- beta
+	print("beta: ", q2:getAngleAxis())
+	q3:angleAxis(-angle, vec)
+	self.quat = q * q2 * q3
 end
 
 function scene:camera(x, y, z)
@@ -246,7 +410,7 @@ function scene:render(screen)
 	for k, o in ipairs(current_scene) do
 		if o.pos.z > 0 then
 			o.o:render(screen, self.fov, o.pos)
-			print(o.pos.x, o.pos.y, o.pos.z)
+--			print(o.pos.x, o.pos.y, o.pos.z)
 		end
 	end
 end

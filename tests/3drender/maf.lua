@@ -105,7 +105,9 @@ vec3 = {
     end,
 
     angle = function(v, u)
-      return math.acos(v:dot(u) / (v:length() + u:length()))
+      local a = v:dot(u) / (v:length() * u:length())
+--      if a > 1 then a = 1 elseif a < -1 then a = -1 end
+      return math.acos(a)
     end,
 
     dot = function(v, u)
@@ -242,7 +244,7 @@ quat = {
       return out
     end,
 
-    mul = function(q, r, out)
+    mul2 = function(q, r, out)
       out = out or q
       local qx, qy, qz, qw = q:unpack()
       local rx, ry, rz, rw = r:unpack()
@@ -250,15 +252,34 @@ quat = {
       out.y = qy * rw + qw * ry - qz * rx - qx * rz
       out.z = qz * rw + qw * rz - qx * ry - qy * rx
       out.w = qw * rw - qx * rx - qy * ry - qz * rz
+
       return out
     end,
-
+    mul = function(q1, q2, out)
+      out = out or q1
+      local qx, qy, qz, qw = q1:unpack()
+      local rx, ry, rz, rw = q2:unpack()
+        out.x = qx * rw + qw * rx + qy * rz - qz * ry;
+        out.y = qy * rw + qw * ry + qz * rx - qx * rz;
+	out.z = qz * rw + qw * rz + qx * ry - qy * rx;
+        out.w = qw * rw - qx * rx - qy * ry - qz * rz;
+	return out
+    end,
     scale = function(q, s, out)
       out = out or q
       out.x = q.x * s
       out.y = q.y * s
       out.z = q.z * s
       out.w = q.w * s
+      return out
+    end,
+
+    inv = function(q, out)
+      out = out or q
+      out.x = -q.x
+      out.y = -q.y
+      out.z = -q.z
+      out.w = q.w
       return out
     end,
 
