@@ -174,6 +174,11 @@ local earth = {
 	[1.0] = {255, 255, 255};
 }
 
+local asteroid = {
+	[-1.0] = { 0, 0, 0 };
+	[1.0] = {255, 255, 255};
+}
+
 local function grad(g, n)
 	local keys
 	if not g.sorted then
@@ -213,11 +218,17 @@ local function atmosphere(n)
 	return r, g, b, clamp(n * 150, 0, 255)
 --	return r, g, b, (1 - n) * 90
 end
-
-local function shape(n)
+local grads = {
+	earth = earth;
+	mars = mars;
+	asteroid = asteroid;
+}
+local function shape(n, t)
 --	n = clamp(n, -1, 1)
---	return grad(earth, n)
-	return grad(mars, n)
+	return grad(grads[t], n)
+---	return grad(earth, n)
+--	return grad(mars, n)
+--	return grad(asteroid, n)
 end
 
 function render.planet(t)
@@ -268,7 +279,7 @@ function render.planet(t)
 				n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
 					instead.noise3(nx * 2 + nseed, ny * 2 + nseed, nz * 2 + nseed) / 2 + 
 					instead.noise3(nx * 4 + nseed, ny * 4 + nseed, nz * 4 + nseed) / 4
-				rc, gc, bc = shape(clamp(n, -1, 1))
+				rc, gc, bc = shape(clamp(n, -1, 1), 'mars')
 				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
 			end
 		end
@@ -297,6 +308,76 @@ function render.planet(t)
 
 	std.busy(false)
 
+	return pxl
+end
+
+function render.asteroid(t)
+	local seed = t.seed or 1
+	render.noise(seed)
+	local nseed = render.rndf() * 16387
+	local r = t.r
+	local pxl = pixels.new(r * 2, r * 2)
+	local xc = t.r
+	local yc = t.r
+
+	local sfactor = 2
+	local rfactor = 1 -- reflect
+	local vfactor = r / 2
+	local sun = t.light or maf.vec3(0.5, 0.5, 1)
+	local point = maf.vec3()
+	local point2 = maf.vec3()
+	std.busy(true)
+	local dd = t.r * 2
+	local nx, ny, nz, n, rc, gc, bc, rr, xx, yy
+	local r2 = r ^ 2
+	for y = 1, dd do -- surface
+		local dy2 = (y - yc) ^ 2
+		yy = yc - y
+		local ox = false
+		local oy = false
+		for x = 1, dd do
+			local dx2 = (x - xc) ^2
+			xx = x - xc
+			if dx2 + dy2 <= r2 then
+				local zz = (r2 - dx2 - dy2) ^ 0.5
+				point2.x, point2.y, point2.z = xx, yy, -zz
+				point2:normalize()
+				point.x, point.y, point.z = xx, yy, -zz
+
+				nx = (r + xx) / (2 * r) * sfactor
+				ny = (r + yy) / (2 * r) * sfactor
+				nz = (zz / (2 * r)) * sfactor
+
+				n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) --+
+--					instead.noise3(nx * 2 + nseed, ny * 2 + nseed, nz * 2 + nseed) / 2 +
+--					instead.noise3(nx * 4 + nseed, ny * 4 + nseed, nz * 4 + nseed) / 4
+
+				point2:scale((1 + n) / 2 * vfactor)
+				point:sub(point2);
+
+				rr = sun:angle(point)
+				rr = clamp(rr / PI, 0, 1) 
+				rr = rr * rr * rfactor
+
+				nx = (r + point.x) / (2 * r) * sfactor * 4
+				ny = (r + point.y) / (2 * r) * sfactor * 4
+				nz = (point.z / (2 * r)) * sfactor * 4
+
+				local nn = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
+					instead.noise3(nx * 2 + nseed, ny * 2 + nseed, nz * 2 + nseed) / 2 +
+					instead.noise3(nx * 4 + nseed, ny * 4 + nseed, nz * 4 + nseed) / 4
+
+				nn = clamp(nn, -1, 1)
+
+				nx, ny, nz = point.x, point.y, point.z
+				rc, gc, bc = shape(nn, 'asteroid')
+				local c = clamp(rc * rr, 0, 255)
+				pxl:fill_circle(xc + nx, yc - ny, 6, c, c, c, 255)
+			end
+		end
+		std.busy(true)
+	end
+	std.busy(false)
 	return pxl
 end
 
