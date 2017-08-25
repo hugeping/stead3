@@ -119,10 +119,10 @@ function render.star(t)
 	end
 
 if not blackhole then
-	local sfactor = 13 + render.rndf() * 3
+	local sfactor = 17 + render.rndf() * 3
 	d = t.r / 4
 	r2 = (r - d) ^ 2
-	r = t.r - 2 * d
+	r = t.r - d -- 2 * d
 	for y = d, t.r * 2 - d do -- surface
 		local dy2 = (y - yc) ^ 2
 		for x = d, t.r * 2 - d do
@@ -192,14 +192,15 @@ local function grad(g, n)
 	if g[-1.0] then
 		sr, sg, sb = g[-1.0][1], g[-1.0][2], g[-1.0][3]
 	end
-
+	local abs = math.abs
 	for v, k in ipairs(keys) do
 		if n <= k then
-			local e = math.abs(n - start) / math.abs(k - start)
+			local e = abs(n - start) / abs(k - start)
 			local s = 1 - e
-			return s * sr + e * g[k][1], 
-				s * sg + e * g[k][2], 
-				s * sb + e * g[k][3]
+			
+			return clamp(s * sr + e * g[k][1], 0, 255),
+				clamp(s * sg + e * g[k][2], 0, 255),
+				clamp(s * sb + e * g[k][3], 0, 2555)
 		end
 		start = k
 		sr, sg, sb = g[k][1], g[k][2], g[k][3]
@@ -236,7 +237,7 @@ function render.planet(t)
 
 	local d = r / 6 -- atmosphere
 	local r2 = (r - d) ^ 2
-	r = t.r - 2 * d
+	r = t.r - d
 	local sfactor = 8
 	local rfactor = 3 -- reflect
 
@@ -247,24 +248,27 @@ function render.planet(t)
 --	end
 	local point = maf.vec3()
 	std.busy(true)
-	for y = d, t.r * 2 - d do -- surface
+	local dd = t.r * 2 - d
+	local nx, ny, nz, n, rc, gc, bc, rr, xx, yy
+	for y = d, dd do -- surface
 		local dy2 = (y - yc) ^ 2
-		for x = d, t.r * 2 - d do
-			local ny = (y - d) / (2 * r) * sfactor
+		yy = yc - y
+		for x = d, dd do
 			local dx2 = (x - xc) ^2
+			xx = x - xc
 			if dx2 + dy2 <= r2 then
-				local z = (r2 - dx2 - dy2) ^ 0.5
-				local rc, gc, bc = pxl:val(x, y)
-				point.x, point.y, point.z = x - t.r, y - t.r, - z
-				local rr = sun:angle(point)
+				local zz = (r2 - dx2 - dy2) ^ 0.5
+				point.x, point.y, point.z = xx, yy, -zz
+				rr = sun:angle(point)
 				rr = clamp(rr / PI, 0, 1) 
 				rr = rr ^ 2 * rfactor
-				local nx = (x - d) / (2 * r) * sfactor
-				local nz = (z / (2 * r)) * sfactor
-				local n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
+				nx = (r + xx) / (2 * r) * sfactor
+				nz = (zz / (2 * r)) * sfactor
+				ny = (r + yy) / (2 * r) * sfactor
+				n = instead.noise3(nx + nseed, ny + nseed, nz + nseed) +
 					instead.noise3(nx * 2 + nseed, ny * 2 + nseed, nz * 2 + nseed) / 2 + 
 					instead.noise3(nx * 4 + nseed, ny * 4 + nseed, nz * 4 + nseed) / 4
-				rc, gc, bc = shape(n, t.t)
+				rc, gc, bc = shape(clamp(n, -1, 1))
 				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
 			end
 		end
@@ -290,6 +294,7 @@ function render.planet(t)
 		end
 		std.busy(true)
 	end
+
 	std.busy(false)
 
 	return pxl
