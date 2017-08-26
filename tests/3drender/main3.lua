@@ -1,6 +1,7 @@
 local r = require "render"
 require "sprite"
 require "keys"
+require "loader"
 
 function keys:filter(press, key)
 	return key == "left" or key == "right" or key == "w" or key == "a" or key == "s" or key == "d" or key == "up" or key == "down" or key == "r" or key == "b"
@@ -56,21 +57,39 @@ game.onkey = function(s, press, key)
 	return true
 end
 
-function gfx()
-	return screen:sprite()
+game.pic = function()
+	print "game.pic"
+	if screen then
+		return screen:sprite()
+	end
 end
-
-game.pic = gfx
 
 declare {
 	screen = false;
 	scene = false;
 }
 
-function init()
-	screen = pixels.new(800, 568)
+room {
+	nam = "main";
+	title = false;
+}
+
+function onload()
+	print "start"
+	local d = loader:data()
+	screen = d.screen
+	scene = d.scene
+	look = d.look
+	print(screen)
+end
+
+function load(data)
+	print "Loading..."
+	local screen = pixels.new(800, 568)
 	screen:clear(0, 0, 0, 255)
-	scene = r.scene()
+	local scene = r.scene()
+	local look
+
 	local starv = r.vec3(-300, 0, 200)
 	local planetv = r.vec3(30, 0, 30)
 	local asteroidv = r.vec3(1, -3, 5)
@@ -88,18 +107,13 @@ function init()
 	scene:place(a, asteroidv)
 	scene:setfov(160)
 	scene:camera(0, 0, 1)
-	scene:render(screen)
-end
 
-function start()
 	look = r.vec3(0, 0, 1)
 	scene:look(look)
 	screen:clear(0, 0, 0, 255)
 	scene:render(screen)
---	os.exit(1)
-end
 
-room {
-	nam = "main";
-	title = false;
-}
+	data.screen = screen
+	data.scene = scene
+	data.look = look
+end
