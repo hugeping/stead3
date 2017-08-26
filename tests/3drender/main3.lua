@@ -83,7 +83,7 @@ function load(data)
 	local look
 
 	local starv = r.vec3(-300, 0, 200)
-	local planetv = r.vec3(30, 0, 30)
+	local planetv = r.vec3(30, -5, 30)
 	local asteroidv = r.vec3(1, -3, 5)
 
 	local star = r.star({r = 160, temp = 4500 })
@@ -91,7 +91,8 @@ function load(data)
 	local asteroid = r.asteroid({r = 160, light = asteroidv - starv, seed = rnd(110000) })
 
 	local o = r.object():pixels(star, -160, 160, 1)
-	local p = r.object():pixels(planet, -160, 160, 0.1)
+	local w, h = planet:size()
+	local p = r.object():pixels(planet, -w/2, h/2, 0.1)
 	local a = r.object():pixels(asteroid, -160, 160, 0.01)
 
 	scene:place(o, starv)
