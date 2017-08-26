@@ -13,7 +13,8 @@ loader = obj {
 	};
 }
 
-function loader:step()
+function loader.step(progress)
+	loader.__progress = progress
 	coroutine.yield()
 end
 
@@ -57,8 +58,6 @@ std.mod_start(function(onload)
 	timer:set(20)
 end)
 
-local i = 0
-
 std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@splash' then
 		return
@@ -68,9 +67,15 @@ std.mod_cmd(function(cmd)
 		sprite.direct(false)
 		return std.nop()
 	end
-	sprite.direct(true)
-	local scr = sprite.scr()
+	local scr
+	if not sprite.direct() then
+		sprite.direct(true)
+		scr = sprite.scr()
+		scr:fill('black')
+	else
+		scr = sprite.scr()
+	end
 	local w, h = scr:size()
-	i = i + 1
-	scr:fill(0, h - 16, i, 16, 'red')
+	scr:fill(0, h - 16, w, 16, 'black')
+	scr:fill(0, h - 16, w * loader.__progress or 0, 16, 'red')
 end)

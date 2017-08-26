@@ -74,17 +74,9 @@ room {
 	title = false;
 }
 
-function onload()
-	print "start"
-	local d = loader:data()
-	screen = d.screen
-	scene = d.scene
-	look = d.look
-	print(screen)
-end
 
 function load(data)
-	print "Loading..."
+	print "Rendering..."
 	local screen = pixels.new(800, 568)
 	screen:clear(0, 0, 0, 255)
 	local scene = r.scene()
@@ -116,4 +108,12 @@ function load(data)
 	data.screen = screen
 	data.scene = scene
 	data.look = look
+end
+
+function onload()
+	print "Start..."
+	local d = loader:data()
+	screen = d.screen
+	scene = d.scene
+	look = d.look
 end

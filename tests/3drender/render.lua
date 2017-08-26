@@ -347,7 +347,7 @@ function render.planet(t)
 	local sun = t.light or maf.vec3(0.5, 0.5, 1)
 
 	local point = maf.vec3()
-	loader.step(true)
+	loader.step(0)
 	local dd = t.r * 2 - d
 	local nx, ny, nz, n, rc, gc, bc, rr, xx, yy
 	for y = d, dd do -- surface
@@ -372,7 +372,7 @@ function render.planet(t)
 				pxl:val(x, y, clamp(rc * rr, 0, 255), clamp(gc * rr, 0, 255), clamp(bc * rr, 0, 255), 255)
 			end
 		end
-		loader.step(true)
+		loader.step(y / dd)
 	end
 	local r2 = t.r ^ 2
 	local rd2 = (t.r - d) ^ 2 
@@ -392,14 +392,14 @@ function render.planet(t)
 				pxl:val(x, y, atmosphere(rr * gr) ) --255, 0, 0, clamp(rr * gr * 150, 0, 255))
 			end
 		end
-		loader.step(true)
+		loader.step(y / t.r * 2)
 	end
 -- rings
 	t.sun = sun
 
 	pxl = render_rings(pxl, t, PI / 32, -PI / 8)
 
-	loader.step(false)
+	loader.step(1)
 
 	return pxl
 end
@@ -419,7 +419,7 @@ function render.asteroid(t)
 	local sun = t.light or maf.vec3(0.5, 0.5, 1)
 	local point = maf.vec3()
 	local point2 = maf.vec3()
-	loader.step(true)
+	loader.step(0)
 	local dd = t.r * 2
 	local nx, ny, nz, n, rc, gc, bc, rr, xx, yy
 	local r2 = r ^ 2
@@ -468,9 +468,9 @@ function render.asteroid(t)
 				pxl:fill_circle(xc + nx, yc - ny, 6, c, c, c, 255)
 			end
 		end
-		loader.step(true)
+		loader.step(y / dd)
 	end
-	loader.step(false)
+	loader.step(1)
 	return pxl
 end
 
