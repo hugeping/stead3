@@ -96,9 +96,6 @@ function start()
 	scene:look(look)
 	screen:clear(0, 0, 0, 255)
 	scene:render(screen)
-	for i = 1, 5 do
---		local planet = r.planet({r = 160, light = r.vec3(1, 0, 0) })
-	end
 --	os.exit(1)
 end
 

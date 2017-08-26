@@ -15,6 +15,10 @@ local object = {
 }
 object.__index = object
 
+local zvec = maf.vec3(0, 0, 1)
+local xvec = maf.vec3(1, 0, 0)
+local yvec = maf.vec3(0, 1, 0)
+
 local function clamp( x, min, max )
 	if x < min then return min end
 	if x > max then return max end
@@ -231,6 +235,97 @@ local function shape(n, t)
 --	return grad(asteroid, n)
 end
 
+local function do_ring(pxl, ring, rr, ref, sina, cosa, cosb, inv)
+	local yy
+	local xc, yc = rr - 1, rr - 1
+	ref = ref -- * ref
+	print("ref = ", ref)
+	for y = 0, rr - 1 do
+		yy = y * cosb
+		local ysina = yy * sina
+		local ycosa = yy * cosa
+		local xcosa, xsina, nx, ny, aa, bb, cc, dd
+		for x = 0, rr - 1 do
+			aa, bb, cc, dd = ring:val(xc - x, yc - y)
+			if (aa ~= 0 or bb ~= 0 or cc ~= 0) then
+				xcosa = x * cosa; xsina = x * sina
+				nx = xcosa - ysina; ny = ycosa + xsina
+				aa = clamp(aa * ref, 0, 255)
+				bb = clamp(bb * ref, 0, 255)
+				cc = clamp(cc * ref, 0, 255)
+				dd = 100
+				if inv then
+					pxl:pixel(xc + nx, yc + ny, aa, bb, cc, dd)
+				else
+					pxl:pixel(xc - nx, yc - ny, aa, bb, cc, dd)
+				end
+				nx = nx - 2 * xcosa; ny = ny - 2 * xsina
+				if inv and x > 0 then
+					pxl:pixel(xc + nx, yc + ny, aa, bb, cc, dd)
+				elseif x > 0 then
+					pxl:pixel(xc - nx, yc - ny, aa, bb, cc, dd)
+				end
+			end
+		end
+	end
+end
+
+local saturn_rings = {
+	[-1.0] = { 0, 0, 0 },
+	[-0.9] = { 20, 20, 20 },
+	[-0.8] = { 40, 40, 40 },
+	[-0.7] = { 128, 128, 128 },
+	[-0.5] = { 190, 190, 190 },
+	[-0.4] = { 128, 128, 128 },
+	[0.2] = { 210, 220, 210 },
+	[0.5] = { 100, 100, 100 },
+	[0.7] = { 210, 210, 190 },
+	[0.8] = { 230, 210, 190 },
+	[1.0] = { 230, 220, 190 },
+}
+
+local function render_rings(pxl, t, angle, beta)
+	local r, rr, d
+	local nseed = render.rndf() * 16387
+	local point = maf.vec3()
+	local sun = t.sun
+	r = t.r
+	rr = 2 * t.r
+	d = rr - rr / 1.7
+	local ring = pixels.new(rr, rr)
+	ring:clear(0, 0, 0, 0)
+	local c
+	for i = 1, d do
+		c = instead.noise1(i / d * 6 + nseed)
+		c = 2 *(1 - i / d) - 1 + c
+		local r, g, b = grad(saturn_rings, clamp(c, -1, 1))
+		ring:fill_circle(rr, rr, rr - i, r, g, b, 255)
+	end
+	ring:fill_circle(rr, rr, rr - d, 0, 0, 0, 255)
+
+	local cosb = math.cos(PI / 2 + math.abs(beta))
+	local cosa = math.cos(-angle)
+	local sina = math.sin(-angle)
+	local pxl2 = pixels.new(2 * rr, 2 * rr)
+	local inv = beta < 0
+	local rot = maf.rotation()
+	rot:angleAxis(angle, zvec)
+	local rot2 = maf.rotation()
+	rot2:angleAxis(beta, rot * xvec)
+	point = rot * rot2 * yvec
+	local ref = sun:angle(point)
+	ref = clamp(ref / PI, 0, 1) 
+
+	do_ring(pxl2, ring, rr, ref, sina, cosa, cosb, inv);
+
+	pxl:blend(pxl2, (rr - r), (rr - r)) -- planet
+
+	do_ring(pxl2, ring, rr, ref, sina, cosa, cosb, not inv);
+
+	pxl = pxl2
+	return pxl
+end
+
 function render.planet(t)
 	local seed = t.seed or 1
 	render.noise(seed)
@@ -242,9 +337,6 @@ function render.planet(t)
 	local yc = t.r
 	local tt = t.temp
 	local d = t.r / 4
---	pxl:fill_circle(xc, yc, r, TtoRGB(t.t))
-
-
 
 	local d = r / 6 -- atmosphere
 	local r2 = (r - d) ^ 2
@@ -253,10 +345,7 @@ function render.planet(t)
 	local rfactor = 3 -- reflect
 
 	local sun = t.light or maf.vec3(0.5, 0.5, 1)
---	for i = 0, d - 1 do
---		local x = (d - i) / d
---		pxl:fill_circle(xc - 1, yc - 1, t.r - i, atmosphere(x))
---	end
+
 	local point = maf.vec3()
 	std.busy(true)
 	local dd = t.r * 2 - d
@@ -305,6 +394,10 @@ function render.planet(t)
 		end
 		std.busy(true)
 	end
+-- rings
+	t.sun = sun
+
+	pxl = render_rings(pxl, t, PI / 32, -PI / 8)
 
 	std.busy(false)
 
@@ -451,9 +544,6 @@ end
 function scene:setfov(fov)
 	self.fov = fov
 end
-local zvec = maf.vec3(0, 0, 1)
-local xvec = maf.vec3(1, 0, 0)
-local yvec = maf.vec3(0, 1, 0)
 
 function scene:climb(look, angle, roll)
 	print("in:", look:unpack())
