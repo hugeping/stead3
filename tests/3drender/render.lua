@@ -235,11 +235,26 @@ local function shape(n, t)
 --	return grad(asteroid, n)
 end
 
-local function do_ring(pxl, ring, rr, ref, sina, cosa, cosb, inv)
+local function do_ring(pxl, ring, rr, r, ref, sina, cosa, cosb, inv, sun)
 	local yy
 	local xc, yc = rr - 1, rr - 1
 	ref = ref -- * ref
 	print("ref = ", ref)
+	local rot = maf.rotation()
+	local v = maf.vec3(sun.x, 0, sun.z)
+	v:normalize()
+	local a = rot:between(xvec, v):getAngleAxis()
+	v.x, v.y, v.z = sun.x, sun.y, 0
+	v:normalize()
+	local b = rot:between(xvec, v):getAngleAxis()
+	local l = math.tan(PI/2 - b)
+	l = math.abs(r * l)
+	local cosra = math.cos(a)
+	local sinra = math.sin(a)
+	local cosrb = math.cos(b)
+	local sinrb = math.sin(b)
+	local ringa = (sun.x > 0 and inv) or ( sun.x < 0 and not inv)
+	local ringb = (sun.x > 0 and not inv) or (sun.x < 0 and inv )
 	for y = 0, rr - 1 do
 		yy = y * cosb
 		local ysina = yy * sina
@@ -254,12 +269,28 @@ local function do_ring(pxl, ring, rr, ref, sina, cosa, cosb, inv)
 				bb = clamp(bb * ref, 0, 255)
 				cc = clamp(cc * ref, 0, 255)
 				dd = 100
+				local sx = x * cosra - y * sinra
+				local sy = y * cosra + x * sinra
+				if ringa and sx ^ 2 / (l ^ 2) + (sy ^ 2 / r ^ 2) < 1 then
+					dd = 64
+				else
+					dd = 100
+				end
 				if inv then
 					pxl:pixel(xc + nx, yc + ny, aa, bb, cc, dd)
 				else
 					pxl:pixel(xc - nx, yc - ny, aa, bb, cc, dd)
 				end
 				nx = nx - 2 * xcosa; ny = ny - 2 * xsina
+
+				local sx = -x * cosra - y * sinra
+				local sy = y * cosra - x * sinra
+				if ringb and sx ^ 2 / (l ^ 2) + (sy ^ 2 / r ^ 2) < 1  then
+					dd = 64
+				else
+					dd = 100
+				end
+
 				if inv and x > 0 then
 					pxl:pixel(xc + nx, yc + ny, aa, bb, cc, dd)
 				elseif x > 0 then
@@ -316,11 +347,15 @@ local function render_rings(pxl, t, angle, beta)
 	local ref = sun:angle(point)
 	ref = clamp(ref / PI, 0, 1) 
 
-	do_ring(pxl2, ring, rr, ref, sina, cosa, cosb, inv);
+	rot:angleAxis(-angle, zvec)
+	rot2:angleAxis(-beta, rot * xvec)
+	point = rot * rot2 * sun
+
+	do_ring(pxl2, ring, rr, rr - d, ref, sina, cosa, cosb, inv, point);
 
 	pxl:blend(pxl2, (rr - r), (rr - r)) -- planet
 
-	do_ring(pxl2, ring, rr, ref, sina, cosa, cosb, not inv);
+	do_ring(pxl2, ring, rr, rr - d, ref, sina, cosa, cosb, not inv, point);
 
 	pxl = pxl2
 	return pxl

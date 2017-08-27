@@ -39,7 +39,10 @@ function timer:callback()
 		end
 		local t = instead.ticks()
 		while coroutine.status(loader.load) ~= "dead" do
-			coroutine.resume(loader.load, loader.d)
+			local status, err = coroutine.resume(loader.load, loader.d) 
+			if not status then
+				dprint(err)
+			end
 			if instead.ticks() - t > 20 then
 				std.busy()
 				return '@splash'
