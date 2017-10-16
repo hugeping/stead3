@@ -43,6 +43,7 @@ stead = {
 	randomseed = instead_srandom;
 }
 
+
 local std = stead
 
 std.strip_call = true
@@ -128,6 +129,11 @@ else
 	math.log10 = function(a)
 		return std.math.log(a, 10)
 	end
+end
+
+math.round = function(num, n)
+	local m = 10 ^ (n or 0)
+	return std.math.floor(num * m + 0.5) / m
 end
 
 local function __mod_callback_reg(f, hook, prio, ...)
@@ -318,6 +324,7 @@ local function fmt_post(str)
 end
 
 function std.for_each_xref_outer(s, fn)
+	local orig = s
 	s = string.gsub(s, '\\?[\\{}]',
 			{ ['{'] = '\001', ['}'] = '\002', [ '\\{' ] = '\\{', [ '\\}' ] = '\\}' });
 	local start
@@ -344,6 +351,9 @@ function std.for_each_xref_outer(s, fn)
 			else
 				s = s:sub(1, start - 1)..new..s:sub(n + 1)
 			end
+		else
+			std.err("Unpaired '{' in:"..std.tostr(orig), 2)
+			break
 		end
 	end
 	s = s:gsub('[\001\002]', { ['\001'] = '{', ['\002'] = '}' });
@@ -907,10 +917,9 @@ function std:reset(fn) -- reset state
 end
 
 function std:load(fname) -- load save
-	if std.rawget(_G, 'DEBUG') or std.ref 'game':time() > 0 then
-		self:reset()
-		std.ref 'game':__ini(false)
-	end
+	self:reset()
+	std.ref 'game':__ini(false)
+
 	local f, err = std.loadfile(fname) -- load all diffs
 	if not f then
 		std.err(err, 2)
@@ -1852,6 +1861,7 @@ std.world = std.class({
 			local o1 = std.ref(cmd[2])
 			local o2 = std.ref(cmd[3])
 			o1 = s.player:srch(o1)
+
 			if not o1 then
 				return nil, false -- wrong input
 			end
@@ -2080,18 +2090,19 @@ std.player = std.class ({
 	take = function(s, w, ...)
 		return s:call('tak', w, ...)
 	end;
-	walkin = function(s, w)
-		return s:walk(w, false)
+	walkin = function(s, w, ...)
+		return s:walk(w, false, true, ...)
 	end;
-	walkout = function(s, w)
+	walkout = function(s, w, ...)
 		if w == nil then
 			w = s:where():from()
 		end
-		return s:walk(w, true, false)
+		return s:walk(w, true, false, ...)
 	end;
-	walk = function(s, w, doexit, doenter)
+	walk = function(s, w, doexit, doenter, dofrom)
 		local noexit = (doexit == false)
 		local noenter = (doenter == false)
+		local nofrom = (dofrom == false)
 		local moved = s:moved()
 		if moved then
 			s:moved(false)
@@ -2160,7 +2171,7 @@ std.player = std.class ({
 		end
 		-- enter is done
 		s.room = inwalk
-		if f ~= inwalk or not s.room.__from then -- brake self-recursion
+		if not nofrom and (f ~= inwalk or not s.room.__from) then -- brake self-recursion
 			s.room.__from = f
 		end
 		if not noenter then
@@ -2744,7 +2755,7 @@ iface.tab = fmt_stub
 iface.y = fmt_stub
 
 function std.loadmod(f)
-	if std.game and not not std.__in_gamefile then
+	if std.game and not std.__in_gamefile then
 		std.err("Use loadmod() only in global context", 2)
 	end
 	if type(f) ~= 'string' then

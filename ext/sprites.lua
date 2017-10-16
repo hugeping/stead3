@@ -250,6 +250,11 @@ instead.mouse_filter = instead_mouse_filter
 
 instead.finger_pos = instead_finger_pos
 
+instead.noise1 = instead_noise1
+instead.noise2 = instead_noise2
+instead.noise3 = instead_noise3
+instead.noise4 = instead_noise4
+
 std.busy = instead_busy
 
 local spr = {
@@ -492,6 +497,14 @@ function pxl:compose_spr(fx, fy, fw, fh, d, x, y, alpha)
 	end
 	instead.sprite_compose(self, fx, fy, fw, fh, spr_get(d), x, y, alpha);
 	return d
+end
+
+function pxl:scale(...)
+	return pxl:new(self:new_scaled(...))
+end
+
+function pxl:rotate(...)
+	return pxl:new(self:new_rotated(...))
 end
 
 local function poly(self, fn, t, ...)
