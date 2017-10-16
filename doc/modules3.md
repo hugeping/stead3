@@ -419,32 +419,32 @@ iface:fmt(). Который в свою очередь вызывает std.fmt.
 ### Пишем компас
 
 В качестве примера разберем модуль, реализующий простой компас.
-````
-require "fmt"
 
+````
 obj {
-    nam = '$comp';
-    act = function(s, w)
-        return fmt.c ("{@compass n| С}\n{@compass w|З} {@compass e|В}\n{@compass s|Ю}")
-    end;
-}: with {
-    obj {
-        nam = '@compass';
-        disp = false;
-        inv = function(s)
-            local dir = std.cmd[3]
-            local h = here()
-            local r = std.call(here(), dir..'_to')
-            if not r then
-                p ([[Нет прохода]])
-            else
-                walk(r)
-            end
-        end;
-    }
+	nam = '@compass';
+	disp = false;
+	inv = function(s)
+		local dir = std.cmd[3]
+		local h = here()
+		local r = std.call(here(), dir..'_to')
+		if not r then
+			p ([[Нет прохода]])
+		else
+			walk(r)
+		end
+	end;
+}:with {
+	obj {
+		nam = '$compass';
+		act = function(s)
+			return fmt.c ("{@compass n| С}\n{@compass w|З} {@compass e|В}\n{@compass s|Ю}")
+		end;
+	}
 }
 
 std.mod_start(function(load)
-    take '$comp'
+	take '@compass'
 end)
+
 ````
