@@ -421,12 +421,13 @@ iface:fmt(). Который в свою очередь вызывает std.fmt.
 В качестве примера разберем модуль, реализующий простой компас.
 
 ````
+local std = stead
+require "fmt"
 obj {
 	nam = '@compass';
 	disp = false;
 	inv = function(s)
 		local dir = std.cmd[3]
-		local h = here()
 		local r = std.call(here(), dir..'_to')
 		if not r then
 			p ([[Нет прохода]])
