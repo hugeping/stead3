@@ -415,4 +415,34 @@ iface:fmt(). Который в свою очередь вызывает std.fmt.
 
 ## Примеры модулей
 
-TODO
+### Пишем компас
+
+````
+require "fmt"
+
+obj {
+    nam = '$comp';
+    act = function(s, w)
+        return fmt.c ("{@compass n| С}\n{@compass w|З} {@compass e|В}\n{@compass s|Ю}")
+    end;
+}: with {
+    obj {
+        nam = '@compass';
+        disp = false;
+        inv = function(s)
+            local dir = std.cmd[3]
+            local h = here()
+            local r = std.call(here(), dir..'_to')
+            if not r then
+                p ([[Нет прохода]])
+            else
+                walk(r)
+            end
+        end;
+    }
+}
+
+std.mod_start(function(load)
+    take '$comp'
+end)
+````

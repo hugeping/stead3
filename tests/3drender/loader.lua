@@ -59,6 +59,10 @@ std.mod_start(function(onload)
 	loader.old_timer = timer:get()
 	loader.loading = true
 	timer:set(20)
+	for i = 1, 10000000 do
+		std.busy(true)
+	end
+	std.busy(false)
 end)
 
 std.mod_cmd(function(cmd)
