@@ -1,3 +1,5 @@
+local lang = require "lang-ru"
+
 local mrd = {
 }
 
@@ -294,5 +296,5 @@ function mrd:dump(path)
 end
 
 mrd:gramtab()
-mrd:load(false, { ["ПОДОСИНОВИК"] = true })
+mrd:load(false, { [lang.upper "подосиновик"] = true })
 mrd:dump()
