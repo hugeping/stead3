@@ -1,6 +1,4 @@
-local mrd =
-{
-
+local mrd = {
 }
 
 local msg = print
@@ -19,9 +17,6 @@ end
 local function empty(l)
 	l = l:gsub("[ \t]+", "")
 	return l == ""
-end
-
-function mrd:load_section(f)
 end
 
 function mrd:gramtab(path)
@@ -55,8 +50,11 @@ end
 
 local function section(f, fn, ...)
 	local n = tonumber(f:read("*line"))
-	if not n or n == 0 then
+	if not n then
 		return false
+	end
+	if n == 0 then
+		return true
 	end
 	for l in f:lines() do -- skip accents
 		if fn then fn(l, ...) end
@@ -89,6 +87,7 @@ local function flex_fn(l, flex, an)
 			if not a then
 				msg("Gram not found. Skip lex: "..f.an)
 			else
+				f.an_name = f.an
 				f.an = a
 				table.insert(fl, f)
 			end
@@ -102,7 +101,20 @@ local function pref_fn(l, pref)
 	table.insert(pref, p)
 end
 
-local function word_fn(l, words, self)
+local function dump(vv)
+	local s = ''
+	if type(vv) ~= 'table' then
+		return string.format("%s", tostring(vv))
+	end
+	for k, v in pairs(vv) do
+		s = s .. string.format("%s = %s ", k, v)
+	end
+	return s
+end
+
+local function word_fn(l, self, dict)
+	local words = self.words
+	local words_list = self.words_list
 	local w = split(l)
 	if #w ~= 6 then
 		msg("Skipping word: "..l)
@@ -112,13 +124,16 @@ local function word_fn(l, words, self)
 	local nflex = tonumber(w[2]) or false
 	local an = w[5]
 	if an == '-' then an = false end
+	local an_name = an
 	local npref = tonumber(w[6]) or false
-	if nflex then
-		nflex = self.flex[nflex + 1]
-		if not nflex then
-			msg("Wrong paradigm number for word: "..l)
-			return
-		end
+	if not nflex then
+		msg("Skipping word:"..l)
+		return
+	end
+	nflex = self.flex[nflex + 1]
+	if not nflex then
+		msg("Wrong paradigm number for word: "..l)
+		return
 	end
 	if an then
 		an = self.gram.an[an]
@@ -135,18 +150,44 @@ local function word_fn(l, words, self)
 		end
 	end
 	local t = w[1]
-	if nflex then
-		for k, v in ipairs(nflex) do
-			if v.an["им"] then
-				local tt = v.pre .. t .. v.post
+	local num = 0
+	local used = false
+	for k, v in ipairs(nflex) do
+		if v.an["им"] then
+			for _, pref in ipairs(npref or { '' }) do
+				local tt = pref..v.pre .. t .. v.post
+				if not dict or dict[tt] then
+					local a = {}
+					for kk, vv in pairs(an or {}) do
+						a[kk] = an[kk]
+					end
+					for kk, vv in pairs(v.an) do
+						a[kk] = v.an[kk]
+					end
+					local w = { t = tt, flex = nflex, an = a }
+					local wds = words[tt] or {}
+					table.insert(wds, w)
+					nflex.used = true
+					used = true
+					if npref then
+						npref.used = true
+					end
+					num = num + 1
+					if #wds == 1 then
+						words[tt] = wds
+					end
+				end
 			end
 		end
-	else
-
 	end
+	if used then
+		table.insert(words_list, { t = w[1], flex = nflex, pref = npref, an = an_name })
+	end
+	self.words_nr = self.words_nr + num
+	return
 end
 
-function mrd:load(path)
+function mrd:load(path, dict)
 	local f, e = io.open(path or 'morphs.mrd', 'rb')
 	if not f then
 		return false, e
@@ -167,14 +208,91 @@ function mrd:load(path)
 		return false, "Error in section 4"
 	end
 	self.pref = pref
-
-	local words = {}
-	if not section(f, word_fn, words, self) then
+	self.words_nr = 0
+	self.words = {}
+	self.words_list = {}
+	if not section(f, word_fn, self, dict) then
 		return false, "Error in section 4"
 	end
-	self.words = words
+	msg("Generated: "..tostring(self.words_nr).." word(s)");
+	f:close()
+end
+
+function mrd:dump(path)
+	local f, e = io.open(path or 'dict.mrd', 'wb')
+	if not f then
+		return false, e
+	end
+	local n = 0
+	for k, v in ipairs(self.flex) do
+		if v.used then
+			v.norm_no = n
+			n = n + 1
+		end
+	end
+	f:write(string.format("%d\n", n))
+	for k, v in ipairs(self.flex) do
+		if v.used then
+			local s = ''
+			for kk, vv in ipairs(v) do
+				s = s .. '%'
+				if vv.post == '' then
+					s = s..vv.an_name
+				else
+					s = s..vv.post..'*'..vv.an_name
+				end
+				if vv.pre ~= '' then
+					s = s .. '*'..vv.pre
+				end
+			end
+			f:write(s.."\n")
+		end
+	end
+	f:write("0\n")
+	f:write("0\n")
+	n = 0
+	for k, v in ipairs(self.pref) do
+		if v.used then
+			v.norm_no = n
+			n = n + 1
+		end
+	end
+	f:write(string.format("%d\n", n))
+	for k, v in ipairs(self.pref) do
+		if v.used then
+			local s = ''
+			for kk, vv in ipairs(v) do
+				if s ~= '' then s = s .. ',' end
+				s = s .. vv
+			end
+			f:write(s.."\n")
+		end
+	end
+	f:write(string.format("%d\n", #self.words_list))
+	for k, v in ipairs(self.words_list) do
+		local s = ''
+		if v.t == '' then
+			s = '#'
+		else
+			s = v.t
+		end
+		s = s ..' '..tostring(v.flex.norm_no)
+		s = s..' - -'
+		if v.an then
+			s = s .. ' '..v.an
+		else
+			s = s .. ' -'
+		end
+		if v.pref then
+			s = s ..' '..tostring(v.pref.norm_no)
+		else
+			s = s .. ' -'
+		end
+		f:write(s..'\n')
+	end
 	f:close()
 end
 
 mrd:gramtab()
-mrd:load()
+mrd:load(false, { ["ПОДОСИНОВИК"] = true })
+mrd:dump()
