@@ -158,6 +158,9 @@ local function word_fn(l, self, dict)
 		if v.an["им"] then
 			for _, pref in ipairs(npref or { '' }) do
 				local tt = pref..v.pre .. t .. v.post
+				if lang.norm then
+					tt = lang.norm(tt)
+				end
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do
