@@ -1,9 +1,15 @@
 local lang = require "lang-ru"
 
 local mrd = {
+	lang = lang;
 }
 
 local msg = print
+
+local function strip(str)
+	str = str:gsub("^[ \t]+", ""):gsub("[ \t]$", "")
+	return str
+end
 
 local function split(str, sep)
 	local words = {}
@@ -158,8 +164,8 @@ local function word_fn(l, self, dict)
 		if v.an["им"] then
 			for _, pref in ipairs(npref or { '' }) do
 				local tt = pref..v.pre .. t .. v.post
-				if lang.norm then
-					tt = lang.norm(tt)
+				if self.lang.norm then
+					tt = self.lang.norm(tt)
 				end
 				if not dict or dict[tt] then
 					local a = {}
@@ -169,7 +175,7 @@ local function word_fn(l, self, dict)
 					for kk, vv in pairs(v.an) do
 						a[kk] = v.an[kk]
 					end
-					local w = { t = tt, flex = nflex, an = a }
+					local w = { t = t, pref = pref, flex = nflex, an = a }
 					local wds = words[tt] or {}
 					table.insert(wds, w)
 					nflex.used = true
@@ -298,6 +304,86 @@ function mrd:dump(path)
 	f:close()
 end
 
+function mrd:lookup(w, g)
+	local cap, upper = self.lang.is_cap(w)
+	local t = self.lang.upper(w)
+	w = self.words[t]
+	if not w then
+		return false, "No word in dictionary"
+	end
+	local res = {}
+	for k, v in ipairs(w) do
+		local flex = v.flex
+		for _, f in ipairs(flex) do
+			local score = 0
+			for kk, vv in ipairs(g or {}) do
+				if f.an[vv] or v.an[vv] then
+					score = score + 1
+				end
+			end
+			table.insert(res, { score = score, pos = #res, word = v, flex = f })
+		end
+	end
+	if #res == 0 then
+		return false, "No gram"
+	end
+	table.sort(res, function(a, b)
+		if a.score == b.score then
+			return a.pos < b.pos
+		end
+		return a.score > b.score
+	end)
+	w = res[1]
+	w = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
+	if upper then
+		w = self.lang.upper(w)
+	elseif cap then
+		w = self.lang.cap(w)
+	end
+	return w
+end
+
+function mrd:word(w)
+	local s, e = w:find("/[^/]*$")
+	local g = {}
+	if s then
+		local gg = w:sub(s + 1)
+		w = w:sub(1, s - 1)
+		g = split(gg, "[^, ]+")
+	end
+	local found = true
+	w = w:gsub("[^ \t,%-!/:]+",
+		   function(w)
+			   local ww = self:lookup(w, g)
+			   if not ww then
+				   found = false
+			   end
+			   return ww or w
+	end)
+	if not found then
+		msg("Can not find word: "..w)
+	end
+	return w
+end
+
+function mrd:file(f)
+	local ff, e = io.open(f, "rb")
+	if not ff then
+		return false, e
+	end
+	for l in ff:lines() do
+		for w in l:gmatch('%-"[^"]+"') do
+			print(w)
+		end
+	end
+end
+
+local mt = getmetatable("")
+function mt.__unm(v)
+	return v
+end
 mrd:gramtab()
-mrd:load(false, { [lang.upper "подосиновик"] = true })
-mrd:dump()
+mrd:load(false, { [lang.upper "подосиновик"] = true, [lang.upper "красный"] = true })
+local w = mrd:word(-"красный подосиновик/рд,мн")
+print(w)
+mrd:file("mrd.lua")

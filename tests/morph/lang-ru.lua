@@ -166,13 +166,16 @@ local function cap(str)
 	end
 	return str
 end
+local lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap }
 
 local function norm(str)
 	if type(str) ~= 'string' then
 		return str
 	end
-	str = str:gsub("ё", "е"):gsub("Ё", "Е")
+	if not lang.yo then
+		str = str:gsub("ё", "е"):gsub("Ё", "Е")
+	end
 	return str
 end
 
-return { kbd = kbdru, norm = norm, upper = upper, cap = cap, is_cap = is_cap }
+return lang
