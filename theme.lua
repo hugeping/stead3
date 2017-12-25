@@ -1,1 +1,0 @@
-theme = stead.ref '@theme'
