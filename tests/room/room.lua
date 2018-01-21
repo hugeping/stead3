@@ -238,7 +238,30 @@ function cam:draw_sprites(pl, map, columnProps)
 	    self:sprite_column(pl, map, column, columnProps[column], sprites);
 	end
 end
-
+function cam:render_column(texture, step, left, target_top, target_width, target_height, alpha)
+--    if math.abs(alpha) < 0.1 then return end
+    local tw, th = texture:size()
+    local textX = math.floor(tw * step.offset);
+    local ty = 0
+    local delta = th / target_height
+    local r, g, b, a, ny
+    ny = 0
+    local height = target_height / th
+    if height < 1 then
+	for y = 0, target_height - 1 do
+	    r, g, b, a = texture:val(textX, math.floor(ty))
+	    ty = ty + delta
+	    self.pxl:clear(left, target_top + y, target_width, 1, r * alpha, g * alpha, b * alpha);
+	end
+    else
+	ty = target_top
+	for y = 0, th - 1 do
+	    r, g, b, a = texture:val(textX, math.floor(y))
+	    self.pxl:clear(left, math.floor(ty), target_width, math.ceil(height), r * alpha, g * alpha, b * alpha);
+	    ty = ty + height
+	end
+    end
+end
 function cam:column(col, ray, angle, map, pl)
     local left = math.floor(col * self.spacing)
     local width = math.ceil(self.spacing)
@@ -255,31 +278,10 @@ function cam:column(col, ray, angle, map, pl)
 	    local wall = self:project(step.height, angle, step.distance)
 	    wall.top = wall.top + math.cos(pl.paces * 6) * 4
 	    local alpha = step.distance + step.shading - self.lightRange + 1
-	    local tw, th = self.texture:size()
-	    local textX = math.floor(tw * step.offset);
-	    if alpha > 1 then alpha = 1 end
-	    if alpha < -1 then alpha = -1 end
+	    if alpha > 1 then alpha = 1
+	    elseif alpha < -1 then alpha = -1 end
 	    alpha = 1 - ((1 + alpha) / 2)
-	    local ty = 0
-	    local delta = th / wall.height
-	    local r, g, b, a, ny
-	    ny = 0
-	    local height = wall.height / th
---	    if math.abs(alpha) < 0.1 then return end
-	    if height < 1 then
-		for y = 0, wall.height - 1 do
-		    r, g, b, a = self.texture:val(textX, math.floor(ty))
-		    ty = ty + delta
-		    pxl:clear(left, wall.top + y, width, 1, r * alpha, g * alpha, b * alpha);
-		end
-	    else
-		ty = wall.top
-		for y = 0, th - 1 do
-		    r, g, b, a = self.texture:val(textX, math.floor(y))
-		    pxl:clear(left, math.floor(ty), width, math.ceil(height), r * alpha, g * alpha, b * alpha);
-		    ty = ty + height
-		end
-	    end
+	    self:render_column(self.texture, step, left, wall.top, width, wall.height, alpha)
 	    hitDistance = step.distance
 	elseif step.object then
 	    table.insert(objects, {

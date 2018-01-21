@@ -9,7 +9,7 @@ local map = {
     { 0, 1, 1, 1, 1 },
     { 0, 0, 0, 0, 0 },
 }
-function start()
+function start(load)
     r = r:new(256, 256, 2)
     for y = 1, 5 do
 	for x = 1, 5 do
