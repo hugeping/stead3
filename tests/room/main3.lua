@@ -4,7 +4,7 @@ local r = require "room"
 
 local map = {
     { 0, 0, 0, 0, 0 },
-    { 0, 1, 1, 1, 1 },
+    { 0, 1, 0, 1, 1 },
     { 0, 0, 0, 0, 1 },
     { 0, 1, 1, 1, 1 },
     { 0, 0, 0, 0, 0 },
@@ -17,7 +17,7 @@ function start(load)
 	    r.map:set(x - 1, y - 1, { block = b })
 	end
     end
-    r.map:get(3, 2).item = {}
+    r.map:get(3, 2).object =  { w = 1, h = 1, x = 3, y = 2.5 }
     r.player.x = 0
     r.player.y = 2.5
     r.player.dir = 0
@@ -29,21 +29,26 @@ function game:timer()
     if keys:state('left') then
 	r.player:rotate(-0.05)
 	r:render()
-    elseif keys:state('right') then
+    end
+    if keys:state('right') then
 	r.player:rotate(0.05)
 	r:render()
-    elseif keys:state('w') then
+    end
+    if keys:state('w') then
 	r.player:walk(0.1, r.map)
 	r:render()
-    elseif keys:state('s') then
+    end
+    if keys:state('s') then
 	r.player:walk(-0.1, r.map)
 	r:render()
-    elseif keys:state('a') then
+    end
+    if keys:state('a') then
 	r.player:rotate(- math.pi/2)
 	r.player:walk(0.1, r.map)
 	r.player:rotate(math.pi/2)
 	r:render()
-    elseif keys:state('d') then
+    end
+    if keys:state('d') then
 	r.player:rotate(math.pi/2)
 	r.player:walk(0.1, r.map)
 	r.player:rotate(-math.pi/2)
