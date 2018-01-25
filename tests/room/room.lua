@@ -221,17 +221,19 @@ function cam:draw_sprites(pl, map, columnProps)
 	local resolution = self.res
 	local sprites = {}
 
-	for o, _ in pairs(self.step_objects) do
+	for o, step in pairs(self.step_objects) do
 		local distX = o.x - pl.x
 		local distY = o.y - pl.y
 
 		o.distanceFromPlayer = math.sqrt(distX ^ 2 + distY ^ 2);
 
 		local width = o.w * self.w / o.distanceFromPlayer
-		local height = o.h * self.h / o.distanceFromPlayer
 		local renderedFloorOffset = (o.floorOffset or 0) / o.distanceFromPlayer
 		local angleToPlayer = math.atan2(distY, distX)
 		local angleRelativeToPlayerView = pl.dir - angleToPlayer
+		local wall = self:project(step.height, angleRelativeToPlayerView, step.distance)
+		local z = step.distance * math.cos(angleRelativeToPlayerView)
+		local height = o.h * self.h / z -- o.distanceFromPlayer
 		local top = (self.h * CAM_HEIGHT) * (CAM_VIEW + 1 / o.distanceFromPlayer) - height;
 
 		if angleRelativeToPlayerView >= CIRCLE / 2 then
@@ -314,6 +316,7 @@ function cam:column(col, ray, angle, map, pl)
 			table.insert(objects, {
 					     object = step.object,
 					     ditsance = step.distance,
+					     height = step.height,
 					     offset = step.offset,
 					     angle = angle,
 			})
