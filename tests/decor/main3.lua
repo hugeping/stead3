@@ -9,5 +9,5 @@ end
 
 function start()
 	timer:set(100)
-	decor:new {"box", "image", "box:64x64,red", x= 12, y = 12, xc = true, yc = true }
+	decor:new {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true }
 end
