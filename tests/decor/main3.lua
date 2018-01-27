@@ -6,9 +6,11 @@ function game:timer()
 	decor:render()
 	return false
 end
-
-function start()
+local text = [[Проверка длинных текстов, да еще
+с переносами строк. Интересно
+сработает ли?]];
+function init()
 	timer:set(100)
 	decor:new {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true }
-	decor:new {"text", "txt", "Hello world!", font = "sans.ttf", size = 32, color = 'red', x = 12, y = 200 }
+	decor:new {"text", "txt", text, color = 'red', x = 12, y = 200, align = 'justify' }
 end

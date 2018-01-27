@@ -96,6 +96,23 @@ function img:render(v)
     end
 end
 
+function img:new_spr(v, s)
+    v.xc = v.xc or 0
+    v.yc = v.yc or 0
+    v.sprite = s
+    local w, h = s:size()
+    if v.w then w = v.w end
+    if v.h then h = v.h end
+    if v.xc == true then
+	v.xc = math.floor(w / 2)
+    end
+    if v.yc == true then
+	v.yc = math.floor(h / 2)
+    end
+    v.w, v.h = w, h
+    return v
+end
+
 function img:new(v)
     local fname = v[3]
     if type(fname) ~= 'string' then
@@ -109,20 +126,8 @@ function img:new(v)
 	end
 	s = self.cache:add(fname, sp)
     end
-    v.xc = v.xc or 0
-    v.yc = v.yc or 0
-    v.sprite = s
     self.cache:put(fname)
-    local w, h = s:size()
-    if v.w then w = v.w end
-    if v.h then h = v.h end
-    if v.xc == true then
-	v.xc = math.floor(w / 2)
-    end
-    if v.yc == true then
-	v.yc = math.floor(h / 2)
-    end
-    return v
+    return self:new_spr(v, s)
 end
 
 local fnt = {
@@ -182,6 +187,29 @@ end
 local txt = {
 }
 
+local function make_align(l, width, t)
+    if t == 'left' then
+	return
+    end
+    if t == 'center' then
+	local delta = math.floor((width - l.w) / 2)
+	for _, v in ipairs(l) do
+	    v.x = v.x + delta
+	end
+	return
+    end
+    if t == 'right' then
+	local delta = math.floor(width - l.w)
+	for _, v in ipairs(l) do
+	    v.x = v.x + delta
+	end
+	return
+    end
+    if t == 'justify' then
+	-- todo
+	return
+    end
+end
 function txt:new(v)
     local text = v[3]
     if type(text) == 'function' then
@@ -193,15 +221,85 @@ function txt:new(v)
     local align = v.align or 'left'
     local words = {}
     local style = v.style
-    local color = v.color
-    for w in text:gmatch("[^ \t]+") do
-	fnt:text(v.font, v.size, text, color, style)
+    local color = v.color or theme.get('win.col.fg')
+    local font = v.font or theme.get('win.fnt.name')
+    local intvl = v.intvl or std.tonum(theme.get 'win.fnt.height')
+    local ww
+    local y = 0;
+    local x = 0;
+    local sp
+    local size = v.size or std.tonum(theme.get 'win.fnt.size')
+    v.fnt = fnt:get(font, size)
+    local spw, _ = v.fnt:size(" ")
+    local lines = {}
+    local line = { h = v.fnt:height() }
+    local W = 0
+    local H = 0
+
+    local function newline()
+	line.y = y
+	line.w = 0
+	if #line > 0 then
+	    line.w = line[#line].x + line[#line].w
+	end
+	y = y + v.fnt:height() * intvl
+	if y > H then
+	    H = y
+	end
+	table.insert(lines, line)
+	line = { h = v.fnt:height() }
+	x = 0
     end
-    fnt:text(v.font, v.size, text, v.color, v.style)
+
+    for w in text:gmatch("[^ \t]+") do
+	while w and w ~= '' do
+	    local s, _ = w:find("\n", 1, true)
+	    if not s then
+		ww = w
+		w = false
+	    elseif s > 1 then
+		ww = w:sub(1, s - 1)
+		w = w:sub(s)
+	    else -- s == 1
+		ww = '\n'
+		w = w:sub(2)
+	    end
+	    if ww == '\n' then
+		newline()
+	    else
+		sp = fnt:text(font, size, ww, color, style)
+		local width, height = sp:size()
+		if height > line.h then
+		    line.h = height
+		end
+
+		table.insert(line, { x = x, y = y, spr = sp, w = width, h = height })
+		x = x + width + spw
+		if x > W then
+		    W = x
+		end
+	    end
+	end
+    end
+    if #line > 0 then
+	newline()
+    end
+    local spr = sprite.new(W, H)
+    for _, l in ipairs(lines) do
+	make_align(l, W, align)
+	for _, w in ipairs(l) do
+	    w.spr:copy(spr, w.x, w.y)
+	end
+    end
+    return img:new_spr(v, spr)
 end
-function txt:render()
+function txt:render(v)
+    img:render(v)
 end
-function txt:delete()
+function txt:delete(v)
+    if v.sprite then
+	fnt:put(v.font, v.size)
+    end
 end
 
 decor = obj {
@@ -244,7 +342,6 @@ function decor:get(n)
     end
     return self.objects[n]
 end
-
 
 function decor:render()
 	local list = {}
