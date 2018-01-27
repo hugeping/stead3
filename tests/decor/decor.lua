@@ -22,7 +22,7 @@ function cache:add(name, value)
 	v.use = v.use + 1
 	return v.value
     end
-    v = { value = value, use = 1 }
+    v = { name = name, value = value, use = 1 }
     self.cache[name] = v
     table.insert(self.list, 1, v)
     return v.value
@@ -37,20 +37,42 @@ function cache:get(name)
     return v.value
 end
 
+function cache:clear()
+    local nr = #self.list
+    local list = {}
+--    if nr <= self.max then
+--	return
+--    end
+    for k, v in ipairs(self.list) do
+	if v.use == 0 then
+	    v.ttl = v.ttl - 1
+	    if v.ttl <= 0 then
+		self.cache[v.name] = nil
+		print("cache purge: "..v.name)
+	    else
+		table.insert(list, v)
+	    end
+	else
+	    table.insert(list, v)
+	end
+    end
+    self.list = list
+end
+
 function cache:put(name)
     local v = self.cache[name]
     if not v then
 	return
     end
     v.use = v.use - 1
-    if v.use < 0 then v.use = 0 end
-    for k, vv in ipairs(self.list) do
-	if vv == v then
-	    table.remove(self.list, k)
-	    table.insert(self.list, #self.list, v)
-	    break
-	end
-    end
+    if v.use <= 0 then v.use = 0; v.ttl = 3; end
+--    for k, vv in ipairs(self.list) do
+--	if vv == v then
+--	    table.remove(self.list, k)
+--	    table.insert(self.list, #self.list, v)
+--	    break
+--	end
+--    end
     return v.value
 end
 
@@ -60,6 +82,10 @@ local img = {
 
 function img:delete(v)
 
+end
+
+function img:clear()
+    self.cache:clear()
 end
 
 function img:render(v)
@@ -107,20 +133,75 @@ function fnt:key(name, size)
     return name .. std.tostr(size)
 end
 
-function fnt:get(name, size)
+function fnt:clear()
+    self.cache:clear()
+    for k, v in ipairs(self.cache.list) do
+	v.value.cache:clear()
+    end
+end
+
+function fnt:_get(name, size)
     local f = self.cache:get(self:key(name, size))
     if not f then
-	f = sprite.fnt(name, size)
-	if not f then
+	local fnt = sprite.fnt(name, size)
+	if not fnt then
 	    std.err("Can not load font", 2)
 	end
+	f = { fnt = fnt, cache = cache:new(1024) }
 	self.cache:add(self:key(name, size), f)
     end
     return f
 end
 
+function fnt:get(name, size)
+    return self:_get(name, size).fnt
+end
+
+function fnt:text_key(text, color, style)
+    local key = std.tostr(color)..'#'..std.tostr(style or "")..'#'..tostring(text)
+    return key
+end
+
+function fnt:text(name, size, text, color, style)
+    local fn = self:_get(name, size);
+    local key = self:text_key(text, color, style)
+    local sp = fn.cache:get(key)
+    if not sp then
+	sp = fn.fnt:text(text, color, size)
+	fn.cache:add(key, sp)
+    end
+    fn.cache:put(key)
+    self:put(name, size)
+    return sp
+end
+
 function fnt:put(name, size)
     self.cache:put(self:key(name, size))
+end
+
+local txt = {
+}
+
+function txt:new(v)
+    local text = v[3]
+    if type(text) == 'function' then
+	text = text(v)
+    end
+    if type(text) ~= 'string' then
+	std.err("Wrong text in txt decorator")
+    end
+    local align = v.align or 'left'
+    local words = {}
+    local style = v.style
+    local color = v.color
+    for w in text:gmatch("[^ \t]+") do
+	fnt:text(v.font, v.size, text, color, style)
+    end
+    fnt:text(v.font, v.size, text, v.color, v.style)
+end
+function txt:render()
+end
+function txt:delete()
 end
 
 decor = obj {
@@ -128,6 +209,7 @@ decor = obj {
     {
 	img = img;
 	fnt = fnt;
+	txt = txt;
     };
     objects = {
     };
@@ -181,6 +263,11 @@ function decor:render()
 	end
 end
 
+function decor:cache_clear()
+    self.img:clear();
+    self.fnt:clear();
+end
+
 function decor:load()
 --	for _, v in pairs(self.fonts) do
 --		self:fnt(v)
@@ -203,10 +290,14 @@ end)
 
 std.mod_step(
 function(state)
-	if not state then
-		return
+    if not state then
+	if std.cmd[1] == '@timer' then
+	    decor:cache_clear()
 	end
-	decor:render()
+	return
+    end
+    decor:cache_clear()
+    decor:render()
 end)
 
 
