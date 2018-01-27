@@ -222,17 +222,20 @@ function txt:new(v)
     local words = {}
     local style = v.style
     local color = v.color or theme.get('win.col.fg')
+    local link_color = v.link_color or theme.get('win.col.link')
+    local alink_color = v.alink_color or theme.get('win.col.alink')
     local font = v.font or theme.get('win.fnt.name')
     local intvl = v.intvl or std.tonum(theme.get 'win.fnt.height')
     local ww
     local y = 0;
     local x = 0;
-    local sp
+    local sp, linksp
     local size = v.size or std.tonum(theme.get 'win.fnt.size')
     v.fnt = fnt:get(font, size)
     local spw, _ = v.fnt:size(" ")
     local lines = {}
     local line = { h = v.fnt:height() }
+    local link_list = {}
     local W = 0
     local H = 0
 
@@ -267,14 +270,52 @@ function txt:new(v)
 	    if ww == '\n' then
 		newline()
 	    else
-		sp = fnt:text(font, size, ww, color, style)
-		local width, height = sp:size()
-		if height > line.h then
-		    line.h = height
+		local n
+		local links = {}
+		ww = std.for_each_xref_outer(ww,
+			function(str)
+			    str = str:gsub("^{", ""):gsub("}$", "")
+			    local h = str:find("|", 1, true)
+			    local l = str:sub(h + 1)
+			    h = str:sub(1, h - 1)
+			    table.insert(links, {h, l})
+			    return '\3'..std.tostr(#links)..'\3'
+		end)
+		local t, col, act
+		while ww do
+		    s, _ = ww:find("\3[0-9]+\3", 1)
+		    col = color
+		    if s == 1 then
+			n = std.tonum(ww:sub(s + 1, _ - 1))
+			t = links[n][2]
+			act = links[n][1]
+			ww = ww:sub(_ + 1)
+			col = link_color
+		    elseif s then
+			t = ww:sub(1, s - 1)
+			ww = ww:sub(s)
+		    else
+			t = ww
+			ww = false
+		    end
+		    sp = fnt:text(font, size, t, col, style)
+		    if col == link_color then
+			linksp = fnt:text(font, size, t, alink_color, style)
+		    else
+			linksp = false
+		    end
+		    local width, height = sp:size()
+		    if height > line.h then
+			line.h = height
+		    end
+		    local witem = { link = linksp, action = act, x = x, y = y, spr = sp, w = width, h = height }
+		    if linksp then
+			table.insert(link_list, witem)
+		    end
+		    table.insert(line, witem)
+		    x = x + width
 		end
-
-		table.insert(line, { x = x, y = y, spr = sp, w = width, h = height })
-		x = x + width + spw
+		x = x + spw
 		if x > W then
 		    W = x
 		end
@@ -291,9 +332,29 @@ function txt:new(v)
 	    w.spr:copy(spr, w.x, w.y)
 	end
     end
+    v.__lines = lines
+    v.__link_list = link_list
     return img:new_spr(v, spr)
 end
+
 function txt:render(v)
+    local x, y = instead.mouse_pos()
+    x = x - v.x + v.xc
+    y = y - v.y + v.yc
+    for _, w in ipairs(v.__link_list) do
+	if x >= w.x and y>= w.y
+	and x < w.x + w.w and y < w.y + w.h then
+	    if not w.__active then
+		w.__active = true
+		w.link:copy(v.sprite, w.x, w.y)
+	    end
+	else
+	    if w.__active then
+		w.__active = false
+		w.spr:copy(v.sprite, w.x, w.y)
+	    end
+	end
+    end
     img:render(v)
 end
 function txt:delete(v)
@@ -358,6 +419,9 @@ function decor:render()
     end
     table.sort(list, function(a, b)
 		   return (a.z or 0) < (b.z or 0)
+    end)
+    table.sort(after_list, function(a, b)
+		   return (a.z or 0) > (b.z or 0)
     end)
     sprite.scr():fill(self.bgcol)
     for _, v in ipairs(list) do
