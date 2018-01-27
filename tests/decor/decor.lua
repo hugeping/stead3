@@ -334,9 +334,19 @@ function txt:new(v)
     end
     v.__lines = lines
     v.__link_list = link_list
+    if #link_list > 0 then
+	v.click = true
+    end
     return img:new_spr(v, spr)
 end
-
+function txt:click(v, x, y)
+    for _, w in ipairs(v.__link_list) do
+	if x >= w.x and y>= w.y
+	and x < w.x + w.w and y < w.y + w.h then
+	    return w.action
+	end
+    end
+end
 function txt:render(v)
     local x, y = instead.mouse_pos()
     x = x - v.x + v.xc
@@ -381,6 +391,9 @@ decor:img{ 'hello', 'img' }
 function decor:new(v)
     local name = v[1]
     local t = v[2]
+    if not v.z then
+	v.z = 0
+    end
     if type(name) ~= 'string' then
 	std.err("Wrong parameter to decor:new(): name", 2)
     end
@@ -436,6 +449,30 @@ sprite.render_callback(
 	end
 end)
 
+function decor:click_filter(x, y)
+    local c = {}
+    for _, v in pairs(self.objects) do
+	if v.click and x >= v.x - v.xc and y >= v.y - v.yc and
+	x < v.x - v.xc + v.w and y < v.y - v.yc + v.h then
+	    table.insert(c, v)
+	end
+    end
+    if #c == 0 then
+	return false
+    end
+    local e = c[1]
+    for _, v in ipairs(c) do
+	if v.z < 0 and e.z >= 0 then
+	    e = v
+	elseif v.z >= 0 and e.z >= 0 and v.z > e.z then
+	    e = v
+	elseif v.z < 0 and e.z < 0 and v.z < e.z then
+	    e = v
+	end
+    end
+    return e
+end
+
 function decor:cache_clear()
     self.img:clear();
     self.fnt:clear();
@@ -452,7 +489,28 @@ function decor:load()
 	    self:new(v)
 	end
 end
-
+std.mod_cmd(
+function(cmd)
+    if cmd[1] ~= '@decor_click' then
+	return
+    end
+    local nam = cmd[2]
+    local e = decor.objects[nam]
+    local t = e[2]
+    local x, y, btn = cmd[3], cmd[4], cmd[5]
+    local r, v
+    if type(decor[t].click) == 'function' then
+	nam = decor[t]:click(e, x, y, btn)
+    end
+    local r, v = std.call(std.here(), 'ondecor', nam, x, y, btn)
+    if not r and not v then
+	r, v = std.call(std.game, 'ondecor', nam, x, y, btn)
+    end
+    if not r and not v then
+	return nil, false
+    end
+    return r, v
+end)
 std.mod_start(
 function(load)
 	theme.set('scr.gfx.scalable', 5)
@@ -475,6 +533,24 @@ function(state)
     decor:render()
 end)
 
+local input = std.ref '@input'
+local clickfn = input.click
+
+function input:click(press, btn, x, y, px, py)
+    if press == false then
+	local e = decor:click_filter(x, y)
+	if e then
+	    x = x - e.x + e.xc
+	    y = y - e.y + e.yc
+	    local a
+	    for _, v in std.ipairs {e[1], x, y, btn} do
+		a = (a and (a..', ') or ' ') .. std.dump(v)
+	    end
+	    return '@decor_click'.. (a or '')
+	end
+    end
+    return clickfn(press, btn, x, y, px, py)
+end
 
 function D(n)
 	return decor:get(n)
