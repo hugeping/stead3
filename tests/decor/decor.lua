@@ -391,6 +391,7 @@ end
 
 std.mod_start(
 function(load)
+	theme.set('scr.gfx.scalable', 5)
 	if load then
 		decor:load()
 	end

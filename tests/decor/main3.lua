@@ -8,6 +8,7 @@ end
 local text = [[Проверка длинных текстов, да еще
 с переносами строк. Интересно
 сработает ли?]];
+_'main'.dsc = [[Привет мир!]];
 function init()
 	timer:set(100)
 	decor.bgcol = 'white'
