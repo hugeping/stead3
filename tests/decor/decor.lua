@@ -390,6 +390,7 @@ function(state)
     if not state then
 	if std.cmd[1] == '@timer' then
 	    decor:cache_clear()
+	    decor:render()
 	end
 	return
     end
