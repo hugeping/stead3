@@ -346,6 +346,7 @@ function txt:click(v, x, y)
 	    return w.action
 	end
     end
+    return v[1]
 end
 function txt:render(v)
     local x, y = instead.mouse_pos()
@@ -449,12 +450,18 @@ sprite.render_callback(
 	end
 end)
 
-function decor:click_filter(x, y)
+function decor:click_filter(press, x, y)
     local c = {}
     for _, v in pairs(self.objects) do
 	if v.click and x >= v.x - v.xc and y >= v.y - v.yc and
 	x < v.x - v.xc + v.w and y < v.y - v.yc + v.h then
-	    table.insert(c, v)
+	    if v[2] == 'txt' then
+		if not press then
+		    table.insert(c, v)
+		end
+	    elseif press then
+		table.insert(c, v)
+	    end
 	end
     end
     if #c == 0 then
@@ -537,17 +544,15 @@ local input = std.ref '@input'
 local clickfn = input.click
 
 function input:click(press, btn, x, y, px, py)
-    if press == false then
-	local e = decor:click_filter(x, y)
-	if e then
-	    x = x - e.x + e.xc
-	    y = y - e.y + e.yc
-	    local a
-	    for _, v in std.ipairs {e[1], x, y, btn} do
-		a = (a and (a..', ') or ' ') .. std.dump(v)
-	    end
-	    return '@decor_click'.. (a or '')
+    local e = decor:click_filter(press, x, y)
+    if e then
+	x = x - e.x + e.xc
+	y = y - e.y + e.yc
+	local a
+	for _, v in std.ipairs {e[1], x, y, btn} do
+	    a = (a and (a..', ') or ' ') .. std.dump(v)
 	end
+	return '@decor_click'.. (a or '')
     end
     return clickfn(press, btn, x, y, px, py)
 end
