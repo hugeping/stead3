@@ -343,22 +343,34 @@ function decor:get(n)
     return self.objects[n]
 end
 
+local after_list = {}
+
 function decor:render()
-	local list = {}
-	for _, v in pairs(self.objects) do
-		local z = v.z or 0
-		if z >= 0 then
-			table.insert(list, v)
-		end
+    local list = {}
+    after_list = {}
+    for _, v in pairs(self.objects) do
+	local z = v.z or 0
+	if z >= 0 then
+	    table.insert(list, v)
+	else
+	    table.insert(after_list, v)
 	end
-	table.sort(list, function(a, b)
-		return (a.z or 0) < (b.z or 0)
-	end)
-	sprite.scr():fill(self.bgcol)
-	for _, v in ipairs(list) do
-	    self[v[2]]:render(v)
-	end
+    end
+    table.sort(list, function(a, b)
+		   return (a.z or 0) < (b.z or 0)
+    end)
+    sprite.scr():fill(self.bgcol)
+    for _, v in ipairs(list) do
+	self[v[2]]:render(v)
+    end
 end
+
+sprite.render_callback(
+    function()
+	for _, v in ipairs(after_list) do
+	    decor[v[2]]:render(v)
+	end
+end)
 
 function decor:cache_clear()
     self.img:clear();
