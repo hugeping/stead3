@@ -5,11 +5,16 @@ function game:timer()
 	D"box".x = D"box".x + 20
 	return false
 end
-local text = [[Проверка длинных {test|текстов},
-да еще с переносами строк. 
-Интересно сработает ли?]];
+local text = [[Проверка длинных {test|текстов}, да еще с переносами строк.
+Интересно сработает ли? А также интересно посмотреть на разные типы выравнивания!
+И конечно, на принудительный разрыв строк!]];
 _'main'.dsc = [[Привет мир!]];
+local n = 1
 function game:ondecor(name, x, y)
+	local j = { 'left', 'right', 'center', 'justify' };
+	D"text".align = j[(n % #j) + 1];
+	n = n + 1
+	decor:new('text')
 	p("click:", name, ":",x, ",", y)
 end
 function init()

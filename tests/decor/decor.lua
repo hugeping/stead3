@@ -206,7 +206,30 @@ local function make_align(l, width, t)
 	return
     end
     if t == 'justify' then
-	-- todo
+	local n = 0
+	for _, v in ipairs(l) do
+	    if not v.unbreak then
+		n = n + 1
+	    end
+	end
+	n = n - 1
+	if n == 0 then
+	    return
+	end
+	local delta = math.floor((width - l.w) / n)
+	local ldelta = (width - l.w) % n
+	local xx = 0
+	for k, v in ipairs(l) do
+	    if k > 1 then
+		if not v.unbreak then
+		    if k == 2 then
+			xx = xx + ldelta
+		    end
+		    xx = xx + delta
+		end
+		v.x = v.x + xx
+	    end
+	end
 	return
     end
 end
@@ -225,6 +248,7 @@ function txt:new(v)
     local link_color = v.link_color or theme.get('win.col.link')
     local alink_color = v.alink_color or theme.get('win.col.alink')
     local font = v.font or theme.get('win.fnt.name')
+    v.font = font
     local intvl = v.intvl or std.tonum(theme.get 'win.fnt.height')
     local ww
     local y = 0;
@@ -338,7 +362,10 @@ function txt:new(v)
 		    end
 		    for k, v in ipairs(applist) do
 			v.y = y
-			x = v.x + v.w + spw
+			x = v.x + v.w
+			if k ~= 1 then
+			    v.unbreak = true
+			end
 			table.insert(line, v)
 		    end
 		else
@@ -346,10 +373,13 @@ function txt:new(v)
 		    for k, v in ipairs(applist) do
 			v.x = v.x + sx
 			x = v.x + v.w
+			if k ~= 1 then
+			    v.unbreak = true
+			end
 			table.insert(line, v)
 		    end
-		    x = x + spw
 		end
+		x = x + spw
 		if x > W then
 		    W = x
 		end
@@ -424,6 +454,9 @@ decor:img{ 'hello', 'img' }
 ]]--
 
 function decor:new(v)
+    if type(v) == 'string' then
+	v = self.objects[v]
+    end
     local name = v[1]
     local t = v[2]
     if not v.z then
