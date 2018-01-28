@@ -236,9 +236,10 @@ function txt:new(v)
     local lines = {}
     local line = { h = v.fnt:height() }
     local link_list = {}
+    local maxw = v.w
+    local maxh = v.h
     local W = 0
     local H = 0
-
     local function newline()
 	line.y = y
 	line.w = 0
@@ -252,9 +253,15 @@ function txt:new(v)
 	table.insert(lines, line)
 	line = { h = v.fnt:height() }
 	x = 0
+	if maxh and y > maxh then
+	    return true
+	end
     end
-
+    local finish
     for w in text:gmatch("[^ \t]+") do
+	if finish then
+	    break
+	end
 	while w and w ~= '' do
 	    local s, _ = w:find("\n", 1, true)
 	    if not s then
@@ -268,7 +275,10 @@ function txt:new(v)
 		w = w:sub(2)
 	    end
 	    if ww == '\n' then
-		newline()
+		if newline() then
+		    finish = true
+		    break
+		end
 	    else
 		local n
 		local links = {}
@@ -308,7 +318,9 @@ function txt:new(v)
 		    if height > line.h then
 			line.h = height
 		    end
-		    local witem = { link = linksp, action = act, x = x, y = y, spr = sp, w = width, h = height }
+		    local witem = { link = linksp,
+				    action = act, x = x, y = y,
+				    spr = sp, w = width, h = height }
 		    if linksp then
 			table.insert(link_list, witem)
 		    end
@@ -325,9 +337,9 @@ function txt:new(v)
     if #line > 0 then
 	newline()
     end
-    local spr = sprite.new(W, H)
+    local spr = sprite.new(maxw or W, maxh or H)
     for _, l in ipairs(lines) do
-	make_align(l, W, align)
+	make_align(l, maxw or W, align)
 	for _, w in ipairs(l) do
 	    w.spr:copy(spr, w.x, w.y)
 	end
@@ -346,7 +358,7 @@ function txt:click(v, x, y)
 	    return w.action
 	end
     end
-    return v[1]
+    return v.name
 end
 function txt:render(v)
     local x, y = instead.mouse_pos()
@@ -407,6 +419,8 @@ function decor:new(v)
     if not self[t] or type(self[t].new) ~= 'function' then
 	std.err("Wrong type decorator: "..t, 2)
     end
+    v.name = name
+    v.type = t
     self.objects[name] = self[t]:new(v)
     return v
 end;
@@ -432,21 +446,23 @@ function decor:render()
 	end
     end
     table.sort(list, function(a, b)
-		   return (a.z or 0) < (b.z or 0)
+		   if a.z == b.z then return a.name < b.name end
+		   return a.z > b.z
     end)
     table.sort(after_list, function(a, b)
-		   return (a.z or 0) > (b.z or 0)
+		   if a.z == b.z then return a.name < b.name end
+		   return a.z > b.z
     end)
     sprite.scr():fill(self.bgcol)
     for _, v in ipairs(list) do
-	self[v[2]]:render(v)
+	self[v.type]:render(v)
     end
 end
 
 sprite.render_callback(
     function()
 	for _, v in ipairs(after_list) do
-	    decor[v[2]]:render(v)
+	    decor[v.type]:render(v)
 	end
 end)
 
@@ -469,11 +485,11 @@ function decor:click_filter(press, x, y)
     end
     local e = c[1]
     for _, v in ipairs(c) do
-	if v.z < 0 and e.z >= 0 then
-	    e = v
-	elseif v.z >= 0 and e.z >= 0 and v.z > e.z then
-	    e = v
-	elseif v.z < 0 and e.z < 0 and v.z < e.z then
+	if v.z == e.z then
+	    if v.name > e.name then
+		e = v
+	    end
+	elseif v.z < e.z then
 	    e = v
 	end
     end

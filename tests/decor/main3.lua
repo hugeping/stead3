@@ -17,5 +17,5 @@ function init()
 	decor.bgcol = 'white'
 	decor:new {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true }
 --	decor:new {"box2", "img", "box:64x64,blue", x= 320, y = 12, xc = true, yc = true, z = -1 }
-	decor:new {"text", "txt", text, xc = true, x = 400, y = 200, align = 'center' }
+	decor:new {"text", "txt", text, xc = true, x = 400, y = 200, h = 32, align = 'center' }
 end
