@@ -250,7 +250,9 @@ function txt:new(v)
 	if y > H then
 	    H = y
 	end
-	table.insert(lines, line)
+	if #line > 0 then
+	    table.insert(lines, line)
+	end
 	line = { h = v.fnt:height() }
 	x = 0
 	if maxh and y > maxh then
@@ -292,6 +294,8 @@ function txt:new(v)
 			    return '\3'..std.tostr(#links)..'\3'
 		end)
 		local t, col, act
+		local applist = {}
+		local xx = 0
 		while ww do
 		    s, _ = ww:find("\3[0-9]+\3", 1)
 		    col = color
@@ -319,15 +323,33 @@ function txt:new(v)
 			line.h = height
 		    end
 		    local witem = { link = linksp,
-				    action = act, x = x, y = y,
+				    action = act, x = xx, y = y,
 				    spr = sp, w = width, h = height }
 		    if linksp then
 			table.insert(link_list, witem)
 		    end
-		    table.insert(line, witem)
-		    x = x + width
+		    table.insert(applist, witem)
+		    xx = xx + width
 		end
-		x = x + spw
+		if maxw and x + xx + spw >= maxw and #line > 0 then
+		    if newline() then
+			stop = true
+			break
+		    end
+		    for k, v in ipairs(applist) do
+			v.y = y
+			x = v.x + v.w + spw
+			table.insert(line, v)
+		    end
+		else
+		    local sx = x
+		    for k, v in ipairs(applist) do
+			v.x = v.x + sx
+			x = v.x + v.w
+			table.insert(line, v)
+		    end
+		    x = x + spw
+		end
 		if x > W then
 		    W = x
 		end
