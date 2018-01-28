@@ -233,6 +233,13 @@ local function make_align(l, width, t)
 	return
     end
 end
+local function parse_xref(str)
+    str = str:gsub("^{", ""):gsub("}$", "")
+    local h = str:find("|", 1, true)
+    local l = str:sub(h + 1)
+    h = str:sub(1, h - 1)
+    return h, l
+end
 function txt:new(v)
     local text = v[3]
     if type(text) == 'function' then
@@ -283,7 +290,19 @@ function txt:new(v)
 	    return true
 	end
     end
-    local finish
+    local actions = {}
+    local text = std.for_each_xref(text,
+	    function(str)
+		local h, l = parse_xref(str)
+		table.insert(actions, h)
+		local o = ""
+		for w in l:gmatch("[^ \t]+") do
+		    if o ~= '' then o = o ..' ' end
+		    o = o .. "{".. std.tostr(#actions) .. "|" .. w .."}"
+		end
+		return o
+    end)
+    local finish = false
     for w in text:gmatch("[^ \t]+") do
 	if finish then
 	    break
@@ -308,20 +327,18 @@ function txt:new(v)
 	    else
 		local n
 		local links = {}
-		ww = std.for_each_xref_outer(ww,
+		ww = std.for_each_xref(ww,
 			function(str)
-			    str = str:gsub("^{", ""):gsub("}$", "")
-			    local h = str:find("|", 1, true)
-			    local l = str:sub(h + 1)
-			    h = str:sub(1, h - 1)
+			    local h, l = parse_xref(str)
+			    h = actions[std.tonum(h)]
 			    table.insert(links, {h, l})
-			    return '\3'..std.tostr(#links)..'\3'
+			    return '\3'..std.tostr(#links)..'\4'
 		end)
 		local t, col, act
 		local applist = {}
 		local xx = 0
-		while ww do
-		    s, _ = ww:find("\3[0-9]+\3", 1)
+		while ww and ww ~= '' do
+		    s, _ = ww:find("\3[0-9]+\4", 1)
 		    col = color
 		    if s == 1 then
 			n = std.tonum(ww:sub(s + 1, _ - 1))
@@ -357,7 +374,7 @@ function txt:new(v)
 		end
 		if maxw and x + xx + spw >= maxw and #line > 0 then
 		    if newline() then
-			stop = true
+			finish = true
 			break
 		    end
 		    for k, v in ipairs(applist) do
@@ -403,22 +420,39 @@ function txt:new(v)
     end
     return img:new_spr(v, spr)
 end
-function txt:click(v, x, y)
+function txt:link(v, x, y)
     for _, w in ipairs(v.__link_list) do
-	if x >= w.x and y>= w.y
-	and x < w.x + w.w and y < w.y + w.h then
-	    return w.action
+	if x >= w.x and y >= w.y then
+	    if x < w.x + w.w and y < w.y + w.h then
+		return w, _
+	    end
+	    local next = v.__link_list[_ + 1]
+	    if next and next.action == w.action and
+	    x < next.x and y < next.y + next.h then
+		return w, _
+	    end
 	end
     end
-    return v.name
 end
+
+function txt:click(v, x, y)
+    local w = self:link(v, x, y)
+    if w then
+	return std.cmd_parse(w.action)
+    end
+    return { v.name }
+end
+
 function txt:render(v)
     local x, y = instead.mouse_pos()
     x = x - v.x + v.xc
     y = y - v.y + v.yc
+    local w = txt:link(v, x, y)
+
+    local action = w and w.action or false
+
     for _, w in ipairs(v.__link_list) do
-	if x >= w.x and y>= w.y
-	and x < w.x + w.w and y < w.y + w.h then
+	if w.action == action then
 	    if not w.__active then
 		w.__active = true
 		w.link:copy(v.sprite, w.x, w.y)
@@ -577,12 +611,19 @@ function(cmd)
     local t = e[2]
     local x, y, btn = cmd[3], cmd[4], cmd[5]
     local r, v
+    local a
     if type(decor[t].click) == 'function' then
-	nam = decor[t]:click(e, x, y, btn)
+	a = decor[t]:click(e, x, y, btn)
+    else
+	a = { nam }
     end
-    local r, v = std.call(std.here(), 'ondecor', nam, x, y, btn)
+    table.insert(a, x)
+    table.insert(a, y)
+    table.insert(a, btn)
+
+    local r, v = std.call(std.here(), 'ondecor', std.unpack(a))
     if not r and not v then
-	r, v = std.call(std.game, 'ondecor', nam, x, y, btn)
+	r, v = std.call(std.game, 'ondecor', std.unpack(a))
     end
     if not r and not v then
 	return nil, false
