@@ -2,7 +2,7 @@ require "timer"
 loadmod "decor"
 
 function game:timer()
-	D"box".x = D"box".x + 20
+	D"box".x = D"box".x + 1
 	return false
 end
 local text = [[Проверка длинных {test|текстов}, да еще с переносами строк.
@@ -11,6 +11,9 @@ local text = [[Проверка длинных {test|текстов}, да ещ�
 _'main'.dsc = [[Привет мир!]];
 local n = 1
 function game:ondecor(name, x, y)
+	if name ~= 'test' then
+		return false
+	end
 	local j = { 'left', 'right', 'center', 'justify' };
 	D"text".align = j[(n % #j) + 1];
 	n = n + 1
