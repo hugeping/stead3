@@ -89,6 +89,26 @@ function img:clear()
 end
 
 function img:render(v)
+    if v.frames and v.w and v.h then
+	local delay = v.delay or 25
+	local w, h = v.sprite:size()
+	local width = math.floor(w / v.w)
+	local geight = math.floor(h / v.h)
+	local frame = v.frame_nr or 0
+	local yy = math.floor(frame / width)
+	local xx = math.floor(frame % width)
+	v.fx = xx * v.w
+	v.fy = yy * v.h
+	if instead.ticks() - (v.__delay or 0) >= delay then
+	    if frame < v.frames - 1 then
+		frame = frame + 1
+	    else
+		frame = 0
+	    end
+	    v.frame_nr = frame
+	    v.__delay = instead.ticks()
+	end
+    end
     if v.fx and v.fy and v.w and v.h then
 	v.sprite:draw(v.fx, v.fy, v.w, v.h, sprite.scr(), v.x - v.xc, v.y - v.yc)
     else
@@ -528,6 +548,7 @@ decor = obj {
 	img = img;
 	fnt = fnt;
 	txt = txt;
+	dirty = false;
     };
     objects = {
     };
@@ -575,6 +596,9 @@ local after_list = {}
 
 function decor:render()
     local list = {}
+    if not decor.dirty then
+	return
+    end
     after_list = {}
     for _, v in pairs(self.objects) do
 	local z = v.z or 0
@@ -596,6 +620,7 @@ function decor:render()
     for _, v in ipairs(list) do
 	self[v.type]:render(v)
     end
+    decor.dirty = false
 end
 
 sprite.render_callback(
@@ -721,6 +746,7 @@ function input:click(press, btn, x, y, px, py)
 end
 
 function D(n)
+    decor.dirty = true;
     if type(n) == 'table' then
 	return decor:new(n)
     end

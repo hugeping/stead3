@@ -38,6 +38,7 @@ function init()
 		decor:new {"snow"..std.tostr(i), "img", "box:4x4,black", x= rnd(800), y = rnd(600), xc = true, yc = true, z = -1 }
 	end
 	decor.bgcol = 'white'
+	D {"cat", "img", "anim.png", x = 64, y = 64, frames = 3, w = 64, h = 54, delay = 100 }
 	D {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true, click = true }
 --	decor:new {"box2", "img", "box:64x64,blue", x= 320, y = 12, xc = true, yc = true, z = -1 }
 	D {"text", "txt", text, xc = true, x = 400, w = 150, y = 100, align = 'left' }
