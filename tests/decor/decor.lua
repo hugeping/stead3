@@ -476,7 +476,7 @@ function txt:link(v, x, y)
     end
 end
 
-function txt:click(v, x, y)
+function txt:click(v, press, x, y)
     local w = self:link(v, x, y)
     if w then
 	return std.cmd_parse(w.action)
@@ -614,7 +614,7 @@ function decor:click_filter(press, x, y)
 		if not press then
 		    table.insert(c, v)
 		end
-	    elseif press then
+	    else
 		table.insert(c, v)
 	    end
 	end
@@ -659,14 +659,15 @@ function(cmd)
     local nam = cmd[2]
     local e = decor.objects[nam]
     local t = e[2]
-    local x, y, btn = cmd[3], cmd[4], cmd[5]
+    local press, x, y, btn = cmd[3], cmd[4], cmd[5], cmd[6]
     local r, v
     local a
     if type(decor[t].click) == 'function' then
-	a = decor[t]:click(e, x, y, btn)
+	    a = decor[t]:click(e, press, x, y, btn)
     else
 	a = { nam }
     end
+    table.insert(a, press)
     table.insert(a, x)
     table.insert(a, y)
     table.insert(a, btn)
@@ -711,7 +712,7 @@ function input:click(press, btn, x, y, px, py)
 	x = x - e.x + e.xc
 	y = y - e.y + e.yc
 	local a
-	for _, v in std.ipairs {e[1], x, y, btn} do
+	for _, v in std.ipairs {e[1], press, x, y, btn} do
 	    a = (a and (a..', ') or ' ') .. std.dump(v)
 	end
 	return '@decor_click'.. (a or '')
@@ -720,5 +721,8 @@ function input:click(press, btn, x, y, px, py)
 end
 
 function D(n)
-	return decor:get(n)
+    if type(n) == 'table' then
+	return decor:new(n)
+    end
+    return decor:get(n)
 end

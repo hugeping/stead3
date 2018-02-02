@@ -22,6 +22,7 @@ local text = [[Проверка длинных {test a b|те кстов}, да 
 _'main'.dsc = [[Привет мир!]];
 local n = 1
 function game:ondecor(name, a, b, x, y)
+	print("click on", name, a, b, x, y)
 	if name ~= 'test' then
 		return false
 	end
@@ -37,7 +38,7 @@ function init()
 		decor:new {"snow"..std.tostr(i), "img", "box:4x4,black", x= rnd(800), y = rnd(600), xc = true, yc = true, z = -1 }
 	end
 	decor.bgcol = 'white'
-	decor:new {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true }
+	D {"box", "img", "box:64x64,red", x= 12, y = 12, xc = true, yc = true, click = true }
 --	decor:new {"box2", "img", "box:64x64,blue", x= 320, y = 12, xc = true, yc = true, z = -1 }
-	decor:new {"text", "txt", text, xc = true, x = 400, w = 150, y = 100, align = 'left' }
+	D {"text", "txt", text, xc = true, x = 400, w = 150, y = 100, align = 'left' }
 end
