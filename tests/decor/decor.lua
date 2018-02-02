@@ -5,11 +5,11 @@ require "click"
 local cache = {
 }
 
-function cache:new(max)
+function cache:new(ttl)
     local c = {
 	cache = {};
 	list = {};
-	max = max or 16;
+	ttl = ttl or 4;
     }
     self.__index = self
     return std.setmt(c, self)
@@ -48,7 +48,9 @@ function cache:clear()
 	    v.ttl = v.ttl - 1
 	    if v.ttl <= 0 then
 		self.cache[v.name] = nil
-		print("cache purge: "..v.name)
+		if DEBUG then
+		    dprint("cache purge: "..v.name)
+		end
 	    else
 		table.insert(list, v)
 	    end
@@ -65,7 +67,7 @@ function cache:put(name)
 	return
     end
     v.use = v.use - 1
-    if v.use <= 0 then v.use = 0; v.ttl = 3; end
+    if v.use <= 0 then v.use = 0; v.ttl = 4; end
 --    for k, vv in ipairs(self.list) do
 --	if vv == v then
 --	    table.remove(self.list, k)
@@ -172,7 +174,7 @@ function fnt:_get(name, size)
 	if not fnt then
 	    std.err("Can not load font", 2)
 	end
-	f = { fnt = fnt, cache = cache:new(1024) }
+	f = { fnt = fnt, cache = cache:new() }
 	self.cache:add(self:key(name, size), f)
     end
     return f
@@ -570,11 +572,16 @@ function decor:new(v)
     if type(name) ~= 'string' then
 	std.err("Wrong parameter to decor:new(): name", 2)
     end
+    if self.objects[name] then
+	local tt = self.objects[name].type
+	self[tt]:delete(self.objects[name])
+    end
+    if t == nil then
+	self.objects[name] = nil
+	return
+    end
     if type(t) ~= 'string' then
 	std.err("Wrong parameter to decor:new(): type", 2)
-    end
-    if self.objects[name] then
-	self[t]:delete(self.objects[name])
     end
     if not self[t] or type(self[t].new) ~= 'function' then
 	std.err("Wrong type decorator: "..t, 2)
@@ -602,10 +609,12 @@ function decor:render()
     after_list = {}
     for _, v in pairs(self.objects) do
 	local z = v.z or 0
-	if z >= 0 then
-	    table.insert(list, v)
-	else
-	    table.insert(after_list, v)
+	if not v.hidden then
+	    if z >= 0 then
+		table.insert(list, v)
+	    else
+		table.insert(after_list, v)
+	    end
 	end
     end
     table.sort(list, function(a, b)
@@ -692,10 +701,10 @@ function(cmd)
     else
 	a = { nam }
     end
-    table.insert(a, press)
-    table.insert(a, x)
-    table.insert(a, y)
-    table.insert(a, btn)
+    table.insert(a, 1, press)
+    table.insert(a, 2, x)
+    table.insert(a, 3, y)
+    table.insert(a, 4, btn)
 
     local r, v = std.call(std.here(), 'ondecor', std.unpack(a))
     if not r and not v then
