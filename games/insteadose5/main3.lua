@@ -1,5 +1,5 @@
 --$Name: Инстедоз 5$
---$Version: 0.9$
+--$Version: 1.0$
 --$Author: http://instead.syscall.ru$
 --$Info: Сборник коротких игр$
 require 'fmt'
