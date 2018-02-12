@@ -100,7 +100,7 @@ function mp:key(key)
 		end
 		return false
 	end
-	key = lang.kbd[key]
+	key = mp.shift and lang.kbd.shifted[key] or lang.kbd[key] or key
 	if key then
 		mp:inp_insert(key)
 		return true
