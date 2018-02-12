@@ -50,7 +50,18 @@ local mp
 
 function input:key(press, key)
 	local a
-	if press then
+	local mod
+	if key:find("alt") then
+		mp.alt = press
+		mod = true
+	elseif key:find("ctrl") then
+		mp.ctrl = press
+		mod = true
+	elseif key:find("shift") then
+		mp.shift = press
+		mod = true
+	end
+	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
 			return '@mp_key'
 		end
@@ -65,7 +76,10 @@ mp = std.obj {
 	{
 		inp = '';
 		cur = 1;
-		cursor = fmt.b("|")
+		cursor = fmt.b("|");
+		ctrl = false;
+		shift = false;
+		alt = false;
 	}
 }
 
