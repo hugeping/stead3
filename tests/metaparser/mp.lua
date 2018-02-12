@@ -46,15 +46,13 @@ local function utf_ff(b, pos)
 end
 
 local okey = input.key
+local mp
 
 function input:key(press, key)
 	local a
 	if press then
-		if key == 'space' or key == 'backspace' or key == 'return' or key:len() == 1 then
-			for _, v in std.ipairs {press, key} do
-				a = (a and (a..', ') or ' ') .. std.dump(v)
-			end
-			return '@mp_key '.. (a or '')
+		if mp:key(key) then
+			return '@mp_key'
 		end
 	end
 	if okey then
@@ -62,7 +60,7 @@ function input:key(press, key)
 	end
 end
 
-local mp = std.obj {
+mp = std.obj {
 	nam = '@metaparser';
 	{
 		inp = '';
@@ -71,20 +69,45 @@ local mp = std.obj {
 	}
 }
 
+function mp:key(key)
+	if key == 'left' then
+		return self:inp_left()
+	end
+	if key == 'right' then
+		return self:inp_right()
+	end
+	if key == 'space' then
+		mp:inp_insert(' ')
+		return true
+	end
+	if key == 'backspace' then
+		if self:inp_remove() then
+			return true
+		end
+		return false
+	end
+	key = lang.kbd[key]
+	if key then
+		mp:inp_insert(key)
+		return true
+	end
+	return false
+end
+
 function mp:inp_left()
 	if self.cur > 1 then
 		local i = utf_bb(self.inp, self.cur - 1)
 		self.cur = self.cur - i
+		return true
 	end
-	if self.cur < 1 then self.cur = 1 end
 end
 
 function mp:inp_right()
 	if self.cur <= self.inp:len() then
 		local i = utf_ff(self.inp, self.cur)
 		self.cur = self.cur + i
+		return true
 	end
-	if self.cur > self.inp:len() then self.cur = self.inp:len() + 1 end
 end
 
 function mp:inp_split()
@@ -110,26 +133,24 @@ function mp:inp_remove()
 	return true
 end
 
+function mp:esc(s)
+	local rep = function(str)
+		return fmt.nb(str)
+	end
+	if not s then return end
+	local r = s:gsub("[<>]+", rep):gsub("[ \t]", rep);
+	return r
+end
+
 instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
-	return iface:esc(pre)..mp.cursor..iface:esc(post)
+	return mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
 
 std.mod_cmd(function(cmd)
 	if cmd[1] ~= '@mp_key' then
-			return
+		return
 	end
-	local key = cmd[3]
-	if key == 'backspace' then
-		if mp:inp_remove() then
-			return true, false
-		end
-		return false
-	end
-	key = lang.kbd[key]
-	if key then
-		mp:inp_insert(key)
-		return true, false
-	end
-	return false
+
+	return true, false
 end)
