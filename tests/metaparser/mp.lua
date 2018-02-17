@@ -1,6 +1,9 @@
 require "fmt"
 
-local lang = require "lang-ru"
+local lang = require "morph/lang-ru"
+local mrd = require "morph/mrd"
+
+mrd.lang = lang
 
 local input = std.ref '@input'
 
@@ -80,7 +83,8 @@ mp = std.obj {
 		ctrl = false;
 		shift = false;
 		alt = false;
-	}
+	};
+	dict = {};
 }
 
 function mp:key(key)
@@ -161,10 +165,26 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	return mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
 
-std.mod_cmd(function(cmd)
+std.mod_cmd(
+function(cmd)
 	if cmd[1] ~= '@mp_key' then
 		return
 	end
 
 	return true, false
+end)
+
+std.mod_start(
+function()
+	mrd:gramtab("morph/rgramtab.tab")
+	if not mrd:load("dict.mrd") then
+		local dict = {}
+		for f in std.readdir(instead.gamepath()) do
+			if f:find("%.lua$") then
+				mrd:file(f, dict)
+			end
+		end
+		mrd:load("morph/morphs.mrd", dict)
+		mrd:dump("dict.mrd")
+	end
 end)

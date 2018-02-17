@@ -1,4 +1,11 @@
-local lang = require "lang-ru"
+local lang = {
+	norm = function(str)
+	end;
+	upper = function(str)
+	end;
+	lower = function(str)
+	end;
+}
 
 local mrd = {
 	lang = lang;
@@ -227,6 +234,7 @@ function mrd:load(path, dict)
 	end
 	msg("Generated: "..tostring(self.words_nr).." word(s)");
 	f:close()
+	return true
 end
 
 function mrd:dump(path)
@@ -366,24 +374,33 @@ function mrd:word(w)
 	return w
 end
 
-function mrd:file(f)
+function mrd:file(f, dict)
+	dict = dict or {}
 	local ff, e = io.open(f, "rb")
 	if not ff then
 		return false, e
 	end
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
-			print(w)
+			w = w:gsub('^-"', ""):gsub('"$', "")
+			for ww in w:gmatch("[^, %-]+") do
+				dict[self.lang.upper(ww)] = true;
+				print("added word: ", ww)
+			end
 		end
 	end
+	ff:close()
+	return dict
 end
 
 local mt = getmetatable("")
 function mt.__unm(v)
 	return v
 end
-mrd:gramtab()
-mrd:load(false, { [lang.upper "подосиновик"] = true, [lang.upper "красный"] = true })
-local w = mrd:word(-"красный подосиновик/рд,мн")
-print(w)
-mrd:file("mrd.lua")
+
+return mrd
+--mrd:gramtab()
+--mrd:load(false, { [lang.upper "подосиновик"] = true, [lang.upper "красный"] = true })
+--local w = mrd:word(-"красный подосиновик/рд,мн")
+--print(w)
+--mrd:file("mrd.lua")

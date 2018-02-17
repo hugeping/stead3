@@ -166,7 +166,8 @@ local function cap(str)
 	end
 	return str
 end
-local lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap }
+
+local lang
 
 local function norm(str)
 	if type(str) ~= 'string' then
@@ -177,5 +178,7 @@ local function norm(str)
 	end
 	return str
 end
+
+lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap }
 
 return lang
