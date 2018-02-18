@@ -48,6 +48,77 @@ local function utf_ff(b, pos)
 	return l
 end
 
+local function utf_len(b)
+	local i = 1
+	local n = 0
+	if b:len() == 0 then
+		return 0
+	end
+	while i <= b:len() do
+		i = i + utf_ff(b, i)
+		n = n + 1
+	end
+	return n
+end
+
+local function utf_char(b, c)
+	local i = 1
+	local n = 0
+	local s
+	while i <= b:len() do
+		s = i
+		i = i + utf_ff(b, i)
+		n = n + 1
+		if n == c then
+			return b:sub(s, i - 1)
+		end
+	end
+	return
+end
+
+-- Returns the Levenshtein distance between the two given strings
+-- https://gist.github.com/Badgerati/3261142
+
+local function utf_lev(str1, str2)
+	local len1 = utf_len(str1)
+	local len2 = utf_len(str2)
+	local matrix = {}
+	local cost = 0
+
+        -- quick cut-offs to save time
+	if (len1 == 0) then
+		return len2
+	elseif (len2 == 0) then
+		return len1
+	elseif (str1 == str2) then
+		return 0
+	end
+
+        -- initialise the base matrix values
+	for i = 0, len1, 1 do
+		matrix[i] = {}
+		matrix[i][0] = i
+	end
+	for j = 0, len2, 1 do
+		matrix[0][j] = j
+	end
+
+        -- actual Levenshtein algorithm
+	for i = 1, len1, 1 do
+		for j = 1, len2, 1 do
+			if (utf_char(str1, i) == utf_char(str2, j)) then
+				cost = 0
+			else
+				cost = 1
+			end
+
+			matrix[i][j] = math.min(matrix[i-1][j] + 1, matrix[i][j-1] + 1, matrix[i-1][j-1] + cost)
+		end
+	end
+
+        -- return the last value - this is the Levenshtein distance
+	return matrix[len1][len2]
+end
 local okey = input.key
 local mp
 
