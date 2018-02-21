@@ -1,17 +1,15 @@
 require "fmt"
-local get_ways = instead.get_ways
+loadmod "decor"
+loadmod "fading"
+loadmod "instfmt"
 
-instead.get_ways = std.cacheable('ways', function()
-	local str = iface:cmd("way");
-	if str then
-		str = std.string.gsub(str, '\n$','');
-		str = std.string.gsub(str, '\\?['..std.delim ..']',
-			{ [std.delim] = instead.ways_delim, [ '\\'..std.delim ] = std.delim });
-		return '\n'..fmt.b(">").." "..fmt.l(str);
-	end
-	return str
-end)
+function instead.titlefmt(w)
+	return fmt.c(w)
+end
 
+function instead.wayfmt(w)
+	return fmt.c(w)
+end
 
 declare 'newitem' (function(i)
 	local o = { nam = 'Яблоко #'..tostring(i) };
