@@ -8,7 +8,6 @@ require "snapshots"
 require "prefs"
 require "timer"
 require "snd"
-
 -- call onact/onuse in here()
 local function onaction(m)
 	return function(s, ...)
