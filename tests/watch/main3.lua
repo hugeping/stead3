@@ -1,7 +1,9 @@
 require "fmt"
+require "timer"
 loadmod "decor"
 loadmod "fading"
 loadmod "instfmt"
+include "intro"
 
 function instead.titlefmt(w)
 	return fmt.c(w)
@@ -30,4 +32,5 @@ function init()
 	for i = 1, 5 do
 		take(newitem(i))
 	end
+	walk 'intro'
 end

@@ -540,7 +540,7 @@ function txt:new(v)
 		end
 		local sx = 0;
 
-		if maxw and x + xx + spw >= maxw and #line > 0 then
+		if maxw and x + xx + spw > maxw and #line > 0 then
 		    newline()
 		else
 		    sx = x
@@ -679,6 +679,7 @@ end
 function txt:render(v)
     if v.typewriter and v.started then
 	local d = instead.ticks() - (v.__last_tw or 0)
+	decor.dirty = true
 	if d > (v.delay or 25) then
 	    v.__last_tw = instead.ticks()
 	    v.step = (v.step or 0) + (v.speed or 1)
@@ -798,6 +799,7 @@ function decor:render()
     if not decor.dirty then
 	return
     end
+    decor.dirty = false
     after_list = {}
     for _, v in pairs(self.objects) do
 	local z = v.z or 0
@@ -821,7 +823,6 @@ function decor:render()
     for _, v in ipairs(list) do
 	self[v.type]:render(v)
     end
-    decor.dirty = false
 end
 local oldrender = sprite.render_callback()
 sprite.render_callback(
