@@ -86,7 +86,7 @@ room {
 			D{'input'}
 			D{'intro'}
 			D{'line'}
-			walk 'main'
+			walk 'snow'
 			return
 		end
 		if not D'intro'.started and not D 'cursor' then
@@ -108,4 +108,31 @@ room {
 		timer:set(20)
 		D {"intro", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/3, align = 'center', typewriter = true, z = 1 }
 	end
+}
+
+function snow_theme()
+	if D 'snow' then
+		theme.set('win.col.fg', 'black')
+		theme.set('win.col.link','black')
+		theme.set('win.col.alink', 'black')
+	end
+end
+
+function dark_theme()
+	theme.reset('win.col.fg')
+	theme.reset('win.col.link')
+	theme.reset('win.col.alink')
+end
+
+room {
+	nam = 'snow';
+	title = false;
+	enter = function()
+		D {"snow", "img", background = true, "gfx/snow.jpg", z = 1 };
+		snow_theme()
+	end;
+	dsc = [[Тест]];
+	exit = function()
+		dark_theme()
+	end;
 }

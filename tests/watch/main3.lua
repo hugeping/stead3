@@ -40,3 +40,7 @@ function init()
 --	end
 	walk 'intro'
 end
+
+function start()
+	snow_theme()
+end
