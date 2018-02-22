@@ -94,6 +94,7 @@ room {
 			D {"input", "txt", "", align = 'left', xc = false, x = d.x, y = d.y + d.h - d.yc }
 			take 'zero'
 			take 'one'
+			return
 		end
 		return false
 	end;
