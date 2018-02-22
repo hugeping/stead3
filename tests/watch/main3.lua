@@ -31,6 +31,9 @@ Lorem Ipsum - это текст-"рыба", часто используемый 
 }
 
 function init()
+	if theme.name() ~= '.' then
+		std.err("Пожалуйста, включите поддержку собственных тем игры.")
+	end
 --	for i = 1, 5 do
 --		take(newitem(i))
 --	end
