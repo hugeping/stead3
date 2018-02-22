@@ -153,6 +153,9 @@ function img:new_spr(v, s)
     v.xc = v.xc or 0
     v.yc = v.yc or 0
     v.sprite = s
+    if not s then
+	return v
+    end
     local w, h = s:size()
     if v.w then w = v.w end
     if v.h then h = v.h end
@@ -266,6 +269,9 @@ function txt_mt:page(nr)
     if nr < 1 then
 	return false
     end
+    if self.typewriter then
+	self.finished = false
+    end
     txt:make_page(self, nr)
     return true
 end
@@ -276,6 +282,7 @@ function txt_mt:next_page()
 	txt:make_page(self, self.page_nr or 1)
 	self.typewriter = true
 	self.started = false
+	self.finished = true
 	return
     end
     return self:page((self.page_nr or 1) + 1)
@@ -372,7 +379,9 @@ function txt:make_page(v, nr)
     local alink_color = v.color_alink or theme.get('win.col.alink')
     local font = v.font or theme.get('win.fnt.name')
     v.page_nr = page
-
+    if v.w == 0 or v.h == 0 then
+	return
+    end
     if not v.spr_blank then
 	v.spr_blank = sprite.new(v.w, v.h)
     end
@@ -403,11 +412,14 @@ function txt:make_page(v, nr)
     end
     if v.typewriter then
 	v.step = 0; -- typewriter effect
-	v.started = true
 	if not v.spr_blank then
 	    v.spr_blank = sprite.new(v.w, v.h)
 	end
-	v.spr_blank:copy(v.sprite)
+	if not v.finished then
+		v.started = true
+		v.finished = false
+		v.spr_blank:copy(v.sprite)
+	end
     end
 end
 
@@ -568,7 +580,9 @@ function txt:new(v)
 	newline()
     end
 
-    v.sprite = sprite.new(maxw or W, maxh or H)
+    if (maxw or W) ~= 0 and (maxh or H) ~= 0 then
+        v.sprite = sprite.new(maxw or W, maxh or H)
+    end
     local pages = {}
     local off = 0;
     if #lines >= 1 then
@@ -591,7 +605,11 @@ function txt:new(v)
     v.__pages = pages
     v.__lines = lines
     v.__link_list = link_list
-    v.w, v.h = v.sprite:size()
+    if v.sprite then
+        v.w, v.h = v.sprite:size()
+    else
+	v.w, v.h = 0, 0
+    end
     if #link_list > 0 or #pages > 1 then
 	v.click = true
     end
@@ -612,6 +630,7 @@ function txt:make_tw(v, step)
 	local l = v.__lines[_]
 	if l.y + l.h - v.__offset > v.h or l.pgbrk then
 	    v.started = false
+	    v.finished = true
 	    break
 	end
 	for _, w in ipairs(l) do
@@ -641,6 +660,7 @@ function txt:make_tw(v, step)
     v.step = n
     if n < step then
 	v.started = false
+	v.finished = true
     end
     return step > n
 end
@@ -677,6 +697,9 @@ function txt:click(v, press, x, y)
 end
 
 function txt:render(v)
+    if v.w == 0 or v.h == 0 then
+	return
+    end
     if v.typewriter and v.started then
 	local d = instead.ticks() - (v.__last_tw or 0)
 	decor.dirty = true

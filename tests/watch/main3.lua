@@ -1,5 +1,7 @@
 require "fmt"
 require "timer"
+require "keys"
+require "snd"
 loadmod "decor"
 loadmod "fading"
 loadmod "instfmt"
@@ -29,8 +31,8 @@ Lorem Ipsum - это текст-"рыба", часто используемый 
 }
 
 function init()
-	for i = 1, 5 do
-		take(newitem(i))
-	end
+--	for i = 1, 5 do
+--		take(newitem(i))
+--	end
 	walk 'intro'
 end
