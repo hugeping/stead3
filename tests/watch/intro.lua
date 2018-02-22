@@ -132,23 +132,65 @@ function pp(str)
 end
 
 declare 'flake' (function(v)
-	v.x = v.x + rnd(v.speed)
-	v.y = v.y + rnd(v.speed) / 2
-	if v.x > theme.scr.w() then v.x = 0 end
-	if v.y > theme.scr.h() then v.y = 0 end
+	local sp = v.speed + rnd(2)
+	local sp2 = v.speed + rnd(4)
+	v.x = v.x + sp;
+	v.y = v.y + sp2 / 2;
+	if v.x > theme.scr.w() then 
+		v.x = 0 
+		v.speed = rnd(5)
+	end
+	if v.y > theme.scr.h() then 
+		v.y = 0 
+		v.speed = rnd(5)
+	end
 end)
 declare 'flake_spr' (function(v)
-	return sprite.new 'box:2x2,white' -- todo
+	local p = pixels.new(7, 7)
+	local x, y = 3, 3
+	p:val(x, y, 255,255,255,255)
+	for i = 1, rnd(5) do
+		local w = rnd(3)
+		p:fill(x, y, w, w, 255, 255, 255, 255)
+		x = x + rnd(2) - 1
+		y = y + rnd(2) - 1
+	end
+	local w, h = 7, 7
+	local cell = function(x, y)
+		if x < 0 or x >= w or y < 0 or y >= h then
+			return 0
+		end
+		local r, g, b, a = p:val(x, y)
+		return a
+	end
+	for y = 0, h  do
+		for x = 0, w do
+			local c1, c2, c3, c4, c5, c6, c7, c8, c9 =
+				cell(x - 1, y - 1),
+				cell(x, y - 1),
+				cell(x + 1, y - 1),
+				cell(x - 1, y),
+				cell(x, y),
+				cell(x + 1, y),
+				cell(x - 1, y + 1),
+				cell(x, y + 1),
+				cell(x + 1, y + 1)
+			local c = (c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9) / 9
+			p:val(x, y, 255, 255, 255, math.floor(c))
+		end
+	end
+	return p:sprite()
 end)
 room {
 	nam = 'snow';
 	title = false;
 --	fading = true;
 	enter = function()
+--		fading.change {'crossfade', max = 20 }
 		timer:set(25)
 		D {"snow", "img", background = true, "gfx/snow.jpg", z = 2 };
 		for i = 1, 50 do
-			D {"flake"..tostring(i), 'img', flake_spr, process = flake, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(8) + 8, z = 1 }
+			D {"flake"..tostring(i), 'img', flake_spr, process = flake, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 1 }
 		end
 		snow_theme()
 		lifeon '#голос'
