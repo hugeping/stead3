@@ -34,6 +34,7 @@ function init()
 	if theme.name() ~= '.' then
 		std.err("Пожалуйста, включите поддержку собственных тем игры.")
 	end
+	decor.bgcol = theme.get 'win.col.bg'
 --	for i = 1, 5 do
 --		take(newitem(i))
 --	end

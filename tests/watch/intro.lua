@@ -3,9 +3,9 @@ function keys:filter(press, key)
 end
 
 declare 'deco_cursor' (function(v)
-	local w, h = 4, theme.get('win.fnt.size')
+	local w, h = 8, theme.get('win.fnt.size')
 	local s = sprite.new(w * 2, h)
-	s:fill 'black'
+	s:fill(theme.get('win.col.bg'))
 	s:fill(0, 0, w, h, 'gray')
 	return s
 end)
@@ -23,7 +23,7 @@ local function inp(n)
 	D(d)
 	d.x = (theme.scr.w() - d.w ) / 2
 	local c = D'cursor'
-	c.x = d.x + d.w
+	c.x = d.x + d.w - 4
 	inpnr = inpnr + 1
 	local t = D'intro'
 	local len = 24
@@ -90,7 +90,7 @@ room {
 		end
 		if not D'intro'.started and not D 'cursor' then
 			local d = D'intro'
-			D {"cursor", "img", deco_cursor, xc = true, frames = 2, delay = 300, x = d.x, y = d.y + d.h - d.yc }
+			D {"cursor", "img", deco_cursor, xc = false, frames = 2, w = 8, delay = 300, x = d.x, y = d.y + d.h - d.yc + 1 }
 			D {"input", "txt", "", align = 'left', xc = false, x = d.x, y = d.y + d.h - d.yc }
 			take 'zero'
 			take 'one'
