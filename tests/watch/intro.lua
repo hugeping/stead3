@@ -14,7 +14,7 @@ global 'randoms' ({})
 
 local beep = snd.new 'snd/beep.ogg'
 function decor.beep(v)
-	beep:play();
+	beep:play(1);
 end
 
 local function inp(n)
