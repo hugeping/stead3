@@ -10,6 +10,7 @@ loadmod "decor"
 loadmod "fading"
 loadmod "instfmt"
 include "dict"
+include "display"
 
 include "intro"
 
@@ -44,7 +45,8 @@ function init()
 --	for i = 1, 2 do
 --		take(newitem(i))
 --	end
-	walk 'intro'
+--	walk 'intro'
+	walk 'snow'
 end
 
 function start()
