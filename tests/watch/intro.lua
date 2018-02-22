@@ -44,7 +44,7 @@ local function inp(n)
 		for _, v in ipairs(randoms) do
 			text = text .. std.tostr(v)
 		end
-		D { "analys", "txt", text, xc = true, x = theme.scr.w()/2, y = c.y + c.h + 16, align = 'center', 
+		D { "analys", "txt", text, xc = true, x = theme.scr.w()/2, y = c.y + c.h + 16, align = 'center',
 		typewriter = true, z = 1 }
 	else
 		beep:play();
@@ -124,15 +124,76 @@ function dark_theme()
 	theme.reset('win.col.alink')
 end
 
+dict.add("снег", "Снег ослепительно белый. Снежинки роем кружатся у моего лица.")
+dict.add("ребенок", "Мне пять лет. Это все, что я знаю о себе.")
+
+function pp(str)
+	p("{#recurse|"..str.."}")
+end
+
+_'@iface'.em = function(s, str) return str end
+declare 'flake' (function(v)
+	v.x = v.x + rnd(v.speed)
+	v.y = v.y + rnd(v.speed) / 2
+	if v.x > theme.scr.w() then v.x = 0 end
+	if v.y > theme.scr.h() then v.y = 0 end
+end)
+declare 'flake_spr' (function(v)
+	return sprite.new 'box:2x2,white' -- todo
+end)
 room {
 	nam = 'snow';
 	title = false;
+--	fading = true;
 	enter = function()
-		D {"snow", "img", background = true, "gfx/snow.jpg", z = 1 };
+		timer:set(25)
+		D {"snow", "img", background = true, "gfx/snow.jpg", z = 2 };
+		for i = 1, 50 do
+			D {"flake"..tostring(i), 'img', flake_spr, process = flake, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(8) + 8, z = 1 }
+		end
 		snow_theme()
+		lifeon '#голос'
 	end;
-	dsc = [[Тест]];
+	decor = [[{$dict снег|Снег. Кругом белый снег.} {$dict ребенок|Я стою}, {#сугроб|провалившись в сугроб}.]];
 	exit = function()
 		dark_theme()
 	end;
+}: with {
+	obj {
+		nam = '#сугроб';
+		act = function(s)
+			if seen '#отец' then
+				pn [[Я снова пытаюсь вылезти из сугроба. Но он глубокий. Мне становится страшно.]]
+				p [[-- Папа! -- но отец только смеется и зовет меня к себе.]]
+				return
+			end
+			pp [[Я пытаюсь вылезти из сугроба, но только глубже проваливаюсь в податливый снег.]]
+		end;
+	};
+	obj {
+		nam = '#голос';
+		n = 1;
+		act = function(s)
+			pp [[Это голос отца! За стеной снега я вижу его фигуру.]]
+			enable '#отец';
+		end;
+		life = function(s)
+			s.n = s.n + 1
+			if s.n > 3 then
+				if seen '#отец' then
+					return
+				else
+					p [[{#голос|Я слышу как чей то голос зовет меня.}]]
+				end
+				return
+			end
+		end
+	};
+	obj {
+		nam = '#отец';
+		dsc = [[{$dict ребенок|Я вижу} {$dict снег|за стеной снега} {#отец|фигуру отца}.]];
+		act = function(s)
+			pp [[Отец зовет меня к себе. Почему он не поможет мне?]];
+		end;
+	}:disable();
 }

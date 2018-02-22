@@ -2,9 +2,15 @@ require "fmt"
 require "timer"
 require "keys"
 require "snd"
+require "fmt"
+fmt.dash = true
+fmt.quotes = true
+
 loadmod "decor"
 loadmod "fading"
 loadmod "instfmt"
+include "dict"
+
 include "intro"
 
 function instead.titlefmt(w)
@@ -35,7 +41,7 @@ function init()
 		std.err("Пожалуйста, включите поддержку собственных тем игры.")
 	end
 	decor.bgcol = theme.get 'win.col.bg'
---	for i = 1, 5 do
+--	for i = 1, 2 do
 --		take(newitem(i))
 --	end
 	walk 'intro'
