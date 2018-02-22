@@ -13,6 +13,9 @@ global 'inpnr' (0)
 global 'randoms' ({})
 
 local beep = snd.new 'snd/beep.ogg'
+function decor.beep(v)
+	beep:play();
+end
 
 local function inp(n)
 	local d = D'input'
@@ -33,18 +36,19 @@ local function inp(n)
 		D'cursor'.hidden = true
 		remove 'zero'
 		remove 'one'
-		local text = [[Анализирую последовательность......
-[b]Плохое качество энтропии![/b]
+		local text = [[Анализирую последовательность... [pause] [pause] [pause]
+[b]Плохое качество энтропии![/b] [pause]
 В качестве данных беру нулевые биты
-от времени нажатия клавиш......
+от времени нажатия клавиш... [pause] [pause]
 ]];
 		for _, v in ipairs(randoms) do
 			text = text .. std.tostr(v)
 		end
 		D { "analys", "txt", text, xc = true, x = theme.scr.w()/2, y = c.y + c.h + 16, align = 'center', 
 		typewriter = true, z = 1 }
+	else
+		beep:play();
 	end
-	beep:play();
 end
 
 menu {
@@ -70,9 +74,6 @@ room {
 	timer = function()
 		if D'intro' and not D'intro'.finished or
 			D'analys' and not D'analys'.finished then
-			if rnd(2) == 1 then
-				beep:play();
-			end
 		end
 		if D'analys' and D'analys'.finished then
 			delay = delay + 1
@@ -101,7 +102,7 @@ room {
 	enter = function()
 		local x, y, w, h = theme.get 'win.x', theme.get 'win.y', theme.get 'win.w', theme.get 'win.h'
 		x, y, w, h = std.tonum(x),  std.tonum(y),  std.tonum(w),  std.tonum(h)
-		local text = [[Представьте себе, что вы бросаете монетку.
+		local text = [[Представьте себе, что вы бросаете монетку. [pause] [pause] [pause]
 Ноль - это орел. Один - решка.
 Запишите последовательность из нулей и единиц...]]
 		timer:set(20)

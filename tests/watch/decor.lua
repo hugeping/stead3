@@ -396,7 +396,7 @@ function txt:make_page(v, nr)
 	    break
 	end
 	for _, w in ipairs(l) do
-	    if not w.spr then
+	    if not w.spr and w.w > 0 then
 		w.spr = fnt:text(font, size, w.txt,
 				 w.id and link_color or color, w.style)
 	    end
@@ -407,7 +407,9 @@ function txt:make_page(v, nr)
 	    else
 		w.link = nil
 	    end
-	    w.spr:copy(v.sprite, w.x, w.y - off)
+	    if w.spr then
+		    w.spr:copy(v.sprite, w.x, w.y - off)
+	    end
 	end
     end
     if v.typewriter then
@@ -541,9 +543,15 @@ function txt:new(v)
 		    if height > line.h then
 			line.h = height
 		    end
+
+		    if t == '[pause]' then
+			width = 0
+		    end
+
 		    local witem = { style = st,
 				    action = act, id = id, x = xx, y = y,
 				    w = width, h = height, txt = t }
+
 		    if id then
 			table.insert(link_list, witem)
 		    end
@@ -640,7 +648,7 @@ function txt:make_tw(v, step)
 	    if w.txt:len() + n <= step then
 		n = n + w.txt:len()
 		n = n + 1
-		if n >= step then
+		if n >= step and w.spr then
 		    w.spr:copy(spr, w.x, w.y - v.__offset)
 		end
 	    else
@@ -652,7 +660,12 @@ function txt:make_tw(v, step)
 		step = step + i - nm
 		local txt = w.txt:sub(1, i - 1)
 		local ww, hh = v.fnt:size(txt)
-		w.spr:copy(0, 0, ww, hh, spr, w.x, w.y - v.__offset)
+		if w.spr then
+			if type(decor.beep) == 'function' then
+			    decor.beep(v)
+			end
+			w.spr:copy(0, 0, ww, hh, spr, w.x, w.y - v.__offset)
+		end
 		n = step
 	    end
 	end
