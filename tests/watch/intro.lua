@@ -1,7 +1,9 @@
 function keys:filter(press, key)
-	return press and (key == '0' or key == '1')
+	return press and (key == '0' or key == '1' or key == 'space')
 end
-
+function click:filter(press)
+	return not press
+end
 declare 'deco_cursor' (function(v)
 	local w, h = 8, theme.get('win.fnt.size')
 	local s = sprite.new(w * 2, h)
@@ -370,18 +372,24 @@ room {
 room {
 	nam = 'пробуждение';
 	title = false;
+	onclick = function(s)
+		if D'wakeup' and D'wakeup'.finished then
+			D()
+			timer:stop()
+			fading.set {"fadeblack", max = 200 }
+			walk 'main'
+		end
+	end;
+	onkey = function(s)
+		return s:onclick()
+	end;
 	timer = function(s)
 		if not D'wakeup' then
 			local text = [[[b]Алиса:[/b] Пробуждение... Пробуждение... Пробуждение... [pause] [pause] [pause]
 Локальное время 25 февраля 2202 года. 08:00. Вахта 39.
 Все системы функционируют в штатном режиме.
-С пробуждением! [pause] [pause] [pause] ]];
+С пробуждением!]];
 			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/2, align = 'center', typewriter = true, z = 1 }
-		elseif D'wakeup'.finished then
-			D()
-			timer:stop()
-			fading.set {"fadeblack", max = 200 }
-			walk 'main'
 		end
 	end;
 	enter = function()
