@@ -350,6 +350,7 @@ room {
 		end
 	end;
 	enter = function(s)
+		snd.play 'snd/snowball.ogg'
 		s.time = instead.ticks()
 		quake.start()
 	end;
