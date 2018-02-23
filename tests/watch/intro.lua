@@ -2,7 +2,7 @@ function keys:filter(press, key)
 	return press and (key == '0' or key == '1' or key == 'space')
 end
 function click:filter(press)
-	return not press
+	return press
 end
 declare 'deco_cursor' (function(v)
 	local w, h = 8, theme.get('win.fnt.size')
