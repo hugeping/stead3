@@ -181,6 +181,7 @@ declare 'flake_spr' (function(v)
 	end
 	return p:sprite()
 end)
+global 'snow_state' (0)
 room {
 	nam = 'snow';
 	title = false;
@@ -195,7 +196,14 @@ room {
 		snow_theme()
 		lifeon '#голос'
 	end;
-	decor = [[{$dict снег|Снег. Кругом белый снег.} {$dict ребенок|Я стою}, {#сугроб|провалившись в сугроб}.]];
+	decor = function()
+		p [[{$dict снег|Снег. Кругом белый снег.} ]]
+		if snow_state < 5 then
+			p [[{$dict ребенок|Я стою}, {#сугроб|провалившись в сугроб}.]];
+		else
+			p [[{$dict ребенок|Я стою по колено} {$dict снег|в снегу.}]];
+		end
+	end;
 	exit = function()
 		dark_theme()
 	end;
@@ -204,8 +212,26 @@ room {
 		nam = '#сугроб';
 		act = function(s)
 			if seen '#отец' then
+				if snow_state == 1 or snow_state == 2 then
+					p [[Я изо всех сил пытаюсь преодолеть глубокий снег. Но мне не удается преодолеть его сопротивление.]];
+					snow_state = 2
+					return
+				end
+				if snow_state == 3 then
+					snow_state = 4
+					p [[Я пробиваюсь сквозь снег молотя руками и ногами. Снег вокруг меня.]];
+					return
+				end
+				if snow_state == 4 then
+					p [[Кажется, снег поддается! Снег уже не сковывает моих движений. Я выбрался!]]
+					snow_state = 5
+					return
+				end
 				pn [[Я снова пытаюсь вылезти из сугроба. Но он глубокий. Мне становится страшно.]]
 				p [[-- Папа! -- но отец только смеется и зовет меня к себе.]]
+				if actions '#отец' > 0 then
+					if snow_state == 0 then snow_state = 1 end
+				end
 				return
 			end
 			p [[Я пытаюсь вылезти из сугроба, но только глубже проваливаюсь в податливый снег.]]
@@ -220,7 +246,7 @@ room {
 		end;
 		life = function(s)
 			s.n = s.n + 1
-			if s.n > 3 then
+			if s.n > 4 then
 				if seen '#отец' then
 					return
 				else
@@ -234,7 +260,18 @@ room {
 		nam = '#отец';
 		dsc = [[{$dict ребенок|Я вижу} {$dict снег|за стеной снега} {#отец|фигуру отца}.]];
 		act = function(s)
-			p [[Отец зовет меня к себе. Почему он не поможет мне?]];
+			if snow_state == 1 then
+				p [[Он смеется и зовет меня к себе. Но я не могу выбраться!]];
+			elseif snow_state > 1 then
+				if snow_state < 3 then
+					p [[За снежной пеленой мне кажется, что отец уходит... ^-- Папа! Помоги!]];
+					snow_state = 3
+				else
+					p [[-- Папа, подожди!]]
+				end
+			else
+				p [[Отец зовет меня к себе. Почему он не поможет мне?]];
+			end
 		end;
 	}:disable();
 }
