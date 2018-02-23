@@ -14,7 +14,9 @@ global 'randoms' ({})
 
 local beep = snd.new 'snd/beep.ogg'
 function decor.beep(v)
-	beep:play(1);
+	if beep then
+		beep:play(1);
+	end
 end
 
 local function inp(n)
@@ -47,7 +49,9 @@ local function inp(n)
 		D { "analys", "txt", text, xc = true, x = theme.scr.w()/2, y = c.y + c.h + 16, align = 'center',
 		typewriter = true, z = 1 }
 	else
-		beep:play();
+		if beep then
+			beep:play();
+		end
 	end
 end
 
