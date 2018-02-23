@@ -115,6 +115,11 @@ function snow_theme()
 		theme.set('win.col.fg', 'black')
 		theme.set('win.col.link','black')
 		theme.set('win.col.alink', 'black')
+
+		theme.set('inv.col.fg', 'black')
+		theme.set('inv.col.link','black')
+		theme.set('inv.col.alink', 'black')
+
 	end
 end
 
@@ -122,10 +127,13 @@ function dark_theme()
 	theme.reset('win.col.fg')
 	theme.reset('win.col.link')
 	theme.reset('win.col.alink')
+
+	theme.reset('inv.col.fg')
+	theme.reset('inv.col.link')
+	theme.reset('inv.col.alink')
 end
 
-dict.add("снег", "Снег ослепительно белый. Снежинки роем кружатся у моего лица.")
-dict.add("ребенок", "Мне пять лет. Это все, что я знаю о себе.")
+--dict.add("ребенок", "Мне пять лет. Это все, что я знаю о себе.")
 
 function pp(str)
 	p("{#recurse|"..str.."}")
@@ -182,6 +190,27 @@ declare 'flake_spr' (function(v)
 	return p:sprite()
 end)
 global 'snow_state' (0)
+obj {
+	nam = 'снежок';
+	inv = [[Я покрепче слепил снежок.]];
+	try = false;
+	shoot = false;
+	use = function(s, w)
+		if w ^ '#отец' then
+			p [[Я бросил снежок.]]
+			remove(s)
+			if not s.try then
+				p [[Бросок был слабым, комок снега не долетел до цели.]]
+				s.try = true
+			else
+				s.shoot = true
+				p [[Попал! Я слышу смех отца. Он идет ко мне.]]
+			end
+		else
+			p [[Я хочу бросить снежком в отца.]]
+		end
+	end
+}
 room {
 	nam = 'snow';
 	title = false;
@@ -196,24 +225,42 @@ room {
 		snow_theme()
 		lifeon '#голос'
 	end;
+	onexit = function()
+		lifeoff '#голос'
+	end;
 	decor = function()
-		p [[{$dict снег|Снег. Кругом белый снег.} ]]
+		p [[{#снег|Снег. Кругом белый снег.} ]]
 		if snow_state < 5 then
-			p [[{$dict ребенок|Я стою}, {#сугроб|провалившись в сугроб}.]];
+			p [[{#ребенок|Я стою}, {#сугроб|провалившись в сугроб}.]];
 		else
-			p [[{$dict ребенок|Я стою по колено} {$dict снег|в снегу.}]];
+			p [[{#ребенок|Я стою по колено} {#снег|в снегу.}]];
 		end
 	end;
 	exit = function()
-		dark_theme()
+--		dark_theme()
 	end;
 }: with {
+	obj {
+		nam = '#снег';
+		act = function()
+			if snow_state == 5 and not have 'снежок' then
+				p [[Я слепил из снега снежок.]]
+				take 'снежок'
+				return
+			end
+			p "Снег ослепительно белый. Снежинки роем кружатся у моего лица."
+		end;
+	};
+	obj {
+		nam = '#ребенок';
+		act = "Мне пять лет. Это все, что я знаю о себе.";
+	};
 	obj {
 		nam = '#сугроб';
 		act = function(s)
 			if seen '#отец' then
 				if snow_state == 1 or snow_state == 2 then
-					p [[Я изо всех сил пытаюсь преодолеть глубокий снег. Но мне не удается преодолеть его сопротивление.]];
+					p [[Я изо всех сил пытаюсь пройти сквозь глубокий снег. Но мне не удается преодолеть его сопротивление.]];
 					snow_state = 2
 					return
 				end
@@ -223,7 +270,7 @@ room {
 					return
 				end
 				if snow_state == 4 then
-					p [[Кажется, снег поддается! Снег уже не сковывает моих движений. Я выбрался!]]
+					p [[Кажется, снег поддается! Он уже не сковывает моих движений. Я выбрался!]]
 					snow_state = 5
 					return
 				end
@@ -258,8 +305,18 @@ room {
 	};
 	obj {
 		nam = '#отец';
-		dsc = [[{$dict ребенок|Я вижу} {$dict снег|за стеной снега} {#отец|фигуру отца}.]];
+		dsc = function(s)
+			p [[{#ребенок|Я вижу} {#снег|за стеной снега} {#отец|фигуру отца}.]];
+		end;
 		act = function(s)
+			if snow_state == 5 then
+				if _'снежок'.shoot then
+					walk 'комок'
+					return
+				end
+				p [[Я злюсь на отца. Зачем он бросил меня в сугроб?]];
+				return
+			end
 			if snow_state == 1 then
 				p [[Он смеется и зовет меня к себе. Но я не могу выбраться!]];
 			elseif snow_state > 1 then
@@ -274,4 +331,10 @@ room {
 			end
 		end;
 	}:disable();
+}
+
+room {
+	nam = 'комок';
+	title = false;
+	dsc = [[В меня летит комок снега! TODO]];
 }
