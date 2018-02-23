@@ -9,6 +9,10 @@ game.display = function(s, state)
 		l = s.player:look() -- objects [and scene]
 		l = std.par(std.scene_delim, av or false, l or false, pv or false)
 	end
-	l = std.par("^"..(fmt.c(fmt.img 'gfx/div.png')).."^", l or false, reaction or false) or ''
+	if not player_moved() then
+		l = std.par("^"..(fmt.c(fmt.img 'gfx/div.png')).."^", l or false, reaction or false) or ''
+	else
+		l = std.par("^"..(fmt.c(fmt.img 'gfx/div.png')).."^", reaction or false, l or false) or ''
+	end
 	return l
 end;
