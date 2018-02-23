@@ -321,6 +321,7 @@ room {
 		act = function(s)
 			if snow_state == 5 then
 				if _'снежок'.shoot then
+					snd.play 'snd/snowball.ogg'
 					walk 'комок'
 					return
 				end
@@ -348,7 +349,7 @@ room {
 	{
 		time = 0;
 	};
-	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ ПРЯМО МНЕ В ЛИЦО");
+	decor = fmt.y("50%")..fmt.c("СНЕЖОК!");
 	timer = function(s)
 		inv():zap()
 		if instead.ticks() - s.time > 500 then
@@ -357,7 +358,6 @@ room {
 		end
 	end;
 	enter = function(s)
-		snd.play 'snd/snowball.ogg'
 		s.time = instead.ticks()
 		quake.start()
 	end;
