@@ -211,7 +211,7 @@ obj {
 				s.try = true
 			else
 				s.shoot = true
-				p [[Попал! Я слышу смех отца. Он идет ко мне.]]
+				p [[Попал! Я слышу как смеется отец. Он идет ко мне.]]
 			end
 		else
 			p [[Я хочу бросить снежком в отца.]]
@@ -236,7 +236,7 @@ room {
 		lifeoff '#голос'
 --		D()
 --		decor.bgcol = 'white'
-		fading.set { 'fadeblack', max = 1 }
+		fading.set { 'crossfade', max = 1}
 	end;
 	decor = function()
 		p [[{#снег|Снег. Кругом белый снег.} ]]
@@ -348,7 +348,7 @@ room {
 	{
 		time = 0;
 	};
-	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ МНЕ ПРЯМО В ЛИЦО");
+	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ ПРЯМО МНЕ В ЛИЦО");
 	timer = function(s)
 		inv():zap()
 		if instead.ticks() - s.time > 500 then
