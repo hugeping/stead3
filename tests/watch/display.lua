@@ -6,6 +6,7 @@ game.display = function(s, state)
 		av, pv = s:events()
 		av = iface:em(av)
 		pv = iface:em(pv)
+		reaction = iface:em(reaction)
 		l = s.player:look() -- objects [and scene]
 		l = std.par(std.scene_delim, av or false, l or false, pv or false)
 	end
