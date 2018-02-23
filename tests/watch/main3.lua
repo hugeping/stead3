@@ -14,6 +14,7 @@ include "dict"
 include "display"
 
 include "intro"
+include "game"
 
 function instead.titlefmt(w)
 	return fmt.c(w)

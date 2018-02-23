@@ -477,7 +477,7 @@ room {
 		d.realh = d.h
 		get_offsets(d)
 		make_stars()
-		walk 'кубрик'
+		walk 'гибернация'
 	end;
 	onkey = function(s)
 		return s:onclick()
@@ -498,9 +498,4 @@ room {
 		D 'about'.y = theme.scr.h() - D'about'.h
 		timer:set(20)
 	end;
-}
-
-room {
-	nam = 'кубрик';
-	title = 'Отсек хибернации';
 }
