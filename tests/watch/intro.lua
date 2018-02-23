@@ -376,7 +376,7 @@ room {
 Локальное время 25 февраля 2202 года. 08:00. Вахта 39.
 Все системы функционируют в штатном режиме.
 С пробуждением! [pause] [pause] [pause] ]];
-			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/3, align = 'center', typewriter = true, z = 1 }
+			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/2, align = 'center', typewriter = true, z = 1 }
 		elseif D'wakeup'.finished then
 			D()
 			timer:stop()
