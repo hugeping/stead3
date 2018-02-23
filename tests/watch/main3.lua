@@ -5,10 +5,11 @@ require "snd"
 require "fmt"
 fmt.dash = true
 fmt.quotes = true
-
 loadmod "decor"
 loadmod "fading"
 loadmod "instfmt"
+loadmod "quake"
+
 include "dict"
 include "display"
 
@@ -41,14 +42,14 @@ function init()
 	if theme.name() ~= '.' then
 		std.err("Пожалуйста, включите поддержку собственных тем игры.")
 	end
-	decor.bgcol = theme.get 'win.col.bg'
+	decor.bgcol = theme.get 'scr.col.bg'
 --	for i = 1, 2 do
 --		take(newitem(i))
 --	end
---	walk 'intro'
-	walk 'snow'
+	walk 'intro'
+--	walk 'snow'
 end
 
 function start()
-	snow_theme()
+	theme_select()
 end

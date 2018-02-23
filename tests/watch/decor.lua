@@ -776,6 +776,18 @@ decor = obj {
 decor:img{ 'hello', 'img' }
 ]]--
 
+function decor:zap()
+	local l = {}
+	for k, v in pairs(self.objects) do
+		table.insert(l, k)
+	end
+	for _, name in ipairs(l) do
+		local tt = self.objects[name].type
+		self[tt]:delete(self.objects[name])
+		self.objects[name] = nil
+	end
+end
+
 function decor:new(v)
     if type(v) == 'string' then
 	v = self.objects[v]
@@ -993,6 +1005,9 @@ end
 
 function D(n)
     decor.dirty = true
+    if n == nil then
+	return decor:zap()
+    end
     if type(n) == 'table' then
 	return decor:new(n)
     end

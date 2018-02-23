@@ -111,16 +111,13 @@ room {
 }
 
 function snow_theme()
-	if D 'snow' then
-		theme.set('win.col.fg', 'black')
-		theme.set('win.col.link','black')
-		theme.set('win.col.alink', 'black')
+	theme.set('win.col.fg', 'black')
+	theme.set('win.col.link','black')
+	theme.set('win.col.alink', 'black')
 
-		theme.set('inv.col.fg', 'black')
-		theme.set('inv.col.link','black')
-		theme.set('inv.col.alink', 'black')
-
-	end
+	theme.set('inv.col.fg', 'black')
+	theme.set('inv.col.link','black')
+	theme.set('inv.col.alink', 'black')
 end
 
 function dark_theme()
@@ -132,7 +129,13 @@ function dark_theme()
 	theme.reset('inv.col.link')
 	theme.reset('inv.col.alink')
 end
-
+function theme_select()
+	if D'snow' then
+		snow_theme()
+	else
+		dark_theme()
+	end
+end
 --dict.add("ребенок", "Мне пять лет. Это все, что я знаю о себе.")
 
 function pp(str)
@@ -227,6 +230,9 @@ room {
 	end;
 	onexit = function()
 		lifeoff '#голос'
+--		D()
+--		decor.bgcol = 'white'
+		fading.set { 'fadeblack', max = 1 }
 	end;
 	decor = function()
 		p [[{#снег|Снег. Кругом белый снег.} ]]
@@ -332,9 +338,23 @@ room {
 		end;
 	}:disable();
 }
-
 room {
 	nam = 'комок';
 	title = false;
-	dsc = [[В меня летит комок снега! TODO]];
+	time = 0;
+	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ МНЕ ПРЯМО В ЛИЦО");
+	timer = function(s)
+		if instead.ticks() - s.time > 1000 then
+			fading.set {"fadeblack", max = 400 }
+			walk 'main'
+		end
+	end;
+	enter = function(s)
+		s.time = instead.ticks()
+		quake.start()
+	end;
+	exit = function()
+		D()
+		dark_theme();
+	end;
 }
