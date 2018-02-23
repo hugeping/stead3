@@ -151,12 +151,12 @@ declare 'flake' (function(v)
 	local sp2 = v.speed + rnd(4)
 	v.x = v.x + sp;
 	v.y = v.y + sp2 / 2;
-	if v.x > theme.scr.w() then 
-		v.x = 0 
+	if v.x > theme.scr.w() then
+		v.x = 0
 		v.speed = rnd(5)
 	end
-	if v.y > theme.scr.h() then 
-		v.y = 0 
+	if v.y > theme.scr.h() then
+		v.y = 0
 		v.speed = rnd(5)
 	end
 end)
@@ -345,12 +345,15 @@ room {
 room {
 	nam = 'комок';
 	title = false;
-	time = 0;
+	{
+		time = 0;
+	};
 	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ МНЕ ПРЯМО В ЛИЦО");
 	timer = function(s)
+		inv():zap()
 		if instead.ticks() - s.time > 500 then
 			fading.set {"fadeblack", max = 200 }
-			walk 'main'
+			walk 'пробуждение'
 		end
 	end;
 	enter = function(s)
@@ -359,7 +362,33 @@ room {
 		quake.start()
 	end;
 	exit = function()
-		D()
+		D() -- reset all
 		dark_theme();
+	end;
+}
+
+room {
+	nam = 'пробуждение';
+	title = false;
+	timer = function(s)
+		if not D'wakeup' then
+			local text = [[[b]Алиса:[/b] Пробуждение... Пробуждение... Пробуждение... [pause] [pause] [pause]
+Локальное время 25 февраля 2202 года. 08:00. Вахта 39.
+Все системы функционируют в штатном режиме.
+С пробуждением! [pause] [pause] [pause] ]];
+			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/3, align = 'center', typewriter = true, z = 1 }
+		elseif D'wakeup'.finished then
+			D()
+			timer:stop()
+			fading.set {"fadeblack", max = 200 }
+			walk 'main'
+		end
+	end;
+	enter = function()
+		D { 'title', 'img', 'gfx/title.png', xc = true, x = theme.scr.w()/2, y = 16 }
+		local text = 'Игра Петра Косых\nНа движке [b]INSTEAD[/b]\nМарт 2018'
+		D { 'about', 'txt', text, xc = true, x = theme.scr.w()/2, color = 'gray', align = 'center' }
+		D 'about'.y = theme.scr.h() - D'about'.h
+		timer:set(20)
 	end;
 }
