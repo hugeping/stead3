@@ -344,8 +344,8 @@ room {
 	time = 0;
 	decor = fmt.y("50%")..fmt.c("СНЕЖОК ЛЕТИТ МНЕ ПРЯМО В ЛИЦО");
 	timer = function(s)
-		if instead.ticks() - s.time > 1000 then
-			fading.set {"fadeblack", max = 400 }
+		if instead.ticks() - s.time > 500 then
+			fading.set {"fadeblack", max = 200 }
 			walk 'main'
 		end
 	end;
