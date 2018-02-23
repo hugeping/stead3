@@ -139,7 +139,11 @@ function img:render(v)
 	end
     end
     if v.background then
-	v.sprite:copy(sprite.scr(), 0, 0)
+        if v.fx and v.fy and v.w and v.h then
+	    v.sprite:copy(v.fx, v.fy, v.w, v.h, sprite.scr(), v.x - v.xc, v.y - v.yc)
+	else
+	    v.sprite:copy(sprite.scr(), v.x - v.xc, v.y - v.yc)
+	end
 	return
     end
     if v.fx and v.fy and v.w and v.h then
@@ -152,6 +156,8 @@ end
 function img:new_spr(v, s)
     v.xc = v.xc or 0
     v.yc = v.yc or 0
+    v.x = v.x or 0
+    v.y = v.y or 0
     v.sprite = s
     if not s then
 	return v

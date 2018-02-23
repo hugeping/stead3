@@ -162,17 +162,8 @@ declare 'flake' (function(v)
 		v.speed = rnd(5)
 	end
 end)
-declare 'flake_spr' (function(v)
-	local p = pixels.new(7, 7)
-	local x, y = 3, 3
-	p:val(x, y, 255,255,255,255)
-	for i = 1, rnd(5) do
-		local w = rnd(3)
-		p:fill(x, y, w, w, 255, 255, 255, 255)
-		x = x + rnd(2) - 1
-		y = y + rnd(2) - 1
-	end
-	local w, h = 7, 7
+local function blur(p, r, g, b)
+	local w, h = p:size()
 	local cell = function(x, y)
 		if x < 0 or x >= w or y < 0 or y >= h then
 			return 0
@@ -193,11 +184,40 @@ declare 'flake_spr' (function(v)
 				cell(x, y + 1),
 				cell(x + 1, y + 1)
 			local c = (c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9) / 9
-			p:val(x, y, 255, 255, 255, math.floor(c))
+			p:val(x, y, r, g, b, math.floor(c))
 		end
 	end
+end
+
+declare 'flake_spr' (function(v)
+	local p = pixels.new(7, 7)
+	local x, y = 3, 3
+	p:val(x, y, 255,255,255,255)
+	for i = 1, rnd(5) do
+		local w = rnd(3)
+		p:fill(x, y, w, w, 255, 255, 255, 255)
+		x = x + rnd(2) - 1
+		y = y + rnd(2) - 1
+	end
+	blur(p, 255, 255, 255)
 	return p:sprite()
 end)
+
+declare 'star_spr' (function(v)
+	local p = pixels.new(7, 7)
+	local x, y = 3, 3
+	p:val(x, y, 255,255,255,255)
+	local c = rnd(128) + 127
+	for i = 1, rnd(5) do
+		local w = rnd(3)
+		p:fill(x, y, w, w, 255, 255, 255, 255)
+		x = x + rnd(2) - 1
+		y = x + rnd(2) - 1
+	end
+	blur(p, 255, 255, 255)
+	return p:sprite()
+end)
+
 global 'snow_state' (0)
 obj {
 	nam = 'снежок';
@@ -368,17 +388,91 @@ room {
 		dark_theme();
 	end;
 }
+declare 'shade_spr' (function(v)
+	local shade = sprite.new(theme.scr.w(), theme.scr.h())
+	shade:fill 'black'
+	return shade:alpha(8)
+end)
+
+local time = 0
+local delay = rnd(2000)
+
+declare 'stars' (function(v)
+	if not v.xx then v.xx = v.x end
+	if not v.yy then v.yy = v.y end
+	local mx, my = instead.mouse_pos()
+	local dx = (mx - theme.scr.w() / 2)
+	local dy = (my - theme.scr.h() / 2)
+	dx = dx * v.dist / (theme.scr.w() / 2)
+	dy = dy * v.dist / (theme.scr.w() / 2)
+	v.x = v.xx - dx
+	v.y = v.yy - dy
+end)
+
+declare 'space_bg' (function(v)
+	if not v.ffx then v.ffx = v.fx end
+	if not v.ffy then v.ffy = v.fy end
+	local mx, my = instead.mouse_pos()
+	local dx = (mx - theme.scr.w() / 2)
+	local dy = (my - theme.scr.h() / 2)
+	dx = dx * 8 / (theme.scr.w() / 2)
+	dy = dy * 8 / (theme.scr.w() / 2)
+	v.fx = v.ffx + dx
+	v.fy = v.ffy + dy
+	if instead.ticks() - time < delay then
+		return
+	end
+	D'shade'.hidden = not D'shade'.hidden
+	if not D'shade'.hidden then
+		return
+	end
+--	v.fx = v.fx + rnd(2) - 1
+--	v.fy = v.fy + rnd(2) - 1
+	delay = rnd(500)
+	time = instead.ticks()
+end)
+
+local function get_offsets(d)
+	time = instead.ticks()
+	d.fx = rnd(d.realw - theme.scr.w() - 32) + 8
+	d.fy = rnd(d.realh - theme.scr.h() - 32) + 8
+	d.w = theme.scr.w() + 8
+	d.h = theme.scr.h() + 8
+	d.ffx = d.fx
+	d.ffy = d.fy
+end
+local function make_stars()
+	for i = 1, 9 do
+		D {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 1 }
+	end
+end
 
 room {
 	nam = 'пробуждение';
 	title = false;
-	onclick = function(s)
-		if D'wakeup' and D'wakeup'.finished then
-			D()
-			timer:stop()
-			fading.set {"fadeblack", max = 200 }
-			walk 'main'
+	ini = function(load)
+		if load then
+			local d = D 'space'
+			if d then
+				get_offsets(d)
+				make_stars()
+			end
 		end
+	end;
+	onclick = function(s)
+		if not D'wakeup' or not D'wakeup'.finished then
+			return
+		end
+		D()
+		timer:set(100)
+		fading.set {"fadeblack", max = 200 }
+		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 2 }
+		D { 'shade', 'img', shade_spr, z = 1, hidden = false }
+		d.realw = d.w
+		d.realh = d.h
+		get_offsets(d)
+		make_stars()
+		walk 'кубрик'
 	end;
 	onkey = function(s)
 		return s:onclick()
@@ -399,4 +493,9 @@ room {
 		D 'about'.y = theme.scr.h() - D'about'.h
 		timer:set(20)
 	end;
+}
+
+room {
+	nam = 'кубрик';
+	title = 'Отсек хибернации';
 }
