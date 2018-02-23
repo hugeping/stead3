@@ -408,7 +408,7 @@ declare 'stars' (function(v)
 	v.x = v.xx - dx
 	v.y = v.yy - dy
 end)
-
+local STARS = 9
 declare 'space_bg' (function(v)
 	if not v.ffx then v.ffx = v.fx end
 	if not v.ffy then v.ffy = v.fy end
@@ -422,13 +422,18 @@ declare 'space_bg' (function(v)
 	if instead.ticks() - time < delay then
 		return
 	end
+	local s = D('star'..tostring(rnd(STARS)))
+	s.hidden = not s.hidden
 	D'shade'.hidden = not D'shade'.hidden
 	if not D'shade'.hidden then
 		return
 	end
+	for i = 1, STARS do
+		D('star'..tostring(i)).hidden = false
+	end
 --	v.fx = v.fx + rnd(2) - 1
 --	v.fy = v.fy + rnd(2) - 1
-	delay = rnd(500)
+	delay = rnd(2000)
 	time = instead.ticks()
 end)
 
@@ -442,7 +447,7 @@ local function get_offsets(d)
 	d.ffy = d.fy
 end
 local function make_stars()
-	for i = 1, 9 do
+	for i = 1, STARS do
 		D {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 1 }
 	end
 end
@@ -464,10 +469,10 @@ room {
 			return
 		end
 		D()
-		timer:set(100)
+		timer:set(60)
 		fading.set {"fadeblack", max = 200 }
-		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 2 }
-		D { 'shade', 'img', shade_spr, z = 1, hidden = false }
+		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 3 }
+		D { 'shade', 'img', shade_spr, z = 2, hidden = false }
 		d.realw = d.w
 		d.realh = d.h
 		get_offsets(d)
