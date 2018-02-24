@@ -19,6 +19,8 @@ include "intro"
 include "game"
 global 'watch' (1883)
 
+const 'FADE_LONG' (128)
+
 function instead.titlefmt(w)
 	if type(w) ~= 'string' or w == ''  then
 		return w

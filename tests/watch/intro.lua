@@ -86,7 +86,7 @@ room {
 			if delay < 50 then
 			    return false
 			end
-			fading.set { 'fadeblack', max = 300 }
+			fading.set { 'fadeblack', max = FADE_LONG }
 			D{'analys'}
 			D{'cursor'}
 			D{'input'}
@@ -376,7 +376,7 @@ room {
 	timer = function(s)
 		inv():zap()
 		if instead.ticks() - s.time > 500 then
-			fading.set {"fadeblack", max = 200 }
+			fading.set {"fadeblack", max = FADE_LONG }
 			walk 'пробуждение'
 		end
 	end;
@@ -473,7 +473,7 @@ room {
 		end
 		D()
 		timer:set(60)
-		fading.set {"fadeblack", max = 200 }
+		fading.set {"fadeblack", max = FADE_LONG }
 		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 3 }
 --		D { 'shade', 'img', shade_spr, z = 2, hidden = false }
 		d.realw = d.w
