@@ -487,7 +487,7 @@ room {
 	timer = function(s)
 		if not D'wakeup' then
 			local text = [[[b]Алиса:[/b] Пробуждение... Пробуждение... Пробуждение... [pause] [pause] [pause]
-Локальное время 25 февраля 2202 года. 08:00. Вахта 39.
+Локальное время 25 февраля 2202 года. 08:00. Вахта 1833.
 Все системы функционируют в штатном режиме.
 С пробуждением!]];
 			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/2, align = 'center', typewriter = true, z = 1 }

@@ -10,7 +10,7 @@ obj {
 }
 
 dict = obj {
-	nam = '$dict';
+	nam = '$d';
 	act = function(s, w, n)
 		if not seen 'dict' then
 			put 'dict'
@@ -23,15 +23,17 @@ function dict.add(word, act, use)
 	local o = obj {
 		nam = '#dict-'..word;
 		act = function()
-			local r = type(act) == 'function' and act() or act;
-			--r = '{#recurse|'..r..'}'
-			return r
+			if type(act) == 'function' then
+				return act()
+			end
+			return act
 		end;
 		used = function()
 			use = use or act
-			local r = type(use) == 'function' and use() or use;
-			--r = '{#recurse|'..r..'}'
-			return r
+			if type(use) == 'function' then
+				return use()
+			end
+			return use
 		end;
 	}
 	place(o, 'dict')

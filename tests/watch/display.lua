@@ -14,10 +14,10 @@ game.display = function(s, state)
 		l = s.player:look() -- objects [and scene]
 		l = std.par(std.scene_delim, av or false, l or false, pv or false)
 	end
-	if player_moved() then
-	    l = std.par(std.scene_delim, reaction or false, l)
-	    reaction = false
-	end
+--	if player_moved() then
+--	    l = std.par(std.scene_delim, reaction or false, l)
+--	    reaction = false
+--	end
 	l = std.par("^"..div.."^", l or false, reaction or false) or ''
 	return l
 end;
