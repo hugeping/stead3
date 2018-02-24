@@ -17,7 +17,9 @@ include "intro"
 include "game"
 
 function instead.titlefmt(w)
-	return fmt.c(w)
+	local col = theme.get('win.col.fg')
+	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
+	return fmt.l(w)..'^'..hr
 end
 
 function instead.wayfmt(w)
