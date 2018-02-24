@@ -455,6 +455,15 @@ local function make_stars()
 	end
 end
 
+declare 'fadein_proc' (function(v)
+	if v.to > 0 then
+		v.to = v.to - 1
+		return
+	end
+	v.alpha = v.alpha + 2
+	if v.alpha > 255 then v.alpha = 255 end
+end)
+
 room {
 	nam = 'пробуждение';
 	title = false;
@@ -495,9 +504,9 @@ room {
 		end
 	end;
 	enter = function()
-		D { 'title', 'img', 'gfx/title.png', xc = true, x = theme.scr.w()/2, y = 16 }
+		D { 'title', 'img', 'gfx/title.png', xc = true, x = theme.scr.w()/2, y = 16, alpha = 0, process = fadein_proc, to = 100 }
 		local text = 'Игра Петра Косых\nНа движке [b]INSTEAD[/b]\nМарт 2018'
-		D { 'about', 'txt', text, xc = true, x = theme.scr.w()/2, color = 'gray', align = 'center' }
+		D { 'about', 'txt', text, xc = true, x = theme.scr.w()/2, color = 'gray', align = 'center', process = fadein_proc, alpha = 0, to = 100 }
 		D 'about'.y = theme.scr.h() - D'about'.h
 		timer:set(20)
 	end;
