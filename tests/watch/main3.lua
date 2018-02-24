@@ -1,3 +1,5 @@
+--$Name:Вахта$
+
 require "fmt"
 require "timer"
 require "keys"

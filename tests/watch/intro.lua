@@ -253,6 +253,7 @@ room {
 		end
 		snow_theme()
 		lifeon '#голос'
+		p [[Мне нужно выбраться из сугроба!]]
 	end;
 	onexit = function()
 		lifeoff '#голос'
