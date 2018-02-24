@@ -147,9 +147,9 @@ function img:render(v)
 	return
     end
     if v.fx and v.fy and v.w and v.h then
-	v.sprite:draw(v.fx, v.fy, v.w, v.h, sprite.scr(), v.x - v.xc, v.y - v.yc)
+	v.sprite:draw(v.fx, v.fy, v.w, v.h, sprite.scr(), v.x - v.xc, v.y - v.yc, v.alpha)
     else
-	v.sprite:draw(sprite.scr(), v.x - v.xc, v.y - v.yc)
+	v.sprite:draw(sprite.scr(), v.x - v.xc, v.y - v.yc, v.alpha)
     end
 end
 

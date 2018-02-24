@@ -409,6 +409,7 @@ declare 'stars' (function(v)
 	v.y = v.yy - dy
 end)
 local STARS = 9
+global 'blink' (false)
 declare 'space_bg' (function(v)
 	if not v.ffx then v.ffx = v.fx end
 	if not v.ffy then v.ffy = v.fy end
@@ -423,17 +424,18 @@ declare 'space_bg' (function(v)
 		return
 	end
 	local s = D('star'..tostring(rnd(STARS)))
-	s.hidden = not s.hidden
-	D'shade'.hidden = not D'shade'.hidden
-	if not D'shade'.hidden then
+	s.alpha = rnd(255)
+	blink = not blink
+--	D'shade'.hidden = not D'shade'.hidden
+	if blink then -- D'shade'.hidden then
 		return
 	end
 	for i = 1, STARS do
-		D('star'..tostring(i)).hidden = false
+		D('star'..tostring(i)).alpha = nil
 	end
 --	v.fx = v.fx + rnd(2) - 1
 --	v.fy = v.fy + rnd(2) - 1
-	delay = rnd(2000)
+	delay = rnd(200)
 	time = instead.ticks()
 end)
 
@@ -472,7 +474,7 @@ room {
 		timer:set(60)
 		fading.set {"fadeblack", max = 200 }
 		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 3 }
-		D { 'shade', 'img', shade_spr, z = 2, hidden = false }
+--		D { 'shade', 'img', shade_spr, z = 2, hidden = false }
 		d.realw = d.w
 		d.realh = d.h
 		get_offsets(d)
