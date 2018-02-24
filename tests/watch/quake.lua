@@ -8,7 +8,7 @@ local q = std.obj {
 		timer = false;
 		step = 0;
 	};
-	max = 3; -- iterations
+	max = 5; -- iterations
 	power = 40; -- power
 	post = true; -- after action or before it
 	nam = '@quake';
@@ -48,7 +48,13 @@ std.mod_cmd(function(cmd)
 	end
 	q.step = q.step + 1
 	sprite.scr():fill('black')
-	scr:copy(sprite.scr(), 0, rnd(q.power) - q.power / 2);
+	local dy = q.power - rnd(q.power / 4)
+	if q.step % 2 == 0 then
+		dy = dy
+	else
+		dy = - dy
+	end
+	scr:copy(sprite.scr(), 0, dy);
 	if q.step > q.max then
 		q.started = false
 		timer:set(q.timer)
