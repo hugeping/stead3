@@ -17,6 +17,9 @@ include "intro"
 include "game"
 
 function instead.titlefmt(w)
+	if type(w) ~= 'string' or w == ''  then
+		return w
+	end
 	local col = theme.get('win.col.fg')
 	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
 	return fmt.l(w)..'^'..hr
