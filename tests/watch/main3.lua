@@ -15,6 +15,7 @@ include "display"
 
 include "intro"
 include "game"
+global 'watch' (1883)
 
 function instead.titlefmt(w)
 	if type(w) ~= 'string' or w == ''  then
@@ -22,7 +23,7 @@ function instead.titlefmt(w)
 	end
 	local col = theme.get('win.col.fg')
 	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
-	return fmt.l(w)..'^'..hr
+	return fmt.l(w)..fmt.tab('100%')..fmt.nb('Вахта: '..std.tostr(watch))..'^'..hr
 end
 
 function instead.wayfmt(w)

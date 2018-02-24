@@ -8,7 +8,7 @@ declare 'deco_cursor' (function(v)
 	local w, h = 8, theme.get('win.fnt.size')
 	local s = sprite.new(w * 2, h)
 	s:fill(theme.get('win.col.bg'))
-	s:fill(0, 0, w, h, 'gray')
+	s:fill(0, 0, w - 1, h - 1, 'gray')
 	return s
 end)
 global 'inpnr' (0)
