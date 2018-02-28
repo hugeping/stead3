@@ -28,11 +28,13 @@ function instead.titlefmt(w)
 	local col = theme.get('win.col.fg')
 	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
 	local subtitle = std.call(here(), 'subtitle') or 'Вахта'
-	return fmt.l(w)..fmt.tab('100%')..fmt.nb(subtitle)..'^'..hr
+	return fmt.l(w)..fmt.tab('100%')..fmt.nb(subtitle)..'\n'..hr
 end
 
 function instead.wayfmt(w)
-	return fmt.c(w)
+	local col = theme.get('win.col.fg')
+	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
+	return fmt.c(w)..'\n'..hr
 end
 
 declare 'newitem' (function(i)

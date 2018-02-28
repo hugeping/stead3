@@ -221,16 +221,20 @@ end)
 global 'snow_state' (0)
 obj {
 	nam = 'снежок';
-	inv = [[Я покрепче слепил снежок.]];
-	try = false;
+	hard = false;
+	inv = function(s)
+		p [[Я покрепче слепил снежок.]];
+		s.hard = true
+	end;
 	shoot = false;
 	use = function(s, w)
 		if w ^ '#отец' then
 			p [[Я бросил снежок.]]
 			remove(s)
-			if not s.try then
-				p [[Бросок был слабым, комок снега не долетел до цели.]]
-				s.try = true
+			if not s.hard then
+				p [[Бросок был слабым, комок снега не долетел до цели, рассыпавшись по пути.]]
+				p [[Нужно еще сильнее скатать снежок.]]
+				s.hard = true
 			else
 				s.shoot = true
 				p [[Попал! Я слышу как смеется отец. Он идет ко мне.]]
@@ -497,7 +501,7 @@ room {
 	timer = function(s)
 		if not D'wakeup' then
 			local text = [[[b]Алиса:[/b] Пробуждение... Пробуждение... Пробуждение... [pause] [pause] [pause]
-Локальное время 25 февраля 2202 года. 08:00. Вахта 1833.
+Локальное время 25 февраля 2266 года. 08:00. Вахта 7117.
 Все системы функционируют в штатном режиме.
 С пробуждением!]];
 			D {"wakeup", "txt", text, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h()/2, align = 'center', typewriter = true, z = 1 }
