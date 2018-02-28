@@ -987,9 +987,11 @@ function(state)
 	end
 	return
     end
-    decor:cache_clear()
-    decor:process()
-    decor:render()
+    if not iface:raw_mode() then -- debugger?
+        decor:cache_clear()
+        decor:process()
+        decor:render()
+    end
 end)
 
 local input = std.ref '@input'
