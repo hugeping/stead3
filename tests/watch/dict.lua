@@ -29,7 +29,7 @@ function dict.add(word, act, use)
 			return act
 		end;
 		used = function()
-			use = use or act
+			use = use or false -- act
 			if type(use) == 'function' then
 				return use()
 			end
