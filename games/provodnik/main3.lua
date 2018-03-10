@@ -1,7 +1,7 @@
 --$Name:Проводник$
 --$Info:Демонстрационная игра\nна STEAD3$
 --$Author:Peter Kosyh, 2017$
---$Version:0.9$
+--$Version:1.0$
 require "fmt"
 require "noinv"
 require "snapshots"
@@ -1031,7 +1031,7 @@ bottle = obj {
 				p [[То, что горит -- не нужно поджигать снова!]]
 				return
 			end
-			if here()^'inair' and not _'#сумочка'.know then
+			if here()^'inair' and (not seen '#сумочка' or not _'#сумочка'.know) then
 				p [[Пока у меня нет повода начинать войну.]]
 				return
 			end
