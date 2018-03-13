@@ -373,13 +373,17 @@ obj {
 	nam = 'шахматы';
 	dsc = [[{#стол|На столе} {$d я|я} {вижу шахматную доску.}]];
 	act = function(s)
-		p [[Весь экипаж разделен на две команды: белые и черные. Каждый из нас во время вахты делает один ход.
+		if chess_puzzle_solved then
+			p [[Я никогда не любил шахматы. Все-таки хорошо, что я не подвел команду белых.]]
+		else
+			p [[Весь экипаж разделен на две команды: белые и черные. Каждый из нас во время вахты делает один ход.
 Это еще один способ избежать одиночества. Я играю за белых.]];
-		enable '#партия'
+			enable 'партия'
+		end
 	end;
 	obj = {
 		obj {
-			nam = '#партия';
+			nam = 'партия';
 			dsc = [[{Сейчас мой ход.}]];
 			act = function(s)
 				walkin 'игра-шахматы'
@@ -713,6 +717,8 @@ end)
 local board_w = 32 * 8
 local board_h = 32 * 8
 global 'chess_selected' (false)
+global 'chess_puzzle_solved' (false)
+
 function game:ondecor(n, press, x, y)
 	if not n or not press then
 		return false
@@ -726,15 +732,22 @@ function game:ondecor(n, press, x, y)
 		if not c and not chess_selected then
 			return
 		end
+		if seen '#назад' then
+			return false
+		end
 		if not chess_selected or c then
 			chess_selected = string.format('fig-%d%d', x, y)
 			D {'selection', 'img', selector_spr, x = boardx + (x - 1) * 32, y = boardy + (y - 1) * 32, z = 0 }
 		else
 			local d = D(chess_selected)
+			if chess_selected == 'fig-22' and x == 4 then
+				chess_puzzle_solved = true
+			end
 			chess_selected = false
 			D {'selection' }
 			d.x = (x - 1) * 32 + boardx
 			d.y = (y - 1) * 32 + boardy
+			enable '#назад'
 		end
 	end
 end
@@ -747,15 +760,26 @@ room {
 	enter = function()
 		D {'chessboard', 'img', board_spr, x = (theme.scr.w() - board_w) / 2, y = (theme.scr.h() - board_h) / 2, z = 1, click = true }
 		make_board(chess_puzzle)
+		disable '#назад'
 	end;
-	exit = function()
+	exit = function(s, t)
 		D { 'chessboard'}
 		clear_board()
+		if not chess_puzzle_solved then
+			p [[-- Позволю себе заметить, белые делают мат в два хода -- послышался голос Алисы.^
+-- Хм, а я думал что тебе запрещено давать подсказки... Разве нет?^
+-- Конечно, конечно. Прошу прощения, не выдержала.^
+Похоже, есть смысл попробовать найти верный ход.]];
+		else
+			p [[-- Хочу заметить, вы сделали прекрасный ход! -- раздался голос Алисы.]]
+			disable ('партия')
+		end
 	end;
 	way = {
 		path {
+			'#назад',
 			'Назад',
 			from,
-		}
+		}:disable();
 	}
 }
