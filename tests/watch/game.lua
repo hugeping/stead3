@@ -190,18 +190,22 @@ end
 obj {
 	nam = 'панели';
 	act = function(s)
-		if here().subtitle == 'Отсек 1' then
-			if not taken 'одежда' then
-				pn [[В панелях расположены шкафчики с вещами экипажа. Я забрал свой комплект одежды.]]
-				take 'одежда'
+		if here().title == 'Модуль гибернации' then
+			if here().subtitle == 'Отсек 1' then
+				if not taken 'одежда' then
+					pn [[В панелях расположены шкафчики с вещами экипажа. Я забрал свой комплект одежды.]]
+					take 'одежда'
+				else
+					p [[Больше ничего интересного в шкафчиках я не обнаружил.]]
+				end
 			else
-				p [[Больше ничего интересного в шкафчиках я не обнаружил.]]
+				if seen '#контейнеры' then
+					return [[Оборудование и медикаменты.]]
+				end
+				p [[Я не стал копаться в вещах спящего экипажа.]]
 			end
-		else
-			if seen '#контейнеры' then
-				return [[Оборудование и медикаменты.]]
-			end
-			p [[Я не стал копаться в вещах спящего экипажа.]]
+		elseif here().title == 'Жилой модуль' then
+			p [[Ничего интересного.]]
 		end
 	end;
 };
@@ -365,6 +369,25 @@ dict.add('кубрик', [[Кубрик -- отсек жилого модуля 
 на звездолете это роскошь, но кубрик дает возможность проводить вахты с относительным комфортом. А успех миссии напрямую
 зависит от психологического здоровья экипажа.]]);
 
+obj {
+	nam = 'шахматы';
+	dsc = [[{#стол|На столе} {$d я|я} {вижу шахматную доску.}]];
+	act = function(s)
+		p [[Весь экипаж разделен на две команды: белые и черные. Каждый из нас во время вахты делает один ход.
+Это еще один способ избежать одиночества. Я играю за белых.]];
+		enable '#партия'
+	end;
+	obj = {
+		obj {
+			nam = '#партия';
+			dsc = [[{Сейчас мой ход.}]];
+			act = function(s)
+				walkin 'игра-шахматы'
+			end;
+		}:disable();
+	}
+}:disable();
+
 room {
 	nam = 'Жилой Отсек 1';
 	title = 'Жилой модуль';
@@ -384,7 +407,10 @@ room {
 		nam = '#стол';
 		act = function(s)
 			p [[Стол может быть легко убран и тогда отсек превращается в спорт-зал.]]
+			p [[Сейчас же на столе стоит шахматная доска.]]
+			enable 'шахматы'
 		end;
+		obj = { 'шахматы' };
 	};
 	obj {
 		nam = '#кресла';
@@ -563,8 +589,173 @@ room {
 				[[]];
 			}
 			if pager(s, txt) then
-				walkout()
+				walkback()
 			end
 		end;
+	}
+}
+
+room {
+	nam = 'журнал';
+	title = 'Жилой модуль';
+	subtitle = 'Отсек 1';
+	decor = [[На одной из панелей закреплен журнал.]];
+	way = {
+		path {
+			'Назад',
+			from,
+		}
+	}
+}
+
+local chess_puzzle = {
+	'k.......',
+	'.R......',
+	'nK......',
+	'........',
+	'........',
+	'........',
+	'........',
+	'........',
+}
+
+local function chess_cell(x, y)
+	if x < 1 or x > 8 or y < 1 or y > 8 then
+		return
+	end
+	local r = chess_puzzle[y]
+	if not r then return end
+	local c = r:sub(x, x)
+	if c == '.' then return end
+	return c
+end
+
+local function clear_board()
+	for y = 1, 8 do
+		for x = 1, 8 do
+			D { 'fig-'..std.tostr(x)..std.tostr(y) }
+		end
+	end
+	D {'selection'}
+end
+
+local function make_board(b)
+	local f = {
+		['q'] = 0,
+		['k'] = 1,
+		['r'] = 2,
+		['n'] = 3,
+		['b'] = 4,
+		['p'] = 5,
+	}
+	local d = D 'chessboard'
+	local boardx, boardy = d.x, d.y
+	clear_board()
+	for y = 1, 8 do
+		local r = b[y]
+		if not r then
+			return
+		end
+		for x = 1, 8 do
+			local c = r:sub(x, x)
+			if c and c ~= '.' then
+				local n = f[c:lower()]
+				local xx, yy = (x - 1) * 32 + boardx, (y - 1) * 32 + boardy
+				local white = not f[c]
+				D { 'fig-'..std.tostr(x)..std.tostr(y), 'img', chess_spr, z = 1, x = xx, y = yy, white = white, fig = n }
+			end
+		end
+	end
+end
+
+declare 'board_spr' (function()
+	local w, h = 32, 32
+	local spr = sprite.new(w * 8 + 24, h * 8 + 24)
+	local fnt = sprite.fnt(theme.get 'win.fnt.name', 12)
+	for y = 1, 8 do
+		for x = 1, 8 do
+			local xx, yy = x - 1, y - 1
+			local color = '#fff7f2'
+			if (xx + yy) % 2 == 1 then
+				color = '#b38973'
+			end
+			spr:fill(xx * w, yy * h, w, h, color)
+		end
+	end
+	local t = {"a", "b", "c", "d", "e", "f", "g", "h"}
+	for y = 1, 8 do
+		local a = fnt:text(std.tostr(9 - y), 'white', 1)
+		a:copy(spr, 8 * 32 + 4, (y - 1)* 32 + 11)
+		a = fnt:text(t[y], 'white', 1)
+		a:copy(spr, (y - 1)* 32 + 11, 8 * 32 + 4)
+	end
+	return spr
+end)
+
+declare 'chess_spr' (function(v)
+	local spr = sprite.new 'gfx/chess.png'
+	local fx, fy = 0, 0
+	if v.white then fy = 32 end
+	fx = v.fig * 32
+	local f = sprite.new(32, 32)
+	spr:copy(fx, fy, 32, 32, f, 0, 0)
+	return f
+end)
+declare 'selector_spr' (function(v)
+
+	local p = pixels.new(32, 32)
+	p:poly({0, 0, 31, 0, 31, 31, 0, 31}, 32, 32, 32, 255)
+	p:poly({1, 1, 30, 1, 30, 30, 1, 30}, 255, 255, 255, 255)
+	p:poly({2, 2, 29, 2, 29, 29, 2, 29}, 32, 32, 32, 255)
+	return p:sprite()
+end)
+
+local board_w = 32 * 8
+local board_h = 32 * 8
+global 'chess_selected' (false)
+function game:ondecor(n, press, x, y)
+	if not n or not press then
+		return false
+	end
+	if n == 'chessboard' then
+		local d = D 'chessboard'
+		local boardx, boardy = d.x, d.y
+		x = math.floor(x / 32) + 1
+		y = math.floor(y / 32) + 1
+		local c = chess_cell(x, y)
+		if not c and not chess_selected then
+			return
+		end
+		if not chess_selected or c then
+			chess_selected = string.format('fig-%d%d', x, y)
+			D {'selection', 'img', selector_spr, x = boardx + (x - 1) * 32, y = boardy + (y - 1) * 32, z = 0 }
+		else
+			local d = D(chess_selected)
+			chess_selected = false
+			D {'selection' }
+			d.x = (x - 1) * 32 + boardx
+			d.y = (y - 1) * 32 + boardy
+		end
+	end
+end
+
+room {
+	nam = 'игра-шахматы';
+	title = 'Жилой модуль';
+	noinv = true;
+	subtitle = 'Отсек 1';
+	enter = function()
+		D {'chessboard', 'img', board_spr, x = (theme.scr.w() - board_w) / 2, y = (theme.scr.h() - board_h) / 2, z = 1, click = true }
+		make_board(chess_puzzle)
+	end;
+	exit = function()
+		D { 'chessboard'}
+		clear_board()
+	end;
+	way = {
+		path {
+			'Назад',
+			from,
+		}
 	}
 }

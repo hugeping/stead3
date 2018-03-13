@@ -455,7 +455,7 @@ local function get_offsets(d)
 end
 local function make_stars()
 	for i = 1, STARS do
-		D {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 1 }
+		D {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 2 }
 	end
 end
 
