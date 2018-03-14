@@ -25,6 +25,9 @@ function instead.titlefmt(w)
 	if type(w) ~= 'string' or w == ''  then
 		return w
 	end
+	if here().hidetitle then
+		return
+	end
 	local col = theme.get('win.col.fg')
 	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
 	local subtitle = std.call(here(), 'subtitle') or 'Вахта'

@@ -403,8 +403,12 @@ room {
 	obj {
 		nam = '#кровати';
 		act = function(s)
-			p [[Кушетки индивидуально подстраиваются под анатомические особенности человека. На них можно удобно поспать несколько часов.
+			pn [[Кушетки индивидуально подстраиваются под анатомические особенности человека. На них можно удобно поспать несколько часов.
 Обычным сном, не входя в анабиоз. А можно просто полежать, погрузившись в свои мысли.]];
+			if disabled '#журнал' then
+				p [[На одной из кушеток я заметил журнал экипажа.]]
+				enable '#журнал'
+			end
 		end;
 	};
 	obj {
@@ -423,7 +427,28 @@ room {
 Правда, пока мы движемся на крейсерской скорости, вахту несет только один член экипажа. В данный момент -- это я.]]
 		end;
 	};
+	obj {
+		nam = '#журнал';
+		dsc = [[{#кровати|На кушетке} {лежит журнал.}]];
+		act = function(s)
+			p [[Журнал из обычной бумаги -- еще один способ поддерживать связь. Связь между людьми из разных вахт.]]
+			p [[Здесь есть что угодно: стихи, мысли, анекдоты, наброски. Все, что составляет обычное человеческое общение, которого так не хватает.]]
+			enable '#записи';
+--			walkin 'журнал'
+		end;
+		obj = {
+			obj {
+				nam = '#записи';
+				dsc = [[{$d я|Я} {могу прочитать новые записи.}]];
+				act = function(s)
+					walkin 'журнал'
+				end
+			}:disable();
+		}
+	}:disable();
 }
+
+global 'need_email' (false)
 
 room {
 	nam = 'Жилой Отсек 2';
@@ -536,6 +561,7 @@ room {
 	nam = 'Жилой Отсек 3';
 	title = 'Жилой модуль';
 	subtitle = 'Отсек 3';
+	decor = [[{$d я|Я} {$d жилойотсек|нахожусь в инженерном отсеке.}]];
 	way = { path {CW, 'Жилой Отсек 2'}, path{UP, 'Жилой Отсек 0'},path {CCW, 'Жилой Отсек 4'} };
 }
 
@@ -593,22 +619,10 @@ room {
 				[[]];
 			}
 			if pager(s, txt) then
+				need_email = true;
 				walkback()
 			end
 		end;
-	}
-}
-
-room {
-	nam = 'журнал';
-	title = 'Жилой модуль';
-	subtitle = 'Отсек 1';
-	decor = [[На одной из панелей закреплен журнал.]];
-	way = {
-		path {
-			'Назад',
-			from,
-		}
 	}
 }
 
@@ -705,8 +719,8 @@ declare 'chess_spr' (function(v)
 	spr:copy(fx, fy, 32, 32, f, 0, 0)
 	return f
 end)
-declare 'selector_spr' (function(v)
 
+declare 'selector_spr' (function(v)
 	local p = pixels.new(32, 32)
 	p:poly({0, 0, 31, 0, 31, 31, 0, 31}, 32, 32, 32, 255)
 	p:poly({1, 1, 30, 1, 30, 30, 1, 30}, 255, 255, 255, 255)
@@ -719,36 +733,31 @@ local board_h = 32 * 8
 global 'chess_selected' (false)
 global 'chess_puzzle_solved' (false)
 
-function game:ondecor(n, press, x, y)
-	if not n or not press then
+local function chess_onclick(s, name, press, x, y)
+	local d = D 'chessboard'
+	local boardx, boardy = d.x, d.y
+	x = math.floor(x / 32) + 1
+	y = math.floor(y / 32) + 1
+	local c = chess_cell(x, y)
+	if not c and not chess_selected then
 		return false
 	end
-	if n == 'chessboard' then
-		local d = D 'chessboard'
-		local boardx, boardy = d.x, d.y
-		x = math.floor(x / 32) + 1
-		y = math.floor(y / 32) + 1
-		local c = chess_cell(x, y)
-		if not c and not chess_selected then
-			return
+	if seen '#назад' then
+		return false
+	end
+	if not chess_selected or c then
+		chess_selected = string.format('fig-%d%d', x, y)
+		D {'selection', 'img', selector_spr, x = boardx + (x - 1) * 32, y = boardy + (y - 1) * 32, z = 0 }
+	else
+		local d = D(chess_selected)
+		if chess_selected == 'fig-22' and x == 4 then
+			chess_puzzle_solved = true
 		end
-		if seen '#назад' then
-			return false
-		end
-		if not chess_selected or c then
-			chess_selected = string.format('fig-%d%d', x, y)
-			D {'selection', 'img', selector_spr, x = boardx + (x - 1) * 32, y = boardy + (y - 1) * 32, z = 0 }
-		else
-			local d = D(chess_selected)
-			if chess_selected == 'fig-22' and x == 4 then
-				chess_puzzle_solved = true
-			end
-			chess_selected = false
-			D {'selection' }
-			d.x = (x - 1) * 32 + boardx
-			d.y = (y - 1) * 32 + boardy
-			enable '#назад'
-		end
+		chess_selected = false
+		D {'selection' }
+		d.x = (x - 1) * 32 + boardx
+		d.y = (y - 1) * 32 + boardy
+		enable '#назад'
 	end
 end
 
@@ -757,6 +766,8 @@ room {
 	title = 'Жилой модуль';
 	noinv = true;
 	subtitle = 'Отсек 1';
+	ondecor = chess_onclick;
+	hint = false;
 	enter = function()
 		D {'chessboard', 'img', board_spr, x = (theme.scr.w() - board_w) / 2, y = (theme.scr.h() - board_h) / 2, z = 1, click = true }
 		make_board(chess_puzzle)
@@ -766,10 +777,15 @@ room {
 		D { 'chessboard'}
 		clear_board()
 		if not chess_puzzle_solved then
-			p [[-- Позволю себе заметить, белые делают мат в два хода -- послышался голос Алисы.^
+			if not s.hint then
+				pn [[-- Позволю себе заметить, белые делают мат в два хода -- послышался голос Алисы.^
 -- Хм, а я думал что тебе запрещено давать подсказки... Разве нет?^
--- Конечно, конечно. Прошу прощения, не выдержала.^
-Похоже, есть смысл попробовать найти верный ход.]];
+-- Конечно, конечно. Прошу прощения, не выдержала.]]
+				s.hint = true
+			else
+				pn [[Гм, я как буд-то слышу грустный вздох Алисы. Интересно, она так же подсказывает и команде черных?]]
+			end
+			p [[Похоже, есть смысл попробовать найти верный ход.]];
 		else
 			p [[-- Хочу заметить, вы сделали прекрасный ход! -- раздался голос Алисы.]]
 			disable ('партия')
@@ -781,5 +797,41 @@ room {
 			'Назад',
 			from,
 		}:disable();
+	}
+}
+
+room {
+	nam = 'журнал';
+	title = 'Жилой модуль';
+	noinv = true;
+	hidetitle = true;
+	subtitle = 'Отсек 1';
+	enter = function(s)
+		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
+		snow_theme()
+	end;
+	onexit = function(s, t)
+		if s == t then
+			p "page"
+			return false
+		end
+	end;
+	exit = function(s, t)
+		D {'journal' }
+		dark_theme()
+	end;
+	dsc = [[Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum.
+]];
+	way = {
+		path {
+			'#закрыть',
+			'Закрыть',
+			from,
+		};
+		path {
+			'#листать',
+			'Листать',
+			'журнал',
+		};
 	}
 }

@@ -124,6 +124,11 @@ function snow_theme()
 	theme.set('inv.col.fg', 'black')
 	theme.set('inv.col.link','black')
 	theme.set('inv.col.alink', 'black')
+
+	if here() ^ 'журнал' then
+		theme.set('win.h', 540 - 80)
+		theme.set('inv.mode', 'disabled')
+	end
 end
 
 function dark_theme()
@@ -134,9 +139,12 @@ function dark_theme()
 	theme.reset('inv.col.fg')
 	theme.reset('inv.col.link')
 	theme.reset('inv.col.alink')
+	theme.reset('win.h')
+	theme.reset('inv.mode')
 end
+
 function theme_select()
-	if D'snow' then
+	if D'snow' or here() ^ 'журнал' then
 		snow_theme()
 	else
 		dark_theme()
