@@ -561,8 +561,11 @@ room {
 	nam = 'Жилой Отсек 3';
 	title = 'Жилой модуль';
 	subtitle = 'Отсек 3';
-	decor = [[{$d я|Я} {$d жилойотсек|нахожусь в инженерном отсеке.}]];
+	decor = [[{$d я|Я} {#инжотсек|нахожусь в инженерном отсеке.} {$d стена|Вдоль стен} {#места|установлены рабочие места.}]];
 	way = { path {CW, 'Жилой Отсек 2'}, path{UP, 'Жилой Отсек 0'},path {CCW, 'Жилой Отсек 4'} };
+}: with {
+	dec ('#инжотсек', [[В этом отсеке жилого модуля находятся рабочие места экипажа.]]);
+	dec ('#места', [[Рабочие места представляют из себя консоли.]]);
 }
 
 room {
@@ -766,9 +769,9 @@ end
 room {
 	nam = 'игра-шахматы';
 	title = 'Жилой модуль';
-	noinv = true;
 	subtitle = 'Отсек 1';
 	hidetitle = true;
+	hideinv = true;
 	ondecor = chess_onclick;
 	hint = false;
 	enter = function()
@@ -804,18 +807,21 @@ room {
 		}:disable();
 	}
 }
-obj {
-	nam = '$fmt';
-	act = function(s, w, t)
-		return fmt[w](t)
-	end
-}
+
+if not _'$fmt' then
+	obj {
+		nam = '$fmt';
+		act = function(s, w, t)
+			return fmt[w](t)
+		end
+	}
+end
 
 room {
 	nam = 'журнал';
 	title = 'Жилой модуль';
-	noinv = true;
 	hidetitle = true;
+	hideinv = true;
 	subtitle = 'Отсек 1';
 	enter = function(s)
 		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
@@ -882,4 +888,33 @@ local roster = {
 	{ "астронавт", "Григорий Туполев"},
 	{ "астронавт", "Александр Белоусов"},
 	{ "астронавт", "Николай Семенов" },
+}
+
+room {
+	nam = 'консоль';
+	title = 'Жилой модуль';
+	hideinv = true;
+	hidetitle = true;
+	subtitle = 'Отсек 3';
+	enter = function(s)
+		D {'console', 'img', 'gfx/console.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
+		noinv_theme()
+	end;
+	onexit = function(s, t)
+		if s == t then
+			pager(s, s.txt)
+			return false
+		end
+	end;
+	exit = function(s, t)
+		D {'console' }
+		inv_theme()
+	end;
+	way = {
+		path {
+			'#закрыть',
+			'Закрыть',
+			from,
+		};
+	}
 }

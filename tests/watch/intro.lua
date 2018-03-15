@@ -125,7 +125,7 @@ function snow_theme()
 	theme.set('inv.col.link','black')
 	theme.set('inv.col.alink', 'black')
 
-	if here().noinv then
+	if here().hideinv then
 		noinv_theme()
 	else
 		inv_theme()
@@ -151,7 +151,7 @@ function dark_theme()
 	theme.reset('inv.col.link')
 	theme.reset('inv.col.alink')
 
-	if here().noinv then
+	if here().hideinv then
 		noinv_theme()
 	else
 		inv_theme()
