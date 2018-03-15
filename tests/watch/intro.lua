@@ -125,10 +125,21 @@ function snow_theme()
 	theme.set('inv.col.link','black')
 	theme.set('inv.col.alink', 'black')
 
-	if here() ^ 'журнал' then
-		theme.set('win.h', 540 - 80)
-		theme.set('inv.mode', 'disabled')
+	if here().noinv then
+		noinv_theme()
+	else
+		inv_theme()
 	end
+end
+
+function noinv_theme()
+	theme.set('win.h', 540 - 80)
+	theme.set('inv.mode', 'disabled')
+end
+
+function inv_theme()
+	theme.reset('win.h')
+	theme.reset('inv.mode')
 end
 
 function dark_theme()
@@ -139,8 +150,12 @@ function dark_theme()
 	theme.reset('inv.col.fg')
 	theme.reset('inv.col.link')
 	theme.reset('inv.col.alink')
-	theme.reset('win.h')
-	theme.reset('inv.mode')
+
+	if here().noinv then
+		noinv_theme()
+	else
+		inv_theme()
+	end
 end
 
 function theme_select()

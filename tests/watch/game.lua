@@ -657,6 +657,8 @@ local function clear_board()
 	D {'selection'}
 end
 
+local CS = 48
+
 local function make_board(b)
 	local f = {
 		['q'] = 0,
@@ -678,7 +680,7 @@ local function make_board(b)
 			local c = r:sub(x, x)
 			if c and c ~= '.' then
 				local n = f[c:lower()]
-				local xx, yy = (x - 1) * 32 + boardx, (y - 1) * 32 + boardy
+				local xx, yy = (x - 1) * CS + boardx, (y - 1) * CS + boardy
 				local white = not f[c]
 				D { 'fig-'..std.tostr(x)..std.tostr(y), 'img', chess_spr, z = 1, x = xx, y = yy, white = white, fig = n }
 			end
@@ -687,7 +689,7 @@ local function make_board(b)
 end
 
 declare 'board_spr' (function()
-	local w, h = 32, 32
+	local w, h = CS, CS
 	local spr = sprite.new(w * 8 + 24, h * 8 + 24)
 	local fnt = sprite.fnt(theme.get 'win.fnt.name', 12)
 	for y = 1, 8 do
@@ -703,9 +705,9 @@ declare 'board_spr' (function()
 	local t = {"a", "b", "c", "d", "e", "f", "g", "h"}
 	for y = 1, 8 do
 		local a = fnt:text(std.tostr(9 - y), 'white', 1)
-		a:copy(spr, 8 * 32 + 4, (y - 1)* 32 + 11)
+		a:copy(spr, 8 * w + 4, (y - 1)* h + (CS - 12) / 2)
 		a = fnt:text(t[y], 'white', 1)
-		a:copy(spr, (y - 1)* 32 + 11, 8 * 32 + 4)
+		a:copy(spr, (y - 1)* w + (CS - 12) / 2, 8 * h + 4)
 	end
 	return spr
 end)
@@ -713,31 +715,31 @@ end)
 declare 'chess_spr' (function(v)
 	local spr = sprite.new 'gfx/chess.png'
 	local fx, fy = 0, 0
-	if v.white then fy = 32 end
-	fx = v.fig * 32
-	local f = sprite.new(32, 32)
-	spr:copy(fx, fy, 32, 32, f, 0, 0)
+	if v.white then fy = CS end
+	fx = v.fig * CS
+	local f = sprite.new(CS, CS)
+	spr:copy(fx, fy, CS, CS, f, 0, 0)
 	return f
 end)
 
 declare 'selector_spr' (function(v)
-	local p = pixels.new(32, 32)
-	p:poly({0, 0, 31, 0, 31, 31, 0, 31}, 32, 32, 32, 255)
-	p:poly({1, 1, 30, 1, 30, 30, 1, 30}, 255, 255, 255, 255)
-	p:poly({2, 2, 29, 2, 29, 29, 2, 29}, 32, 32, 32, 255)
+	local p = pixels.new(CS, CS)
+	p:poly({0, 0, CS - 1, 0, CS - 1, CS - 1, 0, CS - 1}, 32, 32, 32, 255)
+	p:poly({1, 1, CS - 2, 1, CS - 2, CS - 2, 1, CS - 2}, 255, 255, 255, 255)
+	p:poly({2, 2, CS - 3, 2, CS - 3, CS - 3, 2, CS - 3}, 32, 32, 32, 255)
 	return p:sprite()
 end)
 
-local board_w = 32 * 8
-local board_h = 32 * 8
+local board_w = CS * 8
+local board_h = CS * 8
 global 'chess_selected' (false)
 global 'chess_puzzle_solved' (false)
 
 local function chess_onclick(s, name, press, x, y)
 	local d = D 'chessboard'
 	local boardx, boardy = d.x, d.y
-	x = math.floor(x / 32) + 1
-	y = math.floor(y / 32) + 1
+	x = math.floor(x / CS) + 1
+	y = math.floor(y / CS) + 1
 	local c = chess_cell(x, y)
 	if not c and not chess_selected then
 		return false
@@ -747,7 +749,7 @@ local function chess_onclick(s, name, press, x, y)
 	end
 	if not chess_selected or c then
 		chess_selected = string.format('fig-%d%d', x, y)
-		D {'selection', 'img', selector_spr, x = boardx + (x - 1) * 32, y = boardy + (y - 1) * 32, z = 0 }
+		D {'selection', 'img', selector_spr, x = boardx + (x - 1) * CS, y = boardy + (y - 1) * CS, z = 0 }
 	else
 		local d = D(chess_selected)
 		if chess_selected == 'fig-22' and x == 4 then
@@ -755,8 +757,8 @@ local function chess_onclick(s, name, press, x, y)
 		end
 		chess_selected = false
 		D {'selection' }
-		d.x = (x - 1) * 32 + boardx
-		d.y = (y - 1) * 32 + boardy
+		d.x = (x - 1) * CS + boardx
+		d.y = (y - 1) * CS + boardy
 		enable '#назад'
 	end
 end
@@ -766,14 +768,17 @@ room {
 	title = 'Жилой модуль';
 	noinv = true;
 	subtitle = 'Отсек 1';
+	hidetitle = true;
 	ondecor = chess_onclick;
 	hint = false;
 	enter = function()
-		D {'chessboard', 'img', board_spr, x = (theme.scr.w() - board_w) / 2, y = (theme.scr.h() - board_h) / 2, z = 1, click = true }
+		D {'chessboard', 'img', board_spr, x = (theme.scr.w() - board_w) / 2, y = tonumber(theme.get 'win.y'), z = 1, click = true }
 		make_board(chess_puzzle)
 		disable '#назад'
+		noinv_theme()
 	end;
 	exit = function(s, t)
+		inv_theme()
 		D { 'chessboard'}
 		clear_board()
 		if not chess_puzzle_solved then
@@ -799,6 +804,12 @@ room {
 		}:disable();
 	}
 }
+obj {
+	nam = '$fmt';
+	act = function(s, w, t)
+		return fmt[w](t)
+	end
+}
 
 room {
 	nam = 'журнал';
@@ -812,7 +823,7 @@ room {
 	end;
 	onexit = function(s, t)
 		if s == t then
-			p "page"
+			pager(s, s.txt)
 			return false
 		end
 	end;
@@ -820,8 +831,19 @@ room {
 		D {'journal' }
 		dark_theme()
 	end;
-	dsc = [[Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum.
-]];
+	dsc = [[{$fmt b|{$fmt c|Журнал экипажа звездолета "ПИЛИГРИМ"}}]];
+	{txt = {
+[[Сегодня, пока я валялся в кубрике и пялился на звезды, мне пришла в голову странная мысль.^
+Сколько бы тысяч световых лет не было между нами, я влияю на каждую звезду, которую вижу!^
+Ведь если принять во внимание квантовые
+взаимодействия, то я (мой глаз и сознание) действуют на звездный свет таким образом, что фотон проявляет
+себя! Пока свет не попал ко мне в глаз, мозг, сознание... он существует только в состоянии
+суперпозиции. А существует ли он тогда вообще? Не могу успокоиться, эта мысль меня вдохновляет! Считайте меня
+конченным солипцистом, но в этом что-то есть!^
+
+{$fmt r|Н.С.}]];
+		 [[222]];
+	}};
 	way = {
 		path {
 			'#закрыть',
