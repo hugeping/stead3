@@ -116,7 +116,7 @@ room {
 	end
 }
 
-function snow_theme()
+function snow_theme(w)
 	theme.set('win.col.fg', 'black')
 	theme.set('win.col.link','black')
 	theme.set('win.col.alink', 'black')
@@ -125,7 +125,7 @@ function snow_theme()
 	theme.set('inv.col.link','black')
 	theme.set('inv.col.alink', 'black')
 
-	if here().hideinv then
+	if (w or here()).hideinv then
 		noinv_theme()
 	else
 		inv_theme()
@@ -135,14 +135,18 @@ end
 function noinv_theme()
 	theme.set('win.h', 540 - 80)
 	theme.set('inv.mode', 'disabled')
+	theme.set('win.w', 600)
+	theme.set('win.x', 192 + 20)
 end
 
 function inv_theme()
 	theme.reset('win.h')
 	theme.reset('inv.mode')
+	theme.reset('win.w')
+	theme.reset('win.x')
 end
 
-function dark_theme()
+function dark_theme(w)
 	theme.reset('win.col.fg')
 	theme.reset('win.col.link')
 	theme.reset('win.col.alink')
@@ -150,8 +154,7 @@ function dark_theme()
 	theme.reset('inv.col.fg')
 	theme.reset('inv.col.link')
 	theme.reset('inv.col.alink')
-
-	if here().hideinv then
+	if (w or here()).hideinv then
 		noinv_theme()
 	else
 		inv_theme()

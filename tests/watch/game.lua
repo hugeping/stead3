@@ -825,7 +825,7 @@ room {
 	subtitle = 'Отсек 1';
 	enter = function(s)
 		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
-		snow_theme()
+		snow_theme(s)
 	end;
 	onexit = function(s, t)
 		if s == t then
@@ -835,7 +835,7 @@ room {
 	end;
 	exit = function(s, t)
 		D {'journal' }
-		dark_theme()
+		dark_theme(t)
 	end;
 	dsc = [[{$fmt b|{$fmt c|Журнал экипажа звездолета "ПИЛИГРИМ"}}^
 {$fmt y|50%}{$fmt em|{$fmt c|"Открылась бездна, звезд полна}^
