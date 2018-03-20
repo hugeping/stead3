@@ -1023,7 +1023,6 @@ room {
 		noinv_theme()
 	end;
 	ondecor = function(s, _, press, _, _, _, n)
-		print(press)
 		if not press then return false end
 		D('menu').hidden = true
 		D('auth').hidden = true
