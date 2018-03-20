@@ -894,13 +894,13 @@ function decor:click_filter(press, x, y)
     for _, v in pairs(self.objects) do
 	if v.click and x >= v.x - v.xc and y >= v.y - v.yc and
 	x < v.x - v.xc + v.w and y < v.y - v.yc + v.h then
-	    if v[2] == 'txt' then
-		if not press then
-		    table.insert(c, v)
-		end
-	    else
+--	    if v[2] == 'txt' then
+--		if not press then
+--		    table.insert(c, v)
+--		end
+--	    else
 		table.insert(c, v)
-	    end
+--	    end
 	end
     end
     if #c == 0 then
