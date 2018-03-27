@@ -14,9 +14,10 @@ end)
 global 'inpnr' (0)
 global 'randoms' ({})
 
-local beep = snd.new 'snd/beep.ogg'
+declare 'beep' (snd.new 'snd/beep.ogg')
+
 function decor.beep(v)
-	if beep then
+	if beep and not player_moved() then
 		beep:play(1);
 	end
 end
