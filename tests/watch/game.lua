@@ -955,14 +955,13 @@ room {
 	hidetitle = true;
 	subtitle = 'Отсек 3';
 	decor = function(s)
-p [[Мне немного не по себе от мысли, что нашу переписку может читать Алиса. Даже если она всего лишь робот. И все-таки я пишу, не могу не писать.^
-Сережа, этот полет был бы невыносим без тебя. Когда я брожу в одиночестве по отсекам корабля, останавливаюсь возле твоей капсулы, смотрю в иллюминаторы,
-смотрю со слезами записи переданные с Земли давным-давно... Мне начинает казаться, что я настолько мала, что меня просто нет. Но твои письма, где ты пишешь о будущем доме, о нас... возвращают меня к жизни.
-^
-Я никогда так много не думала о Боге, как здесь. Когда ты видишь эту бездну, ты не можешь уйти от вопроса, спрятаться от него. Здесь ты с Ним наедине.^
-Сережа, я сегодня сделала маленькую глупость, под твою капсулу я положила безделушку... от меня. Когда я увижу, что ты ее забрал, мне будет
-не так тоскливо видеть тебя лежащим в капсуле.^
-P.S. Жду и от тебя такую же маленькую глупость. Твоя Лена.]]
+p [[Сережа, я так рада, что ты у меня есть! Когда я брожу в одиночестве по отсекам корабля, останавливаюсь возле твоей капсулы, вижу звезды в иллюминаторах,
+смотрю записи с Земли... Мне начинает казаться что я исчезающе мала, что меня уже нет. Но твои письма возвращают меня к жизни.^
+Теплые слова. Наши сны о детстве. Любовь к тем, кто остался в прошлом и те, для кого мы сами -- прошлое... Я всегда смущалась писать о Боге, но здесь все мои мысли снова и снова
+о Нем. Бездна, такая страшная и такая прекрасная. Интересно, что чувствуют другие?^
+Сережа, я сегодня сделала маленькую глупость, под твою капсулу я положила безделушку... Когда я увижу, что ты ее забрал, мне будет
+не так больно видеть тебя лежащим в капсуле.^
+{$fmt em|Твоя Лена.}]]
 	end;
 	onenter = function()
 		emails = 0;
@@ -981,6 +980,12 @@ P.S. Жду и от тебя такую же маленькую глупость
 		};
 	};
 }
+declare 'rec_spr' (
+function(v)
+	local p = pixels.new(32 * 2, 32)
+	p:fill_circle(16, 16, 15, 255, 0, 0)
+	return p:sprite()
+end)
 
 room {
 	nam = 'video';
@@ -991,9 +996,81 @@ room {
 	decor = function(s)
 
 	end;
+	time = 5;
+	len = 0;
+	timer = function(s)
+		if s.time > 0 then
+			s.time = s.time - 0.05
+			if s.time > 0 then
+				local d = D 'recording'
+				d[3] = [[Запись начнется через ]]..std.tostr(math.round(s.time)).." сек."
+				D(d)
+				return
+			else
+				s.time = 0
+				s.len = 0
+				enable '#закончить'
+				disable '#закрыть'
+				local d = D 'console'
+				D {'rec', 'img', rec_spr, frames = 2, h = 32, w = 32, delay = 100, x = d.x + d.w - 64, y = d.y + 32 }
+			end
+		end
+		if s.time == 0 then
+			s.time = -1
+			local d = D 'recording'
+			d.xc = true
+			d.w = false
+			d[3] = [[ИДЕТ ЗАПИСЬ...]]
+			D(d)
+			return
+		end
+		s.len = s.len + 0.05
+	end;
+	ondecor = function(s, _, press, _, _, _, e)
+		local d = D 'recording'
+		if not press then
+			return false
+		end
+		if e == 'delete' then
+			d.h, d.w = false, false
+			d[3] = [[Удаляю запись... [pause] готово.]]
+			d.xc = true
+			d.typewriter = true
+			D(d)
+		elseif e == 'send1' or e == 'send2' or e == 'send3' then
+			d.h, d.w = false, false
+			d.xc = true
+			d[3] = [[Отправляю запись... [pause] готово.]]
+			d.typewriter = true
+			D(d)
+		else
+			return false
+		end
+	end;
+	onenter = function(s)
+		local d = D 'console'
+		s.time = 3
+		local m = [[Запись начнется через ]]..std.tostr(s.time).." сек."
+		D {'recording', 'txt', m, x = theme.scr.w() / 2, y = theme.scr.h() / 2, xc = true, yc = true}
+	end;
 	onexit = function(s, t)
+		if t == s then
+			local d = D 'recording'
+			d.xc = true
+			d.yc = true
+			d[3] = [[Записано ]].. std.tostr(math.round(s.len))..[[ сек.
+{send1|[ Земля ]} {send2|[ Пионер 2217]} {send3|[ Ковчег ]} {delete|[ Удалить ]} ]]
+			d.h, d.w = false, false
+			D(d)
+			D{'rec'}
+			disable("#закончить")
+			enable("#закрыть")
+			return false
+		end
 		D('menu').hidden = false
 		D('auth').hidden = false
+		D{'recording'}
+		D{'rec'}
 		walkback()
 		return false
 	end;
@@ -1003,6 +1080,11 @@ room {
 			'Закрыть',
 			from,
 		};
+		path {
+			'#закончить',
+			'Закончить',
+			'video',
+		}:disable();
 	};
 }
 
@@ -1013,12 +1095,12 @@ room {
 	hidetitle = true;
 	subtitle = 'Отсек 3';
 	enter = function(s)
-		local d = D {'console', 'img', 'gfx/console.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
+		local d = D {'console', 'img', 'gfx/console.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2  }
 		local m = [[Идентификация... [pause] успешно
 Добро пожаловать, Сергей.]]
 		if emails > 0 then m = m .. [[ У вас ]]..tostring(emails)..' новых сообщений.' end
 
-		local a = D {'auth', 'txt', m, x = d.x + 32, y = d.y + 32 , typewriter = true }
+		local a = D {'auth', 'txt', m, x = d.x + 32, y = d.y + 32, typewriter = true }
 		noinv_theme()
 	end;
 	ondecor = function(s, _, press, _, _, _, n)
