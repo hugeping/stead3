@@ -1235,11 +1235,56 @@ room {
 	}
 }
 
+local rot = 0
+
+declare 'stars_rot' (function(v)
+	v.x = math.cos(v.rad + rot) * v.r + theme.scr.w() / 2
+	v.y = math.sin(v.rad + rot) * v.r + theme.scr.h() / 2
+end)
+
+local rstars = {}
+
+local function make_new_stars()
+	for i = 1, STARS do
+		local s = D("star"..tostring(i))
+		s.hidden = true
+	end
+	for i = STARS + 1, STARS * 3 do
+		local s
+		if rstars[i] then
+			s = rstars[i]
+		else
+			s = {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars_rot, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 2 }
+			rstars[i] = s
+			local dx, dy = s.x - theme.scr.w()/2, s.y - theme.scr.h()/2
+			local r = (dx ^ 2 + dy ^ 2) ^ 0.5
+			s.r = r
+		end
+		local alpha = 2 * rnd() * math.pi  - math.pi
+		s.rad = alpha
+		s = D(s)
+	end
+end
+
+local function hide_new_stars()
+	for i = 1, STARS do
+		local s = D("star"..tostring(i))
+		s.hidden = false
+	end
+	for i = STARS + 1, STARS * 3 do
+		D {"star"..tostring(i) }
+	end
+end
+
 room {
 	nam = 'Воронье гнездо';
 	title = 'Мостик';
 	decor = [[{$d я|Я} {#отсек|нахожусь в наблюдательном отсеке.}]];
 	subtitle = 'Воронье гнездо';
+	timer = function(s)
+		rot = rot - 0.005
+		return false
+	end;
 	enter = function()
 		p [[Я поднялся в воронье гнездо по лестнице.]]
 	end;
@@ -1251,6 +1296,15 @@ room {
 	obj {
 		nam = '#пульт';
 		dsc = [[{#отсек|Здесь} {находится пуль управления.}]];
-		act = [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
+		act = function()
+			local d = D 'space'
+			d.hidden = not d.hidden
+			if d.hidden then
+				make_new_stars()
+			else
+				hide_new_stars()
+			end
+			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
+		end;
 	}
 }

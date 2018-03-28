@@ -428,7 +428,6 @@ end)
 
 local time = 0
 local delay = rnd(2000)
-
 declare 'stars' (function(v)
 	if not v.xx then v.xx = v.x end
 	if not v.yy then v.yy = v.y end
@@ -440,7 +439,9 @@ declare 'stars' (function(v)
 	v.x = v.xx - dx
 	v.y = v.yy - dy
 end)
-local STARS = 9
+
+const 'STARS' (9)
+
 global 'blink' (false)
 declare 'space_bg' (function(v)
 	if not v.ffx then v.ffx = v.fx end
@@ -480,6 +481,7 @@ local function get_offsets(d)
 	d.ffx = d.fx
 	d.ffy = d.fy
 end
+
 local function make_stars()
 	for i = 1, STARS do
 		D {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 2 }
