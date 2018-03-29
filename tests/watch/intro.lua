@@ -505,7 +505,9 @@ room {
 			local d = D 'space'
 			if d then
 				get_offsets(d)
-				make_stars()
+				if not d.hidden then
+					make_stars()
+				end
 			end
 		end
 	end;

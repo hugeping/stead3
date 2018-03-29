@@ -160,11 +160,18 @@ local function pager(s, txt)
 	return s.__page == #txt, done
 end
 
+global {
+	cap1 = false;
+	cap2 = false;
+	cap3 = false;
+}
+
 obj {
 	nam = 'капсулы';
 	act = function(s)
 		if here().subtitle == 'Отсек 1' then
 			pn [[В этом отсеке установлено 7 гибернационных капсул.]]
+			cap1 = true
 		elseif here().subtitle == 'Отсек 2' then
 			pn [[В этом отсеке установлено 7 гибернационных капсул.]]
 			if disabled('елена') then
@@ -172,8 +179,10 @@ obj {
 				enable 'елена'
 				return
 			end
+			cap2 = true
 		elseif here().subtitle == 'Отсек 3' then
 			pn [[В этом отсеке установлено 6 гибернационных капсул.]]
+			cap3 = true
 		end
 		local txt = {
 			[[Капсулы устроены таким образом, чтобы при разгоне и торможении "Пилигрима" могли менять свое положение.]],
@@ -307,11 +316,85 @@ room {
 	}:disable();
 }
 
+std.phrase_show = false
+
+dlg {
+	nam = 'alice1';
+	title = [[Алиса]];
+	noinv = true;
+	phr = {
+		{ always = true, "Узнать статус вахты.",
+		  function()
+			  p "Капсулы:"
+			  if cap1 and cap2 and cap3 then
+				  pn "проверены."
+			  else
+				  local n = 1
+				  if cap1 then n = n + 6 end
+				  if cap2 then n = n + 7 end
+				  if cap3 then n = n + 6 end
+				  pn (n "из 20")
+			  end
+			  p "Крио-контейнеры:"
+			  if cont_chk then
+				  pn "проверены."
+			  else
+				  pn "не проверены."
+			  end
+			  p "Жилые отсеки."
+			  local f = true
+			  if not visited('Жилой Отсек 1') then
+				  p "Отсек 1: не проверен."
+				  f = false
+			  end
+			  if not visited('Жилой Отсек 2') then
+				  p "Отсек 2: не проверен."
+				  f = false
+			  end
+			  if not visited('Жилой Отсек 3') then
+				  p "Отсек 3: не проверен."
+				  f = false
+			  end
+			  if not visited('Жилой Отсек 4') then
+				  p "Отсек 4: не проверен."
+				  f = false
+			  end
+			  if f then
+				  pn "Проверены."
+			  else
+				  pn()
+			  end
+			  if visited('Шлюз') then
+				  if not visited('шлюзотсек') then
+					  pn ("Ангар: не проверен шлюз.")
+				  else
+					  pn ("Ангар: проверен.")
+				  end
+			  else
+				  pn ("Ангар: не проверен.")
+			  end
+			  if visited('Мостик') then
+				  if not visited 'Воронье гнездо' then
+					  pn ("Мостик: не проверен.")
+				  else
+					  pn ("Мостик: проверен.")
+				  end
+			  else
+				  pn ("Мостик: не проверен.")
+			  end
+		  end
+		},
+		{ always = true, "Запросить статус", [[-- Все системы функционируют в штатном режиме.]] },
+		{ always = true, "Закончить разговор", function() walkback() end },
+	}
+}: with {
+}
+
 obj {
 	nam = 'браслет';
 	inv = function(s)
-		p [[Этот браслет следит за пульсом, а также позволяет Алисе слышать меня из любого уголка звездолета.
-Алиса -- наш бортовой компьютер. У него, вернее нее, очень приятный голос.]];
+		p [[Этот браслет следит за пульсом, а также позволяет Алисе слышать меня из любого уголка звездолета. Алиса -- наш бортовой компьютер. У него, вернее нее, очень приятный голос.]];
+		walkin 'alice1'
 	end;
 }
 
@@ -342,6 +425,8 @@ room {
 	'капсулы', 'панели',
 }
 
+global 'cont_chk' (false)
+
 room {
 	nam = 'Отсек 4';
 	title = 'Модуль гибернации';
@@ -353,6 +438,7 @@ room {
 	obj {
 		nam = '#контейнеры';
 		act = function(s)
+			cont_chk = true
 			p [[12 ослепительно белых квадратных контейнеров с эмбрионами домашних животных.]]
 			pn [["Пилигрим" -- второй звездолет в конвое, который был отправлен на Глизе 667 Cc. Мы везем
 оборудование и эмбрионы животных.]];
@@ -1300,8 +1386,10 @@ room {
 			local d = D 'space'
 			d.hidden = not d.hidden
 			if d.hidden then
+				fading.set {"fadeblack", max = FADE_LONG, now = true }
 				make_new_stars()
 			else
+				fading.set {"fadeblack", max = FADE_LONG, now = true }
 				hide_new_stars()
 			end
 			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
