@@ -1334,6 +1334,7 @@ local function make_new_stars()
 	for i = 1, STARS do
 		local s = D("star"..tostring(i))
 		s.hidden = true
+		D{"hud", "img", hud_spr, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h() /2, z = 1}
 	end
 	for i = STARS + 1, STARS * 3 do
 		local s
@@ -1356,23 +1357,64 @@ local function hide_new_stars()
 	for i = 1, STARS do
 		local s = D("star"..tostring(i))
 		s.hidden = false
+		D{"hud"}
 	end
 	for i = STARS + 1, STARS * 3 do
 		D {"star"..tostring(i) }
 	end
 end
 
+declare 'hud_spr' (function()
+	local w, h = 361, 361
+	local p = pixels.new(w, h)
+	local col = 'gray'
+	local r = w / 2
+	p:circleAA(w / 2, h / 2, w / 2, color2rgb(col))
+	p:lineAA(0, h / 2, 32, h / 2, color2rgb(col))
+	p:lineAA(w - 32, h / 2, w, h / 2, color2rgb(col))
+	p:lineAA(w / 2, 0, w / 2, 32, color2rgb(col))
+	p:lineAA(w / 2, h - 32, w / 2, h, color2rgb(col))
+	p:lineAA(w / 2, h / 2 - 16, w / 2, h / 2 + 16, color2rgb(col))
+	p:lineAA(w / 2 - 16, h / 2, w / 2 + 16, h / 2, color2rgb(col))
+	for aa = 0, math.pi / 4, math.pi / 8 do
+		local a = aa + math.pi / 8
+		for i = 1, 4 do
+			local x = (r - 2)* math.cos(a)
+			local y = (r - 2)* math.sin(a)
+			local x2 = (r - 8)* math.cos(a)
+			local y2 = (r - 8)* math.sin(a)
+			p:lineAA(x + w / 2, y + h / 2, x2 + w / 2, y2 + h / 2, color2rgb(col))
+			a = a + math.pi / 2
+		end
+	end
+	return p:sprite()
+end)
+
 room {
 	nam = 'Воронье гнездо';
 	title = 'Мостик';
 	decor = [[{$d я|Я} {#отсек|нахожусь в наблюдательном отсеке.}]];
 	subtitle = 'Воронье гнездо';
+	hideinv = true;
+	hidetitle = true;
 	timer = function(s)
 		rot = rot - 0.005
 		return false
 	end;
 	enter = function()
-		p [[Я поднялся в воронье гнездо по лестнице.]]
+--		p [[Я поднялся в воронье гнездо по лестнице.]]
+		local d = D 'space'
+		d.hidden = true
+		fading.set {"fadeblack", max = FADE_LONG, now = true }
+		make_new_stars()
+		noinv_theme()
+	end;
+	exit = function()
+		local d = D 'space'
+		d.hidden = false
+		fading.set {"fadeblack", max = FADE_LONG, now = true }
+		hide_new_stars()
+		inv_theme()
 	end;
 	way = { path{DOWN, 'Мостик'}  };
 }: with {
@@ -1383,16 +1425,7 @@ room {
 		nam = '#пульт';
 		dsc = [[{#отсек|Здесь} {находится пуль управления.}]];
 		act = function()
-			local d = D 'space'
-			d.hidden = not d.hidden
-			if d.hidden then
-				fading.set {"fadeblack", max = FADE_LONG, now = true }
-				make_new_stars()
-			else
-				fading.set {"fadeblack", max = FADE_LONG, now = true }
-				hide_new_stars()
-			end
 			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
 		end;
-	}
+	};
 }
