@@ -598,6 +598,10 @@ room {
 				enable '#журнал'
 				return
 			end
+--			if not watch_status() then
+--				p [[Пока я не закончил вахту, не стоит валяться на кушетке.]]
+--				return
+--			end
 			if true then -- not sleeped and watch_status() then
 				sleeped = true
 				std.pclr()
