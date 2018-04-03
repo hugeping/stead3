@@ -38,6 +38,9 @@ declare 'mark2_spr' (function()
 end)
 
 function markers()
+	if here():type 'dlg' then
+		return
+	end
 	local mt = D 'map-top'
 	if not mt then D { 'mark-top'}; D {'mark-front'}; return; end
 	local x, y =  mt.x - mt.w / 2 - 15, mt.y
