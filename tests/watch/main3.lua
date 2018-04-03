@@ -28,6 +28,9 @@ function instead.titlefmt(w)
 	if here().hidetitle then
 		return
 	end
+	if D'clouds' then
+		return fmt.l(fmt.b(w))
+	end
 	local col = theme.get('win.col.fg')
 	local hr = fmt.img('box:'..theme.get('win.w')..'x1,'..col)
 	local subtitle = std.call(here(), 'subtitle') or 'Вахта'
