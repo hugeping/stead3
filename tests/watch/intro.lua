@@ -163,7 +163,7 @@ function dark_theme(w)
 end
 
 function theme_select()
-	if D'snow' or here() ^ 'журнал' then
+	if D'snow' or here() ^ 'журнал' or D'clouds'then
 		snow_theme()
 	else
 		dark_theme()
@@ -497,33 +497,38 @@ declare 'fadein_proc' (function(v)
 	if v.alpha > 255 then v.alpha = 255 end
 end)
 
+function stars_theme()
+	D()
+	timer:set(60)
+	local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 3 }
+	d.realw = d.w
+	d.realh = d.h
+	get_offsets(d)
+	make_stars()
+end
+
 room {
 	nam = 'пробуждение';
 	title = false;
 	ini = function(load)
-		if load then
-			local d = D 'space'
-			if d then
-				get_offsets(d)
-				if not d.hidden then
-					make_stars()
-				end
-			end
+		if not load then
+			return
+		end
+		local d = D 'space'
+		if not d then
+			return
+		end
+		get_offsets(d)
+		if not d.hidden then
+			make_stars()
 		end
 	end;
 	onclick = function(s)
 		if not D'wakeup' or not D'wakeup'.finished then
 			return
 		end
-		D()
-		timer:set(60)
+		stars_theme()
 		fading.set {"fadeblack", max = FADE_LONG }
-		local d = D { 'space', 'img', 'gfx/space.jpg', background = true, process = space_bg, x = 0, y = 0, z = 3 }
---		D { 'shade', 'img', shade_spr, z = 2, hidden = false }
-		d.realw = d.w
-		d.realh = d.h
-		get_offsets(d)
-		make_stars()
 		walk 'гибернация'
 	end;
 	onkey = function(s)

@@ -74,6 +74,14 @@ function game:afterwalk()
 	markers()
 end
 
+function map_theme()
+	local wx, wy = std.tonum(theme.get('win.x')), std.tonum(theme.get('win.y'))
+	local ww = std.tonum(theme.get('win.w'))
+	D { 'map-top', 'img', 'gfx/piligrim1.png', xc = true, yc = true, x = wx / 2, y = theme.scr.h() / 2 }
+	local x = (wx + ww + theme.scr.w()) / 2
+	D { 'map-front', 'img', 'gfx/piligrim2.png', xc = true, yc = true, x = x, y = theme.scr.h() / 2 }
+end
+
 room {
 	nam = 'гибернация';
 	title = 'В капсуле';
@@ -82,11 +90,7 @@ room {
 		snd.play 'snd/steam.ogg'
 	end;
 	exit = function()
-		local wx, wy = std.tonum(theme.get('win.x')), std.tonum(theme.get('win.y'))
-		local ww = std.tonum(theme.get('win.w'))
-		D { 'map-top', 'img', 'gfx/piligrim1.png', xc = true, yc = true, x = wx / 2, y = theme.scr.h() / 2 }
-		local x = (wx + ww + theme.scr.w()) / 2
-		D { 'map-front', 'img', 'gfx/piligrim2.png', xc = true, yc = true, x = x, y = theme.scr.h() / 2 }
+		map_theme()
 		p [[Не без труда я выбрался из камеры. Теперь необходимо одеться.]];
 	end;
 	decor = [[{#холод|Холодно.} {$d я|Я лежу} {#капсула|в криокапсуле.} {#пар|Вокруг меня клубится белый пар.}]];
@@ -320,7 +324,7 @@ room {
 	'капсулы', 'панели',
 }
 
-dict.add('елена', [[Елена Светлова -- биолог "Пилигрима" и моя невеста.]])
+dict.add('елена', [[Елена Светлова -- биолог "Пилигрима" и моя жена.]])
 
 room {
 	nam = 'Отсек 2';
@@ -339,6 +343,45 @@ room {
 }
 
 std.phrase_show = false
+local function  watch_status()
+	if not cap1 or not cap2 or not cap3 then
+		return false
+	end
+	if not send1 or not send2 or not send3 then
+		return false
+	end
+	if not visited 'reading' then
+		return false
+	end
+	if not cont_chk then
+		return false
+	end
+	if not visited('Жилой Отсек 1') then
+		return false
+	end
+	if not visited('Жилой Отсек 2') then
+		return false
+	end
+	if not visited('Жилой Отсек 3') then
+		return false
+	end
+	if not visited('Жилой Отсек 4') then
+		return false
+	end
+	if not visited('Шлюз') then
+		return false
+	end
+	if not visited('шлюзотсек') then
+		return false
+	end
+	if not visited('Мостик') then
+		return false
+	end
+	if not visited 'Воронье гнездо' then
+		return false
+	end
+	return true
+end
 
 dlg {
 	nam = 'alice1';
@@ -403,6 +446,17 @@ dlg {
 				  end
 			  else
 				  pn ("Мостик: не проверен.")
+			  end
+			  p ("Видеосообщения:")
+			  if not visited 'reading' then
+				  p "не просмотрены, "
+			  else
+				  p "просмотрены, "
+			  end
+			  if not send1 or not send2 or not send3 then
+				  p ("ответы не отправлены.")
+			  else
+				  p ("ответы отправлены.")
 			  end
 		  end
 		},
@@ -521,6 +575,8 @@ obj {
 	}
 }:disable();
 
+global 'sleeped' (false)
+
 room {
 	nam = 'Жилой Отсек 1';
 	title = 'Жилой модуль';
@@ -537,6 +593,13 @@ room {
 			if disabled '#журнал' then
 				p [[На одной из кушеток я заметил журнал экипажа.]]
 				enable '#журнал'
+				return
+			end
+			if true then -- not sleeped and watch_status() then
+				sleeped = true
+				std.pclr()
+				walkin 'Двор-enter'
+				return
 			end
 		end;
 	};
@@ -1144,7 +1207,11 @@ function(v)
 	p:fill_circle(16, 16, 15, 255, 0, 0)
 	return p:sprite()
 end)
-
+global {
+	send1 = false;
+	send2 = false;
+	send3 = false;
+}
 room {
 	nam = 'video';
 	title = 'Жилой модуль';
@@ -1199,6 +1266,13 @@ room {
 			d[3] = [[Отправляю запись... [pause] готово.]]
 			d.typewriter = true
 			D(d)
+			if e == 'send1' then
+				send1 = true
+			elseif e == 'send2' then
+				send2 = true
+			elseif e == 'send3' then
+				send3 = true
+			end
 		else
 			return false
 		end
@@ -1477,4 +1551,86 @@ room {
 			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
 		end;
 	};
+}
+declare 'mask_render' (
+function(v)
+	local w = v.w - v.x
+	v.sprite:draw(v.x, 0, w, v.h, sprite.scr(), 0, 0)
+	v.sprite:draw(0, 0, v.x, v.h, sprite.scr(), w, 0)
+end)
+
+declare 'mask_process' (
+function(v)
+	v.x = v.x + 4
+	if v.x >= v.w then
+		v.x = 0
+	end
+end)
+
+function fading.effects.fadelight(s, src, dst)
+	src:copy(sprite.scr(), 0, 0);
+	local pos = (s.step / s.max)
+	local x, y, w, h
+	local a = 0.6
+	local b = 0.4
+	if pos <= a then
+		local scale = pos / a
+		w = 64 * scale
+		x = (theme.scr.w() - w) / 2
+		h = theme.scr.h() * scale
+		y = (theme.scr.h() - h) / 2
+		dst:copy(x, y, w, h, sprite.scr(), x, y)
+	else
+		local scale = (pos - a)/ b
+		w = theme.scr.w() * scale
+		x = (theme.scr.w() - w) / 2
+		y = 0
+		h = theme.scr.h()
+		dst:copy(x, y, w, h, sprite.scr(), x, y)
+	end
+end
+
+global { saved_inv = std.list {} };
+
+room {
+	nam = 'Двор-enter';
+	title = 'Жилой модуль';
+	subtitle = 'Отсек 1';
+	noinv = true;
+	enter = [[Остаток вахты я решил отдохнуть. Я лег на кушетку и мгновенно провалился в глубокий сон.]];
+	way = { path { 'Дальше', 'Двор' }};
+}
+
+room {
+	nam = 'Двор';
+	hidetitle = true;
+	ini = function(s, load)
+		if not load then
+			return
+		end
+	end;
+	decor = [[Я стою у подъезда своего дома. ]];
+	enter = function(s, f)
+		if f ^ 'Двор-enter' then
+			saved_inv:zap()
+			saved_inv:cat(inv())
+			inv():zap()
+			fading.set {"fadelight", max = 32 }
+			D();
+			D { 'clouds', 'img', 'gfx/clouds.jpg', background = true, x = 0, y = 0, z = 3 }
+			D { 'clouds-mask', 'img', 'gfx/clouds-mask.png', x = 0, y = 0, z = 2, render = mask_render, process = mask_process }
+			snow_theme();
+			return
+		end
+	end;
+	exit = function(s, t)
+		if t ^ 'Жилой Отсек 1' then
+			inv():cat(saved_inv)
+			stars_theme()
+			dark_theme()
+			map_theme()
+			return
+		end
+	end;
+	way = { 'Жилой Отсек 1' };
 }

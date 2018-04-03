@@ -146,6 +146,10 @@ function img:render(v)
 	end
 	return
     end
+    if type(v.render) == 'function' then
+	v.render(v)
+	return
+    end
     if v.fx and v.fy and v.w and v.h then
 	v.sprite:draw(v.fx, v.fy, v.w, v.h, sprite.scr(), v.x - v.xc, v.y - v.yc, v.alpha)
     else
