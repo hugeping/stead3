@@ -1574,17 +1574,29 @@ room {
 		end;
 	};
 }
+
+declare 'mask_spr' (
+function(v)
+	local s = sprite.new('gfx/clouds-mask.png')
+	local w, h = s:size()
+	local ss = sprite.new(w * 2, h)
+	s:copy(ss, 0, 0)
+	s:copy(ss, w, 0)
+	return ss
+end)
+
 declare 'mask_render' (
 function(v)
-	local w = v.w - v.x
-	v.sprite:draw(v.x, 0, w, v.h, sprite.scr(), 0, 0)
-	v.sprite:draw(0, 0, v.x, v.h, sprite.scr(), w, 0)
+--	local w = v.w - v.x
+	v.sprite:draw(v.x, 0, v.w / 2, v.h, sprite.scr(), 0, 0)
+--	v.sprite:draw(v.x, 0, w, v.h, sprite.scr(), 0, 0)
+--	v.sprite:draw(0, 0, v.x, v.h, sprite.scr(), w, 0)
 end)
 
 declare 'mask_process' (
 function(v)
 	v.x = v.x + 4
-	if v.x >= v.w then
+	if v.x >= v.w / 2 then
 		v.x = 0
 	end
 end)
@@ -1655,7 +1667,7 @@ room {
 			fading.set {"fadelight", max = 32 }
 			D();
 			D { 'clouds', 'img', 'gfx/clouds.jpg', background = true, x = 0, y = 0, z = 3 }
-			D { 'clouds-mask', 'img', 'gfx/clouds-mask.png', x = 0, y = 0, z = 2, render = mask_render, process = mask_process }
+			D { 'clouds-mask', 'img', mask_spr, x = 0, y = 0, z = 2, render = mask_render, process = mask_process }
 			snow_theme();
 			return
 		end
