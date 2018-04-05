@@ -1924,6 +1924,14 @@ room {
 	};
 }
 
+function fading.effects.tilt(s, src, dst)
+	src:copy(sprite.scr(), 0, 0);
+	local pos = (s.step / s.max)
+	local h = theme.scr.h() * pos / 2;
+	dst:copy(0, 0, theme.scr.w(), h, sprite.scr(), 0, 0);
+	dst:copy(0, theme.scr.h() - h, theme.scr.w(), h, sprite.scr(), 0, theme.scr.h() - h)
+end
+
 room {
 	nam = 'удар в лицо';
 	noinv = true;
@@ -1944,15 +1952,15 @@ room {
 	timer = function(s)
 		inv():zap()
 		if instead.ticks() - s.time > 1000 then
-			fading.set {"fadeblack", max = FADE_LONG }
+			fading.set {"tilt"  }
 			walkback 'Жилой Отсек 1'
 		end
 	end;
 	enter = function(s)
 		fading.set {"none"}
 		s.time = instead.ticks()
---		quake.post = true
---		quake.start()
+		quake.post = true
+		quake.start()
 	end;
 	exit = function()
 		inv():zap()
