@@ -1,7 +1,7 @@
 std.scene_delim = "^"
 game.display = function(s, state)
 	local div = fmt.c(fmt.img 'gfx/div.png')
-	if not D'snow' then
+	if not D'snow' and not D'clouds' then
 		div = fmt.c(fmt.img 'gfx/div2.png')
 	end
 	local l, av, pv

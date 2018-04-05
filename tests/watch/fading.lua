@@ -77,6 +77,13 @@ function timer:callback(...)
 end
 
 function f.start()
+	if f.effect[1] == 'none' then
+		f.started = false
+		if f.defeffect then
+			f.effect = std.clone(f.defeffect)
+		end
+		return
+	end
 	local old = sprite.direct()
 	sprite.direct(true)
 	sprite.scr():copy(scr)
