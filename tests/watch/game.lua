@@ -1957,10 +1957,12 @@ room {
 		end
 	end;
 	enter = function(s)
-		fading.set {"none"}
 		s.time = instead.ticks()
-		quake.post = true
-		quake.start()
+		if s.state ~= 3 then
+			fading.set {"none"}
+			quake.post = true
+			quake.start()
+		end
 	end;
 	exit = function()
 		inv():zap()
