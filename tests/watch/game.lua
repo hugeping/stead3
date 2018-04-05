@@ -1642,10 +1642,13 @@ obj {
 	tak = [[Я забрал мяч.]];
 	use = function(s, w)
 		if w ^ '#парни' then
-			p [[Поиграть с ними в футбол?]]
+			_'удар в лицо'.state = 1
+			walk 'удар в лицо'
 			return
 		elseif w ^ '#главный' then
-			p [[Гм... TODO]]
+			_'удар в лицо'.state = 2
+			walk 'удар в лицо'
+			return
 		end
 		if w^'#мальчик' then
 			p [[Я попробовал сбить мальчика мячом, но мяч просто отскочил обратно мне в руки.]]
@@ -1675,15 +1678,6 @@ room {
 			D { 'clouds', 'img', 'gfx/clouds.jpg', background = true, x = 0, y = 0, z = 3 }
 			D { 'clouds-mask', 'img', mask_spr, x = 0, y = 0, z = 2, render = mask_render, process = mask_process }
 			snow_theme();
-			return
-		end
-	end;
-	exit = function(s, t)
-		if t ^ 'Жилой Отсек 1' then
-			inv():cat(saved_inv)
-			stars_theme()
-			dark_theme()
-			map_theme()
 			return
 		end
 	end;
@@ -1843,6 +1837,13 @@ room {
 	enter = function(s)
 		remove 'мяч'
 	end;
+	onexit = function(s, t)
+		if t ^ 'Двор' then
+			_'удар в лицо'.state = 3
+			walk 'удар в лицо'
+			return false
+		end
+	end;
 	decor = function(s)
 		local t = {
 			[[{$d я7|Я} {#ворота|стою в воротах.} {#макс|Макс} {#удар|готовится бить.}]],
@@ -1921,4 +1922,44 @@ room {
 			end
 		end;
 	};
+}
+
+room {
+	nam = 'удар в лицо';
+	noinv = true;
+	title = false;
+	{
+		time = 0;
+	};
+	state = 1;
+	decor = function(s)
+		if s.state == 1 then
+			p (fmt.y("50%")..fmt.c("Я БРОСАЮ МЯЧ В ЧЬЕ-ТО ЛИЦО!"))
+		elseif s.state == 2 then
+			p (fmt.y("50%")..fmt.c("Я БРОСАЮ МЯЧ В ЕГО ЛИЦО!"))
+		else
+			p (fmt.y("50%")..fmt.c("Я УШЕЛ..."))
+		end
+	end;
+	timer = function(s)
+		inv():zap()
+		if instead.ticks() - s.time > 1000 then
+			fading.set {"fadeblack", max = FADE_LONG }
+			walkback 'Жилой Отсек 1'
+		end
+	end;
+	enter = function(s)
+		fading.set {"none"}
+		s.time = instead.ticks()
+--		quake.post = true
+--		quake.start()
+	end;
+	exit = function()
+		inv():zap()
+		inv():cat(saved_inv)
+		stars_theme()
+		dark_theme()
+		map_theme()
+		return
+	end;
 }
