@@ -205,6 +205,27 @@ function img:new(v)
     return self:new_spr(v, s)
 end
 
+local raw = {
+}
+
+function raw:delete(v)
+end
+function raw:clear()
+end
+function raw:render(v)
+	if type(v.render) ~= 'function' then
+		return
+	end
+	v.render(v)
+	return
+end
+function raw:new(v)
+	if type(v[3]) == 'function' then
+		v[3](v)
+		return v
+	end
+end
+
 local fnt = {
     cache = cache:new();
 }
@@ -776,6 +797,7 @@ decor = obj {
 	img = img;
 	fnt = fnt;
 	txt = txt;
+	raw = raw;
 	dirty = false;
 	objects = {
 	}

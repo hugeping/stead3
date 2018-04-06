@@ -53,11 +53,9 @@ function init()
 		std.err("Пожалуйста, включите поддержку собственных тем игры.")
 	end
 	decor.bgcol = theme.get 'scr.col.bg'
---	for i = 1, 2 do
---		take(newitem(i))
---	end
+
+--	walk 'snova'
 	walk 'intro'
---	walk 'snow'
 end
 
 function start()

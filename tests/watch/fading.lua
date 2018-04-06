@@ -32,6 +32,23 @@ function f.effects.fadeblack(s, src, dst)
 	end
 end
 
+function f.effects.fadewhite(s, src, dst)
+	sprite.scr():fill('white')
+	if s.step < s.max / 8 then -- fadeout old
+		local pos = s.step * 8 / s.max
+		local alpha = (1 - pos) * 255;
+		if alpha > 0 then
+			src:draw(sprite.scr(), 0, 0, alpha);
+		end
+	else -- fadein new
+		local pos = (s.step - s.max / 8) / (s.max - s.max/ 8);
+		local alpha = pos * 255
+		if alpha > 0 then
+			dst:draw(sprite.scr(), 0, 0, alpha);
+		end
+	end
+end
+
 function f.effects.crossfade(s, src, dst)
 	local alpha = ((s.step - 1) / s.max) * 255;
 	src:draw(sprite.scr(), 0, 0, 255 - alpha);

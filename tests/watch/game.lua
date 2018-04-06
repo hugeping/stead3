@@ -1973,3 +1973,53 @@ room {
 		return
 	end;
 }
+
+declare 'snova_process' (function(v)
+	if v.state < #v.snova then
+		v.state = v.state + 1
+	end
+end)
+
+declare 'snova_render' (
+function(v)
+	v.space:copy(sprite.scr())
+	if v.state > 0 then
+		v.snova[v.state]:draw(sprite.scr())
+	else
+		v.snova[rnd(2)]:draw(sprite.scr())
+	end
+end)
+
+declare 'snova_spr' (
+function(v)
+	for i = 1, 10 do
+		v.snova[i] = sprite.new('gfx/snova'..tostring(i)..'.png')
+	end
+	v.space = sprite.new('gfx/space.jpg')
+end)
+
+room {
+	nam = 'snova';
+	noinv = true;
+	hidetitle = true;
+	ini = function(s, load)
+		if load and here() == s then
+		end
+	end;
+	timer = function()
+		if D'snova'.state == #D'snova'.snova then
+			fading.set { "fadewhite", max = FADE_LONG }
+			walk 'main'
+			return
+		end
+	end;
+	enter = function(s)
+		timer:set(60)
+		D { 'snova', 'raw', snova = {}, snova_spr, render = snova_render, state = -32, process = snova_process };
+		s:ini(true)
+	end;
+	exit = function()
+		D {'snova'}
+		timer:stop()
+	end;
+}
