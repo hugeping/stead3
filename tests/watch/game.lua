@@ -2002,21 +2002,17 @@ room {
 	nam = 'snova';
 	noinv = true;
 	hidetitle = true;
-	ini = function(s, load)
-		if load and here() == s then
-		end
-	end;
 	timer = function()
 		if D'snova'.state == #D'snova'.snova then
 			fading.set { "fadewhite", max = FADE_LONG }
-			walk 'main'
+			walk 'snow'
 			return
 		end
 	end;
 	enter = function(s)
+		D()
 		timer:set(60)
-		D { 'snova', 'raw', snova = {}, snova_spr, render = snova_render, state = -32, process = snova_process };
-		s:ini(true)
+		D { 'snova', 'raw', snova = {}, snova_spr, render = snova_render, state = -48, process = snova_process };
 	end;
 	exit = function()
 		D {'snova'}

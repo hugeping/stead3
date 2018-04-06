@@ -93,7 +93,7 @@ room {
 			D{'input'}
 			D{'intro'}
 			D{'line'}
-			walk 'snow'
+			walk 'snova'
 			return
 		end
 		if not D'intro'.started and not D 'cursor' then
