@@ -244,7 +244,7 @@ obj {
 
 dict.add('отсек0', [[
 Нулевые отсеки связывают жилой модуль и модуль гибернации с остальными отсеками звездолета.
-Диаметр нулевого отсека примерно соответствует человеческому росту, так что тут довольно тесно.
+Внутренний диаметр нулевого отсека примерно соответствует человеческому росту, так что тут довольно тесно.
 ]], false)
 
 dict.add('гравитация', [[
@@ -260,7 +260,8 @@ room {
 	nam = 'Отсек 0';
 	title = "Модуль гибернации";
 	subtitle = 'Отсек 0';
-	decor = [[{$d отсек0|Здесь} {$d гравитация|нет искусственной гравитации.} {$d ботинки|Звук от магнитных ботинок глухо отражается} {$d стена|от изогнутых стен.}]];
+	decor = [[{$d отсек0|Здесь} {$d гравитация|нет искусственной гравитации.} {$d ботинки|Звук от магнитных ботинок глухо отражается} {$d стена|от изогнутых стен.}
+ {$d отсек0|Из этого отсека} {#лифт|с помощью лифта} {#шлюз|можно попасть в шлюз.}]];
 	way = {  path {'В отсек 1', 'Отсек 1'}, path{'2', 'Отсек 2'},path {'3', 'Отсек 3'}, path {'4', 'Отсек 4'}, path {'В жилой модуль', 'Жилой Отсек 0'}, path { 'В шлюз', 'Шлюз'} };
 	onenter = function(s, w)
 		if not shower then
@@ -271,12 +272,23 @@ room {
 			p [[Я поднялся по лестнице в нулевой отсек.]]
 		end
 	end;
+	enter = function(s, f)
+		if f ^ 'Шлюз' then
+			action ([[Я вошел в шлюзовой лифт. Двери с шипением закрылись. Лифт перенес меня в 0-отсек.]], true)
+			return
+		end
+	end;
 	onexit = function(s, w)
 		if w ^ 'Отсек 1' or w ^ 'Отсек 2' or w ^ 'Отсек 3' or w ^ 'Отсек 4' then
 			p [[Я спустился по лестнице в отсек.]]
 		end
 	end;
+}: with {
+	dec('#лифт',[[Звездолет состоит из двух частей. Носовая часть может находиться во вращении, создавая гравитацию в кольцевых модулях.
+Хвостовая часть не вращается. В ней находятся двигатель и шлюзовой модуль. Попасть в шлюзовой модуль можно через шлюзовую шахту с помощью лифта.]]);
+	dec('#шлюз', [[В шлюзовом модуле расположен ангар.]]);
 }
+
 local CW = fmt.img 'gfx/cw.png'
 local CCW = fmt.img 'gfx/ccw.png'
 local UP = fmt.img 'gfx/up.png'
@@ -319,6 +331,15 @@ room {
 				return
 			end
 			p [[Это моя капсула.]];
+			if watch_status() then
+				if not sleeped then
+					p [[Пока не вышли 48 часов вахты, я могу подремать на кушетке в жилом модуле.]]
+					return
+				else
+					p [[Что происходит?]]
+					return
+				end
+			end
 			p [[Вахта длится 48 часов. Еще не время уходить в гибернацию.^Каждый член экипажа
 несет свою вахту 48 часов. Затем находится в состоянии гибернации около 40 дней. Таким образом, субъективное
 время полета составляет всего 3.5 года. На Земле за это время пройдет 75 лет...]]
@@ -360,7 +381,7 @@ dlg.ph_onact = function(s, w)
 	return r, v
 end;
 
-local function  watch_status()
+function  watch_status()
 	if not cap1 or not cap2 or not cap3 then
 		return false
 	end
@@ -408,6 +429,10 @@ dlg {
 	phr = {
 		{ always = true, "Узнать статус вахты.",
 		  function()
+			  if watch_status() then
+				  p [[-- Отличная служба, бортинженер! Теперь, остаток вахты вы можете отдохнуть в жилом модуле.]]
+				  return
+			  end
 			  p "Капсулы:"
 			  if cap1 and cap2 and cap3 then
 				  pn "проверены."
@@ -613,11 +638,11 @@ room {
 				enable '#журнал'
 				return
 			end
---			if not watch_status() then
---				p [[Пока я не закончил вахту, не стоит валяться на кушетке.]]
---				return
---			end
-			if true then -- not sleeped and watch_status() then
+			if not watch_status() then
+				p [[Пока я не закончил вахту, не стоит валяться на кушетке.]]
+				return
+			end
+			if not sleeped then
 				sleeped = true
 				std.pclr()
 				walkin 'Двор-enter'
@@ -1405,21 +1430,18 @@ room {
 }
 
 dict.add('шлюз', [[Шлюзовой модуль состоит из ангара для посадочной шлюпки и небольшого шлюза для выхода в открытый космос.
-Пол модуля расположен перпендикулярно оси корабля. Перемещение здесь возможно только с помощью магнитных ботинок. Лестница в 0-отсек ведет прямо "наверх".]] )
+Пол модуля расположен перпендикулярно оси корабля. Перемещение здесь возможно только с помощью магнитных ботинок. Чтобы попасть в 0-отсек нужно воспользоваться шлюзовым лифтом.]] )
 
 room {
 	nam = 'Шлюз';
 	title = 'Шлюз';
 	subtitle = 'Ангар';
-	decor = [[{$d шлюз|В шлюзовом модуле} {$d гравитация|нет искусственной гравитации.} {#место|Большую часть пространства} {#шлюпка|занимает посадочная шлюпка.}]];
+	decor = [[{$d шлюз|В шлюзовом модуле} {$d гравитация|нет искусственной гравитации.} {#место|Большую часть пространства} {#шлюпка|занимает посадочная шлюпка.}
+{#лифт|В центре модуля находится лифт.}]];
 	enter = function(s, f)
 		if f ^ 'Отсек 0' then
-			p [[Я осторожно спустился по лестнице в шлюзовой модуль.]]
-		end
-	end;
-	exit = function(s, t)
-		if t ^ 'Отсек 0' then
-			p [[Я поднялся по лестнице в нулевой отсек.]]
+			action ([[Я вошел в шлюзовой лифт. Двери с шипением закрылись. Медленно лифт перенес меня в ангар.]], true)
+			return
 		end
 	end;
 	way = { path{UP, 'Отсек 0'}, path{ "В шлюзовой отсек", "шлюзотсек" } };
@@ -1428,7 +1450,8 @@ room {
 	obj {
 		nam = '#шлюпка';
 		act = [[Она понадобится нам на Глизе.]];
-	}
+	};
+	dec('#лифт', "Лифт через шлюзовую шахту позволяет попасть в 0-отсек и к двигателям.");
 }
 
 room {
@@ -1805,6 +1828,7 @@ dlg {
 room {
 	nam = 'action_room';
 	title = false;
+	subtitle = false;
 	noinv = true;
 	fading = false;
 	decor = false;
@@ -1819,14 +1843,17 @@ room {
 	}
 }
 
-function action(t)
+function action(t, f)
 	local div = fmt.c(fmt.img 'gfx/div.png')
 	if not D'snow' and not D'clouds' then
 		div = fmt.c(fmt.img 'gfx/div2.png')
 	end
 	_'action_room'.decor =  fmt.em(t) .. '^'..div..'^'..fmt.c'{#Дальше|Дальше}'
 	_'action_room'.title = std.titleof(here())
-	fading.set { "none" }
+	_'action_room'.subtitle = here().subtitle
+	if not f then
+		fading.set { "none" }
+	end
 	walkin 'action_room'
 end
 
@@ -1931,7 +1958,39 @@ function fading.effects.tilt(s, src, dst)
 	dst:copy(0, 0, theme.scr.w(), h, sprite.scr(), 0, 0);
 	dst:copy(0, theme.scr.h() - h, theme.scr.w(), h, sprite.scr(), 0, theme.scr.h() - h)
 end
+dict.add('сирена', [[Криокапсулы в опасности!]])
+obj {
+	nam = 'серена';
+	life = function(s)
+		p [[{$d сирена|Я слышу истошный вой сирены.}]]
+		return true
+	end;
+}
+declare 'sirene_proc' (
+function(v)
+	v.alpha = v.alpha + v.step * 11
+	if v.alpha >= 128 or v.alpha <= 0 then
+		v.step = - v.step
+		if v.step == 1 then
+			snd.play('snd/alarm.ogg', 3)
+		end
+	end
+	if v.alpha > 128 then v.alpha = 128 end
+	if v.alpha < 0 then v.alpha = 0 end
+end)
 
+function game:onact()
+	if D'сирена' then
+		p [[Капсулы! Нужно срочно бежать в жилой блок!]]
+		return false
+	end
+end
+function game:oninv()
+	if D'сирена' then
+		p [[Капсулы! Нужно срочно бежать в жилой блок!]]
+		return false
+	end
+end
 room {
 	nam = 'удар в лицо';
 	noinv = true;
@@ -1954,6 +2013,9 @@ room {
 		if instead.ticks() - s.time > 1000 then
 			fading.set {"tilt"  }
 			walkback 'Жилой Отсек 1'
+			lifeon('серена')
+			D {'сирена', 'img', 'box:1024x576,red', x = 0, y = 0, z = 0, alpha = 0, process = sirene_proc, step = 1 }
+			snd.play('snd/alarm.ogg', 3)
 		end
 	end;
 	enter = function(s)
