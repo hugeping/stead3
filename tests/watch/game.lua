@@ -1093,6 +1093,10 @@ room {
 		inv_theme()
 		D { 'chessboard'}
 		clear_board()
+		if sleeped then
+			p [[Верный ход или нет... В этом уже нет никакого смысла...]]
+			return
+		end
 		if not chess_puzzle_solved then
 			if not s.hint then
 				pn [[-- Позволю себе заметить, белые делают мат в два хода -- послышался голос Алисы.^
