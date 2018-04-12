@@ -11,7 +11,6 @@ dec = function(nam, desc)
 	return obj {nam = nam, act = desc }
 end
 
-
 dict.add('я', me_act, me_use)
 dict.add('криоотсек', [[Модуль гибернации представляет из себя кольцо, которое состоит из четырех отсеков. Искусственная гравитация обеспечивается вращением модуля.
 На время разгона и торможения "Пилигрима" полом служат боковые поверхности кольца. Сейчас же звездолет идет на крейсерской скорости.]])
@@ -1575,6 +1574,13 @@ end)
 
 local rstars = {}
 
+declare 'aship_spr' (function(v)
+	local p = pixels.new(32, 32)
+	p:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
+	p:pixel(15, 15, color2rgb('white'))
+	return p:sprite()
+end)
+
 local function make_new_stars()
 	for i = 1, STARS do
 		local s = D("star"..tostring(i))
@@ -1596,9 +1602,15 @@ local function make_new_stars()
 		s.rad = alpha
 		s = D(s)
 	end
+	if sleeped then
+		D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = 100, z = 1.5, x = 0, y = 0, process = stars_rot, click = true }
+	end
 end
 
 local function hide_new_stars()
+	if sleeped then
+		D{"ship"}
+	end
 	for i = 1, STARS do
 		local s = D("star"..tostring(i))
 		s.hidden = false
@@ -1642,6 +1654,11 @@ room {
 	subtitle = 'Воронье гнездо';
 	hideinv = true;
 	hidetitle = true;
+	ondecor = function(s, name, press)
+		if not press or name ~= 'ship' then
+			return
+		end
+	end;
 	timer = function(s)
 		rot = rot - 0.005
 		return false
