@@ -296,9 +296,15 @@ local DOWN = fmt.img 'gfx/down.png'
 obj {
 	nam = 'монета';
 	know = false;
+	num = 0;
 	inv = function(s)
 		p [[Похоже, это монетка -- древняя мелкая денежная единица. Интересно, откуда она?]]
 		p [[Я подбросил монетку.]]
+		if sleeped then
+			p [[Решка.]]
+			s.num = s.num + 1
+			return
+		end
 		if rnd(2) == 1 then
 			p [[Орел.]]
 		else
