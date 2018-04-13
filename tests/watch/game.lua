@@ -1578,13 +1578,57 @@ declare 'stars_rot' (function(v)
 	v.y = math.sin(v.rad + rot) * v.r + theme.scr.h() / 2
 end)
 
-local rstars = {}
+global { rstars = {} };
 
-declare 'aship_spr' (function(v)
-	local p = pixels.new(32, 32)
-	p:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
-	p:pixel(15, 15, color2rgb('white'))
+global { hud_selected = false }
+local hud_cursor = pixels.new(32, 32)
+hud_cursor:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
+hud_cursor = hud_cursor:sprite()
+
+declare 'aship_spr' (function(v, select)
+	local p = pixels.new(2, 2)
+	p:pixel(0, 0, color2rgb('gray'))
+	p:pixel(1, 0, color2rgb('blue'))
+	p:pixel(1, 1, color2rgb('cyan'))
+	p:pixel(0, 1, color2rgb('green'))
 	return p:sprite()
+end)
+
+local hud_text = false
+local hud_font = sprite.fnt(theme.get'win.fnt.name', 12)
+local NEW_STARS = 18
+local SNAMES = {
+	"Glisse 667",
+	"G Sco",
+	"Sargas",
+	"Dschubba",
+	"Nunki",
+	"d Oph",
+	"3 Sgr",
+	"Sargas",
+	"Kaus Media",
+	"HIP 87220",
+	"τ Sco",
+	"ψ Sgr",
+	"β Oph",
+	"θ Lup",
+	"Stead3",
+	"c Oph",
+	"Antares",
+	"HIP 83336",
+}
+
+declare 'star_render' (
+function(v)
+	v.sprite:draw(sprite.scr(), v.x - v.xc, v.y - v.yc)
+	if hud_selected == v[1] then
+		hud_cursor:draw(sprite.scr(), v.x - v.xc - 15 + v.w / 2 , v.y - v.yc - 15 + v.h / 2)
+		if not hud_text then
+			hud_text = hud_font:text(v.num and SNAMES[v.num] or "???", 'cyan')
+		end
+		local w, h = hud_text:size()
+		hud_text:draw(sprite.scr(), v.x - w/2 + v.w / 2, v.y + 15 + v.h);
+	end
 end)
 
 local function make_new_stars()
@@ -1593,23 +1637,29 @@ local function make_new_stars()
 		s.hidden = true
 		D{"hud", "img", hud_spr, xc = true, yc = true, x = theme.scr.w()/2, y = theme.scr.h() /2, z = 1}
 	end
-	for i = STARS + 1, STARS * 3 do
+	local rot = 2 * rnd() * math.pi- math.pi
+
+	for i = STARS + 1, STARS + NEW_STARS do
 		local s
 		if rstars[i] then
-			s = rstars[i]
+			s = std.clone(rstars[i])
+			s.rad = s.rad + rot
 		else
-			s = {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars_rot, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 2 }
-			rstars[i] = s
+			s = {"star"..tostring(i), 'img', star_spr, dist = rnd(8) + 8, process = stars_rot, x = rnd(theme.scr.w()), y = rnd(theme.scr.h()), speed = rnd(5), z = 2, click = 16, render = star_render, num = i - STARS }
 			local dx, dy = s.x - theme.scr.w()/2, s.y - theme.scr.h()/2
 			local r = (dx ^ 2 + dy ^ 2) ^ 0.5
+			if s.num == 1 then
+				r = 1
+			end
 			s.r = r
+			local alpha = 2 * rnd() * math.pi  - math.pi
+			s.rad = alpha
+			rstars[i] = std.clone(s)
 		end
-		local alpha = 2 * rnd() * math.pi  - math.pi
-		s.rad = alpha
 		s = D(s)
 	end
 	if sleeped then
-		D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = 100, z = 1.5, x = 0, y = 0, process = stars_rot, click = true }
+		D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = rnd(50) + 50, z = 1.5, x = 0, y = 0, process = stars_rot, click = 16, render = star_render }
 	end
 end
 
@@ -1622,7 +1672,7 @@ local function hide_new_stars()
 		s.hidden = false
 		D{"hud"}
 	end
-	for i = STARS + 1, STARS * 3 do
+	for i = STARS + 1, STARS + NEW_STARS do
 		D {"star"..tostring(i) }
 	end
 end
@@ -1661,9 +1711,11 @@ room {
 	hideinv = true;
 	hidetitle = true;
 	ondecor = function(s, name, press)
-		if not press or name ~= 'ship' then
+		if not press then
 			return
 		end
+		hud_selected = name
+		hud_text = false
 	end;
 	timer = function(s)
 		rot = rot - 0.005
@@ -1673,14 +1725,14 @@ room {
 --		p [[Я поднялся в воронье гнездо по лестнице.]]
 		local d = D 'space'
 		d.hidden = true
-		fading.set {"fadeblack", max = FADE_LONG, now = true }
+		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
 		make_new_stars()
 		noinv_theme()
 	end;
 	exit = function()
 		local d = D 'space'
 		d.hidden = false
-		fading.set {"fadeblack", max = FADE_LONG, now = true }
+		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
 		hide_new_stars()
 		inv_theme()
 	end;

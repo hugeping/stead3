@@ -916,33 +916,36 @@ sprite.render_callback(
 end)
 
 function decor:click_filter(press, x, y)
-    local c = {}
-    for _, v in pairs(self.objects) do
-	if v.click and x >= v.x - v.xc and y >= v.y - v.yc and
-	x < v.x - v.xc + v.w and y < v.y - v.yc + v.h then
---	    if v[2] == 'txt' then
---		if not press then
---		    table.insert(c, v)
---		end
---	    else
-		table.insert(c, v)
---	    end
+	local c = {}
+	local near = {}
+	for _, v in pairs(self.objects) do
+		if v.click and x >= v.x - v.xc and y >= v.y - v.yc and
+		x < v.x - v.xc + v.w and y < v.y - v.yc + v.h then
+			table.insert(c, v)
+		elseif type(v.click) == 'number' and x >= v.x - v.xc - v.click and y >= v.y - v.yc - v.click and
+		x < v.x - v.xc + v.w + v.click and y < v.y - v.yc + v.h + v.click then
+			table.insert(near, v)
+		end
 	end
-    end
-    if #c == 0 then
-	return false
-    end
-    local e = c[1]
-    for _, v in ipairs(c) do
-	if v.z == e.z then
-	    if v.name > e.name then
-		e = v
-	    end
-	elseif v.z < e.z then
-	    e = v
+	table.sort(near, function(a, b)
+			   return ((x - (a.x - a.xc)) ^ 2 + (y - (a.y - a.yc)) ^ 2) ^ 0.5 <
+				   ((x - (b.x - b.xc)) ^ 2 + (y - (b.y - b.yc)) ^ 2) ^ 0.5
+	end)
+	if #near > 0 then table.insert(c, near[1]) end
+	if #c == 0 then
+		return false
 	end
-    end
-    return e
+	local e = c[1]
+	for _, v in ipairs(c) do
+		if v.z == e.z then
+			if v.name > e.name then
+				e = v
+			end
+		elseif v.z < e.z then
+			e = v
+		end
+	end
+	return e
 end
 
 function decor:cache_clear()
