@@ -2,6 +2,8 @@ require "noinv"
 require "nolife"
 loadmod "keyboard"
 
+local render = require "render"
+
 function me_act()
 	p [[Меня зовут Сергей Летов. Я бортинженер звездолета "Пилигрим".]]
 end
@@ -1585,6 +1587,19 @@ local hud_cursor = pixels.new(32, 32)
 hud_cursor:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
 hud_cursor = hud_cursor:sprite()
 
+room {
+	nam = 'tele';
+	star = false;
+	enter = function(s)
+		local star = render.star({r = rnd(100) + 50, temp = rnd(8000)})
+		s.star = star:sprite()
+	end;
+	decor = function(s)
+		p(fmt.img(s.star))
+	end;
+	way = { path {"Назад", from } };
+}
+
 declare 'aship_spr' (function(v, select)
 	local p = pixels.new(2, 2)
 	p:pixel(0, 0, color2rgb('gray'))
@@ -1746,6 +1761,7 @@ room {
 		dsc = [[{#отсек|Здесь} {находится пуль управления.}]];
 		act = function()
 			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
+			walkin 'tele'
 		end;
 	};
 }
