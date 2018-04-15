@@ -1596,7 +1596,7 @@ function(v)
 		local p = pixels.new(w * 16, w)
 		local alpha = 0
 		for i = 1, 16 do
-			p:circleAA((i - 1) * w + w/2, w/2, w/2, color2rgb('grey'))
+			p:circleAA((i - 1) * w + w/2, w/2, w/2, color2rgb('white'))
 --			p:circleAA((i - 1) * w + w/2, w/2, w/2 - w/10, color2rgb('white'))
 			local r = w / 2 - 1
 			local a = alpha
@@ -1604,7 +1604,7 @@ function(v)
 				local x, y = r * math.cos(a), r * math.sin(a)
 				local xx = (i - 1) * w + w/2
 				local yy = w / 2
-				p:lineAA(xx, yy, xx + x, yy + y, color2rgb('grey'))
+				p:lineAA(xx, yy, xx + x, yy + y, color2rgb('white'))
 				a = a + math.pi / 2
 			end
 			p:fill_circle((i - 1) * w + w/2, w/2, w/5, color2rgb('#cdcdcd'))
@@ -1613,7 +1613,7 @@ function(v)
 		return p:sprite()
 	end
 	rnd_seed(num_selected)
-	local star = render.star({r = rnd(5)+2, temp = rnd(9000)})
+	local star = render.star({r = rnd(5)+3, temp = rnd(6000)})
 	return star:sprite()
 end)
 
@@ -1788,7 +1788,7 @@ room {
 	exit = function(s, t)
 		if t ^ 'tele' then
 			hide_new_stars(true)
-			D { 'tele-space', 'img', 'gfx/space.jpg', x = 200, y = 0, z = 3, fx = rnd(500), fy = rnd(50), background = true };
+			D { 'tele-space', 'img', 'gfx/milkyway.jpg', x = 200, y = 0, z = 3, fx = rnd(500), fy = rnd(50), background = true };
 			D { 'tele', 'img', 'gfx/tele.png', x = 0, y = 0, z = 1 };
 			return
 		end
@@ -1807,9 +1807,19 @@ room {
 		nam = '#пульт';
 		dsc = [[{#отсек|Здесь} {находится пуль управления.}]];
 		act = function()
-			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
+			if not sleeped then
+				p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
+				return
+			end
+			if not hud_selected then
+				p [[Сначала нужно выбрать объект наблюдения.]]
+				return
+			end
 			if hud_selected then
 				num_selected = D(hud_selected).num or 0
+				if num_selected == 0 then
+					p [[Это похоже... Не может быть, что бы это был "Пионер"!]]
+				end
 				walk 'tele'
 			end
 		end;
