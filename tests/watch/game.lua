@@ -1582,20 +1582,52 @@ end)
 
 global { rstars = {} };
 
-global { hud_selected = false }
+global { hud_selected = false, num_selected = 0 }
 local hud_cursor = pixels.new(32, 32)
 hud_cursor:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
 hud_cursor = hud_cursor:sprite()
 
+global { ship_r = 9 }
+
+declare 'rnd_star_spr' (
+function(v)
+	if num_selected == 0 then
+		local w = ship_r
+		local p = pixels.new(w * 16, w)
+		local alpha = 0
+		for i = 1, 16 do
+			p:circleAA((i - 1) * w + w/2, w/2, w/2, color2rgb('grey'))
+--			p:circleAA((i - 1) * w + w/2, w/2, w/2 - w/10, color2rgb('white'))
+			local r = w / 2 - 1
+			local a = alpha
+			for k = 1, 4 do
+				local x, y = r * math.cos(a), r * math.sin(a)
+				local xx = (i - 1) * w + w/2
+				local yy = w / 2
+				p:lineAA(xx, yy, xx + x, yy + y, color2rgb('grey'))
+				a = a + math.pi / 2
+			end
+			p:fill_circle((i - 1) * w + w/2, w/2, w/5, color2rgb('#cdcdcd'))
+			alpha = alpha + math.pi / 32
+		end
+		return p:sprite()
+	end
+	rnd_seed(num_selected)
+	local star = render.star({r = rnd(5)+2, temp = rnd(9000)})
+	return star:sprite()
+end)
+
 room {
 	nam = 'tele';
 	star = false;
+	hideinv = true;
+	hidetitle = true;
 	enter = function(s)
-		local star = render.star({r = rnd(100) + 50, temp = rnd(8000)})
-		s.star = star:sprite()
-	end;
-	decor = function(s)
-		p(fmt.img(s.star))
+		if num_selected == 0 then
+			D { 'star', 'img', rnd_star_spr, xc = true, yc = true, x = 512, y = 288, z = 2, frames = 16, w = ship_r, h = ship_r, delay = 400 }
+		else
+			D { 'star', 'img', rnd_star_spr, xc = true, yc = true, x = 512, y = 288, z = 2 }
+		end
 	end;
 	way = { path {"Назад", from } };
 }
@@ -1678,15 +1710,17 @@ local function make_new_stars()
 	end
 end
 
-local function hide_new_stars()
+local function hide_new_stars(all)
 	if sleeped then
 		D{"ship"}
 	end
-	for i = 1, STARS do
-		local s = D("star"..tostring(i))
-		s.hidden = false
-		D{"hud"}
+	if not all then
+		for i = 1, STARS do
+			local s = D("star"..tostring(i))
+			s.hidden = false
+		end
 	end
+	D{"hud"}
 	for i = STARS + 1, STARS + NEW_STARS do
 		D {"star"..tostring(i) }
 	end
@@ -1736,7 +1770,14 @@ room {
 		rot = rot - 0.005
 		return false
 	end;
-	enter = function()
+	enter = function(s, f)
+		if f ^ 'tele' then
+			D {'tele'}
+			D {'tele-space'}
+			D {'star'}
+			make_new_stars()
+			return
+		end
 --		p [[Я поднялся в воронье гнездо по лестнице.]]
 		local d = D 'space'
 		d.hidden = true
@@ -1744,7 +1785,13 @@ room {
 		make_new_stars()
 		noinv_theme()
 	end;
-	exit = function()
+	exit = function(s, t)
+		if t ^ 'tele' then
+			hide_new_stars(true)
+			D { 'tele-space', 'img', 'gfx/space.jpg', x = 200, y = 0, z = 3, fx = rnd(500), fy = rnd(50), background = true };
+			D { 'tele', 'img', 'gfx/tele.png', x = 0, y = 0, z = 1 };
+			return
+		end
 		local d = D 'space'
 		d.hidden = false
 		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
@@ -1761,7 +1808,10 @@ room {
 		dsc = [[{#отсек|Здесь} {находится пуль управления.}]];
 		act = function()
 			p [[Сейчас нет необходимости выполнять визуальные наблюдения.]];
-			walkin 'tele'
+			if hud_selected then
+				num_selected = D(hud_selected).num or 0
+				walk 'tele'
+			end
 		end;
 	};
 }

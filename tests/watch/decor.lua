@@ -871,6 +871,7 @@ function decor:process()
 		    v.__last_time = t
 	    end
 	end
+	if v.frames then decor.dirty = true end
     end
 end
 
