@@ -677,7 +677,7 @@ room {
 	obj {
 		nam = '#кровати';
 		act = function(s)
-			if maneur then
+			if maneur and ship_heading ~= 0 then
 				fading.set {"fadeblack", max = FADE_LONG }
 				walk 'переход'
 				return
@@ -1721,7 +1721,12 @@ local function make_new_stars()
 		s = D(s)
 	end
 	if sleeped then
-		D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = rnd(50) + 50, z = 1.5, x = 0, y = 0, process = stars_rot, click = 16, render = star_render }
+		local d = D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = rnd(50) + 50, z = 1.5, x = 0, y = 0, process = stars_rot, click = 16, render = star_render }
+		if ship_heading == 0 then
+			d.r = rnd(16)
+			d = D ('star'..tostring(STARS+1))
+			d.r = 32
+		end
 	end
 end
 
@@ -1958,6 +1963,7 @@ room {
 		return false
 	end;
 	onenter = function(s)
+		if ship_heading == 0 then return end
 		if maneur then
 			maneur_t = maneur_t - rnd(5)
 		end
@@ -1969,7 +1975,7 @@ room {
 	enter = function(s)
 		local d = D {'radar', 'img', radar_spr, xc = true, yc = true, x = theme.scr.w() / 2, y = tonumber(theme.get 'win.h') - 150 , z = 1, click = true }
 		D {'radar_line', 'raw', render = radar_draw, z = 0, a = - math.pi/2, speed = 20, process = radar_proc }
-		if maneur then
+		if maneur and ship_heading ~= 0 then
 			show_maneur()
 		end
 		disable '#курс'
@@ -1987,6 +1993,9 @@ room {
 		D {'radar_line'}
 		D {'radar_txt'}
 		inv_theme()
+		if ship_heading == 0 then
+			return
+		end
 		p [[Это не может быть звездолетом, но это похоже именно на ... звездолет!]]
 		if not maneur then
 			p [[До него можно добраться за пару суток... Если изменить курс "Пилигрима". Я должен принять решение.]]
@@ -2610,8 +2619,78 @@ room {
 			end
 		end;
 	}
+	}
+
+global {
+	dist_m = 15000 + rnd(1000);
+	dist_fly = 0;
 }
 
+declare {
+	milky_shadow = function(v)
+		if not v.__black then
+			v.__black = sprite.new('box:1024x578,black')
+		end
+		v.__black:draw(sprite.scr(), 0, 0, 255 - v.alpha)
+		if dist_fly < 200 then
+			v.alpha = v.alpha + 2
+		else
+			v.alpha = v.alpha - 2
+		end
+		if v.alpha <= 0 then
+			v.alpha = 0;
+		end
+		dist_m = dist_m - 1
+		dist_fly = dist_fly + 1
+		local m = [[Дистанция до неопознанного корабля: ]]..tostring(dist_m)..[[ км.]]
+		if v.alpha > 128 then
+			v.alpha = 128
+			if not D'distance' then
+				D {'distance', 'txt', m, xc = true, x = theme.scr.w()/2, y = theme.scr.h()/2, typewriter = true, z = 1 }
+			end
+		end
+		if D'distance' and (D 'distance'.finished) then
+			local d = D 'distance'
+			d[3] = m
+			d.w = false
+			d.h = false
+			D(d)
+		end
+	end;
+	milky_draw = function(v)
+		if not v.__milky then
+			v.__milky = sprite.new('gfx/milkyway.jpg')
+		end
+		v.__milky:copy(sprite.scr(), v.x, math.floor(v.y))
+		v.x = v.x - 1
+		_'@decor'.dirty = true
+	end;
+}
 room {
 	nam = 'переход';
+	hidetitle = true;
+	noinv = true;
+	enter = function(s)
+		D()
+		D{'milky', 'raw', render = milky_draw, x = 0, y = 0, z = 3 }
+		D{'milky_shadow', 'raw', render = milky_shadow, x = 0, y = 0, alpha = 0, z = 2 }
+		local m = [[Бортовое время: 2 марта 2266]]
+		local a = D {'trans', 'txt', m, xc = true, x = theme.scr.w()/2, y = theme.scr.h()/2 - 64, style = 1, z = 1 }
+	end;
+	timer = function()
+		if dist_fly >= 200 and D'milky_shadow'.alpha == 0 then
+			walk 'Жилой Отсек 1'
+			ship_heading = 0
+			ship_r = 24
+			ship_distance = 0.01
+			fading.set {"fadeblack", max = FADE_LONG }
+			return
+		end
+		return false
+	end;
+	exit = function(s)
+		D()
+		stars_theme()
+		map_theme()
+	end;
 }
