@@ -677,6 +677,11 @@ room {
 	obj {
 		nam = '#кровати';
 		act = function(s)
+			if maneur then
+				fading.set {"fadeblack", max = FADE_LONG }
+				walk 'переход'
+				return
+			end
 			pn [[Кушетки индивидуально подстраиваются под анатомические особенности человека. На них можно удобно поспать несколько часов.
 Обычным сном, не входя в анабиоз. А можно просто полежать, погрузившись в свои мысли.]];
 			if disabled '#журнал' then
@@ -1865,7 +1870,7 @@ function(v)
 	if a > 200 and a < 210 then
 		snd.play ('snd/radar.ogg', 3)
 	end
-	if not disabled '#курс' then
+	if not disabled '#курс' or maneur then
 		v.__dot:fill_circle(5, 5, 4, 255, 100, 100, a)
 	else
 		v.__dot:fill_circle(5, 5, 4, 100, 255, 255, a)
@@ -1890,7 +1895,7 @@ function(v)
 		v.__dot:draw_spr(sprite.scr(), d.x - d.xc + d.w /2 + x , d.y - d.yc + d.h/2 + y)
 	end
 end)
-
+global { maneur = false }
 declare 'radar_spr' (
 function(v)
 	local p = pixels.new(300, 300)
@@ -1910,6 +1915,25 @@ function(v)
 	end
 	return p:sprite()
 end)
+global {
+	maneur_t = 30;
+}
+local function show_maneur()
+	local d = D 'radar'
+	D {'radar_txt'}
+	local t
+	if maneur_t % 10 == 1 then
+		t = tostring(maneur_t) .. ' минуту'
+	elseif maneur_t % 10 >= 2 and maneur_t % 10 <= 4 then
+		t = tostring(maneur_t) .. ' минуты'
+	else
+		t = tostring(maneur_t) .. ' минут'
+	end
+	local m = [[Маневр будет произведен через ]]..t..[[.
+Будьте готовы к кратковременному отключению гравитации.]]
+	local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
+end
+
 room {
 	nam = 'Радар';
 	title = 'Мостик';
@@ -1924,28 +1948,37 @@ room {
 		local a = - math.pi / 2 + ship_heading
 		local r = ship_distance * 90 / 0.1
 		local xx, yy = math.cos(a) * r, math.sin(a) * r
-		if x >= xx - 16 and y >= yy - 16 and x < xx + 16 and y < yy + 16 then
+		if x >= xx - 16 and y >= yy - 16 and x < xx + 16 and y < yy + 16 and not maneur then
 			local m = [[Неопознанный объект.
-Дистанция: ]].. string.format("%0.3f", ship_distance)..' au\nКурс: '.. string.format("%0.3f", ship_heading)
+Дистанция: ]].. string.format("%0.3f", ship_distance)..' au / Относит. скорость: -0.25c\nКурс: '.. string.format("%0.3f", ship_heading)
 			local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
 			enable "#курс"
 			return
 		end
 		return false
 	end;
+	onenter = function(s)
+		if maneur then
+			maneur_t = maneur_t - rnd(5)
+		end
+		if maneur_t < 10 then
+			p [[Скоро начнется маневр. Лучше провести это время пристегнутым в жилом отсеке.]]
+			return false
+		end
+	end;
 	enter = function(s)
 		local d = D {'radar', 'img', radar_spr, xc = true, yc = true, x = theme.scr.w() / 2, y = tonumber(theme.get 'win.h') - 150 , z = 1, click = true }
 		D {'radar_line', 'raw', render = radar_draw, z = 0, a = - math.pi/2, speed = 20, process = radar_proc }
+		if maneur then
+			show_maneur()
+		end
 		disable '#курс'
 		noinv_theme()
 	end;
 	onexit = function(s, t)
 		if t == s then
-			local d = D 'radar'
-			D {'radar_txt'}
-			local m = [[Маневр будет произведен через 30 минут.
-Будьте готовы к кратковременному отключению гравитации.]]
-			local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
+			maneur = true
+			show_maneur()
 			return false
 		end
 	end;
@@ -1954,6 +1987,12 @@ room {
 		D {'radar_line'}
 		D {'radar_txt'}
 		inv_theme()
+		p [[Это не может быть звездолетом, но это похоже именно на ... звездолет!]]
+		if not maneur then
+			p [[До него можно добраться за пару суток... Если изменить курс "Пилигрима". Я должен принять решение.]]
+		else
+			p [[Так или иначе, я скоро узнаю это. Сейчас лучше пойти в жилой модуль и приготовиться к маневру.]]
+		end
 	end;
 	way = { path{"Назад", 'Мостик'}, path { "#курс", "Изменить курс",  'Радар'}:disable() };
 }
@@ -2571,4 +2610,8 @@ room {
 			end
 		end;
 	}
+}
+
+room {
+	nam = 'переход';
 }
