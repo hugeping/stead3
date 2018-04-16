@@ -1648,6 +1648,12 @@ room {
 }
 
 declare 'aship_spr' (function(v, select)
+	if ship_heading == 0 then
+		local p = pixels.new(5, 5)
+		p:fill_circle(2, 2, 2, color2rgb 'cyan')
+		blur(p, 200, 255, 255)
+		return p:sprite()
+	end
 	local p = pixels.new(2, 2)
 	p:pixel(0, 0, color2rgb('gray'))
 	p:pixel(1, 0, color2rgb('blue'))
@@ -1819,6 +1825,10 @@ room {
 		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
 		hide_new_stars()
 		inv_theme()
+		if pioner then
+			p [[Итак, это "Пионер". По крайней мере это все, что я могу предположить. Таких корабля было построено всего два.
+Один из них "Пилигрим", следовательно... Кажется, я убеждаю сам себя.]]
+		end
 	end;
 	way = { path{DOWN, 'Мостик'}  };
 }: with {
@@ -1846,7 +1856,9 @@ room {
 						return
 					end
 					if ship_r >= 20 then
+						pn [[Я могу различить вращающиеся модули! Звездолет с Земли?]]
 						p [[Это похоже... Не может быть, что бы это был "Пионер"! Ведь он стартовал с Земли за 10 лет до нашего старта.]]
+						pioner = true
 					elseif ship_r >= 16 then
 						p [[Я могу различить вращающиеся модули! Звездолет с Земли?]]
 					elseif ship_r >= 12 then
@@ -1860,6 +1872,7 @@ room {
 }
 global {
 	ship_heading = math.pi / 8;
+	pioner = false;
 }
 declare 'radar_proc' (
 function(v)
@@ -1927,6 +1940,13 @@ local function show_maneur()
 	local d = D 'radar'
 	D {'radar_txt'}
 	local t
+	if ship_heading == 0 then
+		local m = [[Режим: следование за целью.
+Согласование скоростей: завершено.
+Дистанция: 5км.]];
+		local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
+		return
+	end
 	if maneur_t % 10 == 1 then
 		t = tostring(maneur_t) .. ' минуту'
 	elseif maneur_t % 10 >= 2 and maneur_t % 10 <= 4 then
@@ -1975,7 +1995,7 @@ room {
 	enter = function(s)
 		local d = D {'radar', 'img', radar_spr, xc = true, yc = true, x = theme.scr.w() / 2, y = tonumber(theme.get 'win.h') - 150 , z = 1, click = true }
 		D {'radar_line', 'raw', render = radar_draw, z = 0, a = - math.pi/2, speed = 20, process = radar_proc }
-		if maneur and ship_heading ~= 0 then
+		if maneur then
 			show_maneur()
 		end
 		disable '#курс'
@@ -2608,7 +2628,7 @@ room {
 			local txt = {
 				[[Сон? Нет. Это реальность и кошмар возвращается. Я единственный, кто остался в живых.]];
 				[[Что это было? Я так и не выяснил. Алиса, похоже, повреждена. А гибернация без нее невозможна.]];
-				[[Несколько суток я бродил по кораблю в отчаянии, пока усталость и нервное истощение не взяли свое...]];
+				[[Сутки я бродил по кораблю в отчаянии, пока усталость и нервное истощение не взяли свое...]];
 				[[Елена... Елена... Где ты?]];
 				[[Капитан, он был таким реальным. Он сказал идти в воронье гнездо... ]],
 				[[Что же, я пойду и посмотрю... Может быть, я схожу с ума? Может быть, это принесет мне облегчение?...]];
@@ -2679,7 +2699,7 @@ room {
 	end;
 	timer = function()
 		if dist_fly >= 200 and D'milky_shadow'.alpha == 0 then
-			walk 'Жилой Отсек 1'
+			walk 'awake3'
 			ship_heading = 0
 			ship_r = 24
 			ship_distance = 0.01
@@ -2693,4 +2713,31 @@ room {
 		stars_theme()
 		map_theme()
 	end;
+}
+
+room {
+	nam = 'awake3';
+	title = 'Жилой модуль';
+	subtitle = 'Отсек 1';
+	decor = [[{$d я|Я} {#кушетка|лежу на кушетке} {#всебя|и медленно прихожу в себя.}]];
+	way = { path {'#встать', 'Встать', 'Жилой Отсек 1'}:disable()};
+}: with {
+	dec('#кушетка', [[Сон -- все что мне остается в утешение.]]);
+	obj {
+		nam = '#всебя';
+		act = function(s)
+			local txt = {
+				[[Как же не хочется просыпаться... Не хочется возвращаться в эту реальность. Но все же чужой корабль не дает мне покоя.]];
+				[[Итак, сегодня я попробую снова визуализировать его.]];
+				[[Сигналы он не передает и не отвечает на мои.]];
+				[[Это может означать... что это чужак? Возможно ли это? Да, многие из нас мечтали о встрече со внеземными цивилизациями.]];
+				[[Но этого так и не произошло. Конечно, если принять во внимание расстояния и длину человеческой жизни... И все-таки...]];
+				[[Надо сходить в воронье гнездо и выполнить наблюдение.]];
+				[[]];
+			}
+			if pager(s, txt) then
+				enable '#встать'
+			end
+		end;
+	}
 }
