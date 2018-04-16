@@ -1852,12 +1852,10 @@ room {
 			if hud_selected then
 				num_selected = D(hud_selected).num or 0
 				if num_selected == 0 then
-					if not radar then
+					if not radar or not visited 'Радар' then
 						p [[Странный объект. Нужно сходить на мостик и проверить, регистрируется ли он...]];
 						radar = true
-						return
-					end
-					if ship_r >= 20 then
+					elseif ship_r >= 20 then
 						pn [[Я могу различить вращающиеся модули! Звездолет с Земли?]]
 						p [[Это похоже... Не может быть, что бы это был "Пионер"! Ведь он стартовал с Земли за 10 лет до нашего старта.]]
 						pioner = true
@@ -1944,8 +1942,8 @@ local function show_maneur()
 	local t
 	if ship_heading == 0 then
 		local m = [[Режим: следование за целью.
-Согласование скоростей: завершено.
-Дистанция: 5км.]];
+Согласование скоростей: через 15 минут.
+Дистанция: 320км.]];
 		local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
 		return
 	end
@@ -2644,7 +2642,7 @@ room {
 	}
 
 global {
-	dist_m = 15000 + rnd(1000);
+	dist_m = 350000 + rnd(1000);
 	dist_fly = 0;
 }
 
@@ -2696,7 +2694,7 @@ room {
 		D()
 		D{'milky', 'raw', render = milky_draw, x = 0, y = 0, z = 3 }
 		D{'milky_shadow', 'raw', render = milky_shadow, x = 0, y = 0, alpha = 0, z = 2 }
-		local m = [[Бортовое время: 2 марта 2266]]
+		local m = [[Бортовое время: 2 марта 2266 года]]
 		local a = D {'trans', 'txt', m, xc = true, x = theme.scr.w()/2, y = theme.scr.h()/2 - 64, style = 1, z = 1 }
 	end;
 	timer = function()
