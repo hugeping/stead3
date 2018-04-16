@@ -1569,7 +1569,13 @@ room {
 теперь относится к небольшому отсеку на носу, выполняющему ту же функцию.]]);
 	obj {
 		nam = '#консоли';
-		act = 'Нет необходимости вмешиваться в работу автоматики.';
+		act = function(s)
+			if radar then
+				walkin 'Радар'
+				return
+			end
+			p 'Нет необходимости вмешиваться в работу автоматики.';
+		end;
 	}
 }
 
@@ -1587,18 +1593,21 @@ local hud_cursor = pixels.new(32, 32)
 hud_cursor:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
 hud_cursor = hud_cursor:sprite()
 
-global { ship_r = 9 }
+global {
+	ship_r = 12,
+	ship_distance = 0.121241
+}
 
 declare 'rnd_star_spr' (
 function(v)
 	if num_selected == 0 then
 		local w = ship_r
-		local p = pixels.new(w * 16, w)
+		local p = pixels.new(w * 32, w)
 		local alpha = 0
-		for i = 1, 16 do
-			p:circleAA((i - 1) * w + w/2, w/2, w/2, color2rgb('white'))
---			p:circleAA((i - 1) * w + w/2, w/2, w/2 - w/10, color2rgb('white'))
-			local r = w / 2 - 1
+		for i = 1, 32 do
+			p:circleAA((i - 1) * w + w/2, w/2, w/2 - 2, color2rgb('white'))
+			p:circleAA((i - 1) * w + w/2, w/2, w/2 - w/10, color2rgb('white'))
+			local r = w / 2 - 3
 			local a = alpha
 			for k = 1, 4 do
 				local x, y = r * math.cos(a), r * math.sin(a)
@@ -1607,9 +1616,10 @@ function(v)
 				p:lineAA(xx, yy, xx + x, yy + y, color2rgb('white'))
 				a = a + math.pi / 2
 			end
-			p:fill_circle((i - 1) * w + w/2, w/2, w/5, color2rgb('#cdcdcd'))
-			alpha = alpha + math.pi / 32
+			p:fill_circle((i - 1) * w + w/2, w/2, w/5, color2rgb('#f0f0f0'))
+			alpha = alpha + math.pi / 64
 		end
+		blur(p, 240, 255, 255)
 		return p:sprite()
 	end
 	rnd_seed(num_selected)
@@ -1624,7 +1634,7 @@ room {
 	hidetitle = true;
 	enter = function(s)
 		if num_selected == 0 then
-			D { 'star', 'img', rnd_star_spr, xc = true, yc = true, x = 512, y = 288, z = 2, frames = 16, w = ship_r, h = ship_r, delay = 400 }
+			D { 'star', 'img', rnd_star_spr, xc = true, yc = true, x = 512, y = 288, z = 2, frames = 32, w = ship_r, h = ship_r, delay = 200 }
 		else
 			D { 'star', 'img', rnd_star_spr, xc = true, yc = true, x = 512, y = 288, z = 2 }
 		end
@@ -1751,7 +1761,9 @@ declare 'hud_spr' (function()
 	end
 	return p:sprite()
 end)
-
+global {
+	radar = false;
+}
 room {
 	nam = 'Воронье гнездо';
 	title = 'Мостик';
@@ -1818,13 +1830,134 @@ room {
 			if hud_selected then
 				num_selected = D(hud_selected).num or 0
 				if num_selected == 0 then
-					p [[Это похоже... Не может быть, что бы это был "Пионер"!]]
+					if not radar then
+						p [[Странный объект. Нужно сходить на мостик и проверить, регистрируется ли он...]];
+						radar = true
+						return
+					end
+					if ship_r >= 20 then
+						p [[Это похоже... Не может быть, что бы это был "Пионер"! Ведь он стартовал с Земли за 10 лет до нашего старта.]]
+					elseif ship_r >= 16 then
+						p [[Я могу различить вращающиеся модули! Звездолет с Земли?]]
+					elseif ship_r >= 12 then
+						p [[Кажется, это звездолет. Я не знаю, что и думать....]]
+					end
 				end
 				walk 'tele'
 			end
 		end;
 	};
 }
+global {
+	ship_heading = math.pi / 8;
+}
+declare 'radar_proc' (
+function(v)
+	local d = D 'radar'
+	if not v.__pxl then
+		v.__pxl = pixels.new(d.w, d.h)
+	end
+	v.__dot = pixels.new(7, 7)
+	local a = 3 * math.pi / 2 + ship_heading
+	a = (a - v.a) / (2 * math.pi)
+	if a < 0 then a = 0 end
+	a = a * 255
+	if a > 200 and a < 210 then
+		snd.play ('snd/radar.ogg', 3)
+	end
+	if not disabled '#курс' then
+		v.__dot:fill_circle(5, 5, 4, 255, 100, 100, a)
+	else
+		v.__dot:fill_circle(5, 5, 4, 100, 255, 255, a)
+	end
+	v.__pxl:clear(0, 0, 0, 0)
+	local alpha = v.a
+	local r = d.w / 2 - 10
+	local x, y = r * math.cos(alpha), r * math.sin(alpha)
+	v.__pxl:lineAA(d.w /2, d.h / 2, d.w /2 + x, d.h /2 + y, 255, 255, 255, 200)
+	v.a = v.a + math.pi / 16
+	if v.a > 2 * math.pi then v.a = v.a - 2 * math.pi end
+end)
+
+declare 'radar_draw' (
+function(v)
+	local d = D 'radar'
+	if v.__pxl then
+		v.__pxl:draw_spr(sprite.scr(), d.x - d.xc, d.y - d.yc)
+		local a = - math.pi / 2 + ship_heading
+		local r = ship_distance * 90 / 0.1
+		local x, y = math.cos(a) * r, math.sin(a) * r
+		v.__dot:draw_spr(sprite.scr(), d.x - d.xc + d.w /2 + x , d.y - d.yc + d.h/2 + y)
+	end
+end)
+
+declare 'radar_spr' (
+function(v)
+	local p = pixels.new(300, 300)
+	p:circleAA(150, 150, 140, color2rgb('white'))
+	for k = 1, 4 do
+		p:circleAA(150, 150, k * 30, color2rgb('gray'))
+	end
+	p:fill_circle(150, 150, 4, color2rgb('cyan'))
+	local r = 120
+	local alpha = 0
+	local xc, yc = 150, 150
+	for k = 1, 32 do
+		local x, y = r * math.cos(alpha), r * math.sin(alpha)
+		local x1, y1 = (r - 30) * math.cos(alpha), (r - 30) * math.sin(alpha)
+		p:lineAA(xc + x, yc + y, xc + x1, yc + y1, color2rgb 'grey')
+		alpha = alpha + math.pi / 16
+	end
+	return p:sprite()
+end)
+room {
+	nam = 'Радар';
+	title = 'Мостик';
+	subtitle = 'Консоль';
+--	hidetitle = true;
+	hideinv = true;
+	ondecor = function(s, n, press, x, y)
+		if not press then
+			return false
+		end
+		local d = D 'radar'
+		local a = - math.pi / 2 + ship_heading
+		local r = ship_distance * 90 / 0.1
+		local xx, yy = math.cos(a) * r, math.sin(a) * r
+		if x >= xx - 16 and y >= yy - 16 and x < xx + 16 and y < yy + 16 then
+			local m = [[Неопознанный объект.
+Дистанция: ]].. string.format("%0.3f", ship_distance)..' au\nКурс: '.. string.format("%0.3f", ship_heading)
+			local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
+			enable "#курс"
+			return
+		end
+		return false
+	end;
+	enter = function(s)
+		local d = D {'radar', 'img', radar_spr, xc = true, yc = true, x = theme.scr.w() / 2, y = tonumber(theme.get 'win.h') - 150 , z = 1, click = true }
+		D {'radar_line', 'raw', render = radar_draw, z = 0, a = - math.pi/2, speed = 20, process = radar_proc }
+		disable '#курс'
+		noinv_theme()
+	end;
+	onexit = function(s, t)
+		if t == s then
+			local d = D 'radar'
+			D {'radar_txt'}
+			local m = [[Маневр будет произведен через 30 минут.
+Будьте готовы к кратковременному отключению гравитации.]]
+			local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
+			return false
+		end
+	end;
+	exit = function(s, t)
+		D {'radar'}
+		D {'radar_line'}
+		D {'radar_txt'}
+		inv_theme()
+	end;
+	way = { path{"Назад", 'Мостик'}, path { "#курс", "Изменить курс",  'Радар'}:disable() };
+}
+
 
 declare 'mask_spr' (
 function(v)

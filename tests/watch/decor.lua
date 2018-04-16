@@ -224,6 +224,7 @@ function raw:new(v)
 		v[3](v)
 		return v
 	end
+	return v
 end
 
 local fnt = {

@@ -189,7 +189,8 @@ declare 'flake' (function(v)
 		v.speed = rnd(5)
 	end
 end)
-local function blur(p, r, g, b)
+
+function blur(p, r, g, b)
 	local w, h = p:size()
 	local cell = function(x, y)
 		if x < 0 or x >= w or y < 0 or y >= h then
