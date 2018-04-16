@@ -1635,6 +1635,8 @@ end)
 room {
 	nam = 'tele';
 	star = false;
+	title = 'Мостик';
+	subtitle = 'Воронье гнездо';
 	hideinv = true;
 	hidetitle = true;
 	enter = function(s)
