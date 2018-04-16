@@ -2642,7 +2642,7 @@ room {
 	}
 
 global {
-	dist_m = 350000 + rnd(1000);
+	dist_m = 15000 + rnd(1000);
 	dist_fly = 0;
 }
 
