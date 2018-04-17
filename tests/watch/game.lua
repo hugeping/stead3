@@ -1566,6 +1566,13 @@ room {
 		end
 		return false
 	end;
+	exit = function(s, t)
+		if t ^ 'Жилой Отсек 0' and pioner then
+			walk 'chap3'
+			fading.set {"fadeblack", max = FADE_LONG }
+			return
+		end
+	end;
 	decor = [[{$d мостик|Капитанский мостик занимает} {#нос|носовую часть} {$d пилигрим|звездолета}. {$d мостик|Здесь} {$d гравитация|нет искусственной гравитации.}
 {$d стена|Вдоль стенки отсека} {#консоли|расположены консоли.}]];
 	way = { path{"В воронье гнездо", 'Воронье гнездо'}, path{DOWN, 'Жилой Отсек 0'}  };
@@ -1810,6 +1817,7 @@ room {
 		end
 --		p [[Я поднялся в воронье гнездо по лестнице.]]
 		local d = D 'space'
+		hud_selected = false
 		d.hidden = true
 		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
 		make_new_stars()
@@ -2739,5 +2747,46 @@ room {
 				enable '#встать'
 			end
 		end;
+	}
+}
+
+room {
+	nam = 'chap3';
+	title = 'Жилой модуль';
+	hidetitle = true;
+	hideinv = true;
+	subtitle = 'Отсек 1';
+	enter = function(s)
+		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
+		snow_theme(s)
+		s.__page = 0
+	end;
+	onexit = function(s, t)
+		if s == t then
+			if pager(s, s.txt) then
+				walkback()
+				return
+			end
+			return false
+		end
+	end;
+	exit = function(s, t)
+		D {'journal' }
+		dark_theme(t)
+		fading.set {"fadeblack", max = FADE_LONG }
+	end;
+	decor = [[Не знаю, зачем я пишу это здесь. В журнале звездолета, на котором кроме меня в живых не осталось никого... Возможно, я
+надеюсь, что когда-нибудь кто-нибудь это прочитает.^^
+Сегодня 3 марта 2266 года, и я принял решение высадиться на "Пионер-2217". На мои сигналы он не отвечает, поэтому у меня
+плохое предчувствие. Но мне уже не чего терять. Не знаю, что я надеюсь там увидеть. Но я хотя бы попробую понять, каким образом
+наши звездолеты, отправленные с промежутком в 10 лет, смогли встретиться...^^
+Ну, что же. Я направляюсь в шлюзовой модуль. Прощайте.^
+{$fmt em|{$fmt r|Сергей Летов}}]];
+	way = {
+		path {
+			'#закрыть',
+			'Закрыть',
+			'Шлюз',
+		};
 	}
 }

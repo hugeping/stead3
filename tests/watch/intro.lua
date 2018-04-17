@@ -163,7 +163,7 @@ function dark_theme(w)
 end
 
 function theme_select()
-	if D'snow' or here() ^ 'журнал' or D'clouds'then
+	if D'snow' or here() ^ 'журнал' or D'clouds' or D'journal' then
 		snow_theme()
 	else
 		dark_theme()
