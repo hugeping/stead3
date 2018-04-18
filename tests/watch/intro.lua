@@ -511,10 +511,7 @@ end
 room {
 	nam = 'пробуждение';
 	title = false;
-	ini = function(load)
-		if not load then
-			return
-		end
+	ini = function(s)
 		local d = D 'space'
 		if not d then
 			return
