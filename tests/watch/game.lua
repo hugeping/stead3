@@ -2888,8 +2888,30 @@ room {
 	hidetitle = true;
 	noinv = true;
 	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с "Пионером".}]];
-	way = { path { 'К "Пилигриму"', 'openspace' } };
+	way = { path { 'К "Пилигриму"', 'openspace' }; path { 'К мостику', 'openspace3' }:disable(); path { 'К шлюзу', 'openspace4' }:disable() };
 } : with {
 	dec('#рядом', 'До звездолета не больше ста метров.');
-	dec('#пионер', function(s) p 'Я могу подлететь к носовой части или к шлюзу.' end);
+	dec('#пионер', function(s) p 'Я могу подлететь к носовой части или к шлюзу.';  ways():enable() end);
+}
+
+room {
+	nam = 'openspace3';
+	hidetitle = true;
+	noinv = true;
+	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с носовой частью "Пионера".}]];
+	way = { path { 'К "Пилигриму"', 'openspace2' } };
+} : with {
+	dec('#рядом', '');
+	dec('#пионер', function(s) p '' end);
+}
+
+room {
+	nam = 'openspace4';
+	hidetitle = true;
+	noinv = true;
+	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с шлюзом "Пионера".}]];
+	way = { path { 'К "Пилигриму"', 'openspace2' } };
+} : with {
+	dec('#рядом', '');
+	dec('#пионер', function(s) p '' end);
 }
