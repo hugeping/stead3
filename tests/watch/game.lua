@@ -1551,7 +1551,7 @@ room {
 {#шлюз|Здесь} {#скафандры|есть скафандры.}]];
 	way = { path{ "В ангар", "Шлюз" } };
 	life = function(s)
-		if player_moved() then
+		if player_moved() and not from() ^ 'openspace' then
 			snd.play('snd/engine.ogg', 4)
 		end
 	end;
@@ -1571,11 +1571,11 @@ room {
 		nam = '#кресла';
 		act = function(s)
 			if skaf then
-				lifeon(here())
 				D {'map-top'}
 				D {'map-front'}
 				D {'mark-front'}
 				D {'mark-top'}
+				lifeon(here())
 				walkin 'openspace'
 				action ([[Я пристегнулся к креслу, выполнил регламентные проверки и активировал открытие шлюза.
 Некоторое время я наблюдал как передо мной распахивается открытый космос...]], true)
@@ -2887,5 +2887,9 @@ room {
 	nam = 'openspace2';
 	hidetitle = true;
 	noinv = true;
+	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с "Пионером".}]];
 	way = { path { 'К "Пилигриму"', 'openspace' } };
+} : with {
+	dec('#рядом', 'До звездолета не больше ста метров.');
+	dec('#пионер', function(s) p 'Я могу подлететь к носовой части или к шлюзу.' end);
 }
