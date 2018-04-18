@@ -37,6 +37,9 @@ function markers()
 		return
 	end
 	local mt = D 'map-top'
+	if not mt then
+		return
+	end
 	if not mt then D { 'mark-top'}; D {'mark-front'}; return; end
 	local x, y =  mt.x - mt.w / 2 - 15, mt.y
 	if here().title == 'Модуль гибернации' then
@@ -1553,7 +1556,14 @@ room {
 		nam = '#кресла';
 		act = function(s)
 			if skaf then
-				print "TODO"
+				D {'map-top'}
+				D {'map-front'}
+				D {'mark-front'}
+				D {'mark-top'}
+				walkin 'openspace'
+				action ([[Я пристегнулся к креслу, выполнил регламентные проверки и активировал открытие шлюза.
+Некоторое время я наблюдал как передо мной распахивается открытый космос...]], true)
+				fading.set {"fadeblack", max = FADE_LONG }
 				return
 			end
 			p [[В таком кресле можно относительно комфортно перемещаться в открытом космосе на небольшие расстояния.]];
@@ -2315,6 +2325,7 @@ room {
 	nam = 'action_room';
 	title = false;
 	subtitle = false;
+	hidetitle = false;
 	noinv = true;
 	fading = false;
 	decor = false;
@@ -2337,6 +2348,7 @@ function action(t, f)
 	_'action_room'.decor =  fmt.em(t) .. '^'..div..'^'..fmt.c'{#Дальше|Дальше}'
 	_'action_room'.title = std.titleof(here())
 	_'action_room'.subtitle = here().subtitle
+	_'action_room'.hidetitle = not not here().hidetitle
 	if not f then
 		fading.set { "none" }
 	end
@@ -2838,4 +2850,11 @@ room {
 			'Шлюз',
 		};
 	}
+}
+
+room {
+	nam = 'openspace';
+	hidetitle = true;
+	noinv = true;
+	decor = [[Я нахожусь в открытом космосе. Впереди я вижу громаду "Пионера".]];
 }
