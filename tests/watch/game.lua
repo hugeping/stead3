@@ -1550,12 +1550,28 @@ room {
 	decor = [[{#шлюз|Шлюзовой отсек занимает небольшую} {$d шлюз|часть модуля.} {$d стена|Вдоль одной из стен} {#кресла|закреплены летающие кресла.}
 {#шлюз|Здесь} {#скафандры|есть скафандры.}]];
 	way = { path{ "В ангар", "Шлюз" } };
+	life = function(s)
+		if player_moved() then
+			snd.play('snd/engine.ogg', 4)
+		end
+	end;
+	enter = function(s, f)
+		if f ^ 'openspace' then
+			snd.play('snd/engine.ogg', 4)
+			lifeoff(s)
+			map_theme()
+			action ([[Я вернулся через открытый шлюз на "Пилигрим". Дал команду на закрытие шлюза и отстегнулся от кресла.]], true)
+			fading.set {"fadeblack", max = FADE_LONG }
+			return
+		end
+	end;
 }: with {
 	dec('#шлюз', [[Шлюзовой отсек предназначен для индивидуального выхода в открытый космос с целью ремонтных работ.]]);
 	obj {
 		nam = '#кресла';
 		act = function(s)
 			if skaf then
+				lifeon(here())
 				D {'map-top'}
 				D {'map-front'}
 				D {'mark-front'}
@@ -2852,9 +2868,24 @@ room {
 	}
 }
 
+dict.add("космос", [["Открылась бездна, звезд полна..."]])
+
 room {
 	nam = 'openspace';
 	hidetitle = true;
 	noinv = true;
-	decor = [[Я нахожусь в открытом космосе. Впереди я вижу громаду "Пионера".]];
+	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе}. {#вперед|Впереди} {$d я|я} {#пионер|вижу громаду "Пионера".}]];
+	way = {  path {'К "Пилигриму"', 'шлюзотсек'}; path { '#дальше', 'К "Пионеру"', 'openspace2' }:disable(); };
+	exit = function(s, t)
+	end
+} : with {
+	dec('#пионер', 'Некоторое время я завороженно наблюдаю за вращением модулей.');
+	dec('#вперед', function(s) p 'До звездолета метров пятьсот... Я собираюсь добраться до него, и проникнуть внутрь через аварийный шлюз.'; enable '#дальше' end);
+}
+
+room {
+	nam = 'openspace2';
+	hidetitle = true;
+	noinv = true;
+	way = { path { 'К "Пилигриму"', 'openspace' } };
 }
