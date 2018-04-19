@@ -3296,6 +3296,9 @@ declare 'black_proc2' (
 			v.alpha = 0
 			return
 		end
+		if d.step == 160 then
+			snd.play ('snd/heart.ogg')
+		end
 		local a = (d.step - 160) * 2
 		v.alpha = a
 		if v.alpha >= 255 then
