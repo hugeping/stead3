@@ -56,7 +56,11 @@ function markers()
 			y = y - 12
 		end
 	end
-	D { 'mark-top', 'img', mark_spr, yc = true, x = x, y = y }
+	if visited 'провал' then
+		D { 'mark-front', 'img', mark_spr, yc = true, x = x, y = y }
+	else
+		D { 'mark-top', 'img', mark_spr, yc = true, x = x, y = y }
+	end
 	local mf = D 'map-front'
 	x, y = mf.x, mf.y
 	if here().subtitle == 'Отсек 1' then
@@ -68,7 +72,11 @@ function markers()
 	elseif here().subtitle == 'Отсек 4' then
 		x = x - mf.w / 2 + 10
 	end
-	D { 'mark-front', 'img', mark2_spr, yc = true, xc = true, x = x, y = y }
+	if visited 'провал' then
+		D { 'mark-top', 'img', mark2_spr, yc = true, xc = true, x = x, y = y }
+	else
+		D { 'mark-front', 'img', mark2_spr, yc = true, xc = true, x = x, y = y }
+	end
 end
 
 function game:afterwalk()
@@ -78,9 +86,15 @@ end
 function map_theme()
 	local wx, wy = std.tonum(theme.get('win.x')), std.tonum(theme.get('win.y'))
 	local ww = std.tonum(theme.get('win.w'))
-	D { 'map-top', 'img', 'gfx/piligrim1.png', xc = true, yc = true, x = wx / 2, y = theme.scr.h() / 2 }
-	local x = (wx + ww + theme.scr.w()) / 2
-	D { 'map-front', 'img', 'gfx/piligrim2.png', xc = true, yc = true, x = x, y = theme.scr.h() / 2 }
+	if visited 'провал' then
+		D { 'map-front', 'img', 'gfx/piligrim2.png', xc = true, yc = true, x = wx / 2, y = theme.scr.h() / 2 }
+		local x = (wx + ww + theme.scr.w()) / 2
+		D { 'map-top', 'img', 'gfx/piligrim1.png', xc = true, yc = true, x = x, y = theme.scr.h() / 2 }
+	else
+		D { 'map-top', 'img', 'gfx/piligrim1.png', xc = true, yc = true, x = wx / 2, y = theme.scr.h() / 2 }
+		local x = (wx + ww + theme.scr.w()) / 2
+		D { 'map-front', 'img', 'gfx/piligrim2.png', xc = true, yc = true, x = x, y = theme.scr.h() / 2 }
+	end
 end
 
 room {
@@ -1512,15 +1526,25 @@ room {
 	decor = [[{$d шлюз|В шлюзовом модуле} {$d гравитация|нет искусственной гравитации.} {#место|Большую часть пространства} {#шлюпка|занимает посадочная шлюпка.}
 {#лифт|В центре модуля находится лифт.}]];
 	enter = function(s, f)
-		if f ^ 'Отсек 0' then
+		if f ^ 'Отсек 0' or f ^ 'Отсек 0 Пионер' then
 			action ([[Я вошел в шлюзовой лифт. Двери с шипением закрылись. Медленно лифт перенес меня в ангар.]], true)
 			return
 		end
 	end;
 	onexit = function(s, t)
 		if t ^ 'Отсек 0' and visited 'chap3' then
-			p [[Я принял решение высадиться на "Пионер". Мне нужно в шлюзовой отсек.]]
-			return false
+			if not onpioner then
+				p [[Я принял решение высадиться на "Пионер". Мне нужно в шлюзовой отсек.]]
+				return false
+			end
+			if skaf then
+				p [[Сначала лучше снять скафандр.]]
+				return false
+			end
+			if onpioner then
+				walk 'Отсек 0 Пионер'
+				return
+			end
 		end
 	end;
 	way = { path{UP, 'Отсек 0'}, path{ "В шлюзовой отсек", "шлюзотсек" } };
@@ -1529,6 +1553,10 @@ room {
 	obj {
 		nam = '#шлюпка';
 		act = function(s)
+			if onpioner then
+				p [[Я надеюсь, что она еще понадобится.]]
+				return
+			end
 			if sleeped then
 				p [[Теперь она бесполезна.]]
 				return
@@ -1570,7 +1598,7 @@ room {
 	obj {
 		nam = '#кресла';
 		act = function(s)
-			if skaf then
+			if skaf and not onpioner then
 				D {'map-top'}
 				D {'map-front'}
 				D {'mark-front'}
@@ -1911,8 +1939,7 @@ room {
 		hide_new_stars()
 		inv_theme()
 		if pioner then
-			p [[Итак, это "Пионер". По крайней мере это все, что я могу предположить. Таких кораблей было построено всего два.
-Один из них "Пилигрим", следовательно... Кажется, я убеждаю сам себя.]]
+			p [[Таких кораблей на момент нашего отбытия было построено всего два. И один из них -- "Пилигрим". Итак, этот корабль -- "Пионер-2217", но как он здесь оказался?]]
 		end
 	end;
 	way = { path{DOWN, 'Мостик'}  };
@@ -2898,11 +2925,46 @@ room {
 	nam = 'openspace3';
 	hidetitle = true;
 	noinv = true;
+	rot = 0;
+	enter = function(s)
+		if not live(s) then
+			lifeon(s)
+		end
+	end;
+	timer = function(s)
+		if actions('#название') > 0 then
+			fading.set {"blackout", max = 96 }
+			lifeoff 'шлюзотсек'
+			walk 'провал'
+		else
+			return false
+		end
+	end;
+	life = function(s)
+		s.rot = s.rot + 1
+		if s.rot > 16 then s.rot = 1 end
+		if here() ~= s then
+			return
+		end
+		if s.rot >=8 and s.rot <= 10 then
+			enable '#название'
+		else
+			disable '#название'
+		end
+	end;
 	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с носовой частью "Пионера".}]];
 	way = { path { 'К "Пилигриму"', 'openspace2' } };
 } : with {
-	dec('#рядом', '');
-	dec('#пионер', function(s) p '' end);
+	dec('#рядом', [[Силуэт "Пионера" плохо различим на фоне бездны.]]);
+	dec('#пионер', function(s) p 'Я наблюдаю за вращением "Пионера". Если подождать некоторое время, я могу попробовать разобрать название звездолета, когда оно будет находиться с моей стороны.' end);
+	obj {
+		nam = '#название';
+		dsc = [[{$d я|Я} {могу различить название корабля.}]];
+		act = function(s)
+			p [[Я читаю название звездолета...]]
+			lifeoff(here())
+		end;
+	}
 }
 
 room {
@@ -2910,8 +2972,109 @@ room {
 	hidetitle = true;
 	noinv = true;
 	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с шлюзом "Пионера".}]];
-	way = { path { 'К "Пилигриму"', 'openspace2' } };
+	way = { path { 'К "Пилигриму"', 'openspace2' }, path { 'Облететь шлюз', 'openspace5' }:disable() };
 } : with {
-	dec('#рядом', '');
-	dec('#пионер', function(s) p '' end);
+	dec('#рядом', 'Я почти у цели. Нужно только найти аварийный шлюз.');
+	dec('#пионер', function(s) p 'Надо найти аварийный шлюз. Небольшой люк, который можно открыть извне.'; ways():enable() end);
+}
+
+room {
+	nam = 'openspace5';
+	hidetitle = true;
+	noinv = true;
+	decor = [[{$d я|Я нахожусь} {$d космос|в открытом космосе} {#рядом|рядом} {#пионер|с шлюзом "Пионера".}]];
+	way = { path { 'К "Пилигриму"', 'openspace2' }, path { 'Облететь шлюз', 'openspace4' } };
+} : with {
+	dec('#рядом', 'Я почти у цели. Нужно только найти аварийный шлюз.');
+	dec('#пионер', function(s) p 'Странно, я нигде не вижу аварийного шлюза.' end);
+}
+
+room {
+	nam = 'провал';
+	hidetitle = true;
+	noinv = true;
+	decor = "{#what|Что происходит?} {#where|Где} {$d я|я?}";
+	way = { path {'Встать', 'аварийныйотсек' }:disable() };
+}: with {
+	dec('#what', [[Я что, потерял память? Я был в открытом космосе, а сейчас... Не помню, как я оказался здесь. Неужели я настолько истощен?]]);
+	dec('#where', function(s) p [[Я вижу стены узкого отсека... Я сижу в скафандре, прислонившись к обшивке.]] enable '#обшивка' end);
+	obj {
+		nam = '#обшивка';
+		dsc = [[{$d я|Я} {#сижу|сижу, прислонившись} {к обшивке отсека.}]];
+		act = function(s)
+			p [[Я осмотрелся. Похоже, я обнаружил аварийный шлюз и проник внутрь. А потом -- отключился.]]
+			ways():enable();
+		end;
+	}:disable();
+	dec('#сижу', [[Хорошо, что это не случилось со мной в открытом космосе. Так или иначе, я добрался сюда.]]);
+}
+
+local noise_eff = false
+function fading.effects.blackout(s, src, dst)
+	local t = false
+	if s.step < 16 then
+		t = false
+	elseif s.step < 32 then
+		if not noise_eff then
+			snd.play ('snd/noise.ogg', rnd(4) + 2)
+			noise_eff = true
+		end
+		t = (s.step % 16) <= 2
+	elseif s.step < 64 then
+		t = (s.step % 8) <= 3
+	elseif s.step < 96 then
+		t = (s.step % 16) <= 8
+	else
+		t = true
+	end
+	if t then
+		dst:copy(sprite.scr(), 0, 0);
+	else
+		src:copy(sprite.scr(), 0, 0);
+	end
+end
+global { onpioner = false }
+room {
+	nam = 'аварийныйотсек';
+	title = 'Шлюз';
+	subtitle = 'Аварийный шлюз';
+	decor = [[{$d я|Я} {#шлюз|нахожусь в аварийном шлюзе.} {#выход|Выход} {#космос|в открытый космос} -- {#выход|закрыт.}]];
+	enter = function(s)
+		onpioner = true
+		map_theme()
+	end;
+	way = { path {'В шлюзовой модуль', 'Шлюз' } };
+}: with {
+	dec("#шлюз", "В аварийный шлюз можно попасть, открыв его снаружи механическим способом. Хорошо, что я смог это сделать.");
+	dec("#выход", "Сейчас выход в открытый космос заблокирован и мне не хочется его открывать.");
+	dec("#космос", "Я мог умереть там, если бы потерял сознание чуть раньше. Странно, что я совсем не помню того, как попал внутрь.");
+}
+
+room {
+	nam = 'Отсек 0 Пионер';
+	title = "Модуль гибернации";
+	subtitle = 'Отсек 0';
+	decor = [[{$d отсек0|Здесь} {$d гравитация|нет искусственной гравитации.} {$d ботинки|Звук от магнитных ботинок глухо отражается} {$d стена|от изогнутых стен.}
+ {$d отсек0|Из этого отсека} {#лифт|с помощью лифта} {#шлюз|можно попасть в шлюз.}]];
+	way = {  path {'В отсек 1', 'Отсек 1'}, path{'2', 'Отсек 2'},path {'3', 'Отсек 3'}, path {'4', 'Отсек 4'}, path {'В жилой модуль', 'Жилой Отсек 0'}, path { 'В шлюз', 'Шлюз'} };
+	onenter = function(s, w)
+		if w ^ 'Отсек 1' or w ^ 'Отсек 2' or w ^ 'Отсек 3' or w ^ 'Отсек 4' then
+			p [[Я поднялся по лестнице в нулевой отсек.]]
+		end
+	end;
+	enter = function(s, f)
+		if f ^ 'Шлюз' then
+			action ([[Я вошел в шлюзовой лифт. Двери с шипением закрылись. Лифт перенес меня в 0-отсек.]], true)
+			return
+		end
+	end;
+	onexit = function(s, w)
+		if w ^ 'Отсек 1' or w ^ 'Отсек 2' or w ^ 'Отсек 3' or w ^ 'Отсек 4' then
+			p [[Я спустился по лестнице в отсек.]]
+		end
+	end;
+}: with {
+	dec('#лифт',[[Звездолет состоит из двух частей. Носовая часть может находиться во вращении, создавая гравитацию в кольцевых модулях.
+Хвостовая часть не вращается. В ней находятся двигатель и шлюзовой модуль. Попасть в шлюзовой модуль можно через шлюзовую шахту с помощью лифта.]]);
+	dec('#шлюз', [[В шлюзовом модуле расположен ангар.]]);
 }
