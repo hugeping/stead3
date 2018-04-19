@@ -3123,6 +3123,10 @@ obj {
 };
 
 dict.add('криоотсек2', function(s)
+		if know_truth then
+			p [[Это "Пилигрим". Все члены экипажа живы и находятся в крио-сне. Невозможно.]]
+			return
+		end
 		 if crio_test() then
 			 p [[Я обследовал все криокапсулы.]]
 			 return
