@@ -1838,7 +1838,7 @@ local function make_new_stars()
 		end
 		s = D(s)
 	end
-	if sleeped then
+	if sleeped and not onpioner then
 		local d = D {"ship", "img", aship_spr, xc = true, yc = true, rad = 2 * rnd() * math.pi - math.pi, r = rnd(50) + 50, z = 1.5, x = 0, y = 0, process = stars_rot, click = 16, render = star_render }
 		if ship_heading == 0 then
 			d.r = rnd(16)
@@ -1938,6 +1938,12 @@ room {
 		fading.set {"fadeblack", max = FADE_LONG / 2, now = true }
 		hide_new_stars()
 		inv_theme()
+		if onpioner then
+			if t ^ 'Мостик' then
+				walkin 'Мостик Пионер'
+			end
+			return
+		end
 		if pioner then
 			p [[Таких кораблей на момент нашего отбытия было построено всего два. И один из них -- "Пилигрим". Итак, этот корабль -- "Пионер-2217", но как он здесь оказался?]]
 		end
@@ -3275,12 +3281,6 @@ room {
 	decor = [[На {$d мостик|мостике} {$d гравитация|нет искусственной гравитации.}
 {$d стена|Вдоль стенки отсека} {#консоли|расположены консоли.}]];
 	way = { path{"В воронье гнездо", 'Воронье гнездо'}, path{DOWN, 'Жилой Отсек 0 Пионер'}  };
-	onexit = function(s, t)
-		if t ^ 'Воронье гнездо' then
-			p [[Я уже достаточно насмотрелся на космос.]]
-			return false
-		end
-	end;
 }: with {
 	dec('#консоли', function(s) walk 'компьютер' end);
 }
@@ -3288,39 +3288,120 @@ room {
 global {
 	know_truth = false;
 }
+local function get_tele(v, i)
+	local scale = v.t
+	local delta = math.floor(610 / v.t)
+	if v.t == 24 then
+		scale = 2
+	elseif v.t == 7 then
+		scale = 4
+	elseif v.t == 30 then
+		scale = 8
+	elseif v.t == 12 then
+		scale = 16
+	end
+	local vv = (instead.noise2(i / scale, v.t / 10)) * 25 + 25
+	if v.t == 7 and math.floor(i / (delta / 4)) == 20 then
+		vv = vv + (instead.noise2(i / 2, v.t / 10)) * 100 + 120
+	elseif v.t == 30 and math.floor(i / (delta / 4 )) == 116 then
+		vv = vv + (instead.noise2(i / 2, v.t / 10)) * 100 + 120
+	elseif v.t == 12 and math.floor(i / (delta / 16)) == 189  then
+		vv = vv + (instead.noise2(i / 2, v.t / 10)) * 100 + 120
+	end
+	return vv
+end
+
+declare 'tele_spr' (
+function(v)
+	local p = pixels.new(610, 260)
+	local w, h = p:size()
+	p:line(16, h - 16, w, h - 16, color2rgb('grey'))
+	p:line(16, h - 16, 16, 16, color2rgb('grey'))
+	for i = 1, v.t do
+		local x = (i - 1) * w / v.t
+		p:line(16 + x, h - 16, 16 + x, h - 12, color2rgb 'grey')
+	end
+	for i = 0, 1, 0.25 do
+		local y = i * h
+		local r, g, b = color2rgb 'grey'
+		p:line(16, h - 16 - y, 12, h - 16 - y, r, g, b)
+	end
+	local vv
+	for i = 1, w do
+		local vv = get_tele(v, i)
+		local r, g, b = color2rgb 'blue'
+		if vv > 120 then
+			r, g, b = color2rgb 'red'
+		elseif vv > 80 then
+			r, g, b = color2rgb 'yellow'
+		elseif vv > 50 then
+			r, g, b = color2rgb 'green'
+		end
+		p:line(16 + i, h - 18, 16 + i, h - 18 - vv, r, g, b)
+	end
+	return p:sprite()
+end)
 
 declare 'black_proc2' (
 	function(v)
 		local d = D'auth'
-		if d.step < 160 then
+		local delay = 230
+		if d.step < delay then
 			v.alpha = 0
 			return
 		end
-		if d.step == 160 then
+		if d.step == delay then
 			snd.play ('snd/heart.ogg')
 		end
-		local a = (d.step - 160) * 2
+		local a = (d.step - delay) * 2
 		v.alpha = a
-		if v.alpha >= 255 then
+		if v.alpha >= 255 or d.finished then
 			v.alpha = 255
 		end
 end)
-
+global {
+	hamma = false;
+	alice_status = false;
+}
 room {
 	nam = 'компьютер';
 	title = 'Мостик';
 	hideinv = true;
 	hidetitle = true;
 	{
+		m_alice = [[ [b]Статус ИИ "Алиса"... [/b] [pause] [pause] [pause]
+Загрузка: 20%
+Ядро: идет обработка
+Сенсоры: недоступны
+Голосовое управление: недоступно
+Интерфейс: недоступен
+Отладочный интерфейс: доступен
+Датчик случайных чисел: [b]плохая энтропия[/b]
+{m_status|> Назад}]];
 		m_main =  [[27 февраля 2266. Вахта 7117.
 Бортовой компьютер STD-3500 приветствует вас.
-{m_status|>Статус систем}
-{m_journal|>Бортовой журнал}
-{m_tele|>Телеметрия}]];
-		m_status = [[ [b]Статус подсистем звездолета "ПИЛИГРИМ"[/b]
-Двигатели: ok
-Гравитация: ok
-Телеметрия: ok]];
+Судно: звездолет [b]"ПИЛИГРИМ"[/b]
+Последняя вахта #7116: Елена Светлова. Без происшествий.
+
+{m_status|> Статус систем}
+{m_journal|> Бортовой журнал}
+{m_tele|> Телеметрия}]];
+		m_status = [[ [b]Статус подсистем:[/b]
+Жизнеобеспечение: в порядке
+Бортовые системы: в порядке
+Реактор: в порядке
+Маневровые двигатели: в порядке
+Гравитация: в порядке
+Криосон: в порядке
+{m_alice|Статус ИИ:} [pause] [pause] [pause] [pause] [b]{m_alice|нет ответа}[/b] {m_alice|> детали}
+Источники телеметрии: в порядке
+{m_main|> Назад}]];
+		m_tele = [[ [b]Данные телеметрии:[/b]
+{tele_day|> За сутки}
+{tele_week|> За неделю}
+{tele_month|> За месяц}
+{tele_year|> За год}
+{m_main|> Назад}]];
 		m_journal = [[ [b]Бортовой журнал звездолета "ПИЛИГРИМ"[/b]
 Вахта 7116: Елена Светлова. Без происшествий.
 Вахта 7115: Василий Зорин. Без происшествий.
@@ -3343,12 +3424,29 @@ room {
 Вахта 7098: Наталия Снежинская. Без происшествий.
 Вахта 7097: Сергей Летов. Без происшествий.
 ...
-{m_main|>Назад}
+{m_main|> Назад}
 ]];
 	};
-	ondecor = function(s, name, press, _, _, _, e)
-		if not press then
+	ondecor = function(s, name, press, x, y, _, e)
+		if not press or D 'black' then
 			return
+		end
+		if name == 'tele' and x > 16 and x < 620 then
+			D{'line', 'img', 'box:1x214,red', x = x + 200, y = 260, z = 0 }
+			x = x - 16
+			local v = (get_tele(D'tele', x - 1) + get_tele(D'tele', x + 1) + get_tele(D'tele', x)) / 3
+			local inf = string.format("Уровень: %0.3f", v)
+			if v < 50 then
+				inf = inf ..'\nНормальный'
+			elseif v < 130 then
+				inf = inf ..'\nВысокий'
+				hamma = true
+			else
+				inf = inf ..'\nГамма всплеск'
+				hamma = true
+			end
+			D{'info', 'txt', inf, xc = true, x = 750, y = 70, z = 0, color = 'cyan', size = 12 }
+			return false
 		end
 		if press and not e then
 			local d = D 'auth'
@@ -3359,25 +3457,55 @@ room {
 			return false
 		end
 		if s[e] then
+			D{'tele'}
 			D{'auth'}
+			D{'line'}
+			D{'info'}
 			local d = D 'console'
-			D {'auth', 'txt', s[e], x = d.x + 32, y = d.y + 32, typewriter = true, w = 620, h = 460, click = true, know_truth = know_truth }
-			if (e == 'm_journal' or e == 'm_tele' or e == 'm_status') and not know_truth then
-				know_truth = true
-				if not D 'black' then
-					D {'black', 'img', 'box:1024x576,black', 0, 0, z = -1, process = black_proc2, alpha = 0 };
-				end
+			D {'auth', 'txt', s[e], x = d.x + 32, y = d.y + 32, typewriter = true, w = 620, h = 450, click = true, know_truth = know_truth, z = 1 }
+			if e == 'm_alice' then
+				alice_status = true
 			end
+			if e ~= 'm_main' then
+				ways():disable()
+			else
+				ways():enable()
+			end
+		elseif e == 'tele_day' then
+			D {'line'}
+			D{'info'}
+			D {'tele', 'img', tele_spr, x = 200, y = 230, t = 24, click = true, z = 0.5 }
+		elseif e == 'tele_week' then
+			D {'line'}
+			D{'info'}
+			D {'tele', 'img', tele_spr, x = 200, y = 230, t = 7, click = true, z = 0.5 }
+		elseif e == 'tele_month' then
+			D {'line'}
+			D{'info'}
+			D {'tele', 'img', tele_spr, x = 200, y = 230, t = 30, click = true, z = 0.5 }
+		elseif e == 'tele_year' then
+			D {'line'}
+			D{'info'}
+			D {'tele', 'img', tele_spr, x = 200, y = 230, t = 12, click = true, z = 0.5 }
 		end
 	end;
 	enter = function(s, f)
 		local d = D {'console', 'img', 'gfx/console.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2  }
 		noinv_theme()
 		local a = D {'auth', 'txt', s.m_main, x = d.x + 32, y = d.y + 32, typewriter = true, know_truth = know_truth }
+		if not know_truth then
+			know_truth = true
+			if not D 'black' then
+				D {'black', 'img', 'box:1024x576,black', 0, 0, z = -1, process = black_proc2, alpha = 0 };
+			end
+		end
 	end;
 	exit = function(s, t)
 		D {'console' }
 		D {'auth'}
+		D {'tele'}
+		D {'line'}
+		D{'info'}
 		inv_theme()
 	end;
 	timer = function()

@@ -553,7 +553,6 @@ function txt:new(v)
 			t = ww
 			ww = false
 		    end
-
 		    while t:find("^%[[ibu]%]") do
 			table.insert(styles, t:sub(2, 2))
 			t = t:gsub("^%[[ibu]%]", "")
@@ -608,7 +607,14 @@ function txt:new(v)
 		    v.line = line
 		    table.insert(line, v)
 		end
-		x = x + spw
+		if #applist > 0 then
+			for i = #applist, 1, -1 do
+				if applist[i].w > 0 then
+					x = x + spw
+					break
+				end
+			end
+	        end
 		if x > W then
 		    W = x
 		end
