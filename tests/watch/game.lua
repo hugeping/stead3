@@ -3766,30 +3766,133 @@ room {
 	}:disable()
 }
 local function num()
-	_'@keyboard'.title = '...';
-	_'@keyboard'.subtitle = ''
-	_'@keyboard'.hidetitle = true
-	_'@keyboard'.args = {}
-	_'@keyboard'.alt_xlat = true
-	_'@keyboard'.numeric = true
-	here():enter()
-	here():reset '#number'
-	walk '@keyboard'
+	here().number = {}
+	push '#enter'
+end
+
+local function check(nn)
+	local max_same = 0;
+	local prev = 0;
+	local same = 0;
+	local ones = 0
+	local changes = 0
+	local o1 = 0
+	local o2 = 0
+	for i = 1, #nn do
+		local bit = nn[i]
+		if bit == 1 then
+			ones = ones + 1
+			if prev == 0 then
+				o1 = o1 + 1
+				changes = changes + 1
+				same = 0
+			end
+			same = same + 1
+			prev = 1
+		else
+			if prev == 1 then
+				o2 = o2 + 1
+				changes = changes + 1
+				same = 0
+			end
+			same = same + 1
+			prev = 0
+		end
+		if same > max_same then
+			max_same = same
+		end
+	end
+
+	if max_same / #nn > 0.25 or max_same / #nn < 0.12 then
+		print("max_same:", max_same / #nn)
+		return false
+	end
+
+	if ones / #nn > 0.65 or ones / #nn < 0.35 then
+		print("ones:", ones / #nn)
+		return false
+	end
+
+	if changes / #nn > 0.59 or changes / #nn < 0.45 then
+		print("changes:", changes / #nn)
+		return false
+	end
+	if o1 / #nn > 0.3 or o1 / #nn < 0.25 then
+		print("o1:", o1 / #nn)
+		return false
+	end
+
+	if o2 / #nn > 0.3 or o2 / #nn < 0.25 then
+		print("o2:", o2 / #nn)
+		return false
+	end
+	return true
+end
+local function check_num()
+	here().bad = not check(here().number)
+	here().number = {}
+	here():reset('#number')
+	open '#how'
+	disable '#bad'
+	std.pclr()
+	p [[-- Хорошо, я проверяю число...]]
+end
+
+local function show_num()
+	local n = ""
+	for i = 1, #here().number do
+		n = n .. std.tostr(here().number[i])
+	end
+	local t = D{'num', 'txt', n, xc = true, yc = true, x = 512, y = 288 }
+	local w = 16 * (32 - #here().number)
+	if w > 0 then
+		D { "line", "img", "box:"..w.."x4,red", xc = true, x = 512, y = t.y + 12 }
+	else
+		D {"line"}
+	end
+end
+
+local function say_one()
+	local h = here()
+	beep:play();
+	table.insert(h.number, 1)
+	show_num()
+	if #h.number >= 32 then
+		check_num()
+	end
+end
+local function say_zero()
+	local h = here()
+	beep:play();
+	table.insert(h.number, 0)
+	show_num()
+	if #h.number >= 32 then
+		check_num()
+	end
 end
 
 dlg {
 	nam = 'капитан2';
 	title = '...';
 	hidetitle = true;
-	noinv = true;
-	number = 0;
-	decor = function(s)
-	end;
+	bad = false;
+--	noinv = true;
+	number = {};
 	enter = function(s, ...)
 		pn [[-- Мне нужно от тебя число.]];
 	end;
-	onkbd = function(s, w)
-		s.number = w
+	onkey = function(s, press, key)
+		if s.current ^ '#enter' then
+			if key == "1" then
+				p "-- Один."
+				say_one()
+			elseif key == "0" then
+				p "-- Ноль."
+				say_zero()
+			end
+			return
+		end
+		return false
 	end;
 	exit = function(s)
 		D()
@@ -3825,9 +3928,30 @@ dlg {
 }: with {
 	{
 		'#number',
-		{ "Ну как?", function(s)
-			  p [[-- Это число плохое, давай еще.]]
+		{ '#how', "Ну как?", function(s)
+			  if here().bad then
+				  p [[-- Это число с плохим качеством энтропии. Мне нужно другое.]]
+				  D {'num'}
+				  D {'line'}
+				  enable '#bad'
+			  else
+				  p [[-- Это число с хорошим качеством энтропии. Я активирую датчик случайных чисел. Прощай. -- силуэт начал удаляться.]]
+				  here():reset '#good'
+			  end
 		end },
-		{ only = true, noshow = true, "Хорошо, попробую.", function(s) num() end },
+		{ false, '#bad', always = true, noshow = true, "Хорошо, попробую.", function(s) num() end },
+	};
+	{
+		'#enter',
+		{ always = true, "Ноль.", say_zero },
+		{ always = true, "Один.", say_one },
+	};
+	{
+		'#good',
+		{'Подожди, у меня есть еще один вопрос!', '-- Какой?',
+		 {'Почему я не должен был помнить того, что произошло? Зачем это все?',
+		  [[-- Ты не должен был осознать себя здесь. Теперь вероятность твоего успешного выхода из криоснаневелика. Прощай.]];
+		 };
+		};
 	}
 }

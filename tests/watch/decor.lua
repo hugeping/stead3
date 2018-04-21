@@ -414,11 +414,11 @@ function txt:make_page(v, nr)
     if v.w == 0 or v.h == 0 then
 	return
     end
-    if not v.spr_blank then
-	v.spr_blank = sprite.new(v.w, v.h)
+    if not v.__spr_blank then
+	v.__spr_blank = sprite.new(v.w, v.h)
     end
     local lnr = v.__pages[page]
-    v.spr_blank:copy(v.sprite)
+    v.__spr_blank:copy(v.sprite)
     if #lines == 0 then return end
     local off = lines[lnr].y
     v.__offset = off
@@ -446,13 +446,13 @@ function txt:make_page(v, nr)
     end
     if v.typewriter then
 	v.step = 0; -- typewriter effect
-	if not v.spr_blank then
-	    v.spr_blank = sprite.new(v.w, v.h)
+	if not v.__spr_blank then
+	    v.__spr_blank = sprite.new(v.w, v.h)
 	end
 	if not v.finished then
 		v.started = true
 		v.finished = false
-		v.spr_blank:copy(v.sprite)
+		v.__spr_blank:copy(v.sprite)
 	end
     end
 end
