@@ -1,6 +1,13 @@
 require "noinv"
 require "nolife"
+require "prefs"
+
 loadmod "keyboard"
+
+prefs.snowball_launcher = false
+prefs.chess_master = false
+prefs.romance = false
+prefs.rnd_master = false
 
 local render = require "render"
 
@@ -327,6 +334,7 @@ obj {
 			elseif s.num > 10 then
 				p [[С точки зрения теории вероятностей, любая последовательность выпаданий монеты имеет такую же вероятность, как
 и любая другая. Но как же это странно...]]
+				prefs.rnd_master = true
 			elseif s.num > 5 then
 				p [[Снова решка. Как это возможно?]]
 			end
@@ -1153,6 +1161,7 @@ room {
 			p [[Похоже, есть смысл попробовать найти верный ход.]];
 		else
 			p [[-- Хочу заметить, вы сделали прекрасный ход! -- раздался голос Алисы.]]
+			prefs.chess_master = true
 			disable ('партия')
 		end
 	end;
@@ -1320,6 +1329,12 @@ room {
 	end;
 	onkbd = function(s, w)
 		s.answ = w
+		w = w:gsub("[ \t\n]+", "")
+		if w:len() > 32 and
+			(w:find("люб") or w:find("Люб") or w:find("лена") or w:find("Лен") or
+			 w:find("орош") or w:find("космо") or w:find("селен") or w:find("слов")) then
+				prefs.romance = true
+		end
 	end;
 	onexit = function(s, t)
 		if t ^ '@keyboard' then
@@ -3965,7 +3980,7 @@ room {
 	title = '...';
 	hidetitle = true;
 	num = 0;
-	decor = [[{$fmt y|50%}-- Почему мне нельзя было помнить все, что произошло? Зачем это все?^-- Ты не должен был осознать себя здесь. Теперь вероятность твоего успешного выхода из криосна невелика. Прощай.]];
+	decor = [[{$fmt y|40%}-- Почему мне нельзя было помнить все, что произошло? Зачем это все?^-- Ты не должен был осознать себя здесь. Теперь вероятность твоего успешного выхода из криосна невелика. Прощай.]];
 	onclick = function(s)
 		if fading.started then
 			return false
@@ -4109,8 +4124,165 @@ room {
 		end;
 	}
 }
+local font
+local font_height
+
+local text = {
+	{ "ВАХТА", style = 1},
+	{ },
+	{ "Сюжет, код игры и движок:", style = 2},
+	{ "Петр Косых" },
+	{ },
+	{ "Иллюстрации:", style = 2 },
+	{ "Петр Косых" },
+	{ },
+	{ "Музыка:", style = 2 },
+	{ "Петр Советов" },
+	{ "http://bensound.com" },
+	{ },
+	{ "Звук:", style = 2 },
+	{ "http://www.freesound.org" },
+	{ },
+	{ "Тестирование:", style = 2 },
+	{ "kerber" },
+	{ "Петр Советов" },
+	{ ".dm" },
+	{ },
+	{ "Апрель 2018" },
+	{ },
+	{ "Спасибо Вам за прохождение!" },
+	{ },
+	{ "Достижения:", style = 2 },
+	{ "prefs.snowball_launcher" },
+	{ "prefs.chess_master" },
+	{ "prefs.romance = false" },
+	{ "prefs.rnd_master" },
+	{ },
+	{ "Благодарности:", style = 2 },
+	{ },
+	{ "Жене - за терпение", },
+	{ "Работодателю - за зарплату" },
+	{ "А также всем тем, кто не мешал..."},
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ "КОНЕЦ", style = 1 },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ },
+	{ '21 апреля 2018', style = 2},
+
+}
+
+
 
 room {
 	nam = 'titles';
 	hidetitle = true;
+	{
+		offset = 0;
+		pos = 1;
+		line = text[1];
+		ww = 0;
+		hh = 0;
+		font = false;
+		font_height = 0;
+		w = 0;
+		h = 0;
+	};
+	ini = function(s)
+		if here() == s then
+			s:enter()
+		end
+	end;
+	enter = function(s)
+		for k, v in ipairs(text) do
+			if v[1] and v[1]:find('prefs.', 1, true) then
+				if v[1] == "prefs.snowball_launcher" then
+					text[k][1] = 'Швырятель снежков: ' .. (prefs.snowball_launcher and 'да' or 'нет')
+				elseif v[1] == "prefs.chess_master" then
+					text[k][1] = 'Шахматист: ' .. (prefs.chess_master and 'да' or 'нет')
+				elseif v[1] == "prefs.romance = false" then
+					text[k][1] = 'Романтик: ' .. (prefs.romance and 'да' or 'нет')
+				elseif v[1] == "prefs.rnd_master" then
+					text[k][1] = 'Теоретик: ' .. (prefs.rnd_master and 'да' or 'нет')
+				end
+			end
+		end
+		timer:set(20)
+		local fn = theme.get('win.fnt.name')
+		s.font = sprite.fnt(fn, 16)
+		s.font_height = s.font:height()
+		s.w, s.h = std.tonum(theme.get 'scr.w'), std.tonum(theme.get 'scr.h')
+	end;
+	timer = function(s)
+		_'@decor'.dirty = false
+		local scr = sprite.scr()
+		if s.line == false then
+			return
+		end
+		if s.pos > 54 then
+			fading.set {"blackout", max = 200 }
+			walk 'провал3'
+			return
+		end
+		-- scroll
+		for y = 0, s.h - 2 do
+			scr:copy(0, y + 1, s.w, 1, scr, 0, y)
+		end
+
+		if s.offset >= s.font_height then
+			s.pos = s.pos + 1
+			s.offset = 0
+		end
+
+		if s.offset == 0 then
+			if s.pos <= #text then
+				s.line = text[s.pos]
+				s.line = s.font:text(s.line[1] or ' ', s.line.color or 'white', s.line.style or 0)
+				s.ww, s.hh = s.line:size()
+			else
+				s.line = false
+			end
+		end
+		if s.line then
+			s.offset = s.offset + 1
+			scr:fill(0, s.h - s.offset, s.w, s.offset, 0, 0, 0, 255)
+			s.line:draw(scr, math.floor((s.w - s.ww) / 2), s.h - s.offset)
+		end
+	end
+}
+
+room {
+	nam = 'провал3';
+	title = '...';
+	hidetitle = true;
+	num = 0;
+	decor = [[{$fmt y|40%}{$fmt b|ЕСЛИ ТЫ ЧИТАЕШЬ ЭТО, ЗНАЧИТ ТЫ СПИШЬ!^
+МЫ ПРОБУЕМ СПОСОБЫ ДОСТУЧАТЬСЯ ДО ТЕБЯ.^
+И ЕСЛИ ТЫ ВИДИШЬ ЭТОТ ТЕКСТ -- У НАС ПОЛУЧИЛОСЬ!^
+Я -- ЕЛЕНА. СЛУШАЙ МЕНЯ. ТЫ ДОЛЖЕН ПРОСНУТЬСЯ.^СЕЙЧАС ЖЕ. Я ЖДУ ТЕБЯ.}]];
 }

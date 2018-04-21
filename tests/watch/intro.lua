@@ -264,6 +264,9 @@ obj {
 				p [[Нужно еще сильнее скатать снежок.]]
 				s.hard = true
 			else
+				if s.shoot then
+					prefs.snowball_launcher = true
+				end
 				s.shoot = true
 				p [[Попал! Я слышу как смеется отец. Он идет ко мне.]]
 			end

@@ -54,7 +54,6 @@ function init()
 	end
 	decor.bgcol = theme.get 'scr.col.bg'
 
---	walk 'snova'
 	walk 'intro'
 end
 
