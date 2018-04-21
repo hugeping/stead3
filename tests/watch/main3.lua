@@ -54,8 +54,63 @@ function init()
 	end
 	decor.bgcol = theme.get 'scr.col.bg'
 
-	walk 'intro'
+--	walk 'intro'
 end
+
+room {
+	nam = 'main';
+	hidetitle = true;
+	decor = function()
+		p(fmt.y "30%")
+		pn ([[В этой игре нужно читать. Если вы умеете читать, для продолжения
+нажмите на слово {#помощь|"помощь".} Для тех кто не умеет читать -- другая кнопка.^
+^
+{#дальше|Дальше}]])
+	end;
+	obj = {
+		obj {
+			nam = '#помощь';
+			act = function(s)
+				walk 'help'
+			end;
+		};
+		obj {
+			nam = '#дальше';
+			act = function(s) walk 'nogame' end
+		}
+	}
+}
+
+room {
+	nam = 'nogame';
+	hidetitle = true;
+	decor = function()
+		p(fmt.y "40%")
+		pn ([[{$fmt b|Эта игра вам не понравится. Вы разучились читать. До свидания!}]])
+	end;
+}
+
+room {
+	nam = 'help';
+	hidetitle = true;
+	decor = function()
+		p(fmt.y "30%")
+		pn ([[{#other|Отлично!^
+В этой игре вы можете нажимать на слова, даже если они не выглядят
+как ссылки. Предметы инвентаря могут использоваться на другие предметы и слова текста.
+Для использования предмета инвентаря или его осмотра -- примените предмет на самого себя.^^
+Спасибо за внимание!} {#начало|Мы начинаем.}]])
+	end;
+}: with {
+	dec('#other', 'Реакции на действия появляются под чертой. Реакции не имеют ссылок. Теперь нажмите на "Мы начинаем"');
+	obj {
+		nam = '#начало';
+		act = function(s)
+			walk 'intro'
+			fading.set {"fadeblack", max = FADE_LONG }
+		end;
+	}
+}
 
 function start()
 	theme_select()
