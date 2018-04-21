@@ -3052,6 +3052,9 @@ room {
 local noise_eff = false
 function fading.effects.blackout(s, src, dst)
 	local t = false
+	if s.step == 1 then
+		noise_eff = false
+	end
 	if s.step < 16 then
 		t = false
 	elseif s.step < 32 then
@@ -4287,7 +4290,7 @@ room {
 	title = '...';
 	hidetitle = true;
 	num = 0;
-	decor = [[{$fmt y|40%}{$fmt b|ЕСЛИ ТЫ ЧИТАЕШЬ ЭТО СООБЩЕНИЕ, ЗНАЧИТ ТЫ СПИШЬ!^
+	decor = [[{$fmt y|40%}{$fmt b|ВНИМАНИЕ!^ЕСЛИ ТЫ ЧИТАЕШЬ ЭТО СООБЩЕНИЕ, ЗНАЧИТ ТЫ СПИШЬ!^
 МЫ ПРОБУЕМ РАЗНЫЕ СПОСОБЫ ДОСТУЧАТЬСЯ ДО ТЕБЯ.^
 И ЕСЛИ ТЫ ВИДИШЬ ЭТОТ ТЕКСТ -- У НАС ПОЛУЧИЛОСЬ!^
 Я -- ЕЛЕНА. СЛУШАЙ МЕНЯ. ТЫ ДОЛЖЕН ПРОСНУТЬСЯ.^СЕЙЧАС ЖЕ. Я ЖДУ ТЕБЯ.}]];
