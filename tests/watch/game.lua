@@ -8,6 +8,7 @@ prefs.snowball_launcher = false
 prefs.chess_master = false
 prefs.romance = false
 prefs.rnd_master = false
+prefs.strong = false
 
 local render = require "render"
 
@@ -527,7 +528,7 @@ dlg {
 				  f = false
 			  end
 			  if f then
-				  pn "Проверены."
+				  pn "проверены."
 			  else
 				  pn()
 			  end
@@ -2663,6 +2664,7 @@ room {
 		end
 	end;
 	enter = function(s)
+		prefs.strong = true
 		s.time = instead.ticks()
 		if s.state ~= 3 then
 			fading.set {"none"}
@@ -2739,11 +2741,11 @@ dlg {
 	end;
 	enter = function(s, ...)
 		D()
-		D{'flash', 'img', 'box:1024x576,white', x = 0, y = 0, alpha = 0, process = flash_proc, z = -1 };
+--		D{'flash', 'img', 'box:1024x576,white', x = 0, y = 0, alpha = 0, process = flash_proc, z = -1 };
 		pn [[-- Капитан, это вы?^-- Да, я. Лежи, не вставай. Я пришел сказать тебе нечто важное...]];
 	end;
 	exit = function(s)
-		D()
+--		D()
 		stars_theme()
 		map_theme()
 		walk 'awake2'
@@ -2758,7 +2760,7 @@ dlg {
 		     {"Что происходит?", "-- Иди в воронье гнездо и узнаешь."},
 		     {"Вы мне снитесь?", "-- Какая тебе разница? Разве тебе есть что терять?"};
 		    };
-		    {cond = function(s) return empty '#l' end; "Прощайте, капитан...", false, noshow = true};
+		    {cond = function(s) return empty '#l' end; function() p "Прощайте, капитан..."; walkout() end, false, noshow = true};
 		  };
 		};
 	};
@@ -2777,7 +2779,7 @@ room {
 		act = function(s)
 			local txt = {
 				[[Сон? Нет. Это реальность и кошмар возвращается. Я единственный, кто остался в живых.]];
-				[[Что это было? Я так и не выяснил. Алиса, похоже, повреждена. А гибернация без нее невозможна.]];
+				[[Что это было? Я так и не выяснил. Данные наблюдений потеряны. Алиса, похоже, повреждена. А гибернация без нее невозможна.]];
 				[[Сутки я бродил по кораблю в отчаянии, пока усталость и нервное истощение не взяли свое...]];
 				[[Елена... Елена... Где ты?]];
 				[[Капитан, он был таким реальным. Он сказал идти в воронье гнездо... ]],
@@ -3616,7 +3618,7 @@ room {
 	nam = 'У капсулы';
 	title = 'Модуль гибернации';
 	subtitle = 'Отсек 2';
-	decor = [[{$d я|Я} {#стою} {#капсула|возле капсулы} {#елена|Елены.}]];
+	decor = [[{$d я|Я} {#стою|стою} {#капсула|возле капсулы} {#елена|Елены.}]];
 	way = { path { 'Отойти', 'Отсек 2 Пионер' }:disable() };
 }: with {
 	dec("#стою", "Меня не слушаются ноги. Я стою, опираясь на капсулу.");
@@ -3669,8 +3671,8 @@ room {
 {m_trace|> Трассировка}
 ]];
 		m_dump = [[ [b]Процессы:[/b]
-Запущено: 8093654 процессов.
-В состоянии сна: 8093653
+Запущено: 32 процесса
+В состоянии сна: 31
 В состоянии активности: 1
 Загрузка процессоров: 20%
 {m_main2|> Назад}]];
@@ -3979,6 +3981,7 @@ room {
 	nam = 'ending';
 	title = '...';
 	hidetitle = true;
+	noinv = true;
 	num = 0;
 	decor = [[{$fmt y|40%}-- Почему мне нельзя было помнить все, что произошло? Зачем это все?^-- Ты не должен был осознать себя здесь. Теперь вероятность твоего успешного выхода из криосна невелика. Прощай.]];
 	onclick = function(s)
@@ -3992,9 +3995,9 @@ room {
 	end;
 	exit = function(s)
 		D()
+		onpioner = false
 		stars_theme()
 		map_theme()
-		onpioner = false
 		fading.set {"fadeblack", max = FADE_LONG }
 	end;
 }
@@ -4155,7 +4158,8 @@ local text = {
 	{ "Достижения:", style = 2 },
 	{ "prefs.snowball_launcher" },
 	{ "prefs.chess_master" },
-	{ "prefs.romance = false" },
+	{ "prefs.romance" },
+	{ "prefs.strong" },
 	{ "prefs.rnd_master" },
 	{ },
 	{ "Благодарности:", style = 2 },
@@ -4225,8 +4229,10 @@ room {
 					text[k][1] = 'Швырятель снежков: ' .. (prefs.snowball_launcher and 'да' or 'нет')
 				elseif v[1] == "prefs.chess_master" then
 					text[k][1] = 'Шахматист: ' .. (prefs.chess_master and 'да' or 'нет')
-				elseif v[1] == "prefs.romance = false" then
+				elseif v[1] == "prefs.romance" then
 					text[k][1] = 'Романтик: ' .. (prefs.romance and 'да' or 'нет')
+				elseif v[1] == "prefs.strong" then
+					text[k][1] = 'Сильный духом: ' .. (prefs.strong and 'да' or 'нет')
 				elseif v[1] == "prefs.rnd_master" then
 					text[k][1] = 'Теоретик: ' .. (prefs.rnd_master and 'да' or 'нет')
 				end
