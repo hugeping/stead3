@@ -546,7 +546,7 @@ room {
 	end;
 	enter = function()
 		D { 'title', 'img', 'gfx/title.png', xc = true, x = theme.scr.w()/2, y = 16, alpha = 0, process = fadein_proc, to = 100 }
-		local text = 'Игра Петра Косых\nНа движке [b]INSTEAD[/b]\nМарт 2018'
+		local text = 'Игра Петра Косых\nНа движке [b]INSTEAD[/b]\nАпрель 2018'
 		D { 'about', 'txt', text, xc = true, x = theme.scr.w()/2, color = 'gray', align = 'center', process = fadein_proc, alpha = 0, to = 100 }
 		D 'about'.y = theme.scr.h() - D'about'.h
 		timer:set(20)

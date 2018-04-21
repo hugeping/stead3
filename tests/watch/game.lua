@@ -2760,7 +2760,7 @@ dlg {
 		     {"Что происходит?", "-- Иди в воронье гнездо и узнаешь."},
 		     {"Вы мне снитесь?", "-- Какая тебе разница? Разве тебе есть что терять?"};
 		    };
-		    {cond = function(s) return empty '#l' end; function() p "Прощайте, капитан..."; walkout() end, false, noshow = true};
+		    {cond = function(s) return empty '#l' end; "Прощайте, капитан..."; function() walkout() end, noshow = true};
 		  };
 		};
 	};
