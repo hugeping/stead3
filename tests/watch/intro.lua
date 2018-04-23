@@ -18,7 +18,11 @@ declare 'beep' (snd.new 'snd/beep.ogg')
 
 function decor.beep(v)
 	if beep and not player_moved() then
-		beep:play(1);
+		if not snd.playing(1) then
+			beep:play(1);
+		elseif not snd.playing(2) then
+			beep:play(2);
+		end
 	end
 end
 
