@@ -2259,10 +2259,12 @@ obj {
 	use = function(s, w)
 		if w ^ '#парни' then
 			_'удар в лицо'.state = 1
+			snd.play 'snd/kick2.ogg'
 			walk 'удар в лицо'
 			return
 		elseif w ^ '#главный' then
 			_'удар в лицо'.state = 2
+			snd.play 'snd/kick2.ogg'
 			walk 'удар в лицо'
 			return
 		end
@@ -2503,6 +2505,7 @@ room {
 			if here().state == 1 then
 				here().state = 2
 				action [[Макс разбегается и бьет. Мяч летит куда-то в угол ворот.]]
+				snd.play 'snd/kick.ogg'
 			elseif here().state == 2 then
 				here().state = 3
 				take 'мяч'
