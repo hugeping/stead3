@@ -4199,7 +4199,7 @@ local text = {
 	{ "Kevin MacLeod / Impact Prelude 1765" },
 	{ "Chris Zabriskie / Prelude No 2" },
 	{ "Chris Zabriskie / Prelude No 12" },
-	{ "Chris_Zabriskie / NirvanaVEVO 1983" },
+	{ "Chris Zabriskie / NirvanaVEVO 1983" },
 	{ },
 	{ "Звук:", style = 2 },
 	{ "http://www.freesound.org" },
