@@ -115,6 +115,7 @@ room {
 	exit = function()
 		map_theme()
 		p [[Не без труда я выбрался из камеры. Теперь необходимо одеться.]];
+		snd.music ('mus/isthatyou.ogg', 1)
 	end;
 	decor = [[{#холод|Холодно.} {$d я|Я лежу} {#капсула|в криокапсуле.} {#пар|Вокруг меня клубится белый пар.}]];
 	way = {
@@ -1244,7 +1245,7 @@ room {
 Космос настраивает на философию. Что есть, то есть. Но я все время думаю о Земле. Не могу поверить,
 что никогда не увижу тех, кто остался. Что с ними сейчас? Что ждет нас на Глизе? И это при том, что Алиса крутит мне сны о детстве. А как у вас?^{$fmt r|А. Белоусов}]];
 [[Саша, Алиса выбирает сны с учетом твоего подсознания. Доверься ей. Она пытается сохранить твою психику целостной, не взирая на то, что мы тут все испытываем.^{$fmt r|Татьяна Соколова}^^
-Тоже поиграю в философию. Мы -- это лишь наша память. Реальности на нас наплевать.^{$fmt r|Линда}^^
+Тоже поиграю в философию. Мы -- это лишь наша память. Реальности на нас наплевать.^{$fmt r|Линда}^
 Экипаж! Наша миссия исключительно важна. И вы все это знаете. На Глизе у нас будет масса дел, перед тем, как прибудет "Ковчег". А
 парням с "Пионера" еще тяжелее. Мне кажется, эта мысль поможет нам всем думать не о собственных переживаниях, а о нашем долге.^{$fmt r|Капитан судна, Михаил Громов}]];
 [[Кэп, на журнал ваши полномочия не распространяются. Вы сами знаете, что его существование обосновано целью поддержки психологического комфорта экипажа. Хи-хи.^{$fmt r|Аноним}^^
@@ -1657,6 +1658,7 @@ room {
 				action ([[Я пристегнулся к креслу, выполнил регламентные проверки и активировал открытие шлюза.
 Некоторое время я наблюдал как передо мной распахивается открытый космос...]], true)
 				fading.set {"fadeblack", max = FADE_LONG }
+				snd.stop_music()
 				return
 			end
 			p [[В таком кресле можно относительно комфортно перемещаться в открытом космосе на небольшие расстояния.]];
@@ -2039,6 +2041,7 @@ global {
 	ship_heading = math.pi / 8;
 	pioner = false;
 }
+local radar_snd = false
 declare 'radar_proc' (
 function(v)
 	local d = D 'radar'
@@ -2050,8 +2053,12 @@ function(v)
 	a = (a - v.a) / (2 * math.pi)
 	if a < 0 then a = 0 end
 	a = a * 255
-	if a > 200 and a < 210 then
+	if a < 100 and radar_snd then
+		radar_snd = false
+	end
+	if a > 100 and not radar_snd then
 		snd.play ('snd/radar.ogg', 3)
+		radar_snd = true
 	end
 	if not disabled '#курс' or maneur then
 		v.__dot:fill_circle(5, 5, 4, 255, 100, 100, a)
@@ -2143,6 +2150,7 @@ room {
 Дистанция: ]].. string.format("%0.3f", ship_distance)..' au / Относит. скорость: -0.25c\nКурс: '.. string.format("%0.3f", ship_heading)
 			local a = D {'radar_txt', 'txt', m, xc = true, x = d.x, y = d.y - d.yc +  d.h, typewriter = true, style = 2 }
 			enable "#курс"
+			snd.music('mus/prelude.ogg', 1)
 			return
 		end
 		return false
@@ -2249,6 +2257,9 @@ room {
 	subtitle = 'Отсек 1';
 	noinv = true;
 	enter = [[Остаток вахты я решил отдохнуть. Я лег на кушетку и мгновенно провалился в глубокий сон.]];
+	exit = function(s)
+		snd.music('mus/prelude2.ogg', 1)
+	end;
 	way = { path { 'Дальше', 'Двор' }};
 }
 
@@ -2463,6 +2474,7 @@ room {
 		remove 'мяч'
 	end;
 	onexit = function(s, t)
+		snd.stop_music()
 		if t ^ 'Двор' then
 			_'удар в лицо'.state = 3
 			walk 'удар в лицо'
@@ -2507,10 +2519,12 @@ room {
 				here().state = 2
 				action [[Макс разбегается и бьет. Мяч летит куда-то в угол ворот.]]
 				snd.play 'snd/kick.ogg'
+				snd.stop_music()
 			elseif here().state == 2 then
 				here().state = 3
 				take 'мяч'
 				action [[Я иду за мячом. Когда мяч в моих руках, я оборачиваюсь и вижу, как с левой стороны поля к Максу идут какие-то взрослые парни.]]
+				snd.music('mus/impact.ogg', 1)
 			elseif here().state == 3 then
 				here().state = 4
 				action [[Их четверо. Руки в карманах. Небрежной походкой они идут прямо к нам. Я подхожу к Максу и мы вместе ждем чего-то страшного.]];
@@ -2777,6 +2791,7 @@ dlg {
 		map_theme()
 		walk 'awake2'
 		fading.set {"fadeblack", max = FADE_LONG }
+		snd.music('mus/prelude12.ogg', 1)
 	end;
 	phr = {
 		{ "Я сплю? Это сон?", "-- Думаю, да." };
@@ -3356,6 +3371,7 @@ room {
 				     know_prog = true
 				     return
 			     end
+			     snd.stop_music()
 			     walk 'отладка'
 			     return
 		     end
@@ -3664,6 +3680,9 @@ room {
 				[[Я должен разбудить тебя, я должен поговорить с тобой. Понять, что это все не сон. Увидеть, что ты жива.]];
 				[[]];
 			}
+			if actions(s) == 0 then
+				snd.music('mus/nirv.ogg', 1)
+			end
 			if pager(s, txt) then
 				ways():enable()
 				enable 'елена2'
@@ -4020,6 +4039,9 @@ room {
 		end
 		walk 'гибернация2';
 	end;
+	onkey = function(s)
+		return s:onclick()
+	end;
 	timer = function(s)
 		s.num = s.num + 1
 	end;
@@ -4029,6 +4051,7 @@ room {
 		stars_theme()
 		map_theme()
 		fading.set {"fadeblack", max = FADE_LONG }
+		snd.music('mus/day.ogg')
 	end;
 }
 
@@ -4170,16 +4193,21 @@ local text = {
 	{ "Петр Косых" },
 	{ },
 	{ "Музыка:", style = 2 },
-	{ "Петр Советов" },
-	{ "http://bensound.com" },
+	{ "Ryan Andersen / Day to Night" },
+	{ "Chris Zabriskie / Is That You or Are You You" },
+	{ "Kevin MacLeod / Impact intermezzo 1999" },
+	{ "Kevin MacLeod / Impact Prelude 1765" },
+	{ "Chris Zabriskie / Prelude No 2" },
+	{ "Chris Zabriskie / Prelude No 12" },
+	{ "Chris_Zabriskie / NirvanaVEVO 1983" },
 	{ },
 	{ "Звук:", style = 2 },
 	{ "http://www.freesound.org" },
 	{ },
 	{ "Тестирование:", style = 2 },
-	{ "kerber" },
-	{ "Петр Советов" },
-	{ ".dm" },
+	{ "vorov2" },
+	{ "techniX" },
+	{ "excelenter" },
 	{ },
 	{ "Апрель 2018" },
 	{ },
@@ -4281,6 +4309,7 @@ room {
 			return
 		end
 		if s.pos > 46 then
+			snd.stop_music(0)
 			fading.set {"blackout", max = 200 }
 			walk 'провал3'
 			return

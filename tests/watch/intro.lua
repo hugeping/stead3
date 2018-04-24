@@ -332,12 +332,14 @@ room {
 		act = function(s)
 			if seen '#отец' then
 				if snow_state == 1 or snow_state == 2 then
+					snd.play 'snd/snow.ogg'
 					p [[Я изо всех сил пытаюсь пройти сквозь глубокий снег. Но мне не удается преодолеть его сопротивление.]];
 					snow_state = 2
 					return
 				end
 				if snow_state == 3 then
 					snow_state = 4
+					snd.play ('snd/snow.ogg', 1)
 					p [[Я пробиваюсь сквозь снег, молотя руками и ногами. Снег вокруг меня.]];
 					return
 				end
@@ -346,6 +348,7 @@ room {
 					snow_state = 5
 					return
 				end
+				snd.play 'snd/snow.ogg'
 				pn [[Я снова пытаюсь вылезти из сугроба. Но он глубокий. Мне становится страшно.]]
 				p [[-- Папа! -- но отец только смеется и зовет меня к себе.]]
 				if actions '#отец' > 0 then
@@ -353,6 +356,7 @@ room {
 				end
 				return
 			end
+			snd.play 'snd/snow.ogg'
 			p [[Я пытаюсь вылезти из сугроба, но только глубже проваливаюсь в податливый снег.]]
 		end;
 	};
