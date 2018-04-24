@@ -339,7 +339,7 @@ room {
 				end
 				if snow_state == 3 then
 					snow_state = 4
-					snd.play ('snd/snow.ogg', 1)
+					snd.play ('snd/snow.ogg')
 					p [[Я пробиваюсь сквозь снег, молотя руками и ногами. Снег вокруг меня.]];
 					return
 				end
