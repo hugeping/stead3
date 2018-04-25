@@ -353,7 +353,7 @@ room {
 		if s.numeric then
 			pn (fmt.c[[{@kbdinput cancel|«Отмена»}    {@kbdinput backspace|«Забой»}    {@kbdinput return|«Ввод»}]]);
 		else
-			pn (fmt.c[[{@kbdinput alt|«Alt»}    {@kbdinput shift|«Shift»}    {@kbdinput cancel|«Отмена»}    {@kbdinput backspace|«Забой»}    {@kbdinput return|«Ввод»}]]);
+			pn (fmt.c[[{@kbdinput alt|«Alt»}    {@kbdinput shift|«Shift»}    {@kbdinput space|«Пробел»}    {@kbdinput cancel|«Отмена»}    {@kbdinput backspace|«Забой»}    {@kbdinput return|«Ввод»}]]);
 		end
 	end;
 }

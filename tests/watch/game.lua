@@ -1064,7 +1064,7 @@ local function make_board(b)
 				local n = f[c:lower()]
 				local xx, yy = (x - 1) * CS + boardx, (y - 1) * CS + boardy
 				local white = not f[c]
-				D { 'fig-'..std.tostr(x)..std.tostr(y), 'img', chess_spr, z = 1, x = xx, y = yy, white = white, fig = n }
+				D { 'fig-'..std.tostr(x)..std.tostr(y), 'img', chess_spr, z = 1, x = xx, y = yy, xx = x, yy = y, white = white, fig = n }
 			end
 		end
 	end
@@ -1119,21 +1119,38 @@ global 'chess_puzzle_solved' (false)
 
 local function chess_onclick(s, name, press, x, y)
 	local d = D 'chessboard'
+	if not press then
+		return
+	end
 	local boardx, boardy = d.x, d.y
 	x = math.floor(x / CS) + 1
 	y = math.floor(y / CS) + 1
 	local c = chess_cell(x, y)
-	if not c and not chess_selected then
-		return false
+	if not chess_selected then
+		if not c or c:find("[a-z]") then
+			return false
+		end
 	end
 	if seen '#назад' then
 		return false
 	end
-	if not chess_selected or c then
+	if not chess_selected or (c and c:find("[A-Z]")) then
 		chess_selected = string.format('fig-%d%d', x, y)
 		D {'selection', 'img', selector_spr, x = boardx + (x - 1) * CS, y = boardy + (y - 1) * CS, z = 0 }
-	else
+	else -- make move
+		local eat = false
+		if c then -- eat?
+			eat = c
+		end
 		local d = D(chess_selected)
+		local c = chess_cell(d.xx, d.yy)
+		local dx, dy = math.abs(x - d.xx), math.abs(y - d.yy)
+		if c == 'R' and (dx ~= 0 and dy ~= 0) then
+			return false
+		end
+		if c == 'K' and (not ((dx == 1 or dx == 0) and (dy == 1 or dy ==0)) or (x == 1 and y == 2)) then
+			return false
+		end
 		if chess_selected == 'fig-22' and x == 4 then
 			chess_puzzle_solved = true
 		end
@@ -1141,6 +1158,9 @@ local function chess_onclick(s, name, press, x, y)
 		D {'selection' }
 		d.x = (x - 1) * CS + boardx
 		d.y = (y - 1) * CS + boardy
+		if eat then
+			D{string.format('fig-%d%d', x, y)}
+		end
 		enable '#назад'
 	end
 end
@@ -1312,6 +1332,7 @@ local roster = {
 global 'emails' (1)
 keyboard.subtitle = ""
 keyboard.hidetitle = false
+keyboard.hideinv = true
 
 room {
 	nam = 'inbox';
@@ -1360,6 +1381,9 @@ room {
 		end
 		D('menu').hidden = false
 		D('auth').hidden = false
+		(D'auth')[3] = [[Идентификация... [pause] успешно
+Добро пожаловать, Сергей.]]
+		D(D'auth')
 		walkback()
 		beep:play(1);
 		return false
@@ -1515,7 +1539,9 @@ room {
 		local d = D {'console', 'img', 'gfx/console.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2  }
 		local m = [[Идентификация... [pause] успешно
 Добро пожаловать, Сергей.]]
-		if emails > 0 then m = m .. [[ У вас ]]..tostring(emails)..' новых сообщений.' end
+		if emails > 0 then
+			m = m .. [[ У вас ]]..tostring(emails)..' новое сообщение.'
+		end
 
 		local a = D {'auth', 'txt', m, x = d.x + 32, y = d.y + 32, typewriter = true }
 		noinv_theme()
