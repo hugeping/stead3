@@ -4245,6 +4245,7 @@ local text = {
 	{ },
 	{ "Иллюстрации:", style = 2 },
 	{ "Петр Косых" },
+	{ "Свободные изображения" },
 	{ },
 	{ "Музыка:", style = 2 },
 	{ "Ryan Andersen / Day to Night" },
@@ -4261,6 +4262,10 @@ local text = {
 	{ "Тестирование:", style = 2 },
 	{ "vorov2" },
 	{ "techniX" },
+	{ "vvb2" },
+	{ "casper_nn" },
+	{ "goraph" },
+	{ "Wol4ik" },
 	{ "excelenter" },
 	{ },
 	{ "Апрель 2018" },
@@ -4318,6 +4323,7 @@ local text = {
 room {
 	nam = 'titles';
 	hidetitle = true;
+	noinv = true;
 	{
 		offset = 0;
 		pos = 1;
@@ -4360,9 +4366,9 @@ room {
 		_'@decor'.dirty = false
 		local scr = sprite.scr()
 		if s.line == false then
-			return
+			return false
 		end
-		if s.pos > 46 then
+		if s.pos > 51 then
 			snd.stop_music(0)
 			fading.set {"blackout", max = 200 }
 			walk 'провал3'
@@ -4392,6 +4398,7 @@ room {
 			scr:fill(0, s.h - s.offset, s.w, s.offset, 0, 0, 0, 255)
 			s.line:draw(scr, math.floor((s.w - s.ww) / 2), s.h - s.offset)
 		end
+		return false
 	end
 }
 
@@ -4399,6 +4406,7 @@ room {
 	nam = 'провал3';
 	title = '...';
 	hidetitle = true;
+	noinv = true;
 	num = 0;
 	decor = [[{$fmt y|40%}{$fmt b|ВНИМАНИЕ!^ЕСЛИ ТЫ ЧИТАЕШЬ ЭТО СООБЩЕНИЕ, ЗНАЧИТ ТЫ СПИШЬ!^
 МЫ ПРОБУЕМ РАЗНЫЕ СПОСОБЫ ДОСТУЧАТЬСЯ ДО ТЕБЯ.^
