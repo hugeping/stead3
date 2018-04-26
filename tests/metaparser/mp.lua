@@ -175,6 +175,9 @@ function mp:key(key)
 		end
 		return false
 	end
+	if key:len() > 1 then
+		return false
+	end
 	key = mp.shift and lang.kbd.shifted[key] or lang.kbd[key] or key
 	if key then
 		mp:inp_insert(key)
@@ -235,6 +238,53 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
 	return mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
+
+local function str_strip(str)
+	return std.strip(str)
+end
+
+local function str_split(str, delim)
+	local a = std.split(str, delim)
+	for k, _ in ipairs(a) do
+		a[k] = str_strip(a[k])
+	end
+	return a
+end
+
+function mp:verb(t, w)
+	w = w or game
+	if type(t) ~= 'table' then
+		std.err("Wrong 1-arg to mp:verb()", 2)
+	end
+	if type(w) ~= 'table' then
+		std.err("Wrong 2-arg to mp:verb()", 2)
+	end
+	if not w.__Verbs then
+		w.__Verbs = {}
+	end
+	local verb = {}
+	local n = 1
+	if std.is_tag(t[1]) then
+		verb.tag = t[1]
+		n = 2
+	end
+	if type(t[n]) ~= 'string' then
+		std.err("Wrong verb pattern in mp:verb()", 2)
+	end
+	verb.pattern = str_split(pattern, ',')
+	if #verb.pattern == 0 then
+		std.err("Wrong verb pattern: " .. verb.pattern, 2)
+	end
+	n = n + 1
+	if type(t[n]) ~= 'string' then
+		std.err("Wrong verb descriptor mp:verb()", 2)
+	end
+	verb.event = t[n]
+	table.insert(w, verb)
+	return verb
+end
+
+-- Verb { "#give", "отдать|дать,${inv}/вн,?для,${obj}/вн", "give %2 %3|receive %3 %2"}
 
 std.mod_cmd(
 function(cmd)
