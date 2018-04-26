@@ -53,7 +53,10 @@ end)
 
 function init()
 	if theme.name() ~= '.' then
-		std.err("Пожалуйста, включите поддержку собственных тем игры.")
+		std.err("Пожалуйста, включите поддержку собственных тем игры.", 2)
+	end
+	if not std.ref '$fmt' then
+		std.err("Пожалуйста, обновите INSTEAD до последней версии.", 2)
 	end
 	decor.bgcol = theme.get 'scr.col.bg'
 
