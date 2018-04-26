@@ -1226,14 +1226,6 @@ room {
 	}
 }
 
-if not std.ref'$fmt' then
-	obj {
-		nam = '$fmt';
-		act = function(s, w, ...)
-			return fmt[w](...)
-		end
-	}
-end
 room {
 	nam = 'journal-prev';
 }
