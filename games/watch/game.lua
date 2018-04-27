@@ -1234,6 +1234,7 @@ room {
 	title = 'Жилой модуль';
 	hidetitle = true;
 	hideinv = true;
+	fading = true;
 	subtitle = 'Отсек 1';
 	enter = function(s)
 		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
@@ -1307,6 +1308,8 @@ room {
 О, как высоко!}]];
 [[Несколько новых набросков. Надеюсь, вам понравится.^{$fmt r|Василий Зорин, 18 февраля 2266}]];
 [[{$fmt img|gfx/piligrim.png}]];
+[[{$fmt c|{$fmt img|gfx/shluz.png}}]];
+[[{$fmt c|{$fmt img|gfx/capsules.png}}]];
 [[]];
 	}};
 	way = {
