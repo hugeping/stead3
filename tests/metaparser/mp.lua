@@ -284,7 +284,7 @@ function mp:verb(t, w)
 	return verb
 end
 
--- Verb { "#give", "отдать|дать,${inv}/вн,?для,${obj}/вн", "give %2 %3|receive %3 %2"}
+-- Verb { "#give", "отдать|дать,{inv}/вн,?для,{obj}/вн", "give %2 %3|receive %3 %2"}
 
 std.mod_cmd(
 function(cmd)
