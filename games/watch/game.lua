@@ -2995,6 +2995,7 @@ room {
 		D {'journal', 'img', 'gfx/journal.png', x = (theme.scr.w() - 680) / 2, y = (theme.scr.h() - 540) / 2 }
 		snow_theme(s)
 		s.__page = 0
+		snd.stop_music();
 	end;
 	onexit = function(s, t)
 		if s == t then
