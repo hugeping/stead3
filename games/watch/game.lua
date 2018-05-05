@@ -3159,7 +3159,7 @@ function fading.effects.blackout(s, src, dst)
 		t = false
 	elseif s.step < 32 then
 		if not noise_eff then
-			snd.play ('snd/noise.ogg', rnd(4) + 2)
+			snd.play ('snd/noise.ogg', rnd(4) + 3)
 			noise_eff = true
 		end
 		t = (s.step % 16) <= 2
