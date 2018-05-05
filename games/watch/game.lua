@@ -3943,12 +3943,12 @@ local function check(nn)
 	end
 	if o1 / #nn > 0.3 or o1 / #nn < 0.25 then
 		print("o1:", o1 / #nn)
-		return false
+--		return false
 	end
 
 	if o2 / #nn > 0.3 or o2 / #nn < 0.25 then
 		print("o2:", o2 / #nn)
-		return false
+--		return false
 	end
 	return true
 end
