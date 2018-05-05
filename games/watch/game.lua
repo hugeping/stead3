@@ -86,8 +86,15 @@ function markers()
 		D { 'mark-front', 'img', mark2_spr, yc = true, xc = true, x = x, y = y }
 	end
 end
-
+local last_mus = 0
 function game:afterwalk()
+	if not sleeped then
+		if snd.music_playing() then
+			last_mus = instead.ticks()
+		elseif instead.ticks() - last_mus > 60 * 1000 then
+			snd.music ('mus/isthatyou.ogg', 1)
+		end
+	end
 	markers()
 end
 
@@ -115,7 +122,7 @@ room {
 	exit = function()
 		map_theme()
 		p [[Не без труда я выбрался из камеры. Теперь необходимо одеться.]];
-		snd.music ('mus/isthatyou.ogg')
+		snd.music ('mus/isthatyou.ogg', 1)
 	end;
 	decor = [[{#холод|Холодно.} {$d я|Я лежу} {#капсула|в криокапсуле.} {#пар|Вокруг меня клубится белый пар.}]];
 	way = {
@@ -528,7 +535,7 @@ dlg {
 				  if cap1 then n = n + 6 end
 				  if cap2 then n = n + 7 end
 				  if cap3 then n = n + 6 end
-				  pn (n, " из 20")
+				  pn ("осмотрено ", n, " из 20")
 			  end
 			  p "Крио-контейнеры:"
 			  if cont_chk then
@@ -757,13 +764,14 @@ room {
 				enable '#журнал'
 				return
 			end
-			if not watch_status() then
+			if not watch_status() and false then
 				p [[Пока я не закончил вахту, не стоит валяться на кушетке.]]
 				return
 			end
 			if not sleeped then
 				sleeped = true
 				std.pclr()
+				snd.stop_music()
 				walkin 'Двор-enter'
 				return
 			end
@@ -4148,12 +4156,12 @@ room {
 global {
 	wear2 = false;
 }
-
+dict.add ("криоотсек3", [[Несмотря на ослепительную белизну отсека, мне тревожно.]])
 room {
 	nam = 'Отсек 2 end';
 	title = 'Модуль гибернации';
 	subtitle = 'Отсек 2';
-	decor = [[{$d криоотсек|По всей площади отсека} {#капсулы|установлены капсулы. Все они открыты.} {$d стена|Вдоль стен} {#панели|расположены панели.}]];
+	decor = [[{$d криоотсек3|По всей площади отсека} {#капсулы|установлены капсулы. Все они открыты.} {$d стена|Вдоль стен} {#панели|расположены панели.}]];
 	onexit = function(s, t)
 		if not wear2 then
 			p [[Сначала нужно переодеться.]]
@@ -4191,7 +4199,7 @@ room {
 	nam = 'Отсек 1 end';
 	title = 'Модуль гибернации';
 	subtitle = 'Отсек 1';
-	decor = [[{$d криоотсек|По всей площади отсека} {#капсулы|установлены открытые капсулы.} {#капсула|Одна из капсул -- закрыта.}]];
+	decor = [[{$d криоотсек3|По всей площади отсека} {#капсулы|установлены открытые капсулы.} {#капсула|Одна из капсул -- закрыта.}]];
 	onexit = function(s, t)
 		if t ^ 'у капсулы сергея' then
 			return
@@ -4262,7 +4270,6 @@ local text = {
 	{ "casper_nn" },
 	{ "goraph" },
 	{ "Wol4ik" },
-	{ "excelenter" },
 	{ },
 	{ "Апрель 2018" },
 	{ },
@@ -4280,15 +4287,6 @@ local text = {
 	{ "Жене - за терпение", },
 	{ "Работодателю - за зарплату" },
 	{ "А также всем тем, кто не мешал..."},
-	{ },
-	{ },
-	{ },
-	{ },
-	{ },
-	{ },
-	{ },
-	{ },
-	{ },
 	{ },
 	{ },
 	{ },
@@ -4364,7 +4362,7 @@ room {
 		if s.line == false then
 			return false
 		end
-		if s.pos > 51 then
+		if s.pos > 50 then
 			snd.stop_music(0)
 			fading.set {"blackout", max = 200 }
 			walk 'провал3'
@@ -4404,6 +4402,14 @@ room {
 	hidetitle = true;
 	noinv = true;
 	num = 0;
+	timer = function(s)
+		if s.num < 250 then
+			s.num = s.num + 1
+		end
+		if s.num == 250 then
+			snd.music 'mus/isthatyou.ogg'
+		end
+	end;
 	decor = [[{$fmt y|40%}{$fmt b|ВНИМАНИЕ!^ЕСЛИ ТЫ ЧИТАЕШЬ ЭТО СООБЩЕНИЕ, ЗНАЧИТ ТЫ СПИШЬ!^
 МЫ ПРОБУЕМ РАЗНЫЕ СПОСОБЫ ДОСТУЧАТЬСЯ ДО ТЕБЯ.^
 И ЕСЛИ ТЫ ВИДИШЬ ЭТОТ ТЕКСТ -- У НАС ПОЛУЧИЛОСЬ!^
