@@ -88,7 +88,7 @@ function markers()
 end
 local last_mus = 0
 function game:afterwalk()
-	if not sleeped then
+	if not sleeped and visited 'Отсек 1' then
 		if snd.music_playing() then
 			last_mus = instead.ticks()
 		elseif instead.ticks() - last_mus > 60 * 1000 then
