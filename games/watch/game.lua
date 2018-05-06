@@ -1812,7 +1812,7 @@ global { rstars = {} };
 
 global { hud_selected = false, num_selected = 0 }
 local hud_cursor = pixels.new(32, 32)
-hud_cursor:poly({0, 0, 31, 0, 31, 31, 0, 31, 0, 0}, 255, 255, 255, 128);
+hud_cursor:poly({1, 1, 30, 1, 30, 30, 1, 30, 1, 1}, 255, 255, 255, 128);
 hud_cursor = hud_cursor:sprite()
 
 global {
