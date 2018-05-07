@@ -3936,7 +3936,7 @@ local function check(nn)
 		return false
 	end
 
-	if changes / #nn > 0.59 or changes / #nn < 0.45 then
+	if changes / #nn > 0.59 or changes / #nn < 0.48 then
 		print("changes:", changes / #nn)
 		return false
 	end
