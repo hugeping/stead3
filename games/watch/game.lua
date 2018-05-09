@@ -4265,14 +4265,14 @@ local text = {
 	{ "Тестирование:", style = 2 },
 	{ "vorov2" },
 	{ "techniX" },
-	{ "vvb2" },
-	{ "casper_nn" },
-	{ "goraph" },
+	{ "vvb" },
 	{ "Wol4ik" },
+	{ "и другие..."},
 	{ },
 	{ "Апрель 2018" },
 	{ },
 	{ "Спасибо Вам за прохождение!" },
+	{ },
 	{ },
 	{ "Достижения:", style = 2 },
 	{ "prefs.snowball_launcher" },
@@ -4286,6 +4286,7 @@ local text = {
 	{ "Жене - за терпение", },
 	{ "Работодателю - за зарплату" },
 	{ "А также всем тем, кто не мешал..."},
+	{ },
 	{ },
 	{ },
 	{ },
@@ -4361,7 +4362,7 @@ room {
 		if s.line == false then
 			return false
 		end
-		if s.pos > 50 then
+		if s.pos > 51 then
 			snd.stop_music(0)
 			fading.set {"blackout", max = 200 }
 			walk 'провал3'
