@@ -312,6 +312,22 @@ function mrd:dump(path)
 	f:close()
 end
 
+function mrd:score(an, g)
+	local score = 0
+	for kk, vv in ipairs(g or {}) do
+		if vv:sub(1, 1) == '~' then
+			vv = vv:sub(2)
+			if an[vv] then
+				score = -1
+				break
+			end
+		elseif an[vv] then
+			score = score + 1
+		end
+	end
+	return score
+end
+
 function mrd:lookup(w, g)
 	local cap, upper = self.lang.is_cap(w)
 	local t = self.lang.upper(w)
@@ -322,14 +338,13 @@ function mrd:lookup(w, g)
 	local res = {}
 	for k, v in ipairs(w) do
 		local flex = v.flex
+		local score = self:score(v.an, g)
 		for _, f in ipairs(flex) do
-			local score = 0
-			for kk, vv in ipairs(g or {}) do
-				if f.an[vv] or v.an[vv] then
-					score = score + 1
-				end
+			local sc = self:score(f.an, g)
+			if sc < 0 then
+				break
 			end
-			table.insert(res, { score = score, pos = #res, word = v, flex = f })
+			table.insert(res, { score = score + sc, pos = #res, word = v, flex = f })
 		end
 	end
 	if #res == 0 then
@@ -341,6 +356,10 @@ function mrd:lookup(w, g)
 		end
 		return a.score > b.score
 	end)
+--	for i = 1, #res do
+--		local w = res[i]
+--		print(self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post), w.score)
+--	end
 	w = res[1]
 	w = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
 	if upper then
@@ -400,7 +419,8 @@ end
 
 return mrd
 --mrd:gramtab()
---mrd:load(false, { [lang.upper "подосиновик"] = true, [lang.upper "красный"] = true })
---local w = mrd:word(-"красный подосиновик/рд,мн")
+--mrd.lang = require "lang-ru"
+--mrd:load(false, { [mrd.lang.upper "подосиновики"] = true, [mrd.lang.upper "красные"] = true })
+--local w = mrd:word(-"красные подосиновики/рд")
 --print(w)
 --mrd:file("mrd.lua")

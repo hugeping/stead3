@@ -251,6 +251,36 @@ local function str_split(str, delim)
 	return a
 end
 
+function mp:pattern(t)
+	local words = {}
+	local pat = str_split(t, "|")
+	for _, v in ipairs(pat) do
+		local w = {}
+		if v:sub(1, 1) == '?' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+		end
+		if v:sub(1, 1) == '~' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.hidden = true
+		end
+		if v:find("[^/]+/[^/]+$") then
+			local s, e = v:find("/[^/]+$")
+			w.morph = v:sub(s + 1, e)
+			v = v:sub(1, s - 1)
+			v = str_strip(v)
+		end
+		if v:find("^{[^}]+}$") then -- special
+
+		end
+		w.word = v
+		table.insert(words, v)
+	end
+	return words
+end
+
 function mp:verb(t, w)
 	w = w or game
 	if type(t) ~= 'table' then
@@ -271,7 +301,7 @@ function mp:verb(t, w)
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb pattern in mp:verb()", 2)
 	end
-	verb.pattern = str_split(pattern, ',')
+	verb.pattern = str_split(pattern, ' ')
 	if #verb.pattern == 0 then
 		std.err("Wrong verb pattern: " .. verb.pattern, 2)
 	end
@@ -284,7 +314,7 @@ function mp:verb(t, w)
 	return verb
 end
 
--- Verb { "#give", "отдать|дать,{inv}/вн,?для,{obj}/вн", "give %2 %3|receive %3 %2"}
+-- Verb { "#give", "отдать|дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
 
 std.mod_cmd(
 function(cmd)
