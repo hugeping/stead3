@@ -318,8 +318,7 @@ function mrd:score(an, g)
 		if vv:sub(1, 1) == '~' then
 			vv = vv:sub(2)
 			if an[vv] then
-				score = -1
-				break
+				score = score - 1
 			end
 		elseif an[vv] then
 			score = score + 1
