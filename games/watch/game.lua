@@ -40,6 +40,18 @@ declare 'mark2_spr' (function()
 	return p:sprite()
 end)
 
+function gravity()
+	if here().subtitle == 'Отсек 0' or
+		here().subtitle == 'Ангар' or
+		here().subtitle == 'Шлюзовой отсек' or
+		here().subtitle == 'Аварийный шлюз' or
+		here().subtitle == 'Центр управления' or
+		here().subtitle == 'Воронье гнездо' then
+		return false
+	end
+	return true
+end
+
 function markers()
 	if here():type 'dlg' then
 		return
@@ -342,7 +354,15 @@ obj {
 	know = false;
 	num = 0;
 	inv = function(s)
-		p [[Я подбросил монетку.]]
+		if skaf then
+			p [[Сначала лучше снять скафандр.]]
+			return
+		end
+		if not gravity() then
+			p [[Я раскрутил монетку в невесомости и поймал ее.]]
+		else
+			p [[Я подбросил монетку.]]
+		end
 		if sleeped then
 			p [[Решка.]]
 			s.num = s.num + 1
@@ -763,7 +783,7 @@ room {
 				enable '#журнал'
 				return
 			end
-			if not watch_status() and false then
+			if not watch_status() then
 				p [[Пока я не закончил вахту, не стоит валяться на кушетке.]]
 				return
 			end
