@@ -155,7 +155,7 @@ mp = std.obj {
 		shift = false;
 		alt = false;
 	};
-	dict = {};
+	-- dict = {};
 }
 
 function mp:key(key)
@@ -239,17 +239,6 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	return mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
 
-local function str_hint(str)
-	local s, e = str:find("/[^/]*$")
-	if not s then
-		return str, ""
-	end
-	if s == 1 then
-		return "", str:sub(2)
-	end
-	return str:sub(1, s - 1), str:sub(s + 1)
-end
-
 local function str_strip(str)
 	return std.strip(str)
 end
@@ -325,74 +314,6 @@ function mp:verb(t, w)
 	return verb
 end
 
-function mp:dict(dict, word)
-	local tab = {}
-	local w, hints = str_hint(word)
-	hints = str_split(hints, ",")
-	for k, v in pairs(dict) do
-		local ww, hh = str_hint(k)
-		local hints2 = {}
-		for _, v in ipairs(str_split(hh, ",")) do
-			hints2[v] = true
-		end
-		if ww == w then
-			local t = { ww, score = 0, pos = #tab, w = v }
-			for _, v in ipairs(hints) do
-				if v:sub(1, 1) ~= '~' then
-					if hints2[v] then
-						t.score = t.score + 1
-					end
-				else
-					if hints2[str_strip(v:sub(2))] then
-						t.score = t.score - 1
-					end
-				end
-			end
-			table.insert(tab, t)
-		end
-	end
-	if #tab > 0 then
-		table.sort(tab,
-			   function(a, b)
-				   if a.score == b.score then
-					   return a.pos < b.pos
-				   end
-				   return a.score > b.score
-		end)
-		return tab[1].w
-	end
-end
-
-function mp:disp(w, n, nn)
-	local hint = ''
-	if type(w) == 'string' then
-		w, hint = str_hint(w)
-	elseif type(n) == 'string' then
-		hint = n
-		n = nn
-	end
-	local w = std.object(w)
-	local ob = w
-	local disp = std.dispof(w)
-	local d = str_split(disp, ',|')
-	if #d == 0 then
-		std.err("Wrong object display: ", w)
-	end
-	n = n or 1
-	if n > #d then
-		n = 1
-	end
-	local hint2
-	w, hint2 = str_hint(d[n])
-	if type(ob.__dict) == 'table' then
-		local ww = self:dict(ob.__dict, w .. '/'.. hint .. ',' .. hint2)
-		if ww then
-			return ww
-		end
-	end
-	return mrd:word(w .. '/'.. hint .. ','.. hint2)
-end
-
 -- Verb { "#give", "отдать|дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
 
 std.mod_cmd(
@@ -404,26 +325,10 @@ function(cmd)
 	return true, false
 end)
 
-std.obj.word = function(self, ...)
-	return mp:disp(self, ...)
-end
-
-std.obj.dict = function(self, v)
-	std.rawset(self, '__dict', v)
-	return self
-end
-
 std.mod_start(
 function()
 	mrd:gramtab("morph/rgramtab.tab")
 	if not mrd:load("dict.mrd") then
-		local dict = {}
-		for f in std.readdir(instead.gamepath()) do
-			if f:find("%.lua$") then
-				mrd:file(f, dict)
-			end
-		end
-		mrd:load("morph/morphs.mrd", dict)
-		mrd:dump("dict.mrd")
+		mrd:create("dict.mrd")
 	end
 end)

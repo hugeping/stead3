@@ -411,6 +411,126 @@ function mrd:file(f, dict)
 	return dict
 end
 
+local function str_hint(str)
+	local s, e = str:find("/[^/]*$")
+	if not s then
+		return str, ""
+	end
+	if s == 1 then
+		return "", str:sub(2)
+	end
+	return str:sub(1, s - 1), str:sub(s + 1)
+end
+
+local function str_strip(str)
+	return std.strip(str)
+end
+
+local function str_split(str, delim)
+	local a = std.split(str, delim)
+	for k, _ in ipairs(a) do
+		a[k] = str_strip(a[k])
+	end
+	return a
+end
+
+function mrd:dict(dict, word)
+	local tab = {}
+	local w, hints = str_hint(word)
+	hints = str_split(hints, ",")
+	for k, v in pairs(dict) do
+		local ww, hh = str_hint(k)
+		local hints2 = {}
+		for _, v in ipairs(str_split(hh, ",")) do
+			hints2[v] = true
+		end
+		if ww == w then
+			local t = { ww, score = 0, pos = #tab, w = v }
+			for _, v in ipairs(hints) do
+				if v:sub(1, 1) ~= '~' then
+					if hints2[v] then
+						t.score = t.score + 1
+					end
+				else
+					if hints2[str_strip(v:sub(2))] then
+						t.score = t.score - 1
+					end
+				end
+			end
+			table.insert(tab, t)
+		end
+	end
+	if #tab > 0 then
+		table.sort(tab,
+			   function(a, b)
+				   if a.score == b.score then
+					   return a.pos < b.pos
+				   end
+				   return a.score > b.score
+		end)
+		return tab[1].w
+	end
+end
+
+function mrd.dispof(w)
+	if w.word ~= nil then
+		local d = std.call(w, 'word')
+		return d
+	end
+	return std.dispof(w)
+end
+
+function mrd:noun(w, n, nn)
+	local hint = ''
+	if type(w) == 'string' then
+		w, hint = str_hint(w)
+	elseif type(n) == 'string' then
+		hint = n
+		n = nn
+	end
+	local w = std.object(w)
+	local ob = w
+	local disp = self.dispof(w)
+	local d = str_split(disp, ',|')
+	if #d == 0 then
+		std.err("Wrong object display: ", w)
+	end
+	n = n or 1
+	if n > #d then
+		n = 1
+	end
+	local hint2
+	w, hint2 = str_hint(d[n])
+	if type(ob.__dict) == 'table' then
+		local ww = self:dict(ob.__dict, w .. '/'.. hint .. ',' .. hint2)
+		if ww then
+			return ww
+		end
+	end
+	return self:word(w .. '/'.. hint .. ','.. hint2)
+end
+
+function mrd:create(fname)
+	local dict = {}
+	for f in std.readdir(instead.gamepath()) do
+		if f:find("%.lua$") then
+			mrd:file(f, dict)
+		end
+	end
+	mrd:load("morph/morphs.mrd", dict)
+	mrd:dump(fname or 'dict.mrd')
+end
+
+std.obj.noun = function(self, ...)
+	return mrd:noun(self, ...)
+end
+
+std.obj.dict = function(self, v)
+	std.rawset(self, '__dict', v)
+	return self
+end
+
+
 local mt = getmetatable("")
 function mt.__unm(v)
 	return v
