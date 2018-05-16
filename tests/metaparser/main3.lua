@@ -3,6 +3,8 @@ require "mp"
 obj {
 	nam = 'яблоко';
 	disp = -"яблоко,яблочко,красное яблоко";
+}: dict {
+	['яблоко/дт,мн'] = 'xxx';
 }
 
 function start()

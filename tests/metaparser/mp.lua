@@ -325,6 +325,44 @@ function mp:verb(t, w)
 	return verb
 end
 
+function mp:dict(dict, word)
+	local tab = {}
+	local w, hints = str_hint(word)
+	hints = str_split(hints, ",")
+	for k, v in pairs(dict) do
+		local ww, hh = str_hint(k)
+		local hints2 = {}
+		for _, v in ipairs(str_split(hh, ",")) do
+			hints2[v] = true
+		end
+		if ww == w then
+			local t = { ww, score = 0, pos = #tab, w = v }
+			for _, v in ipairs(hints) do
+				if v:sub(1, 1) ~= '~' then
+					if hints2[v] then
+						t.score = t.score + 1
+					end
+				else
+					if hints2[str_strip(v:sub(2))] then
+						t.score = t.score - 1
+					end
+				end
+			end
+			table.insert(tab, t)
+		end
+	end
+	if #tab > 0 then
+		table.sort(tab,
+			   function(a, b)
+				   if a.score == b.score then
+					   return a.pos < b.pos
+				   end
+				   return a.score > b.score
+		end)
+		return tab[1].w
+	end
+end
+
 function mp:disp(w, n, nn)
 	local hint = ''
 	if type(w) == 'string' then
@@ -334,6 +372,7 @@ function mp:disp(w, n, nn)
 		n = nn
 	end
 	local w = std.object(w)
+	local ob = w
 	local disp = std.dispof(w)
 	local d = str_split(disp, ',|')
 	if #d == 0 then
@@ -345,6 +384,12 @@ function mp:disp(w, n, nn)
 	end
 	local hint2
 	w, hint2 = str_hint(d[n])
+	if type(ob.__dict) == 'table' then
+		local ww = self:dict(ob.__dict, w .. '/'.. hint .. ',' .. hint2)
+		if ww then
+			return ww
+		end
+	end
 	return mrd:word(w .. '/'.. hint .. ','.. hint2)
 end
 
@@ -361,6 +406,11 @@ end)
 
 std.obj.word = function(self, ...)
 	return mp:disp(self, ...)
+end
+
+std.obj.dict = function(self, v)
+	std.rawset(self, '__dict', v)
+	return self
 end
 
 std.mod_start(
