@@ -239,6 +239,17 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	return mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
 
+local function str_hint(str)
+	local s, e = str:find("/[^/]*$")
+	if not s then
+		return str, ""
+	end
+	if s == 1 then
+		return "", str:sub(2)
+	end
+	return str:sub(1, s - 1), str:sub(s + 1)
+end
+
 local function str_strip(str)
 	return std.strip(str)
 end
@@ -314,6 +325,29 @@ function mp:verb(t, w)
 	return verb
 end
 
+function mp:disp(w, n, nn)
+	local hint = ''
+	if type(w) == 'string' then
+		w, hint = str_hint(w)
+	elseif type(n) == 'string' then
+		hint = n
+		n = nn
+	end
+	local w = std.object(w)
+	local disp = std.dispof(w)
+	local d = str_split(disp, ',|')
+	if #d == 0 then
+		std.err("Wrong object display: ", w)
+	end
+	n = n or 1
+	if n > #d then
+		n = 1
+	end
+	local hint2
+	w, hint2 = str_hint(d[n])
+	return mrd:word(w .. '/'.. hint .. ','.. hint2)
+end
+
 -- Verb { "#give", "отдать|дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
 
 std.mod_cmd(
@@ -324,6 +358,10 @@ function(cmd)
 
 	return true, false
 end)
+
+std.obj.word = function(self, ...)
+	return mp:disp(self, ...)
+end
 
 std.mod_start(
 function()
