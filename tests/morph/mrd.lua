@@ -360,18 +360,27 @@ function mrd:lookup(w, g)
 --		print(self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post), w.score)
 --	end
 	w = res[1]
+	local gram = {}
+	for k, v in pairs(w.flex.an) do
+		gram[k] = v
+	end
+	for k, v in pairs(w.word.an) do
+		gram[k] = v
+	end
+
 	w = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
 	if upper then
 		w = self.lang.upper(w)
 	elseif cap then
 		w = self.lang.cap(w)
 	end
-	return w
+	return w, gram
 end
 
 function mrd:word(w)
 	local s, e = w:find("/[^/]*$")
 	local g = {}
+	local grams = {}
 	if s then
 		local gg = w:sub(s + 1)
 		w = w:sub(1, s - 1)
@@ -380,16 +389,17 @@ function mrd:word(w)
 	local found = true
 	w = w:gsub("[^ \t,%-!/:]+",
 		   function(w)
-			   local ww = self:lookup(w, g)
+			   local ww, gg = self:lookup(w, g)
 			   if not ww then
 				   found = false
 			   end
+			   table.insert(grams, gg)
 			   return ww or w
 	end)
 	if not found then
 		msg("Can not find word: "..w)
 	end
-	return w
+	return w, grams
 end
 
 function mrd:file(f, dict)
@@ -480,7 +490,7 @@ function mrd.dispof(w)
 	return std.dispof(w)
 end
 
-function mrd:noun(w, n, nn)
+function mrd:obj(w, n, nn)
 	local hint = ''
 	if type(w) == 'string' then
 		w, hint = str_hint(w)
@@ -501,19 +511,26 @@ function mrd:noun(w, n, nn)
 	end
 	local hint2
 	w, hint2 = str_hint(d[n])
+	return ob, w, hint .. ',' .. hint2
+end
+
+
+function mrd:noun(w, n, nn)
+	local hint, ob
+	ob, w, hint = self:obj(w, n, nn)
 	if type(ob.__dict) == 'table' then
-		local ww = self:dict(ob.__dict, w .. '/'.. hint .. ',' .. hint2)
+		local ww = self:dict(ob.__dict, w .. '/'.. hint)
 		if ww then
 			return ww
 		end
 	end
 	if type(game.__dict) == 'table' then
-		local ww = self:dict(game.__dict, w .. '/'.. hint .. ',' .. hint2)
+		local ww = self:dict(game.__dict, w .. '/'.. hint)
 		if ww then
 			return ww
 		end
 	end
-	return self:word(w .. '/'.. hint .. ','.. hint2)
+	return self:word(w .. '/'.. hint)
 end
 
 function mrd:create(fname)
@@ -529,6 +546,18 @@ end
 
 std.obj.noun = function(self, ...)
 	return mrd:noun(self, ...)
+end
+
+std.obj.gram = function(self, ...)
+	local hint, ob, w
+	ob, w, hint = mrd:obj(self, ...)
+	local _, gram = mrd:word(w .. '/'..hint)
+	hint = str_split(hint, ",")
+	local g = gram and gram[1] or {}
+	for _, v in ipairs(hint) do
+		g[v] = true
+	end
+	return g
 end
 
 std.obj.dict = function(self, v)

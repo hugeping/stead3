@@ -253,7 +253,7 @@ end
 
 function mp:pattern(t)
 	local words = {}
-	local pat = str_split(t, "|")
+	local pat = str_split(lang.norm(t), "|,")
 	for _, v in ipairs(pat) do
 		local w = {}
 		if v:sub(1, 1) == '?' then
@@ -276,7 +276,7 @@ function mp:pattern(t)
 
 		end
 		w.word = v
-		table.insert(words, v)
+		table.insert(words, w)
 	end
 	return words
 end
@@ -301,10 +301,11 @@ function mp:verb(t, w)
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb pattern in mp:verb()", 2)
 	end
-	verb.pattern = str_split(pattern, ' ')
+	verb.pattern = str_split(t[n], ' ')
 	if #verb.pattern == 0 then
 		std.err("Wrong verb pattern: " .. verb.pattern, 2)
 	end
+	verb.verb = self:pattern(verb.pattern[1])
 	n = n + 1
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb descriptor mp:verb()", 2)
@@ -314,8 +315,43 @@ function mp:verb(t, w)
 	return verb
 end
 
--- Verb { "#give", "отдать|дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
+function mp:lookup(words, w)
+	local ret = {}
+	w = w or game
+	for _, v in ipairs(w) do -- verbs
+		local found = false
+		for _, vv in ipairs(v.verb) do
+			for _, vvv in ipairs(words) do
+				if vv.word == vvv then
+					table.insert(ret, v)
+					break
+				end
+			end
+			if found then
+				break
+			end
+		end
+	end
+	return ret
+end
 
+function mp:input(str)
+	local w = str_split(str, " ,.:")
+	if #w == 0 then
+		return
+	end
+	local verbs = self:lookup(w)
+	if #verbs == 0 then
+		return
+	end
+end
+
+-- Verb { "#give", "отдать,дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
+
+function Verb(t, w)
+	return mp:verb(t, w)
+end
+std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
 	if cmd[1] ~= '@mp_key' then

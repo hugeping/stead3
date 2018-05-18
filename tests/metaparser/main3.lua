@@ -10,6 +10,13 @@ obj {
 game: dict {
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
 }
+
+Verb { "#take", "взять,забрать,схватить {obj}/вн", "take %2"}
+
 function start()
 	print(_'яблоко':noun('дт,мн')) -- даст яблокам
+	for k, v in pairs(_'яблоко':gram()) do
+		print(k, v)
+	end
+	mp:input("взять яблоко")
 end
