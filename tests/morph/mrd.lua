@@ -507,6 +507,12 @@ function mrd:noun(w, n, nn)
 			return ww
 		end
 	end
+	if type(game.__dict) == 'table' then
+		local ww = self:dict(game.__dict, w .. '/'.. hint .. ',' .. hint2)
+		if ww then
+			return ww
+		end
+	end
 	return self:word(w .. '/'.. hint .. ','.. hint2)
 end
 
@@ -530,6 +536,14 @@ std.obj.dict = function(self, v)
 	return self
 end
 
+local onew = std.obj.new
+std.obj.new = function(self, v)
+	if type(v[1]) == 'string' or type(v[1]) == 'function' then
+		v.words = v[1]
+		table.remove(v, 1)
+	end
+	return onew(self, v)
+end
 
 local mt = getmetatable("")
 function mt.__unm(v)
