@@ -539,7 +539,7 @@ end
 local onew = std.obj.new
 std.obj.new = function(self, v)
 	if type(v[1]) == 'string' or type(v[1]) == 'function' then
-		v.words = v[1]
+		v.word = v[1]
 		table.remove(v, 1)
 	end
 	return onew(self, v)
