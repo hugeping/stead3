@@ -331,7 +331,7 @@ function mp:verb(t, w)
 		local dsc = str_split(t[n], ":")
 		local pat
 		if #dsc == 1 then
-			table.insert(verb.dsc, { pat = false, ev = dsc[1] })
+			table.insert(verb.dsc, { pat = {}, ev = dsc[1] })
 		elseif #dsc == 2 then
 			pat = str_split(dsc[1], ' ')
 			table.insert(verb.dsc, { pat = pat, ev = dsc[2] })
@@ -365,18 +365,25 @@ function mp:lookup(words, w)
 	return ret
 end
 
-local function tab_search(t, w)
+local function word_search(t, w)
 	w = str_split(w, " ")
 	for k, v in ipairs(t) do
 		local found = true
 		for i = 1, #w do
-			if w[i] ~= t[k + i - 1] then
+			local found2 = false
+			for ii = k, k + #w - 1 do
+				if w[i] == t[ii] then
+					found2 = true
+					break
+				end
+			end
+			if not found2 then
 				found = false
 				break
 			end
 		end
 		if found then
-			return k
+			return k, #w
 		end
 	end
 end
@@ -396,7 +403,7 @@ function mp:match(verb, w)
 	for _, d in ipairs(verb.dsc) do
 		local match = {}
 		local a = {}
-		found = false
+		found = (#d.pat == 0)
 		for k, v in ipairs(w) do
 			if k ~= verb.verb_nr then
 				table.insert(a, v)
@@ -404,17 +411,26 @@ function mp:match(verb, w)
 		end
 		for _, v in ipairs(d.pat) do
 			local pat = self:pattern(v)
+			local best = #a + 1
+			local best_len = 1
+			local word
+			local required
 			for _, pp in ipairs(pat) do
-				local k = tab_search(a, pp.word)
-				if k then
-					a = tab_sub(a, k)
-					table.remove(a, 1)
-					table.insert(match, pp.word)
+				if not pp.optional then
+					required = true
+				end
+				local k, len = word_search(a, pp.word)
+				if k and ( k < best or len > best_len) then
+					best = k
+					word = pp.word
 					found = true
-					break
 				end
 			end
-			if not found and not v.optional then
+			if found then
+				a = tab_sub(a, best)
+				table.remove(a, 1)
+				table.insert(match, word)
+			elseif required then
 				break
 			end
 		end
@@ -423,6 +439,9 @@ function mp:match(verb, w)
 			table.insert(matches, match)
 		end
 	end
+	table.sort(matches, function(a, b)
+			   return #a > #b
+	end)
 	return matches
 end
 
@@ -435,11 +454,18 @@ function mp:input(str)
 	if #verbs == 0 then
 		return false, "UNKNOWN_VERB"
 	end
+	local matches = {}
 	for _, v in ipairs(verbs) do
 		local m = self:match(v, w)
-		for k, v in pairs(m[1]) do
-			print("!", k, v)
+		if #m > 0 then
+			table.insert(matches, { verb = v, match = m[1] })
 		end
+	end
+	table.sort(matches, function(a, b)
+			   return #a.match > #b.match
+	end)
+	for k, v in pairs(matches[1].match) do
+		print(k, v)
 	end
 	return true
 end
