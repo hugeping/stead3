@@ -135,9 +135,11 @@ function input:key(press, key)
 		mp.shift = press
 		mod = true
 	end
+	if key:find("enter") or key:find("return") then key = 'enter' end
+
 	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
-			return '@mp_key'
+			return '@mp_key '..tostring(key)
 		end
 	end
 	if okey then
@@ -155,6 +157,7 @@ mp = std.obj {
 		shift = false;
 		alt = false;
 	};
+	text = '';
 	-- dict = {};
 }
 
@@ -174,6 +177,9 @@ function mp:key(key)
 			return true
 		end
 		return false
+	end
+	if key == 'enter' then
+		return true
 	end
 	if key:len() > 1 then
 		return false
@@ -445,6 +451,34 @@ function mp:match(verb, w)
 	return matches
 end
 
+function mp:parse(inp)
+	pn(inp)
+end
+
+std.world.display = function(s, state)
+	local l, av, pv
+	local reaction = s:reaction() or nil
+	if state then
+		reaction = iface:em(reaction)
+		av, pv = s:events()
+		av = iface:em(av)
+		pv = iface:em(pv)
+		l = s.player:look() -- objects [and scene]
+	end
+	l = std.par(std.scene_delim, reaction or false,
+		    av or false, l or false,
+		    pv or false) or ''
+	mp.text = mp.text .. fmt.anchor().. l .. '^'
+	return mp.text
+end
+
+function mp:key_enter()
+	local r, v = std.call(mp, 'parse', self.inp)
+	self.inp = '';
+	self.cur = 1;
+	return r, v
+end
+
 function mp:input(str)
 	local w = str_split(str, " ,.:")
 	if #w == 0 then
@@ -478,10 +512,12 @@ end
 std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
+	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
+		return mp:key_enter()
+	end
 	if cmd[1] ~= '@mp_key' then
 		return
 	end
-
 	return true, false
 end)
 
