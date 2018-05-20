@@ -161,6 +161,7 @@ mp = std.obj {
 		words = {};
 		parsed = {};
 		hints = {};
+		unknown = {};
 	};
 	text = '';
 	-- dict = {};
@@ -428,6 +429,7 @@ function mp:match(verb, w)
 	local matches = {}
 	local found
 	local hints = {}
+	local unknown = {}
 	for _, d in ipairs(verb.dsc) do
 		local match = {}
 		local a = {}
@@ -459,6 +461,9 @@ function mp:match(verb, w)
 				table.remove(a, 1)
 				table.insert(match, word)
 			elseif required then
+				for i = 1, best - 1 do
+					table.insert(unknown, a[i])
+				end
 				table.insert(hints, v)
 				break
 			end
@@ -471,7 +476,7 @@ function mp:match(verb, w)
 	table.sort(matches, function(a, b)
 			   return #a > #b
 	end)
-	return matches, hints
+	return matches, hints, unknown
 end
 
 function mp:err(err)
@@ -487,6 +492,9 @@ function mp:err(err)
 		end
 	elseif err == "INCOMPLETE" then
 		p ("Incomplete sentence.")
+		if #self.unknown > 0 then
+			p ("Unknown word: ", self.unknown[1])
+		end
 		if #self.hints > 0 then
 			p ("Possible words: ")
 		end
@@ -549,6 +557,7 @@ end
 
 function mp:input(str)
 	local hints = {}
+	local unknown = {}
 	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
@@ -560,13 +569,14 @@ function mp:input(str)
 	end
 	local matches = {}
 	for _, v in ipairs(verbs) do
-		local m, h = self:match(v, w)
+		local m, h, u = self:match(v, w)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		else
 			for _, v in ipairs(h) do
 				table.insert(hints, v)
 			end
+			table.insert(unknown, u)
 		end
 	end
 	table.sort(matches, function(a, b)
@@ -574,6 +584,20 @@ function mp:input(str)
 	end)
 	if #matches == 0 then
 		self.hints = hints
+		self.unknown = {}
+		for i = 1, #unknown[1] do
+			local u = unknown[1][i]
+			local yes = true
+			for _, v in ipairs(unknown) do
+				if v[i] ~= u or not v[i] then
+					yes = false
+					break
+				end
+			end
+			if yes then
+				table.insert(self.unknown, u)
+			end
+		end
 		return false, "INCOMPLETE"
 	end
 	self.parsed = matches[1].match
