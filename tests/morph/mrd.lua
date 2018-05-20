@@ -520,27 +520,49 @@ function mrd:obj(w, n, nn)
 	if n > #d then
 		n = 1
 	end
+	if n < 0 then -- all names
+		local ret = {}
+		for _, v in ipairs(d) do
+			w, hint2 = str_hint(v)
+			table.insert(ret, { word = w, hint = hint ..','..hint2 });
+		end
+		return ob, ret
+	end
 	w, hint2 = str_hint(d[n])
 	return ob, w, hint .. ',' .. hint2
 end
 
-
 function mrd:noun(w, n, nn)
-	local hint, ob
+	local hint, ob, found
+	local rc = ''
 	ob, w, hint = self:obj(w, n, nn)
-	if type(ob.__dict) == 'table' then
-		local ww = self:dict(ob.__dict, w .. '/'.. hint)
-		if ww then
-			return ww
+	if type(w) ~= 'table' then
+		w = {{ word = w, hint = hint }}
+	end
+	for _, v in ipairs(w) do
+		found = false
+		if type(ob.__dict) == 'table' then
+			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
+			if ww then
+				found = true
+				if rc ~= '' then rc = rc .. '|' end
+				rc = rc .. w
+			end
+		end
+		if not found and type(game.__dict) == 'table' then
+			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint)
+			if ww then
+				found = true
+				if rc ~= '' then rc = rc .. '|' end
+				rc = rc .. w
+			end
+		end
+		if not found then
+			if rc ~= '' then rc = rc .. '|' end
+			rc = rc ..  self:word(v.word .. '/'.. v.hint)
 		end
 	end
-	if type(game.__dict) == 'table' then
-		local ww = self:dict(game.__dict, w .. '/'.. hint)
-		if ww then
-			return ww
-		end
-	end
-	return self:word(w .. '/'.. hint)
+	return rc
 end
 
 function mrd:create(fname)

@@ -251,6 +251,18 @@ local function str_split(str, delim)
 	return a
 end
 
+function noun_obj(attr)
+	local rc = ''
+	local oo = {}
+	std.here():for_each(function(v)
+			table.insert(oo, v)
+			   end)
+	for _, v in ipairs(oo) do
+		rc = rc .. v:noun(attr, -1) .. '|'
+	end
+	return rc
+end
+
 function mp:pattern(t)
 	local words = {}
 	local pat = str_split(lang.norm(t), "|,")
@@ -272,11 +284,19 @@ function mp:pattern(t)
 			v = v:sub(1, s - 1)
 			v = str_strip(v)
 		end
-		if v:find("^{[^}]+}$") then -- special
-
+		if v:find("^{[^}]+}$") then -- completion function
+			v = v:gsub("^{", ""):gsub("}$", "")
+			if type(std.rawget(_G, v)) ~= 'function' then
+				std.err("Wrong subst function: ".. v, 2);
+			end
+			local ww =  self:pattern(_G[v](w.morph))
+			for _, xw in ipairs(ww) do
+				table.insert(words, xw)
+			end
+		else
+			w.word = v
+			table.insert(words, w)
 		end
-		w.word = v
-		table.insert(words, w)
 	end
 	return words
 end
@@ -301,16 +321,25 @@ function mp:verb(t, w)
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb pattern in mp:verb()", 2)
 	end
-	verb.pattern = str_split(t[n], ' ')
-	if #verb.pattern == 0 then
-		std.err("Wrong verb pattern: " .. verb.pattern, 2)
-	end
-	verb.verb = self:pattern(verb.pattern[1])
+	verb.verb = self:pattern(t[n])
 	n = n + 1
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb descriptor mp:verb()", 2)
 	end
-	verb.event = t[n]
+	verb.dsc = {}
+	while type(t[n]) == 'string' do
+		local dsc = str_split(t[n], ":")
+		local pat
+		if #dsc == 1 then
+			table.insert(verb.dsc, { pat = false, ev = dsc[1] })
+		elseif #dsc == 2 then
+			pat = str_split(dsc[1], ' ')
+			table.insert(verb.dsc, { pat = pat, ev = dsc[2] })
+		else
+			std.err("Wrong verb descriptor: " .. t[n])
+		end
+		n = n + 1
+	end
 	table.insert(w, verb)
 	return verb
 end
@@ -321,8 +350,9 @@ function mp:lookup(words, w)
 	for _, v in ipairs(w) do -- verbs
 		local found = false
 		for _, vv in ipairs(v.verb) do
-			for _, vvv in ipairs(words) do
+			for i, vvv in ipairs(words) do
 				if vv.word == vvv then
+					v.verb_nr = i
 					table.insert(ret, v)
 					break
 				end
@@ -335,18 +365,86 @@ function mp:lookup(words, w)
 	return ret
 end
 
-function mp:input(str)
-	local w = str_split(str, " ,.:")
-	if #w == 0 then
-		return
-	end
-	local verbs = self:lookup(w)
-	if #verbs == 0 then
-		return
+local function tab_search(t, w)
+	w = str_split(w, " ")
+	for k, v in ipairs(t) do
+		local found = true
+		for i = 1, #w do
+			if w[i] ~= t[k + i - 1] then
+				found = false
+				break
+			end
+		end
+		if found then
+			return k
+		end
 	end
 end
 
--- Verb { "#give", "отдать,дать {inv}/вн ?для {obj}/вн", "give %2 %3|receive %3 %2"}
+local function tab_sub(t, s, e)
+	local r = {}
+	e = e or #t
+	for i = s, e do
+		table.insert(r, t[i])
+	end
+	return r
+end
+
+function mp:match(verb, w)
+	local matches = {}
+	local found
+	for _, d in ipairs(verb.dsc) do
+		local match = {}
+		local a = {}
+		found = false
+		for k, v in ipairs(w) do
+			if k ~= verb.verb_nr then
+				table.insert(a, v)
+			end
+		end
+		for _, v in ipairs(d.pat) do
+			local pat = self:pattern(v)
+			for _, pp in ipairs(pat) do
+				local k = tab_search(a, pp.word)
+				if k then
+					a = tab_sub(a, k)
+					table.remove(a, 1)
+					table.insert(match, pp.word)
+					found = true
+					break
+				end
+			end
+			if not found and not v.optional then
+				break
+			end
+		end
+		if found then
+			table.insert(match, 1, w[verb.verb_nr])
+			table.insert(matches, match)
+		end
+	end
+	return matches
+end
+
+function mp:input(str)
+	local w = str_split(str, " ,.:")
+	if #w == 0 then
+		return false, "EMPTY_INPUT"
+	end
+	local verbs = self:lookup(w)
+	if #verbs == 0 then
+		return false, "UNKNOWN_VERB"
+	end
+	for _, v in ipairs(verbs) do
+		local m = self:match(v, w)
+		for k, v in pairs(m[1]) do
+			print("!", k, v)
+		end
+	end
+	return true
+end
+
+-- Verb { "#give", "отдать,дать", "{$inv/вн} ?для {$obj/вн} : give %2 %3|receive %3 %2"}
 
 function Verb(t, w)
 	return mp:verb(t, w)
