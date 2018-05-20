@@ -492,6 +492,7 @@ end
 
 function mrd:obj(w, n, nn)
 	local hint = ''
+	local hint2
 	if type(w) == 'string' then
 		w, hint = str_hint(w)
 	elseif type(n) == 'string' then
@@ -501,15 +502,24 @@ function mrd:obj(w, n, nn)
 	local w = std.object(w)
 	local ob = w
 	local disp = self.dispof(w)
-	local d = str_split(disp, ',|')
+	local d = str_split(disp, '|')
 	if #d == 0 then
 		std.err("Wrong object display: ", w)
 	end
+	-- notmalize
+	local nd = {}
+	for _, v in ipairs(d) do
+		w, hint2 = str_hint(v)
+		local dd = str_split(w, ',')
+		for _, vv in ipairs(dd) do
+			table.insert(nd, vv .. '/'..hint2)
+		end
+	end
+	d = nd
 	n = n or 1
 	if n > #d then
 		n = 1
 	end
-	local hint2
 	w, hint2 = str_hint(d[n])
 	return ob, w, hint .. ',' .. hint2
 end
