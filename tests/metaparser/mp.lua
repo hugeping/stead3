@@ -2,6 +2,7 @@ require "fmt"
 
 local lang = require "morph/lang-ru"
 local mrd = require "morph/mrd"
+local inp_split = " :.,!?"
 
 mrd.lang = lang
 
@@ -158,6 +159,8 @@ mp = std.obj {
 		shift = false;
 		alt = false;
 		words = {};
+		parsed = {};
+		hints = {};
 	};
 	text = '';
 	-- dict = {};
@@ -259,7 +262,7 @@ local function str_split(str, delim)
 	return a
 end
 
-function noun_obj(attr)
+function mp:noun_obj(attr)
 	local rc = ''
 	local oo = {}
 	std.here():for_each(function(v)
@@ -294,10 +297,10 @@ function mp:pattern(t)
 		end
 		if v:find("^{[^}]+}$") then -- completion function
 			v = v:gsub("^{", ""):gsub("}$", "")
-			if type(std.rawget(_G, v)) ~= 'function' then
+			if type(self[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local ww =  self:pattern(_G[v](w.morph))
+			local ww =  self:pattern(mp[v](mp, w.morph))
 			for _, xw in ipairs(ww) do
 				table.insert(words, xw)
 			end
@@ -424,6 +427,7 @@ end
 function mp:match(verb, w)
 	local matches = {}
 	local found
+	local hints = {}
 	for _, d in ipairs(verb.dsc) do
 		local match = {}
 		local a = {}
@@ -455,6 +459,7 @@ function mp:match(verb, w)
 				table.remove(a, 1)
 				table.insert(match, word)
 			elseif required then
+				table.insert(hints, v)
 				break
 			end
 		end
@@ -466,29 +471,55 @@ function mp:match(verb, w)
 	table.sort(matches, function(a, b)
 			   return #a > #b
 	end)
-	return matches
+	return matches, hints
 end
 
 function mp:err(err)
 	if err == "UNKNOWN_VERB" then
-		pn ("Unknown verb: ", self.words[1])
+		p ("Unknown verb: ", self.words[1], ".")
 		local verbs = self:lookup_verb(self.words, nil, true)
 		if verbs and #verbs > 0 then
 			local verb = verbs[1]
 			local fixed = verb.verb[verb.word_nr]
 			if verb.lev < 4 then
-				pn("Did you mean: ", fixed.word)
+				pn("Did you mean: ", fixed.word, "?")
+			end
+		end
+	elseif err == "INCOMPLETE" then
+		p ("Incomplete sentence.")
+		if #self.hints > 0 then
+			p ("Possible words: ")
+		end
+		for _, v in ipairs(self.hints) do
+			local help
+			if v:find("^{") then
+				help = false
+				p ("noun")
+			else
+				local pat = self:pattern(v)
+				for _, vv in ipairs(pat) do
+					p (vv.word)
+				end
 			end
 		end
 	end
 end
 
 function mp:parse(inp)
-	pn(fmt.b(inp))
+	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	local r, v = self:input(inp)
 	if not r then
 		self:err(v)
 		return
+	end
+	local rinp = ''
+	pn(fmt.b(inp))
+	for _, v in ipairs(self.parsed) do
+		if rinp ~= '' then rinp = rinp .. ' ' end
+		rinp = rinp .. v
+	end
+	if rinp ~= inp then
+		pn(fmt.em("("..rinp..")"))
 	end
 end
 
@@ -517,7 +548,8 @@ function mp:key_enter()
 end
 
 function mp:input(str)
-	local w = str_split(str, " ,.:")
+	local hints = {}
+	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
 		return false, "EMPTY_INPUT"
@@ -528,17 +560,23 @@ function mp:input(str)
 	end
 	local matches = {}
 	for _, v in ipairs(verbs) do
-		local m = self:match(v, w)
+		local m, h = self:match(v, w)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
+		else
+			for _, v in ipairs(h) do
+				table.insert(hints, v)
+			end
 		end
 	end
 	table.sort(matches, function(a, b)
 			   return #a.match > #b.match
 	end)
-	for k, v in pairs(matches[1].match) do
-		print(k, v)
+	if #matches == 0 then
+		self.hints = hints
+		return false, "INCOMPLETE"
 	end
+	self.parsed = matches[1].match
 	return true
 end
 
