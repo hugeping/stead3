@@ -153,9 +153,11 @@ mp = std.obj {
 		inp = '';
 		cur = 1;
 		cursor = fmt.b("|");
+		prompt = "> ";
 		ctrl = false;
 		shift = false;
 		alt = false;
+		words = {};
 	};
 	text = '';
 	-- dict = {};
@@ -242,7 +244,7 @@ end
 
 instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
-	return mp:esc(pre)..mp.cursor..mp:esc(post)
+	return mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post)
 end)
 
 local function str_strip(str)
@@ -350,23 +352,39 @@ function mp:verb(t, w)
 	return verb
 end
 
-function mp:lookup(words, w)
+function mp:lookup_verb(words, w, lev)
 	local ret = {}
 	w = w or game
 	for _, v in ipairs(w) do -- verbs
 		local found = false
+		local lev_v = {}
 		for _, vv in ipairs(v.verb) do
 			for i, vvv in ipairs(words) do
-				if vv.word == vvv then
+				if lev then
+					local lev = utf_lev(vv.word, vvv)
+					table.insert(lev_v, { lev = lev, verb = v, verb_nr = i, word_nr = _ } )
+				elseif vv.word == vvv then
 					v.verb_nr = i
 					table.insert(ret, v)
 					break
 				end
 			end
-			if found then
-				break
-			end
 		end
+		if lev and #lev_v > 0 then
+			table.sort(lev_v, function(a, b)
+					   return a.lev < b.lev
+			end)
+			lev_v[1].verb.verb_nr = lev_v[1].verb_nr
+			lev_v[1].verb.word_nr = lev_v[1].word_nr
+			lev_v[1].verb.lev = lev_v[1].lev
+			table.insert(ret, lev_v[1].verb)
+		end
+	end
+	if lev then
+		table.sort(ret, function(a, b)
+				   return a.lev < b.lev
+		end)
+		ret = { ret[1] }
 	end
 	return ret
 end
@@ -451,8 +469,27 @@ function mp:match(verb, w)
 	return matches
 end
 
+function mp:err(err)
+	if err == "UNKNOWN_VERB" then
+		pn ("Unknown verb: ", self.words[1])
+		local verbs = self:lookup_verb(self.words, nil, true)
+		if verbs and #verbs > 0 then
+			local verb = verbs[1]
+			local fixed = verb.verb[verb.word_nr]
+			if verb.lev < 4 then
+				pn("Did you mean: ", fixed.word)
+			end
+		end
+	end
+end
+
 function mp:parse(inp)
-	pn(inp)
+	pn(fmt.b(inp))
+	local r, v = self:input(inp)
+	if not r then
+		self:err(v)
+		return
+	end
 end
 
 std.world.display = function(s, state)
@@ -481,10 +518,11 @@ end
 
 function mp:input(str)
 	local w = str_split(str, " ,.:")
+	self.words = w
 	if #w == 0 then
 		return false, "EMPTY_INPUT"
 	end
-	local verbs = self:lookup(w)
+	local verbs = self:lookup_verb(w)
 	if #verbs == 0 then
 		return false, "UNKNOWN_VERB"
 	end
