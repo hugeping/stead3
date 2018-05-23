@@ -1,10 +1,7 @@
 require "fmt"
 
-local lang = require "morph/lang-ru"
 local mrd = require "morph/mrd"
 local inp_split = " :.,!?"
-
-mrd.lang = lang
 
 local input = std.ref '@input'
 
@@ -162,6 +159,9 @@ mp = std.obj {
 		parsed = {};
 		hints = {};
 		unknown = {};
+		token = {};
+		msg = {};
+		mrd = mrd;
 	};
 	text = '';
 	-- dict = {};
@@ -190,7 +190,7 @@ function mp:key(key)
 	if key:len() > 1 then
 		return false
 	end
-	key = mp.shift and lang.kbd.shifted[key] or lang.kbd[key] or key
+	key = mp.shift and mrd.lang.kbd.shifted[key] or mrd.lang.kbd[key] or key
 	if key then
 		mp:inp_insert(key)
 		return true
@@ -263,10 +263,13 @@ local function str_split(str, delim)
 	return a
 end
 
-function mp:noun_obj(attr)
+function mp.token.noun(attr, help)
 	local rc = ''
 	local oo = {}
 	std.here():for_each(function(v)
+			table.insert(oo, v)
+			   end)
+	inv():for_each(function(v)
 			table.insert(oo, v)
 			   end)
 	for _, v in ipairs(oo) do
@@ -277,7 +280,7 @@ end
 
 function mp:pattern(t)
 	local words = {}
-	local pat = str_split(lang.norm(t), "|,")
+	local pat = str_split(mrd.lang.norm(t), "|,")
 	for _, v in ipairs(pat) do
 		local w = {}
 		if v:sub(1, 1) == '?' then
@@ -298,10 +301,10 @@ function mp:pattern(t)
 		end
 		if v:find("^{[^}]+}$") then -- completion function
 			v = v:gsub("^{", ""):gsub("}$", "")
-			if type(self[v]) ~= 'function' then
+			if type(self.token[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local ww =  self:pattern(mp[v](mp, w.morph))
+			local ww =  self:pattern(self.token[v](w.morph))
 			for _, xw in ipairs(ww) do
 				table.insert(words, xw)
 			end
@@ -481,47 +484,61 @@ end
 
 function mp:err(err)
 	if err == "UNKNOWN_VERB" then
-		p ("Unknown verb: ", self.words[1], ".")
+		p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[1], ".")
 		local verbs = self:lookup_verb(self.words, nil, true)
 		if verbs and #verbs > 0 then
 			local verb = verbs[1]
 			local fixed = verb.verb[verb.word_nr]
 			if verb.lev < 4 then
-				pn("Did you mean: ", fixed.word, "?")
+				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word, "?")
 			end
 		end
 	elseif err == "INCOMPLETE" then
-		p ("Incomplete sentence.")
+		local need_noun = #self.hints > 0 and self.hints[1]:find("^{noun}")
 		if #self.unknown > 0 then
-			p ("Unknown word: ", self.unknown[1])
+			if need_noun then
+				p (self.msg.UNKNOWN_OBJ or "Do not see", " ",self.unknown[1], ".")
+			else
+				p (self.msg.UNKNOWN_WORD or "Unknown word", " ", self.unknown[1], ".")
+			end
 		end
+		p (self.msg.INCOMPLETE or "Incomplete sentence.")
 		if #self.hints > 0 then
-			p ("Possible words: ")
+			p (self.msg.HINT_WORDS or "Possible words:", " ")
 		end
+		local first = true
 		for _, v in ipairs(self.hints) do
-			local help
-			if v:find("^{") then
-				help = false
-				p ("noun")
+			if v:find("^{noun}") then
+				if mp.err_noun then
+					mp:err_noun(v)
+				else
+					pr ("noun")
+				end
 			else
 				local pat = self:pattern(v)
 				for _, vv in ipairs(pat) do
-					p (vv.word)
+					if not first then
+						pr (mp.msg.HINT_OR or "or", " ", vv.word)
+					else
+						pr (" ", vv.word)
+					end
 				end
 			end
+			first = false
 		end
+		p "."
 	end
 end
 
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
+	pn(fmt.b(inp))
 	local r, v = self:input(inp)
 	if not r then
 		self:err(v)
 		return
 	end
 	local rinp = ''
-	pn(fmt.b(inp))
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
