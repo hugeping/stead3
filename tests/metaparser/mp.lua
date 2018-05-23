@@ -484,14 +484,19 @@ end
 
 function mp:err(err)
 	if err == "UNKNOWN_VERB" then
-		p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[1], ".")
 		local verbs = self:lookup_verb(self.words, nil, true)
+		local hint = false
 		if verbs and #verbs > 0 then
 			local verb = verbs[1]
 			local fixed = verb.verb[verb.word_nr]
 			if verb.lev < 4 then
+				hint = true
+				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[verb.verb_nr], ".")
 				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word, "?")
 			end
+		end
+		if not hint then
+			p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[1], ".")
 		end
 	elseif err == "INCOMPLETE" then
 		local need_noun = #self.hints > 0 and self.hints[1]:find("^{noun}")
