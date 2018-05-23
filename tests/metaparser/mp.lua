@@ -280,7 +280,7 @@ end
 
 function mp:pattern(t)
 	local words = {}
-	local pat = str_split(mrd.lang.norm(t), "|,")
+	local pat = str_split(mrd.lang.lower(mrd.lang.norm(t)), "|,")
 	for _, v in ipairs(pat) do
 		local w = {}
 		if v:sub(1, 1) == '?' then
@@ -538,7 +538,7 @@ end
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	pn(fmt.b(inp))
-	local r, v = self:input(inp)
+	local r, v = self:input(mrd.lang.lower(inp))
 	if not r then
 		self:err(v)
 		return
@@ -548,7 +548,7 @@ function mp:parse(inp)
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
-	if rinp ~= inp then
+	if mrd.lang.lower(rinp) ~= mrd.lang.lower(inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
 end
