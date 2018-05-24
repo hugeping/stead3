@@ -510,7 +510,7 @@ function mrd:obj(w, n, nn)
 	local nd = {}
 	for _, v in ipairs(d) do
 		w, hint2 = str_hint(v)
-		local dd = str_split(w, ';')
+		local dd = str_split(w, ',')
 		for _, vv in ipairs(dd) do
 			table.insert(nd, vv .. '/'..hint2)
 		end
