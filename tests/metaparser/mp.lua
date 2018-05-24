@@ -163,6 +163,7 @@ mp = std.obj {
 		token = {};
 		msg = {};
 		mrd = mrd;
+		args = {};
 	};
 	text = '';
 	-- dict = {};
@@ -654,6 +655,7 @@ function mp:input(str)
 		return false, "INCOMPLETE"
 	end
 	self.parsed = matches[1].match
+	self.args = self.parsed.args
 	return true
 end
 
