@@ -9,6 +9,8 @@ mp.msg.UNKNOWN_OBJ = "Не вижу здесь"
 mp.msg.UNKNOWN_WORD = "Слово не распознано:"
 mp.msg.HINT_WORDS = "Возможно, Вам следует добавить:"
 mp.msg.HINT_OR = "или"
+mp.msg.HINT_AND = "и"
+mp.msg.MULTIPLE = "Тут есть"
 
 local function hints(w)
 	local h = std.split(w, ",")

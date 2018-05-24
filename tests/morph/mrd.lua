@@ -510,34 +510,47 @@ function mrd:obj(w, n, nn)
 	local nd = {}
 	for _, v in ipairs(d) do
 		w, hint2 = str_hint(v)
-		local dd = str_split(w, ',')
+		local dd = str_split(w, ';')
 		for _, vv in ipairs(dd) do
 			table.insert(nd, vv .. '/'..hint2)
 		end
 	end
 	d = nd
-	n = n or 1
-	if n > #d then
-		n = 1
-	end
-	if n < 0 then -- all names
-		local ret = {}
+	if type(n) == 'table' then
+		local ret = n
 		for _, v in ipairs(d) do
 			w, hint2 = str_hint(v)
 			table.insert(ret, { word = w, hint = hint ..','..hint2 });
 		end
 		return ob, ret
 	end
+	n = n or 1
+	if n > #d then
+		n = 1
+	end
 	w, hint2 = str_hint(d[n])
 	return ob, w, hint .. ',' .. hint2
+end
+
+local function noun_append(rc, tab, w)
+	if tab then
+		table.insert(tab, w)
+	else
+		if rc ~= '' then rc = rc .. '|' end
+		rc = rc .. w
+	end
+	return rc
 end
 
 function mrd:noun(w, n, nn)
 	local hint, ob, found
 	local rc = ''
+	local tab = false
 	ob, w, hint = self:obj(w, n, nn)
 	if type(w) ~= 'table' then
 		w = {{ word = w, hint = hint }}
+	else
+		tab = {}
 	end
 	for _, v in ipairs(w) do
 		found = false
@@ -545,24 +558,21 @@ function mrd:noun(w, n, nn)
 			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
 			if ww then
 				found = true
-				if rc ~= '' then rc = rc .. '|' end
-				rc = rc .. w
+				rc = noun_append(rc, tab, w)
 			end
 		end
 		if not found and type(game.__dict) == 'table' then
 			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint)
 			if ww then
 				found = true
-				if rc ~= '' then rc = rc .. '|' end
-				rc = rc .. w
+				rc = noun_append(rc, tab, w)
 			end
 		end
 		if not found then
-			if rc ~= '' then rc = rc .. '|' end
-			rc = rc ..  self:word(v.word .. '/'.. v.hint)
+			rc = noun_append(rc, tab, self:word(v.word .. '/'.. v.hint))
 		end
 	end
-	return rc
+	return tab and tab or rc
 end
 
 function mrd:create(fname)

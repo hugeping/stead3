@@ -159,6 +159,7 @@ mp = std.obj {
 		parsed = {};
 		hints = {};
 		unknown = {};
+		multi = {};
 		token = {};
 		msg = {};
 		mrd = mrd;
@@ -263,19 +264,24 @@ local function str_split(str, delim)
 	return a
 end
 
-function mp.token.noun(attr, help)
-	local rc = ''
+function mp.token.noun(w)
+	local attr = w.morph
 	local oo = {}
+	local ww = {}
 	std.here():for_each(function(v)
 			table.insert(oo, v)
 			   end)
 	inv():for_each(function(v)
 			table.insert(oo, v)
 			   end)
-	for _, v in ipairs(oo) do
-		rc = rc .. v:noun(attr, -1) .. '|'
+	for _, o in ipairs(oo) do
+		local d = {}
+		o:noun(attr, d)
+		for _, v in ipairs(d) do
+			table.insert(ww, { optional = w.optional, word = v.word, ob = o })
+		end
 	end
-	return rc
+	return ww
 end
 
 function mp:pattern(t)
@@ -304,9 +310,14 @@ function mp:pattern(t)
 			if type(self.token[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local ww =  self:pattern(self.token[v](w.morph))
-			for _, xw in ipairs(ww) do
-				table.insert(words, xw)
+			local tok = self.token[v](w)
+			while type(tok) == 'string' do
+				tok = self:pattern(tok)
+			end
+			if type(tok) == 'table' then
+				for _, xw in ipairs(tok) do
+					table.insert(words, xw)
+				end
 			end
 		else
 			w.word = v
@@ -433,8 +444,9 @@ function mp:match(verb, w)
 	local found
 	local hints = {}
 	local unknown = {}
+	local multi = {}
 	for _, d in ipairs(verb.dsc) do
-		local match = {}
+		local match = { args = {} }
 		local a = {}
 		found = (#d.pat == 0)
 		for k, v in ipairs(w) do
@@ -443,7 +455,7 @@ function mp:match(verb, w)
 			end
 		end
 		for _, v in ipairs(d.pat) do
-			local pat = self:pattern(v)
+			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
 			local word
@@ -453,16 +465,21 @@ function mp:match(verb, w)
 					required = true
 				end
 				local k, len = word_search(a, pp.word)
-				if k and ( k < best or len > best_len) then
+				if found and found.word == pp.word and found.ob and pp.ob then -- few ob candidates
+					table.insert(multi, found.ob:noun())
+					table.insert(multi, pp.ob:noun())
+					found = false
+				elseif k and ( k < best or len > best_len) then
 					best = k
 					word = pp.word
-					found = true
+					found = pp
 				end
 			end
 			if found then
 				a = tab_sub(a, best)
 				table.remove(a, 1)
 				table.insert(match, word)
+				table.insert(match.args, found)
 			elseif required then
 				for i = 1, best - 1 do
 					table.insert(unknown, a[i])
@@ -479,7 +496,7 @@ function mp:match(verb, w)
 	table.sort(matches, function(a, b)
 			   return #a > #b
 	end)
-	return matches, hints, unknown
+	return matches, hints, unknown, multi
 end
 
 function mp:err(err)
@@ -532,13 +549,15 @@ function mp:err(err)
 			first = false
 		end
 		p "."
+	elseif err == "MULTIPLE" then
+		p (self.msg.MULTIPLE or "There are", " ", self.multi[1], " ", mp.msg.HINT_AND or "and", " ", self.multi[2], ".")
 	end
 end
 
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	pn(fmt.b(inp))
-	local r, v = self:input(mrd.lang.lower(inp))
+	local r, v = self:input(mrd.lang.lower(mrd.lang.norm(inp)))
 	if not r then
 		self:err(v)
 		return
@@ -546,9 +565,14 @@ function mp:parse(inp)
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
+		if type(v) == 'table' then
+		for kk, vv in pairs(v) do
+			print(kk, vv)
+		end
+		end
 		rinp = rinp .. v
 	end
-	if mrd.lang.lower(rinp) ~= mrd.lang.lower(inp) then
+	if mrd.lang.lower(mrd.lang.norm(rinp)) ~= mrd.lang.lower(mrd.lang.norm(inp)) then
 		pn(fmt.em("("..rinp..")"))
 	end
 end
@@ -580,6 +604,7 @@ end
 function mp:input(str)
 	local hints = {}
 	local unknown = {}
+	local multi = {}
 	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
@@ -591,7 +616,7 @@ function mp:input(str)
 	end
 	local matches = {}
 	for _, v in ipairs(verbs) do
-		local m, h, u = self:match(v, w)
+		local m, h, u, mu = self:match(v, w)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		else
@@ -599,6 +624,7 @@ function mp:input(str)
 				table.insert(hints, v)
 			end
 			table.insert(unknown, u)
+			table.insert(multi, mu)
 		end
 	end
 	table.sort(matches, function(a, b)
@@ -607,6 +633,11 @@ function mp:input(str)
 	if #matches == 0 then
 		self.hints = hints
 		self.unknown = {}
+		self.multi = {}
+		if #multi > 0 and #multi[1] > 0 then
+			self.multi = multi[1]
+			return false, "MULTIPLE"
+		end
 		for i = 1, #unknown[1] do
 			local u = unknown[1][i]
 			local yes = true
