@@ -531,7 +531,8 @@ function mrd:obj(w, n, nn)
 			break
 		end
 	end
-	w, hint2 = str_hint(d[n].word)
+	w = d[n].word
+	hint2 = d[n].hint
 	return ob, w, hint .. ',' .. hint2
 end
 
