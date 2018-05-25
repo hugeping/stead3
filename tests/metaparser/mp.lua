@@ -279,7 +279,7 @@ function mp.token.noun(w)
 		local d = {}
 		o:noun(attr, d)
 		for _, v in ipairs(d) do
-			table.insert(ww, { optional = w.optional, word = v.word, ob = o })
+			table.insert(ww, { optional = w.optional, word = v.word, ob = o, alias = v.alias })
 		end
 	end
 	return ww
@@ -469,8 +469,8 @@ function mp:match(verb, w)
 				end
 				local k, len = word_search(a, pp.word)
 				if found and found.word == pp.word and found.ob and pp.ob then -- few ob candidates
-					table.insert(multi, found.ob:noun())
-					table.insert(multi, pp.ob:noun())
+					table.insert(multi, found.ob:noun(found.alias))
+					table.insert(multi, pp.ob:noun(pp.alias))
 					found = false
 				elseif k and ( k < best or len > best_len) then
 					best = k
@@ -649,7 +649,7 @@ function mp:input(str)
 		if #ob > 1 then
 			self.multi = {}
 			for _, v in ipairs(ob) do
-				table.insert(self.multi, v.ob:noun())
+				table.insert(self.multi, v.ob:noun(v.alias))
 			end
 			return false, "MULTIPLE"
 		end

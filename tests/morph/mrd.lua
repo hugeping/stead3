@@ -411,7 +411,8 @@ function mrd:file(f, dict)
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
 			w = w:gsub('^-"', ""):gsub('"$', "")
-			for ww in w:gmatch("[^, %-]+") do
+			for ww in w:gmatch("[^, |%-]+") do
+				ww = ww:gsub("/[^/]*$", "")
 				dict[self.lang.upper(ww)] = true;
 				print("added word: ", ww)
 			end
@@ -508,27 +509,29 @@ function mrd:obj(w, n, nn)
 	end
 	-- notmalize
 	local nd = {}
-	for _, v in ipairs(d) do
+	for k, v in ipairs(d) do
 		w, hint2 = str_hint(v)
 		local dd = str_split(w, ',')
 		for _, vv in ipairs(dd) do
-			table.insert(nd, vv .. '/'..hint2)
+			table.insert(nd, { word = vv, hint = hint2 or '', alias = k })
 		end
 	end
 	d = nd
 	if type(n) == 'table' then
 		local ret = n
 		for _, v in ipairs(d) do
-			w, hint2 = str_hint(v)
-			table.insert(ret, { word = w, hint = hint ..','..hint2 });
+			table.insert(ret, { word = v.word, hint = hint ..','..v.hint, alias = v.alias });
 		end
 		return ob, ret
 	end
 	n = n or 1
-	if n > #d then
-		n = 1
+	for k, v in ipairs(d) do
+		if v.alias == n then
+			n = k
+			break
+		end
 	end
-	w, hint2 = str_hint(d[n])
+	w, hint2 = str_hint(d[n].word)
 	return ob, w, hint .. ',' .. hint2
 end
 
