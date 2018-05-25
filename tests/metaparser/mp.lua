@@ -137,6 +137,7 @@ function input:key(press, key)
 
 	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
+			mp:compl(mp.inp)
 			return '@mp_key '..tostring(key)
 		end
 	end
@@ -285,9 +286,17 @@ function mp.token.noun(w)
 	return ww
 end
 
+function mp:norm(t)
+	return mrd.lang.lower(mrd.lang.norm(t))
+end
+
+function mp:eq(t1, t2)
+	return self:norm(t1) == self:norm(t2)
+end
+
 function mp:pattern(t)
 	local words = {}
-	local pat = str_split(mrd.lang.lower(mrd.lang.norm(t)), "|,")
+	local pat = str_split(self:norm(t), "|,")
 	for _, v in ipairs(pat) do
 		local w = {}
 		if v:sub(1, 1) == '?' then
@@ -367,13 +376,17 @@ function mp:verb(t, w)
 		end
 		n = n + 1
 	end
-	table.insert(w, verb)
+	table.insert(w.__Verbs, verb)
 	return verb
 end
 
-function mp:lookup_verb(words, w, lev)
+function mp:verbs()
+	return std.here().__Verbs or game.__Verbs or {}
+end
+
+function mp:lookup_verb(words, lev)
 	local ret = {}
-	w = w or game
+	local w = self:verbs()
 	for _, v in ipairs(w) do -- verbs
 		local found = false
 		local lev_v = {}
@@ -443,6 +456,30 @@ local function tab_sub(t, s, e)
 	return r
 end
 
+function mp:compl(str)
+	local words = str_split(self:norm(str), inp_split)
+	local poss = {}
+	local ret = {}
+	if #words <= 1 then -- verb?
+		for _, v in ipairs(self:verbs()) do
+			for _, vv in ipairs(v.verb) do
+				local verb = vv.word .. (vv.morph or "")
+				table.insert(poss, { word = verb, hidden = (_ ~= 1) })
+			end
+		end
+		for _, v in ipairs(poss) do
+			if #words == 0 or v.word:find(self:norm(words[1]), 1, true) == 1 then
+				table.insert(ret, v)
+			end
+		end
+	else
+	end
+	table.sort(ret, function(a, b)
+			   return a.word < b.word
+	end)
+	return ret
+end
+
 function mp:match(verb, w)
 	local matches = {}
 	local found
@@ -507,7 +544,7 @@ end
 
 function mp:err(err)
 	if err == "UNKNOWN_VERB" then
-		local verbs = self:lookup_verb(self.words, nil, true)
+		local verbs = self:lookup_verb(self.words, true)
 		local hint = false
 		if verbs and #verbs > 0 then
 			local verb = verbs[1]
@@ -567,7 +604,7 @@ end
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	pn(fmt.b(inp))
-	local r, v = self:input(mrd.lang.lower(mrd.lang.norm(inp)))
+	local r, v = self:input(self:norm(inp))
 	if not r then
 		self:err(v)
 		return
@@ -577,7 +614,7 @@ function mp:parse(inp)
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
-	if mrd.lang.lower(mrd.lang.norm(rinp)) ~= mrd.lang.lower(mrd.lang.norm(inp)) then
+	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
 end
