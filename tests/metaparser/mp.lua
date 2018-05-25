@@ -181,6 +181,10 @@ function mp:key(key)
 		mp:inp_insert(' ')
 		return true
 	end
+	if key == 'tab' then
+		self.inp = mp:docompl(self.inp)
+		return true
+	end
 	if key == 'backspace' then
 		if self:inp_remove() then
 			return true
@@ -454,6 +458,33 @@ local function tab_sub(t, s, e)
 		table.insert(r, t[i])
 	end
 	return r
+end
+
+function mp:docompl(str)
+	local compl = self:compl(str)
+	local maxw
+	for _, v in ipairs(compl) do
+		print(v.word)
+		if not maxw then
+			maxw = v.word
+--		elseif v.word:find(maxw, 1, true) == 1 then
+--			maxw = v.word
+		else
+			local maxw2 = ''
+			for k = 1, utf_len(maxw) do
+				if utf_char(maxw, k) == utf_char(v.word, k) then
+					maxw2 = maxw2 .. utf_char(maxw, k)
+				else
+					break
+				end
+			end
+			maxw = maxw2
+		end
+	end
+	if maxw and maxw ~= '' then
+		print(maxw)
+	end
+	return str
 end
 
 function mp:compl(str)
