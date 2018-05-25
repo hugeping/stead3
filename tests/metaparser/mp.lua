@@ -386,6 +386,7 @@ function mp:lookup_verb(words, w, lev)
 					table.insert(lev_v, { lev = lev, verb = v, verb_nr = i, word_nr = _ } )
 				elseif verb == vvv or (vvv:find(pfx, 1, true) == 1 and i == 1) then
 					v.verb_nr = i
+					v.word_nr = _
 					table.insert(ret, v)
 					break
 				end
@@ -492,7 +493,9 @@ function mp:match(verb, w)
 			end
 		end
 		if found then
-			table.insert(match, 1, w[verb.verb_nr])
+			local fixed = verb.verb[verb.word_nr]
+			fixed = fixed.word .. (fixed.morph or '')
+			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
 		end
 	end
