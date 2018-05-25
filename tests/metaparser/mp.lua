@@ -379,10 +379,12 @@ function mp:lookup_verb(words, w, lev)
 		local lev_v = {}
 		for _, vv in ipairs(v.verb) do
 			for i, vvv in ipairs(words) do
+				local verb = vv.word .. (vv.morph or "")
+				local pfx = vv.word
 				if lev then
-					local lev = utf_lev(vv.word, vvv)
+					local lev = utf_lev(verb, vvv)
 					table.insert(lev_v, { lev = lev, verb = v, verb_nr = i, word_nr = _ } )
-				elseif vv.word == vvv then
+				elseif verb == vvv or (vvv:find(pfx, 1, true) == 1 and i == 1) then
 					v.verb_nr = i
 					table.insert(ret, v)
 					break
@@ -510,7 +512,7 @@ function mp:err(err)
 			if verb.lev < 4 then
 				hint = true
 				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[verb.verb_nr], ".")
-				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word, "?")
+				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word .. (fixed.morph or ""), "?")
 			end
 		end
 		if not hint then
@@ -551,7 +553,11 @@ function mp:err(err)
 		end
 		p "."
 	elseif err == "MULTIPLE" then
-		p (self.msg.MULTIPLE or "There are", " ", self.multi[1], " ", mp.msg.HINT_AND or "and", " ", self.multi[2], ".")
+		pr (self.msg.MULTIPLE or "There are", " ", self.multi[1])
+		for k = 2, #self.multi do
+			pr (" ", mp.msg.HINT_AND or "and", " ", self.multi[k])
+		end
+		pr "."
 	end
 end
 
@@ -566,11 +572,6 @@ function mp:parse(inp)
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
-		if type(v) == 'table' then
-		for kk, vv in pairs(v) do
-			print(kk, vv)
-		end
-		end
 		rinp = rinp .. v
 	end
 	if mrd.lang.lower(mrd.lang.norm(rinp)) ~= mrd.lang.lower(mrd.lang.norm(inp)) then
@@ -602,6 +603,36 @@ function mp:key_enter()
 	return r, v
 end
 
+function mp:lookup_noun(w)
+	local oo = {}
+	local k, len
+	local res = {}
+	std.here():for_each(function(v)
+		table.insert(oo, v)
+	end)
+	inv():for_each(function(v)
+		table.insert(oo, v)
+	end)
+	for _, o in ipairs(oo) do
+		local ww = {}
+		o:noun(ww)
+		for _, d in ipairs(ww) do
+			k, len = word_search(w, d.word)
+			if k and len == #w then
+				d.ob = o
+				table.insert(res, d)
+			end
+		end
+	end
+	if #res == 0 then
+		return res
+	end
+	table.sort(res, function(a, b)
+		return a.word:len() > b.word:len()
+	end)
+	return res
+end
+
 function mp:input(str)
 	local hints = {}
 	local unknown = {}
@@ -613,7 +644,24 @@ function mp:input(str)
 	end
 	local verbs = self:lookup_verb(w)
 	if #verbs == 0 then
-		return false, "UNKNOWN_VERB"
+		-- match object?
+		local ob = self:lookup_noun(w)
+		if #ob > 1 then
+			self.multi = {}
+			for _, v in ipairs(ob) do
+				table.insert(self.multi, v.ob:noun())
+			end
+			return false, "MULTIPLE"
+		end
+		if #ob == 0 then
+			return false, "UNKNOWN_VERB"
+		end
+		-- it is the object!
+		table.insert(w, 1, self.default_verb or "examine")
+		verbs = self:lookup_verb(w)
+		if #verbs == 0 then
+			return false, "UNKNOWN_VERB"
+		end
 	end
 	local matches = {}
 	for _, v in ipairs(verbs) do

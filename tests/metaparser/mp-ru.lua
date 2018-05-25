@@ -11,6 +11,7 @@ mp.msg.HINT_WORDS = "Возможно, Вам следует добавить:"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
+mp.default_verb = "осмотреть"
 
 local function hints(w)
 	local h = std.split(w, ",")
