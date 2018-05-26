@@ -507,7 +507,7 @@ function mrd:obj(w, n, nn)
 	if #d == 0 then
 		std.err("Wrong object display: ", w)
 	end
-	-- notmalize
+	-- normalize
 	local nd = {}
 	for k, v in ipairs(d) do
 		w, hint2 = str_hint(v)
@@ -573,7 +573,8 @@ function mrd:noun(w, n, nn)
 			end
 		end
 		if not found then
-			rc = noun_append(rc, tab, self:word(v.word .. '/'.. v.hint))
+			local m = self:word(v.word .. '/'.. v.hint)
+			rc = noun_append(rc, tab, m)
 		end
 	end
 	return tab and tab or rc

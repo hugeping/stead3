@@ -295,9 +295,9 @@ function mp.token.noun(w)
 			   end)
 	for _, o in ipairs(oo) do
 		local d = {}
-		o:noun(attr, d)
-		for _, v in ipairs(d) do
-			table.insert(ww, { optional = w.optional, word = v.word, ob = o, alias = v.alias })
+		local r = o:noun(attr, d)
+		for k, v in ipairs(d) do
+			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias })
 		end
 	end
 	return ww
@@ -616,6 +616,7 @@ function mp:match(verb, w)
 			local best_len = 1
 			local word
 			local required
+			found = false
 			for _, pp in ipairs(pat) do
 				if not pp.optional then
 					required = true
@@ -747,7 +748,7 @@ std.world.display = function(s, state)
 	l = std.par(std.scene_delim, reaction or false,
 		    av or false, l or false,
 		    pv or false) or ''
-	mp.text = mp.text .. fmt.anchor().. l .. '^'
+	mp.text = mp.text ..  l .. '^' .. fmt.anchor()
 	return mp.text
 end
 
@@ -891,4 +892,5 @@ function()
 	if not mrd:load("dict.mrd") then
 		mrd:create("dict.mrd")
 	end
+	mp:compl_fill(mp:compl(""))
 end)
