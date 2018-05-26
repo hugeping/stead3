@@ -137,7 +137,7 @@ function input:key(press, key)
 
 	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
-			mp:compl(mp.inp)
+			mp:compl_fill(mp:compl(mp.inp))
 			return '@mp_key '..tostring(key)
 		end
 	end
@@ -165,6 +165,7 @@ mp = std.obj {
 		msg = {};
 		mrd = mrd;
 		args = {};
+		completions = {};
 	};
 	text = '';
 	-- dict = {};
@@ -178,7 +179,13 @@ function mp:key(key)
 		return self:inp_right()
 	end
 	if key == 'space' then
-		mp:inp_insert(' ')
+		local inp = mp:docompl(self.inp)
+		if inp == self.inp then
+			mp:inp_insert(' ')
+		else
+			self.inp = inp
+			self.cur = self.inp:len() + 1
+		end
 		return true
 	end
 	if key == 'tab' then
@@ -256,7 +263,12 @@ end
 
 instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
-	return mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post)
+	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
+	for _, v in ipairs(mp.completions) do
+		ret = ret .. iface:xref(v, mp, v) .. ' | '
+	end
+	ret = ret:gsub(" | $", "")
+	return ret
 end)
 
 local function str_strip(str)
@@ -292,7 +304,7 @@ function mp.token.noun(w)
 end
 
 function mp:norm(t)
-	return mrd.lang.lower(mrd.lang.norm(t))
+	return std.strip(mrd.lang.lower(mrd.lang.norm(t)))
 end
 
 function mp:eq(t1, t2)
@@ -461,33 +473,38 @@ local function tab_sub(t, s, e)
 	return r
 end
 
-function mp:docompl(str)
-	local compl = self:compl(str)
-	local maxw
+function mp:docompl(str, maxw)
 	local full = false
-	for _, v in ipairs(compl) do
-		if not maxw then
-			full = true
-			maxw = v.word
---		elseif v.word:find(maxw, 1, true) == 1 then
---			maxw = v.word
-		else
-			local maxw2 = ''
-			for k = 1, utf_len(maxw) do
-				if utf_char(maxw, k) == utf_char(v.word, k) then
-					maxw2 = maxw2 .. utf_char(maxw, k)
-				else
-					full = false
-					break
+	if not maxw then
+		local compl = self:compl(str)
+		for _, v in ipairs(compl) do
+			if not maxw then
+				full = true
+				maxw = v.word
+				--		elseif v.word:find(maxw, 1, true) == 1 then
+				--			maxw = v.word
+			else
+				local maxw2 = ''
+				for k = 1, utf_len(maxw) do
+					if utf_char(maxw, k) == utf_char(v.word, k) then
+						maxw2 = maxw2 .. utf_char(maxw, k)
+					else
+						full = false
+						break
+					end
 				end
+				maxw = maxw2
 			end
-			maxw = maxw2
 		end
+	else
+		full = true
 	end
 	if maxw and maxw ~= '' then
 		local words = str_split(str, inp_split)
+		if not str:find(" $") then
+			table.remove(words, #words)
+		end
 		str = ''
-		table.remove(words, #words)
 		table.insert(words, maxw)
 		for _, v in ipairs(words) do
 			str = str .. v .. ' '
@@ -495,7 +512,6 @@ function mp:docompl(str)
 		if not full then
 			str = str:gsub(" $", "")
 		end
-		print(str, "'"..str.."'")
 	end
 	return str
 end
@@ -506,11 +522,12 @@ end
 function mp:compl_match(words)
 	local verb = { words[1] }
 	local verbs = self:lookup_verb(verb)
-	table.remove(words, 1) -- remove verb
+--	table.remove(words, 1) -- remove verb
 	local matches = {}
 	local hints = {}
 	local res = {}
 	local dup = {}
+	local multi
 	for _, v in ipairs(verbs) do
 		local m, h, u, mu = self:match(v, words)
 		if #m > 0 then
@@ -519,9 +536,10 @@ function mp:compl_match(words)
 			for _, v in ipairs(h) do
 				table.insert(hints, v)
 			end
+			multi = multi or (#mu > 0)
 		end
 	end
-	if #matches > 0 or #hints == 0 then
+	if #matches > 0 or #hints == 0 or multi then
 		return res
 	end
 	for _, v in ipairs(hints) do
@@ -544,18 +562,27 @@ function mp:compl_verb(words)
 	end
 	return poss
 end
+
+function mp:compl_fill(compl)
+	self.completions = {}
+	for _, v in ipairs(compl) do
+		table.insert(self.completions, v.word)
+	end
+end
+
 function mp:compl(str)
 	local words = str_split(self:norm(str), inp_split)
 	local poss
 	local ret = {}
 	local dups = {}
-	if #words == 0 or (#words == 1 and not str:find(" $")) then -- verb?
+	local e = str:find(" $")
+	if #words == 0 or (#words == 1 and not e) then -- verb?
 		poss = self:compl_verb(words) or {}
 	else -- matches
 		poss = self:compl_match(words) or {}
 	end
 	for _, v in ipairs(poss) do
-		if #words == 0 or self:startswith(v.word, words[#words]) then
+		if #words == 0 or e or (self:startswith(v.word, words[#words]) and not e) then
 			if not dups[v.word] then
 				dups[v.word] = true
 				table.insert(ret, v)
@@ -843,6 +870,12 @@ end
 std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
+	if cmd[2] == '@metaparser' then
+		mp.inp = mp:docompl(mp.inp, cmd[3])
+		mp.cur = mp.inp:len() + 1
+		mp:compl_fill(mp:compl(mp.inp))
+		return true, false
+	end
 	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
 		return mp:key_enter()
 	end
