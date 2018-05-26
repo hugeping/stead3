@@ -562,14 +562,14 @@ function mrd:noun(w, n, nn)
 			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
 			if ww then
 				found = true
-				rc = noun_append(rc, tab, w)
+				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found and type(game.__dict) == 'table' then
 			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint)
 			if ww then
 				found = true
-				rc = noun_append(rc, tab, w)
+				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found then

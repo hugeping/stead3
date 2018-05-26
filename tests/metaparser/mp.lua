@@ -267,6 +267,9 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	for _, v in ipairs(mp.completions) do
 		ret = ret .. iface:xref(v, mp, v) .. ' | '
 	end
+	if #mp.completions == 0 or mp.completions.eol then
+		ret = ret .. iface:xref(mp.msg.enter or "<enter>", mp, "<enter>")
+	end
 	ret = ret:gsub(" | $", "")
 	return ret
 end)
@@ -297,7 +300,7 @@ function mp.token.noun(w)
 		local d = {}
 		local r = o:noun(attr, d)
 		for k, v in ipairs(d) do
-			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias })
+			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = (k ~= 1) })
 		end
 	end
 	return ww
@@ -448,7 +451,7 @@ local function word_search(t, w)
 		for i = 1, #w do
 			local found2 = false
 			for ii = k, k + #w - 1 do
-				if w[i] == t[ii] then
+				if mp:eq(w[i], t[ii]) then
 					found2 = true
 					break
 				end
@@ -519,6 +522,83 @@ function mp:startswith(w, v)
 	return (self:norm(w)):find(self:norm(v), 1, true) == 1
 end
 
+function mp:compl_verb(words)
+	local dups = {}
+	local poss = {}
+	for _, v in ipairs(self:verbs()) do
+		for _, vv in ipairs(v.verb) do
+			local verb = vv.word .. (vv.morph or "")
+			table.insert(poss, { word = verb, hidden = (_ ~= 1) })
+		end
+	end
+	return poss
+end
+
+function mp:compl_fill(compl, eol)
+	self.completions = {}
+	if eol then
+		self.completions.eol = true
+	end
+	for _, v in ipairs(compl) do
+		if not v.hidden then
+			table.insert(self.completions, v.word)
+		end
+	end
+end
+
+function mp:compl(str)
+	local words = str_split(self:norm(str), inp_split)
+	local poss
+	local ret = {}
+	local dups = {}
+	local eol
+	local e = str:find(" $")
+	if #words == 0 or (#words == 1 and not e) then -- verb?
+		poss, eol = self:compl_verb(words)
+	else -- matches
+		poss, eol = self:compl_match(words)
+	end
+	for _, v in ipairs(poss) do
+		if #words == 0 or e or (self:startswith(v.word, words[#words]) and not e) then
+			if not dups[v.word] then
+				dups[v.word] = true
+				table.insert(ret, v)
+			end
+		end
+	end
+	table.sort(ret, function(a, b)
+			   return a.word < b.word
+	end)
+	return ret, eol
+end
+
+local function lev_sort(t)
+	table.sort(t, function(a, b) return a.lev > b.lev end)
+	local lev = t[1] and t[1].lev
+	local res = {}
+	local dup = {}
+	for _, v in ipairs(t) do
+		if v.lev ~= lev then
+			break
+		end
+		res.lev = lev
+		if v.word then
+			if not dup[v.word] then
+				table.insert(res, v.word)
+				dup[v.word] = true
+			end
+		else
+			for _, vv in ipairs(v) do
+				if not dup[vv] then
+					table.insert(res, vv)
+					dup[vv] = true
+				end
+			end
+		end
+	end
+	return res
+end
+
 function mp:compl_match(words)
 	local verb = { words[1] }
 	local verbs = self:lookup_verb(verb)
@@ -532,68 +612,26 @@ function mp:compl_match(words)
 		local m, h, u, mu = self:match(v, words)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
-		else
-			for _, v in ipairs(h) do
-				table.insert(hints, v)
-			end
-			multi = multi or (#mu > 0)
 		end
+		table.insert(hints, h)
+		multi = multi or (#mu > 0)
 	end
-	if #matches > 0 or #hints == 0 or multi then
+	hints = lev_sort(hints)
+	if multi then -- #matches > 0 or #hints == 0 or multi then
 		return res
 	end
 	for _, v in ipairs(hints) do
+		if #matches > 0 and #matches[1].match > hints.lev then
+			return res
+		end
 		local pat = self:pattern(v)
 		for _, p in ipairs(pat) do
 			table.insert(res, p)
 		end
 	end
-	return res
+	return res, #matches > 0
 end
 
-function mp:compl_verb(words)
-	local dups = {}
-	local poss = {}
-	for _, v in ipairs(self:verbs()) do
-		for _, vv in ipairs(v.verb) do
-			local verb = vv.word .. (vv.morph or "")
-			table.insert(poss, { word = verb, hidden = (_ ~= 1) })
-		end
-	end
-	return poss
-end
-
-function mp:compl_fill(compl)
-	self.completions = {}
-	for _, v in ipairs(compl) do
-		table.insert(self.completions, v.word)
-	end
-end
-
-function mp:compl(str)
-	local words = str_split(self:norm(str), inp_split)
-	local poss
-	local ret = {}
-	local dups = {}
-	local e = str:find(" $")
-	if #words == 0 or (#words == 1 and not e) then -- verb?
-		poss = self:compl_verb(words) or {}
-	else -- matches
-		poss = self:compl_match(words) or {}
-	end
-	for _, v in ipairs(poss) do
-		if #words == 0 or e or (self:startswith(v.word, words[#words]) and not e) then
-			if not dups[v.word] then
-				dups[v.word] = true
-				table.insert(ret, v)
-			end
-		end
-	end
-	table.sort(ret, function(a, b)
-			   return a.word < b.word
-	end)
-	return ret
-end
 
 function mp:match(verb, w)
 	local matches = {}
@@ -601,7 +639,7 @@ function mp:match(verb, w)
 	local hints = {}
 	local unknown = {}
 	local multi = {}
-	for _, d in ipairs(verb.dsc) do
+	for _, d in ipairs(verb.dsc) do -- verb variants
 		local match = { args = {} }
 		local a = {}
 		found = (#d.pat == 0)
@@ -610,22 +648,23 @@ function mp:match(verb, w)
 				table.insert(a, v)
 			end
 		end
-		for _, v in ipairs(d.pat) do
+		for lev, v in ipairs(d.pat) do -- pattern arguments
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
 			local word
 			local required
 			found = false
-			for _, pp in ipairs(pat) do
+			for _, pp in ipairs(pat) do -- single argument
 				if not pp.optional then
 					required = true
 				end
 				local k, len = word_search(a, pp.word)
-				if found and found.word == pp.word and found.ob and pp.ob then -- few ob candidates
-					table.insert(multi, found.ob:noun(found.alias))
-					table.insert(multi, pp.ob:noun(pp.alias))
+				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
+					table.insert(multi, { word = found.ob:noun(found.alias), lev = lev })
+					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = lev })
 					found = false
+					break
 				elseif k and (k < best or len > best_len) then
 					best = k
 					word = pp.word
@@ -639,11 +678,15 @@ function mp:match(verb, w)
 				table.insert(match.args, found)
 			elseif required then
 				for i = 1, best - 1 do
-					table.insert(unknown, a[i])
+					table.insert(unknown, { word = a[i], lev = lev })
 				end
-				table.insert(hints, v)
+				table.insert(hints, { word = v, lev = lev })
 				break
 			end
+		end
+		if #multi > 0 then
+			matches = {}
+			break
 		end
 		if found then
 			local fixed = verb.verb[verb.word_nr]
@@ -652,9 +695,10 @@ function mp:match(verb, w)
 			table.insert(matches, match)
 		end
 	end
-	table.sort(matches, function(a, b)
-			   return #a > #b
-	end)
+	table.sort(matches, function(a, b) return #a > #b end)
+	hints = lev_sort(hints)
+	unknown = lev_sort(unknown)
+	multi = lev_sort(multi)
 	return matches, hints, unknown, multi
 end
 
@@ -759,6 +803,11 @@ function mp:key_enter()
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
+
+	self.inp = self:docompl(self.inp)
+	self.cur = self.inp:len() + 1
+	self:compl_fill(self:compl(self.inp))
+
 	return r, v
 end
 
@@ -828,36 +877,25 @@ function mp:input(str)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		else
-			for _, v in ipairs(h) do
-				table.insert(hints, v)
-			end
+			table.insert(hints, v)
 			table.insert(unknown, u)
 			table.insert(multi, mu)
 		end
 	end
-	table.sort(matches, function(a, b)
-			   return #a.match > #b.match
-	end)
+
+	table.sort(matches, function(a, b) return #a.match > #b.match end)
+
+	hints = lev_sort(hints)
+	unknown = lev_sort(unknown)
+	multi = lev_sort(multi)
+
 	if #matches == 0 then
 		self.hints = hints
-		self.unknown = {}
-		self.multi = {}
-		if #multi > 0 and #multi[1] > 0 then
-			self.multi = multi[1]
+		self.unknown = unknown
+		self.multi = multi
+		if #multi > 0 then
+			self.multi = multi
 			return false, "MULTIPLE"
-		end
-		for i = 1, #unknown[1] do
-			local u = unknown[1][i]
-			local yes = true
-			for _, v in ipairs(unknown) do
-				if v[i] ~= u or not v[i] then
-					yes = false
-					break
-				end
-			end
-			if yes then
-				table.insert(self.unknown, u)
-			end
 		end
 		return false, "INCOMPLETE"
 	end
@@ -875,6 +913,9 @@ std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
 	if cmd[2] == '@metaparser' then
+		if cmd[3] == '<enter>' then
+			return mp:key_enter()
+		end
 		mp.inp = mp:docompl(mp.inp, cmd[3])
 		mp.cur = mp.inp:len() + 1
 		mp:compl_fill(mp:compl(mp.inp))
