@@ -690,6 +690,9 @@ function mp:err(err)
 		local first = true
 		for _, v in ipairs(self.hints) do
 			if v:find("^{noun}") then
+				if not first then
+					pr (" ",mp.msg.HINT_OR or "or", " ")
+				end
 				if mp.err_noun then
 					mp:err_noun(v)
 				else
