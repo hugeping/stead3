@@ -799,15 +799,17 @@ std.world.display = function(s, state)
 	return mp.text
 end
 
+function mp:completion(word)
+	self.inp = self:docompl(self.inp, word)
+	self.cur = self.inp:len() + 1
+	self:compl_fill(self:compl(self.inp))
+end
+
 function mp:key_enter()
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
-
-	self.inp = self:docompl(self.inp)
-	self.cur = self.inp:len() + 1
-	self:compl_fill(self:compl(self.inp))
-
+	self:completion()
 	return r, v
 end
 
@@ -916,9 +918,7 @@ function(cmd)
 		if cmd[3] == '<enter>' then
 			return mp:key_enter()
 		end
-		mp.inp = mp:docompl(mp.inp, cmd[3])
-		mp.cur = mp.inp:len() + 1
-		mp:compl_fill(mp:compl(mp.inp))
+		mp:completion(cmd[3])
 		return true, false
 	end
 	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
