@@ -183,6 +183,7 @@ function mp:key(key)
 	end
 	if key == 'tab' then
 		self.inp = mp:docompl(self.inp)
+		self.cur = self.inp:len() + 1
 		return true
 	end
 	if key == 'backspace' then
@@ -463,9 +464,10 @@ end
 function mp:docompl(str)
 	local compl = self:compl(str)
 	local maxw
+	local full = false
 	for _, v in ipairs(compl) do
-		print(v.word)
 		if not maxw then
+			full = true
 			maxw = v.word
 --		elseif v.word:find(maxw, 1, true) == 1 then
 --			maxw = v.word
@@ -475,6 +477,7 @@ function mp:docompl(str)
 				if utf_char(maxw, k) == utf_char(v.word, k) then
 					maxw2 = maxw2 .. utf_char(maxw, k)
 				else
+					full = false
 					break
 				end
 			end
@@ -482,28 +485,82 @@ function mp:docompl(str)
 		end
 	end
 	if maxw and maxw ~= '' then
-		print(maxw)
+		local words = str_split(str, inp_split)
+		str = ''
+		table.remove(words, #words)
+		table.insert(words, maxw)
+		for _, v in ipairs(words) do
+			str = str .. v .. ' '
+		end
+		if not full then
+			str = str:gsub(" $", "")
+		end
+		print(str, "'"..str.."'")
 	end
 	return str
 end
+function mp:startswith(w, v)
+	return (self:norm(w)):find(self:norm(v), 1, true) == 1
+end
 
-function mp:compl(str)
-	local words = str_split(self:norm(str), inp_split)
-	local poss = {}
-	local ret = {}
-	if #words <= 1 then -- verb?
-		for _, v in ipairs(self:verbs()) do
-			for _, vv in ipairs(v.verb) do
-				local verb = vv.word .. (vv.morph or "")
-				table.insert(poss, { word = verb, hidden = (_ ~= 1) })
+function mp:compl_match(words)
+	local verb = { words[1] }
+	local verbs = self:lookup_verb(verb)
+	table.remove(words, 1) -- remove verb
+	local matches = {}
+	local hints = {}
+	local res = {}
+	local dup = {}
+	for _, v in ipairs(verbs) do
+		local m, h, u, mu = self:match(v, words)
+		if #m > 0 then
+			table.insert(matches, { verb = v, match = m[1] })
+		else
+			for _, v in ipairs(h) do
+				table.insert(hints, v)
 			end
 		end
-		for _, v in ipairs(poss) do
-			if #words == 0 or v.word:find(self:norm(words[1]), 1, true) == 1 then
+	end
+	if #matches > 0 or #hints == 0 then
+		return res
+	end
+	for _, v in ipairs(hints) do
+		local pat = self:pattern(v)
+		for _, p in ipairs(pat) do
+			table.insert(res, p)
+		end
+	end
+	return res
+end
+
+function mp:compl_verb(words)
+	local dups = {}
+	local poss = {}
+	for _, v in ipairs(self:verbs()) do
+		for _, vv in ipairs(v.verb) do
+			local verb = vv.word .. (vv.morph or "")
+			table.insert(poss, { word = verb, hidden = (_ ~= 1) })
+		end
+	end
+	return poss
+end
+function mp:compl(str)
+	local words = str_split(self:norm(str), inp_split)
+	local poss
+	local ret = {}
+	local dups = {}
+	if #words == 0 or (#words == 1 and not str:find(" $")) then -- verb?
+		poss = self:compl_verb(words) or {}
+	else -- matches
+		poss = self:compl_match(words) or {}
+	end
+	for _, v in ipairs(poss) do
+		if #words == 0 or self:startswith(v.word, words[#words]) then
+			if not dups[v.word] then
+				dups[v.word] = true
 				table.insert(ret, v)
 			end
 		end
-	else
 	end
 	table.sort(ret, function(a, b)
 			   return a.word < b.word
@@ -541,7 +598,7 @@ function mp:match(verb, w)
 					table.insert(multi, found.ob:noun(found.alias))
 					table.insert(multi, pp.ob:noun(pp.alias))
 					found = false
-				elseif k and ( k < best or len > best_len) then
+				elseif k and (k < best or len > best_len) then
 					best = k
 					word = pp.word
 					found = pp
