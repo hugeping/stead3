@@ -1,6 +1,7 @@
 require "mp"
 local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
+mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
 mp.msg.UNKNOWN_VERB = "Непонятный глагол"
 mp.msg.UNKNOWN_VERB_HINT = "Возможно, вы имели в виду"
