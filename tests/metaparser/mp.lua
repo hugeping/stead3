@@ -705,10 +705,11 @@ function mp:match(verb, w)
 					best = k
 					word = pp.word
 					found = pp
+					best_len = len
 				end
 			end
 			if found then
-				a = tab_sub(a, best)
+				a = tab_sub(a, best + best_len - 1)
 				table.remove(a, 1)
 				table.insert(match, word)
 				table.insert(match.args, found)

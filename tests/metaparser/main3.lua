@@ -28,7 +28,7 @@ Verb { "#examine",
     "{noun}/вн : Exam %1",
     "Exam" }
 
-Verb { 'сказ/ать', "* : Talk" }
+Verb { 'сказ/ать', "{noun}/дт * : Talk" }
 
 function parser.token.topic(w)
 	return "пароль"
