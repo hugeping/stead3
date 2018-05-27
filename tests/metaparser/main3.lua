@@ -33,7 +33,7 @@ function parser.token.topic(w)
 end
 
 
-Verb { "сказ/ать", "{topic}/ : Talk"}
+Verb { "сказ/ать", " : Talk"}
 
 room {
 	nam = 'main';

@@ -693,6 +693,10 @@ function mp:match(verb, w)
 			fixed = fixed.word .. (fixed.morph or '')
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
+			match.extra = {}
+			for _, v in ipairs(a) do
+				table.insert(match.extra, v)
+			end
 		end
 	end
 	table.sort(matches, function(a, b) return #a > #b end)
@@ -903,6 +907,9 @@ function mp:input(str)
 	end
 	self.parsed = matches[1].match
 	self.args = self.parsed.args
+	for _, v in ipairs(self.parsed.extra) do
+		table.insert(self.args, { word = v, extra = true })
+	end
 	return true
 end
 
