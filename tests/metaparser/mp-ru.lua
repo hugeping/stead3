@@ -47,3 +47,5 @@ function mp:err_noun(noun)
 		pr "именительном падеже"
 	end
 end
+
+parser = mp

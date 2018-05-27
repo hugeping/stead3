@@ -879,7 +879,7 @@ function mp:input(str)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		else
-			table.insert(hints, v)
+			table.insert(hints, h)
 			table.insert(unknown, u)
 			table.insert(multi, mu)
 		end
