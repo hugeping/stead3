@@ -329,8 +329,8 @@ function mp:pattern(t)
 			v = str_strip(v)
 			w.hidden = true
 		end
-		if v:find("[^/]+/[^/]+$") then
-			local s, e = v:find("/[^/]+$")
+		if v:find("[^/]+/[^/]*$") then
+			local s, e = v:find("/[^/]*$")
 			w.morph = v:sub(s + 1, e)
 			v = v:sub(1, s - 1)
 			v = str_strip(v)
@@ -733,7 +733,7 @@ function mp:err(err)
 		end
 		local first = true
 		for _, v in ipairs(self.hints) do
-			if v:find("^{noun}") then
+			if v:find("^{noun}") or v:find("/[^/]*$") then
 				if not first then
 					pr (" ",mp.msg.HINT_OR or "or", " ")
 				end
