@@ -14,6 +14,21 @@ mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
 mp.default_verb = "осмотреть"
 
+mp.hint.live = 'од'
+mp.hint.neuter = 'ср'
+mp.hint.male = 'мр'
+mp.hint.female = 'жр'
+mp.hint.plural = 'мн'
+
+mp.keyboard_space = '<пробел>'
+mp.keyboard_backspace = '<удалить>'
+
+mp.keyboard = {
+	'А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й',
+	'К','Л','М','Н','О','П','Р','О','С','Т','У','Ф',
+	'Х','Ц','Ч','Ш','Щ','Ь','Ы','Ъ','Э','Ю','Я'
+}
+
 local function hints(w)
 	local h = std.split(w, ",")
 	local hints = {}

@@ -165,7 +165,15 @@ mp = std.obj {
 		msg = {};
 		mrd = mrd;
 		args = {};
+		vargs = {};
 		completions = {};
+		hint = {
+			live = 'live',
+			neuter = 'neuter',
+			male = 'male',
+			female = 'female',
+			plural = 'plural',
+		};
 	};
 	text = '';
 	-- dict = {};
@@ -261,16 +269,31 @@ function mp:esc(s)
 	return r
 end
 
+local keys_en = {
+	"A", "B", "C", "D", "E", "F",
+	"G", "H", "I", "J", "K", "L",
+	"M", "N", "O", "P", "Q", "R",
+	"S", "T", "U", "V", "W", "X",
+	"Y", "Z"
+}
 instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
+	local delim = instead.hinv_delim or ' | '
 	for _, v in ipairs(mp.completions) do
-		ret = ret .. iface:xref(v, mp, v) .. ' | '
+		ret = ret .. iface:xref(v, mp, v) .. delim
 	end
 	if #mp.completions == 0 or mp.completions.eol then
-		ret = ret .. iface:xref(mp.msg.enter or "<enter>", mp, "<enter>")
+		ret = ret .. iface:xref(mp.msg.enter or "<enter>", mp, "<enter>") .. delim
+		if mp.completions.vargs then
+			ret = ret .. iface:xref(mp.keyboard_space or "<space>", mp, "<space>") .. delim
+			ret = ret .. iface:xref(mp.keyboard_backspace or "<backspace>", mp, "<backspace>") .. delim
+			for _, v in ipairs(mp.keyboard or keys_en) do
+				ret = ret .. iface:xref(v, mp, v, 'letter') .. delim
+			end
+		end
 	end
-	ret = ret:gsub(" | $", "")
+	ret = ret:gsub(delim .."$", "")
 	return ret
 end)
 
@@ -479,6 +502,7 @@ end
 function mp:docompl(str, maxw)
 	local full = false
 	if not maxw then
+		full = false
 		local compl = self:compl(str)
 		for _, v in ipairs(compl) do
 			if not maxw then
@@ -534,11 +558,11 @@ function mp:compl_verb(words)
 	return poss
 end
 
-function mp:compl_fill(compl, eol)
+function mp:compl_fill(compl, eol, vargs)
 	self.completions = {}
-	if eol then
-		self.completions.eol = true
-	end
+	self.completions.eol = eol
+	self.completions.vargs = vargs
+
 	for _, v in ipairs(compl) do
 		if not v.hidden then
 			table.insert(self.completions, v.word)
@@ -553,10 +577,11 @@ function mp:compl(str)
 	local dups = {}
 	local eol
 	local e = str:find(" $")
+	local vargs
 	if #words == 0 or (#words == 1 and not e) then -- verb?
 		poss, eol = self:compl_verb(words)
 	else -- matches
-		poss, eol = self:compl_match(words)
+		poss, eol, vargs = self:compl_match(words)
 	end
 	for _, v in ipairs(poss) do
 		if #words == 0 or e or (self:startswith(v.word, words[#words]) and not e) then
@@ -569,7 +594,7 @@ function mp:compl(str)
 	table.sort(ret, function(a, b)
 			   return a.word < b.word
 	end)
-	return ret, eol
+	return ret, eol, vargs
 end
 
 local function lev_sort(t)
@@ -613,7 +638,9 @@ function mp:compl_match(words)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		end
-		table.insert(hints, h)
+		if #h > 0 then
+			table.insert(hints, h)
+		end
 		multi = multi or (#mu > 0)
 	end
 	hints = lev_sort(hints)
@@ -629,6 +656,9 @@ function mp:compl_match(words)
 			table.insert(res, p)
 		end
 	end
+	if #hints == 0 and #matches > 0 then
+		return res, true, not not matches[1].match.vargs
+	end
 	return res, #matches > 0
 end
 
@@ -639,8 +669,9 @@ function mp:match(verb, w)
 	local hints = {}
 	local unknown = {}
 	local multi = {}
+	local vargs
 	for _, d in ipairs(verb.dsc) do -- verb variants
-		local match = { args = {} }
+		local match = { args = {}, vargs = {} }
 		local a = {}
 		found = (#d.pat == 0)
 		for k, v in ipairs(w) do
@@ -649,6 +680,11 @@ function mp:match(verb, w)
 			end
 		end
 		for lev, v in ipairs(d.pat) do -- pattern arguments
+			if v == '*' then
+				found = true
+				vargs = true
+				break
+			end
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
@@ -693,9 +729,12 @@ function mp:match(verb, w)
 			fixed = fixed.word .. (fixed.morph or '')
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
-			match.extra = {}
-			for _, v in ipairs(a) do
-				table.insert(match.extra, v)
+			if vargs then
+				for _, v in ipairs(a) do
+					table.insert(match.vargs, v)
+				end
+			else
+				match.vargs = false
 			end
 		end
 	end
@@ -778,6 +817,10 @@ function mp:parse(inp)
 	end
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
+		if rinp ~= '' then rinp = rinp .. ' ' end
+		rinp = rinp .. v
+	end
+	for _, v in ipairs(self.vargs and self.vargs or {}) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
@@ -907,9 +950,7 @@ function mp:input(str)
 	end
 	self.parsed = matches[1].match
 	self.args = self.parsed.args
-	for _, v in ipairs(self.parsed.extra) do
-		table.insert(self.args, { word = v, extra = true })
-	end
+	self.vargs = self.parsed.vargs
 	return true
 end
 
@@ -925,7 +966,21 @@ function(cmd)
 		if cmd[3] == '<enter>' then
 			return mp:key_enter()
 		end
-		mp:completion(cmd[3])
+		if cmd[3] == '<space>' then
+			mp:inp_insert(' ')
+			return true, false
+		end
+		if cmd[3] == '<backspace>' then
+			mp:inp_remove()
+			mp:compl_fill(mp:compl(mp.inp))
+			return true, false
+		end
+		if cmd[4] == 'letter' then
+			mp.inp = mp.inp .. cmd[3]
+			mp.cur = mp.inp:len() + 1
+		else
+			mp:completion(cmd[3])
+		end
 		return true, false
 	end
 	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
@@ -945,3 +1000,5 @@ function()
 	end
 	mp:compl_fill(mp:compl(""))
 end)
+
+instead.mouse_filter(0)
