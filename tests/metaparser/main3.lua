@@ -28,6 +28,14 @@ Verb { "#examine",
     "{noun}/вн : Exam %1",
     "Exam" }
 
+Verb { 'сказ/ать', "{noun}/дт * : Talk" }
+Verb { 'идти', "на северо-восток|север : Walk" }
+Verb { '~север', ": Walk" }
+
+function parser.token.topic(w)
+	return "пароль"
+end
+
 room {
 	nam = 'main';
 }: with { 'яблоко', 'яблоко2' }
