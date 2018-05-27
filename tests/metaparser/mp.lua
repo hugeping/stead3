@@ -648,6 +648,7 @@ function mp:match(verb, w)
 				table.insert(a, v)
 			end
 		end
+		local all_optional = true
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
@@ -658,6 +659,7 @@ function mp:match(verb, w)
 			for _, pp in ipairs(pat) do -- single argument
 				if not pp.optional then
 					required = true
+					all_optional = false
 				end
 				local k, len = word_search(a, pp.word)
 				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
@@ -688,7 +690,7 @@ function mp:match(verb, w)
 			matches = {}
 			break
 		end
-		if found then
+		if found or all_optional then
 			local fixed = verb.verb[verb.word_nr]
 			fixed = fixed.word .. (fixed.morph or '')
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
