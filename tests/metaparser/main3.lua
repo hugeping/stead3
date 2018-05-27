@@ -34,9 +34,6 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-
-Verb { "сказ/ать", " : Talk"}
-
 room {
 	nam = 'main';
 }: with { 'яблоко', 'яблоко2' }
