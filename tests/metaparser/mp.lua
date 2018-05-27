@@ -552,7 +552,7 @@ function mp:compl_verb(words)
 	for _, v in ipairs(self:verbs()) do
 		for _, vv in ipairs(v.verb) do
 			local verb = vv.word .. (vv.morph or "")
-			table.insert(poss, { word = verb, hidden = (_ ~= 1) })
+			table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden })
 		end
 	end
 	return poss

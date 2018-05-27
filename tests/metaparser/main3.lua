@@ -29,6 +29,8 @@ Verb { "#examine",
     "Exam" }
 
 Verb { 'сказ/ать', "{noun}/дт * : Talk" }
+Verb { 'идти', "на северо-восток|север : Walk" }
+Verb { '~север', ": Walk" }
 
 function parser.token.topic(w)
 	return "пароль"
