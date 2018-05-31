@@ -872,6 +872,7 @@ function mp:events_call(events, ob, t)
 	end
 	return false
 end
+
 function mp:action()
 	local parsed = self.parsed
 	local ev = str_split(parsed.ev, "|")
@@ -955,7 +956,9 @@ std.world.display = function(s, state)
 		av, pv = s:events()
 		av = iface:em(av)
 		pv = iface:em(pv)
-		l = s.player:look() -- objects [and scene]
+		if s.player:need_scene() then
+			l = s.player:look() -- objects [and scene]
+		end
 	end
 	l = std.par(std.scene_delim, reaction or false,
 		    av or false, l or false,
