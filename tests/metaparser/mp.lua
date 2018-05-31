@@ -166,6 +166,7 @@ mp = std.obj {
 		mrd = mrd;
 		args = {};
 		vargs = {};
+		debug = { trace_action = false };
 		completions = {};
 		hint = {
 			live = 'live',
@@ -424,7 +425,7 @@ function mp:verb(t, w)
 end
 
 function mp:verbs()
-	return std.here().__Verbs or game.__Verbs or {}
+	return std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
 end
 
 function mp:lookup_verb(words, lev)
@@ -671,7 +672,7 @@ function mp:match(verb, w)
 	local multi = {}
 	local vargs
 	for _, d in ipairs(verb.dsc) do -- verb variants
-		local match = { args = {}, vargs = {} }
+		local match = { args = {}, vargs = {}, ev = d.ev }
 		local a = {}
 		found = (#d.pat == 0)
 		for k, v in ipairs(w) do
@@ -810,6 +811,113 @@ function mp:err(err)
 	end
 end
 
+local function get_events(self, ev)
+	local events = {}
+	for _, v in ipairs(ev) do
+		local ea = str_split(v)
+		local e = ea[1]
+		local args = {}
+		table.remove(ea, 1)
+		for _, vv in ipairs(ea) do
+			local a = vv
+			if vv:find("^%%[0-9]+$") then
+				a = vv:gsub("%%", "")
+				a = tonumber(a)
+				a = self.args[a]
+				if a then a = a.ob or a.word end
+			end
+			table.insert(args, a)
+		end
+		table.insert(events, { ev = e, args = args })
+	end
+	return events
+end
+
+function mp:call(ob, ev, ...)
+	local r, v = std.call(ob, ev, ...)
+	if self.debug.trace_action and r then dprint("mp:call ", ob, ev, ...) end
+	return r, v
+end
+
+function mp:events_call(events, ob, t)
+	if not t then t = '' else t = t .. '_' end
+	for _, o in ipairs(ob) do
+		for _, e in ipairs(events) do
+			local ename = t .. e.ev
+			local eany = t .. 'Any'
+			local edef = t .. 'Default'
+			local ob = o
+			if o == 'obj' then
+				ob = e.args[1]
+				table.remove(e.args, 1)
+			end
+			local r, v
+			if std.is_obj(ob) then
+				r, v = self:call(ob, eany, std.unpack(e.args))
+				if r then std.pr(r) end
+				if not v then
+					r, v = self:call(ob, ename, std.unpack(e.args))
+					if r then std.pr(r) end
+					if not v then
+						r, v = self:call(ob, edef, std.unpack(e.args))
+						if r then std.pr(r) end
+					end
+				end
+			end
+			if v then return v end
+			if o == 'obj' then
+				table.insert(e.args, 1, ob)
+			end
+		end
+	end
+	return false
+end
+function mp:action()
+	local parsed = self.parsed
+	local ev = str_split(parsed.ev, "|")
+	local events = get_events(self, ev)
+	local r
+
+	if not self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before') then
+		r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' })
+	end
+
+	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+
+	-- parser:before_Any
+	-- parser:before_Take || before_Def
+	-- game:before_Any
+	-- game:before_Take || before_Def
+	-- me():before_Any
+	-- me():before_Take || before_Def
+	-- here():before_Any
+	-- here():before_Take || before_Def
+	-- ob():before_Any
+	-- ob():before_Take || before_Def
+
+	-- game:Any
+	-- game:Take || Def
+	-- me():Any
+	-- me():Take || Def
+	-- here():Any
+	-- here():Take || Def
+	-- ob():Any
+	-- ob():Take || Def
+	-- parser:Any
+	-- parser:Take || Def
+
+	-- ob():after_Take || after_Def
+	-- ob():after_Any
+	-- here():after_Take || after_Def
+	-- here():after_Any
+	-- me():after_Take || after_Def
+	-- me():after_Any
+	-- game:after_Take || after_Def
+	-- game:after_Any
+	-- parser:after_Take || after_Def
+	-- parser:after_Any
+end
+
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	pn(fmt.b(inp))
@@ -830,6 +938,13 @@ function mp:parse(inp)
 	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
+	local t = std.pget()
+	std.pclr()
+	-- here we do action
+	mp:action()
+	local tt = std.pget()
+	std.pclr()
+	pr(t, tt)
 end
 
 std.world.display = function(s, state)
