@@ -48,6 +48,12 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
+pl.word = -"я/од";
+
+game:dict {
+	['я/вн'] = 'себя'; -- возвратное местоимение
+}
+
 room {
 	nam = 'main';
 	dsc = 'Вы в комнате';
@@ -55,6 +61,7 @@ room {
 
 function start()
 	print(_'яблоко':noun('тв,мн')) -- даст яблокам
+	print(pl:noun('тв,од')) -- даст мной
 --	for k, v in pairs(_'яблоко':gram()) do
 --		print(k, v)
 --	end

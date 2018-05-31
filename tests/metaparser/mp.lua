@@ -324,6 +324,7 @@ function mp.token.noun(w)
 	inv():for_each(function(v)
 			table.insert(oo, v)
 			   end)
+	table.insert(oo, std.me())
 	for _, o in ipairs(oo) do
 		local d = {}
 		local r = o:noun(attr, d)

@@ -355,10 +355,12 @@ function mrd:lookup(w, g)
 		end
 		return a.score > b.score
 	end)
---	for i = 1, #res do
---		local w = res[i]
---		print(self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post), w.score)
---	end
+if false then
+	for i = 1, #res do
+		local w = res[i]
+		print(self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post), w.score)
+	end
+end
 	w = res[1]
 	local gram = {}
 	for k, v in pairs(w.flex.an) do
