@@ -233,11 +233,13 @@ function mrd:load(path, dict)
 		return false, "Error in section 4"
 	end
 	msg("Generated: "..tostring(self.words_nr).." word(s)");
+	local crc = f:read("*line")
+	if crc then crc = tonumber(crc) end
 	f:close()
-	return true
+	return true, crc
 end
 
-function mrd:dump(path)
+function mrd:dump(path, crc)
 	local f, e = io.open(path or 'dict.mrd', 'wb')
 	if not f then
 		return false, e
@@ -308,6 +310,9 @@ function mrd:dump(path)
 			s = s .. ' -'
 		end
 		f:write(s..'\n')
+	end
+	if crc then
+		f:write(string.format("%d\n", crc))
 	end
 	f:close()
 end
@@ -582,15 +587,33 @@ function mrd:noun(w, n, nn)
 	return tab and tab or rc
 end
 
-function mrd:create(fname)
+local function str_hash(str)
+	local sum = 0
+	for i = 1, str:len() do
+		sum = sum + string.byte(str, i)
+	end
+	return sum
+end
+
+function mrd:create(fname, crc)
 	local dict = {}
 	for f in std.readdir(instead.gamepath()) do
 		if f:find("%.lua$") then
 			mrd:file(f, dict)
 		end
 	end
-	mrd:load("morph/morphs.mrd", dict)
-	mrd:dump(fname or 'dict.mrd')
+	local sum = 0
+	for w, _ in pairs(dict) do
+		sum = sum + str_hash(w)
+		sum = sum % 4294967291;
+	end
+	if crc ~= sum then
+		dprint("Generating dict.mrd with sum: ", sum)
+		mrd:load("morph/morphs.mrd", dict)
+		mrd:dump(fname or 'dict.mrd', sum)
+	else
+		dprint("Using dict.mrd")
+	end
 end
 
 std.obj.noun = function(self, ...)

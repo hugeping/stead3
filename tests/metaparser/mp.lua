@@ -1122,9 +1122,8 @@ end)
 std.mod_start(
 function()
 	mrd:gramtab("morph/rgramtab.tab")
-	if not mrd:load("dict.mrd") then
-		mrd:create("dict.mrd")
-	end
+	local _, crc = mrd:load("dict.mrd")
+	mrd:create("dict.mrd", crc) -- create or update
 	mp:compl_fill(mp:compl(""))
 end)
 
