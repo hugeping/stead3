@@ -206,7 +206,7 @@ function mp:key(key)
 		if self:inp_remove() then
 			return true
 		end
-		return false
+		return true -- avoid scrolling
 	end
 	if key == 'enter' then
 		return true
@@ -921,7 +921,7 @@ end
 
 function mp:parse(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
-	pn(fmt.b(inp))
+	pn(fmt.b(self.prompt .. inp))
 	local r, v = self:input(self:norm(inp))
 	if not r then
 		self:err(v)
@@ -963,7 +963,7 @@ std.world.display = function(s, state)
 	l = std.par(std.scene_delim, reaction or false,
 		    av or false, l or false,
 		    pv or false) or ''
-	mp.text = mp.text ..  l .. '^' .. fmt.anchor()
+	mp.text = mp.text ..  l .. '^^' .. fmt.anchor()
 	return mp.text
 end
 
@@ -1123,3 +1123,7 @@ function()
 end)
 
 instead.mouse_filter(0)
+
+function instead.fading()
+	return instead.need_fading()
+end

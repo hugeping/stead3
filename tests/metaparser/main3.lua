@@ -29,7 +29,6 @@ game: dict {
 
 parser.Exam = function(s, w)
 	if not w then
-		std.pclr()
 		std.me():need_scene(true)
 	end
 	return false
