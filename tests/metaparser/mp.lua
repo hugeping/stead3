@@ -278,9 +278,13 @@ local keys_en = {
 	"Y", "Z"
 }
 instead.get_inv = std.cacheable('inv', function(horiz)
+	local delim = instead.hinv_delim
+	if not horiz then
+		delim = instead.inv_delim
+	end
 	local pre, post = mp:inp_split()
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
-	local delim = instead.hinv_delim or ' | '
+	delim = delim or ' | '
 	for _, v in ipairs(mp.completions) do
 		ret = ret .. iface:xref(v, mp, v) .. delim
 	end
