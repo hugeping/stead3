@@ -569,7 +569,6 @@ function mp:compl_fill(compl, eol, vargs)
 	self.completions = {}
 	self.completions.eol = eol
 	self.completions.vargs = vargs
-
 	for _, v in ipairs(compl) do
 		if not v.hidden then
 			table.insert(self.completions, v.word)
@@ -689,16 +688,18 @@ function mp:match(verb, w)
 		local all_optional = true
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' then
-				found = true
-				vargs = true
+				found = #a > 0 or self.inp:find(" $")
+				vargs = found
 				break
 			end
+
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
 			local word
 			local required
 			found = false
+
 			for _, pp in ipairs(pat) do -- single argument
 				if not pp.optional then
 					required = true
@@ -817,7 +818,9 @@ function mp:err(err)
 			end
 			first = false
 		end
-		p "."
+		if #self.hints > 0 then
+			p "."
+		end
 	elseif err == "MULTIPLE" then
 		pr (self.msg.MULTIPLE or "There are", " ", self.multi[1])
 		for k = 2, #self.multi do
