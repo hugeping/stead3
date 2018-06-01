@@ -1179,7 +1179,7 @@ function std.pr(...)
 		return opr(...)
 	end
 	for _, v in ipairs({...}) do
-		v = v:gsub("{/[^}]+}", function(w)
+		v = v:gsub("{/[^}]*}", function(w)
 			w = w:gsub("^{/", ""):gsub("}$", "")
 			return ctx.self:noun(w)
 		end)
