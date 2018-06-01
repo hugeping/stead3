@@ -1169,3 +1169,21 @@ function instead.fading()
 end
 
 instead.notitle = true
+
+local opr = std.pr
+
+function std.pr(...)
+	local args = {}
+	local ctx = std.cctx()
+	if not ctx or not ctx.self then
+		return opr(...)
+	end
+	for _, v in ipairs({...}) do
+		v = v:gsub("{/[^}]+}", function(w)
+			w = w:gsub("^{/", ""):gsub("}$", "")
+			return ctx.self:noun(w)
+		end)
+		table.insert(args, v)
+	end
+	return opr(std.unpack(args))
+end
