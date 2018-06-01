@@ -168,6 +168,7 @@ mp = std.obj {
 		vargs = {};
 		debug = { trace_action = false };
 		completions = {};
+		event = false;
 		hint = {
 			live = 'live',
 			neuter = 'neuter',
@@ -849,6 +850,7 @@ local function get_events(self, ev)
 end
 
 function mp:call(ob, ev, ...)
+	self.event = ev
 	local r, v = std.call(ob, ev, ...)
 	if self.debug.trace_action and r then dprint("mp:call ", ob, ev, ...) end
 	return r, v
