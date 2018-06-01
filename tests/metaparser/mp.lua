@@ -1055,10 +1055,10 @@ function mp:input(str)
 
 		-- it is the object!
 		if ob[1].ob.default_Act then
-			local r = std.call(ob[1].ob, 'default_Act')
+			local r = std.call(ob[1].ob, 'default_Verb')
 			w = str_split(r)
 		else
-			table.insert(w, 1, self.default_verb or "examine")
+			table.insert(w, 1, self.default_Verb or "examine")
 		end
 		verbs = self:lookup_verb(w)
 		if #verbs == 0 then

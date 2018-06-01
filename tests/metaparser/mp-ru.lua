@@ -12,7 +12,7 @@ mp.msg.HINT_WORDS = "Возможно, Вам следует добавить:"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
-mp.default_verb = "осмотреть"
+mp.default_Verb = "осмотреть"
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
