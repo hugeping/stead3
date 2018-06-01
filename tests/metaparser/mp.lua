@@ -291,7 +291,9 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
 	delim = delim or ' | '
 	for _, v in ipairs(mp.completions) do
-		ret = ret .. iface:xref(v, mp, v) .. delim
+		local t = iface:xref(v.word, mp, v.word)
+		if v.ob and have(v.ob) then t = iface:em(t) end
+		ret = ret .. t .. delim
 	end
 	if #mp.completions == 0 or mp.completions.eol then
 		ret = ret .. iface:xref(mp.msg.enter or "<enter>", mp, "<enter>") .. delim
@@ -575,7 +577,7 @@ function mp:compl_fill(compl, eol, vargs)
 	self.completions.vargs = vargs
 	for _, v in ipairs(compl) do
 		if not v.hidden then
-			table.insert(self.completions, v.word)
+			table.insert(self.completions, v)
 		end
 	end
 end
@@ -869,16 +871,16 @@ function mp:call(ob, ev, ...)
 		end
 	end
 	local r, v = std.call(ob, ev, ...)
-	if self.debug.trace_action and r then dprint("mp:call ", ob, ev, ...) end
+	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
 	for _, v in ipairs(self.aliases) do
 		std.rawset(v, '__word_alias', nil)
 	end
 	return r, v
 end
 
-function mp:events_call(events, ob, t)
+function mp:events_call(events, oo, t)
 	if not t then t = '' else t = t .. '_' end
-	for _, o in ipairs(ob) do
+	for _, o in ipairs(oo) do
 		for _, e in ipairs(events) do
 			local ename = t .. e.ev
 			local eany = t .. 'Any'

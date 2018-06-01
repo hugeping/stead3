@@ -4,14 +4,19 @@ parser.msg.verbs = {
 	['взять'] = { male = "взял", female = "взяла", neuter = "взяло", plural = "взяли" };
 }
 
+function parser:Take(w)
+	take(w)
+end
+
+function parser:after_Take(w)
+	p "{#Me} {#verb/взять} {#first/вн}.";
+end
+
 obj {
 	-"красное яблоко,яблоко/ср,test|облако",
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
-	before_Take = function(s)
-		p "{#Me} {#verb/взять} {#first/вн}.";
-	end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';
 }
