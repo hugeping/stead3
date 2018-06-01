@@ -1,12 +1,13 @@
 require "mp-ru"
 
 obj {
-	-"красное яблоко,яблоко/ср",
+	-"красное яблоко,яблоко/ср|облако/ср",
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
-	before_Take = function()
-		p "Я беру яблочко";
+	before_Take = function(s)
+		p "Я беру";
+		p (s:noun('вн'), '.')
 		return
 	end;
 }: dict {

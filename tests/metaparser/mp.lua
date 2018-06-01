@@ -845,9 +845,10 @@ local function get_events(self, ev)
 				a = vv:gsub("%%", "")
 				a = tonumber(a)
 				a = self.args[a]
+				local arg = a
 				if a then a = a.ob or a.word end
-				if a.ob then
-					self.aliases[a] = a.alias
+				if arg.ob then
+					self.aliases[a] = arg.alias
 				end
 			end
 			table.insert(args, a)
