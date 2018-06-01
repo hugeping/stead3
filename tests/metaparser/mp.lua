@@ -797,7 +797,7 @@ function mp:err(err)
 		for _, v in ipairs(self.hints) do
 			if v:find("^{noun}") or v:find("/[^/]*$") then
 				if not first then
-					pr (" ",mp.msg.HINT_OR or "or", " ")
+					pr (" ", mp.msg.HINT_OR or "or", " ")
 				end
 				if mp.err_noun then
 					mp:err_noun(v)
@@ -808,7 +808,7 @@ function mp:err(err)
 				local pat = self:pattern(v)
 				for _, vv in ipairs(pat) do
 					if not first then
-						pr (mp.msg.HINT_OR or "or", " ", vv.word)
+						pr (" ", mp.msg.HINT_OR or "or", " ", vv.word)
 					else
 						pr (" ", vv.word)
 					end
