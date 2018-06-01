@@ -1,12 +1,16 @@
 require "mp-ru"
 
+parser.msg.verbs = {
+	['взять'] = { male = "взял", female = "взяла", neuter = "взяло", plural = "взяли" };
+}
+
 obj {
 	-"красное яблоко,яблоко/ср,test|облако",
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
 	before_Take = function(s)
-		p "{#Me} беру {#/вн}.";
+		p "{#Me} {#verb/взять} {#first/вн}.";
 	end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';
@@ -48,7 +52,7 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"я/од,мн";
+pl.word = -"я/од,мр,1л";
 
 game:dict {
 	['я/вн'] = 'себя'; -- возвратное местоимение

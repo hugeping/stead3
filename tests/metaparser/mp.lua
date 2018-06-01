@@ -162,6 +162,7 @@ mp = std.obj {
 		unknown = {};
 		multi = {};
 		token = {};
+		shortcut = {};
 		msg = {};
 		mrd = mrd;
 		args = {};
@@ -1176,6 +1177,39 @@ instead.notitle = true
 
 local opr = std.pr
 
+local function shortcut(ob, hint)
+	return ob:noun(hint)
+end
+
+function mp.shortcut.first(hint)
+	return shortcut(mp.first, hint)
+end
+
+function mp.shortcut.second(hint)
+	return shortcut(mp.second, hint)
+end
+
+function mp.shortcut.me(hint)
+	return shortcut(std.me(), hint)
+end
+
+mp.msg.verbs = {}
+
+function mp.shortcut.verb(hint)
+	local v = mp.msg.verbs[hint]
+	if not v then
+		return hint
+	end
+	local w = std.me()
+	for _, h in ipairs { 'plural', 'first', 'second', 'third', 'female', 'male', 'neuter', 'male' } do
+		if w:hint(h) and v[h] then
+			v = v[h]
+			return v
+		end
+	end
+	return hint
+end
+
 function std.pr(...)
 	local args = {}
 	local ctx = std.cctx()
@@ -1184,25 +1218,19 @@ function std.pr(...)
 	end
 	for _, v in ipairs({...}) do
 		v = v:gsub("{#[^}]*}", function(w)
-			local ww = w
+			local ww
 			w = w:gsub("^{#", ""):gsub("}$", "")
-			local hint = w:gsub("[^/]*/?", "")
+			local hint = w:gsub("^[^/]*/?", "")
 			w = w:gsub("/[^/]+$", "")
 			local cap = mp.mrd.lang.is_cap(w)
 			w = w:lower()
-			if w == '' or w == 'first' then
-				w = mp.first
-			elseif w == 'second' then
-				w = mp.second
-			elseif w == 'me' then
-				w = std.me()
+			if mp.shortcut[w] then
+				w = mp.shortcut[w](hint)
+				if cap then
+					w = mp.mrd.lang.cap(w)
+				end
 			else
 				std.err("Wrong shortcut: ".. ww, 2)
-				w = false
-			end
-			w = w:noun(hint)
-			if cap then
-				w = mp.mrd.lang.cap(w)
 			end
 			return w
 		end)
