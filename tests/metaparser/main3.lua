@@ -6,7 +6,7 @@ obj {
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
 	before_Take = function(s)
-		p "Я беру {/вн}.";
+		p "{#Me} беру {#first/вн}.";
 		print(s:hint'neuter')
 	end;
 }: dict {

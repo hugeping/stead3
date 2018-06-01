@@ -170,6 +170,8 @@ mp = std.obj {
 		completions = {};
 		event = false;
 		aliases = {};
+		first = false;
+		second = false;
 		hint = {
 			live = 'live',
 			neuter = 'neuter',
@@ -881,6 +883,8 @@ function mp:events_call(events, ob, t)
 			local eany = t .. 'Any'
 			local edef = t .. 'Default'
 			local ob = o
+			self.first = std.is_obj(e.args[1]) and e.args[1]
+			self.second = std.is_obj(e.args[2]) and e.args[2]
 			if o == 'obj' then
 				ob = e.args[1]
 				table.remove(e.args, 1)
@@ -1179,9 +1183,28 @@ function std.pr(...)
 		return opr(...)
 	end
 	for _, v in ipairs({...}) do
-		v = v:gsub("{/[^}]*}", function(w)
-			w = w:gsub("^{/", ""):gsub("}$", "")
-			return ctx.self:noun(w)
+		v = v:gsub("{#[^}]*}", function(w)
+			local ww = w
+			w = w:gsub("^{#", ""):gsub("}$", "")
+			local hint = w:gsub("[^/]*/?", "")
+			w = w:gsub("/[^/]+$", "")
+			local cap = mp.mrd.lang.is_cap(w)
+			w = w:lower()
+			if w == '' or w == 'first' then
+				w = mp.first
+			elseif w == 'second' then
+				w = mp.second
+			elseif w == 'me' then
+				w = std.me()
+			else
+				std.err("Wrong shortcut: ".. ww, 2)
+				w = false
+			end
+			w = w:noun(hint)
+			if cap then
+				w = mp.mrd.lang.cap(w)
+			end
+			return w
 		end)
 		table.insert(args, v)
 	end

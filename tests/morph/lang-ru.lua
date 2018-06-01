@@ -144,10 +144,16 @@ local function is_cap(str)
 	end
 	local s, e
 	for k, v in pairs(toupper) do
-		if str:find("^"..v) then
+		if not s and str:find("^"..v) then
 			s = true
 		end
-		if str:find(v.."$") then
+		if not e and str:find(v.."$") then
+			e = true
+		end
+		if not s and str:find("^[A-Z]") then
+			s = true
+		end
+		if not e and str:find("[A-Z]$") then
 			e = true
 		end
 	end
