@@ -163,6 +163,7 @@ mp = std.obj {
 		multi = {};
 		token = {};
 		shortcut = {};
+		reaction = false;
 		msg = {};
 		mrd = mrd;
 		args = {};
@@ -870,7 +871,11 @@ function mp:call(ob, ev, ...)
 			std.rawset(v, '__word_alias', self.aliases[v])
 		end
 	end
+
+	self.reaction = std.pget() or false
 	local r, v = std.call(ob, ev, ...)
+	std.cctx().txt = self.reaction
+
 	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
 	for _, v in ipairs(self.aliases) do
 		std.rawset(v, '__word_alias', nil)
@@ -920,7 +925,8 @@ function mp:action()
 	local events = get_events(self, ev)
 	local r
 
-	if not self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before') then
+	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
+	if not r then
 		r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' })
 	end
 
@@ -1187,6 +1193,10 @@ function mp.shortcut.first(hint)
 	return shortcut(mp.first, hint)
 end
 
+function mp.shortcut.firstit(hint)
+	return mp.first:it(hint)
+end
+
 function mp.shortcut.second(hint)
 	return shortcut(mp.second, hint)
 end
@@ -1220,7 +1230,7 @@ function std.pr(...)
 	end
 	for _, v in ipairs({...}) do
 		v = v:gsub("{#[^}]*}", function(w)
-			local ww
+			local ww = w
 			w = w:gsub("^{#", ""):gsub("}$", "")
 			local hint = w:gsub("^[^/]*/?", "")
 			w = w:gsub("/[^/]+$", "")

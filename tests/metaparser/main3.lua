@@ -4,12 +4,27 @@ parser.msg.verbs = {
 	['взять'] = { male = "взял", female = "взяла", neuter = "взяло", plural = "взяли" };
 }
 
+game:dict {
+--	['я/вн'] = 'себя'; -- возвратное местоимение
+}
+
+
+function parser:before_Take(w)
+	if have(w) then
+		p "У {#me/вн} и так {#firstit} уже есть."
+		return
+	end
+	return false
+end
+
 function parser:Take(w)
 	take(w)
 end
 
 function parser:after_Take(w)
-	p "{#Me} {#verb/взять} {#first/вн}.";
+	if not self.reaction then
+		p "{#Me} {#verb/взять} {#first/вн}.";
+	end
 end
 
 obj {
@@ -59,9 +74,6 @@ end
 
 pl.word = -"я/од,мр,1л";
 
-game:dict {
-	['я/вн'] = 'себя'; -- возвратное местоимение
-}
 
 room {
 	nam = 'main';
