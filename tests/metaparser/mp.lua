@@ -169,6 +169,7 @@ mp = std.obj {
 		debug = { trace_action = false };
 		completions = {};
 		event = false;
+		aliases = {};
 		hint = {
 			live = 'live',
 			neuter = 'neuter',
@@ -832,6 +833,7 @@ end
 
 local function get_events(self, ev)
 	local events = {}
+	self.aliases = {}
 	for _, v in ipairs(ev) do
 		local ea = str_split(v)
 		local e = ea[1]
@@ -844,6 +846,9 @@ local function get_events(self, ev)
 				a = tonumber(a)
 				a = self.args[a]
 				if a then a = a.ob or a.word end
+				if a.ob then
+					self.aliases[a] = a.alias
+				end
 			end
 			table.insert(args, a)
 		end
@@ -854,8 +859,16 @@ end
 
 function mp:call(ob, ev, ...)
 	self.event = ev
+	for _, v in ipairs({ob, ...}) do
+		if self.aliases[v] then
+			std.rawset(v, '__word_alias', self.aliases[v])
+		end
+	end
 	local r, v = std.call(ob, ev, ...)
 	if self.debug.trace_action and r then dprint("mp:call ", ob, ev, ...) end
+	for _, v in ipairs(self.aliases) do
+		std.rawset(v, '__word_alias', nil)
+	end
 	return r, v
 end
 

@@ -531,7 +531,7 @@ function mrd:obj(w, n, nn)
 		end
 		return ob, ret
 	end
-	n = n or 1
+	n = n or ob.__word_alias or 1
 	for k, v in ipairs(d) do
 		if v.alias == n then
 			n = k
