@@ -1214,3 +1214,23 @@ end
 function std.obj:hint(hint)
 	return self:gram()[mp.hint[hint] or hint]
 end
+
+function std.obj:it(hint)
+	if mp.it then
+		return mp:it(self, hint)
+	else
+		if self:hint'plural' then
+			return 'they'
+		elseif self:hint'female' then
+			return 'she'
+		elseif self:hint 'male' then
+			return 'he'
+		else
+			return "it"
+		end
+	end
+end
+
+function std.obj:It(hint)
+	return mp.mrd.lang.cap(self:it(hint))
+end

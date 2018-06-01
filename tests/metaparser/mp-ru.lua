@@ -23,6 +23,18 @@ mp.hint.plural = 'мн'
 mp.keyboard_space = '<пробел>'
 mp.keyboard_backspace = '<удалить>'
 
+function mp:it(w, hint)
+	hint = hint or ''
+	if w:hint'plural' then
+		return mp.mrd:noun(-"они/"..hint)
+	elseif w:hint'neuter' then
+		return mp.mrd:noun(-"оно/"..hint)
+	elseif w:hint'female' then
+		return mp.mrd:noun(-"она/"..hint)
+	end
+	return mp.mrd:noun(-"он/"..hint)
+end
+
 mp.keyboard = {
 	'А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й',
 	'К','Л','М','Н','О','П','Р','О','С','Т','У','Ф',

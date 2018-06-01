@@ -6,8 +6,7 @@ obj {
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
 	before_Take = function(s)
-		p "{#Me} беру {#first/вн}.";
-		print(s:hint'neuter')
+		p "{#Me} беру {#/вн}.";
 	end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';

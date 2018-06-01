@@ -509,16 +509,20 @@ end
 
 function mrd:obj(w, n, nn)
 	local hint = ''
-	local hint2
+	local hint2, disp, ob
 	if type(w) == 'string' then
 		w, hint = str_hint(w)
 	elseif type(n) == 'string' then
 		hint = n
 		n = nn
 	end
-	local w = std.object(w)
-	local ob = w
-	local disp = self.dispof(w)
+	if type(w) ~= 'string' then
+		w = std.object(w)
+		ob = w
+		disp = self.dispof(w)
+	else
+		disp = w
+	end
 	local d = str_split(disp, '|')
 	if #d == 0 then
 		std.err("Wrong object display: ", w)
@@ -540,7 +544,7 @@ function mrd:obj(w, n, nn)
 		end
 		return ob, ret
 	end
-	n = n or ob.__word_alias or 1
+	n = n or (ob and ob.__word_alias) or 1
 	for k, v in ipairs(d) do
 		if v.alias == n then
 			n = k
@@ -574,7 +578,7 @@ function mrd:noun(w, n, nn)
 	end
 	for _, v in ipairs(w) do
 		found = false
-		if type(ob.__dict) == 'table' then
+		if ob and type(ob.__dict) == 'table' then
 			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
 			if ww then
 				found = true
