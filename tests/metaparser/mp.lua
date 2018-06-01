@@ -1052,8 +1052,14 @@ function mp:input(str)
 		if #ob == 0 then
 			return false, "UNKNOWN_VERB"
 		end
+
 		-- it is the object!
-		table.insert(w, 1, self.default_verb or "examine")
+		if ob[1].ob.default_Act then
+			local r = std.call(ob[1].ob, 'default_Act')
+			w = str_split(r)
+		else
+			table.insert(w, 1, self.default_verb or "examine")
+		end
 		verbs = self:lookup_verb(w)
 		if #verbs == 0 then
 			return false, "UNKNOWN_VERB"
