@@ -1187,3 +1187,7 @@ function std.pr(...)
 	end
 	return opr(std.unpack(args))
 end
+
+function std.obj:hint(hint)
+	return self:gram()[mp.hint[hint] or hint]
+end
