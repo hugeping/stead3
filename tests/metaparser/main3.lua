@@ -1,13 +1,13 @@
 require "mp-ru"
 
 obj {
-	-"красное яблоко,яблоко/ср,test|облако/ср",
+	-"красное яблоко,яблоко/ср,test|облако",
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 	default_Verb = 'взять красное яблоко';
 	before_Take = function(s)
 		p "Я беру {/вн}.";
-		print(s:hint 'neuter')
+		print(s:hint'neuter')
 	end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';
@@ -49,7 +49,7 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"я/од";
+pl.word = -"я/од,мн";
 
 game:dict {
 	['я/вн'] = 'себя'; -- возвратное местоимение
@@ -62,7 +62,7 @@ room {
 
 function start()
 	print(_'яблоко':noun('тв,мн')) -- даст яблокам
-	print(pl:noun('тв,од')) -- даст мной
+	print(pl:Noun('тв')) -- даст мной
 --	for k, v in pairs(_'яблоко':gram()) do
 --		print(k, v)
 --	end

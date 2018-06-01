@@ -422,10 +422,13 @@ function mrd:file(f, dict)
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
 			w = w:gsub('^-"', ""):gsub('"$', "")
-			for ww in w:gmatch("[^, |%-]+") do
-				ww = ww:gsub("/[^/]*$", "")
-				dict[self.lang.upper(ww)] = true;
-				print("added word: ", ww)
+			local words = split(w, '[^|]+')
+			for _, word in ipairs(words) do
+				word = word:gsub("/[^/]*$", "")
+				for ww in word:gmatch("[^, |%-]+") do
+					dict[self.lang.upper(ww)] = true;
+					print("added word: ", ww)
+				end
 			end
 		end
 	end
@@ -490,7 +493,9 @@ function mrd:dict(dict, word)
 				   end
 				   return a.score > b.score
 		end)
-		return tab[1].w
+		if tab[1].score > 0 then
+			return tab[1].w
+		end
 	end
 end
 
@@ -622,6 +627,10 @@ end
 
 std.obj.noun = function(self, ...)
 	return mrd:noun(self, ...)
+end
+
+std.obj.Noun = function(self, ...)
+	return mrd.lang.cap(mrd:noun(self, ...))
 end
 
 std.obj.gram = function(self, ...)
