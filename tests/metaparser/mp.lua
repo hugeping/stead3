@@ -736,6 +736,7 @@ function mp:match(verb, w)
 		if found or all_optional then
 			local fixed = verb.verb[verb.word_nr]
 			fixed = fixed.word .. (fixed.morph or '')
+			match.extra = (#a ~= 0)
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
 			if vargs then
@@ -746,6 +747,15 @@ function mp:match(verb, w)
 				match.vargs = false
 			end
 		end
+	end
+	if #unknown > 0 then
+		local nmatches = {}
+		for _, v in ipairs(matches) do
+			if not v.extra then
+				table.insert(nmatches, v)
+			end
+		end
+		matches = nmatches
 	end
 	table.sort(matches, function(a, b) return #a > #b end)
 	hints = lev_sort(hints)
