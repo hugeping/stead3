@@ -102,14 +102,14 @@ end
 
 --"увидеть"
 function mp:after_Exam(w)
-	if not self.reaction then
+	if not self.reaction and w then
 		p ("{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.");
 	end
 end
 
 Verb { "#examine",
 	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
-	"?на {noun}/вн : Exam %1",
+	"{noun}/вн : Exam",
 	"Exam" }
 
 parser = mp

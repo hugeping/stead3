@@ -855,19 +855,29 @@ local function get_events(self, ev)
 		local e = ea[1]
 		local args = {}
 		table.remove(ea, 1)
+		local reverse = false
 		for _, vv in ipairs(ea) do
-			local a = vv
-			if vv:find("^%%[0-9]+$") then
-				a = vv:gsub("%%", "")
-				a = tonumber(a)
-				a = self.args[a]
-				local arg = a
-				if a then a = a.ob or a.word end
-				if arg.ob then
-					self.aliases[a] = arg.alias
-				end
+			if vv == 'reverse' then
+				reverse = true
 			end
-			table.insert(args, a)
+		end
+		for _, vv in ipairs(self.args) do
+			if std.is_obj(vv.ob) then
+				if reverse then
+					table.insert(args, 1, vv.ob)
+				else
+					table.insert(args, vv.ob)
+				end
+				self.aliases[vv.ob] = vv.alias
+			end
+		end
+		if self.vargs then
+			local varg = ''
+			for _, vv in ipairs(self.vargs) do
+				if varg ~= '' then varg = varg .. ' ' end
+				vargs = varg .. vv
+			end
+			table.insert(args, varg)
 		end
 		table.insert(events, { ev = e, args = args })
 	end
@@ -917,7 +927,7 @@ function mp:events_call(events, oo, t)
 					r, v = self:call(ob, ename, std.unpack(e.args))
 					if r then std.pr(r) end
 					if not v then
-						r, v = self:call(ob, e.ev, edef, std.unpack(e.args))
+						r, v = self:call(ob, edef, e.ev, std.unpack(e.args))
 						if r then std.pr(r) end
 					end
 				end
