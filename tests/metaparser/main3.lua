@@ -1,9 +1,5 @@
 require "mp-ru"
 
-parser.msg.verbs = {
-	['взять'] = { male = "взял", female = "взяла", neuter = "взяло", plural = "взяли" };
-}
-
 game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
 }
@@ -23,7 +19,7 @@ end
 
 function parser:after_Take(w)
 	if not self.reaction then
-		p "{#Me} {#verb/взять} {#first/вн}.";
+		p "{#Me} {#verb/взять,#me,прш} {#first/вн}.";
 	end
 end
 
@@ -80,9 +76,13 @@ room {
 	dsc = 'Вы в комнате';
 }: with { 'яблоко', 'яблоко2' }
 
+
 function start()
 	print(_'яблоко':noun('тв,мн')) -- даст яблокам
 	print(pl:Noun('тв')) -- даст мной
+	print(parser.mrd:noun(-"взять/прш,од,1л"))
+
+	print(pl:noun())
 --	for k, v in pairs(_'яблоко':gram()) do
 --		print(k, v)
 --	end

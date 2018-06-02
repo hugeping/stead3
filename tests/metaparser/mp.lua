@@ -174,6 +174,8 @@ mp = std.obj {
 		aliases = {};
 		first = false;
 		second = false;
+		first_hint = '';
+		second_hint = '';
 		hint = {
 			live = 'live',
 			neuter = 'neuter',
@@ -893,6 +895,8 @@ function mp:events_call(events, oo, t)
 			local ob = o
 			self.first = std.is_obj(e.args[1]) and e.args[1]
 			self.second = std.is_obj(e.args[2]) and e.args[2]
+			self.first_hint = self.first and self.first:gram().hint
+			self.second_hint = self.second and self.second:gram().hint
 			if o == 'obj' then
 				ob = e.args[1]
 				table.remove(e.args, 1)
@@ -1208,18 +1212,26 @@ end
 mp.msg.verbs = {}
 
 function mp.shortcut.verb(hint)
-	local v = mp.msg.verbs[hint]
-	if not v then
+	local w = str_split(hint, ",")
+	if #w == 0 then
 		return hint
 	end
-	local w = std.me()
-	for _, h in ipairs { 'plural', 'first', 'second', 'third', 'female', 'male', 'neuter', 'male' } do
-		if w:hint(h) and v[h] then
-			v = v[h]
-			return v
+	local verb = w[1]
+	table.remove(w, 1)
+	local hint = ''
+	for _, k in ipairs(w) do
+		if k == '#me' then
+			hint = hint .. std.me():gram().hint .. ','
+		elseif k == '#first' then
+			hint = hint .. self.first_hint .. ','
+		elseif k == '#second' then
+			hint = hint .. self.second_hint .. ','
+		else
+			hint = hint .. k .. ','
 		end
 	end
-	return hint
+	local t = mp.mrd:noun(verb .. '/' .. hint)
+	return t
 end
 
 function std.pr(...)

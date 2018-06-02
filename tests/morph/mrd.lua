@@ -168,7 +168,7 @@ local function word_fn(l, self, dict)
 	local num = 0
 	local used = false
 	for k, v in ipairs(nflex) do
-		if v.an["им"] then
+		if v.an["им"] or v.an.t == 'ИНФИНИТИВ' then
 			for _, pref in ipairs(npref or { '' }) do
 				local tt = pref..v.pre .. t .. v.post
 				if self.lang.norm then
@@ -336,6 +336,16 @@ function mrd:score(an, g)
 	return score
 end
 
+function mrd:gram_compat(a, b)
+	if a == 'ИНФИНИТИВ' then
+		return b == 'ИНФИНИТИВ' or b == 'Г'
+	end
+	if b == 'ИНФИНИТИВ' then
+		return a == 'ИНФИНИТИВ' or a == 'Г'
+	end
+	return true
+end
+
 function mrd:lookup(w, g)
 	local cap, upper = self.lang.is_cap(w)
 	local t = self.lang.upper(w)
@@ -347,12 +357,15 @@ function mrd:lookup(w, g)
 	for k, v in ipairs(w) do
 		local flex = v.flex
 		local score = self:score(v.an, g)
+		local t = v.an.t
 		for _, f in ipairs(flex) do
-			local sc = self:score(f.an, g)
-			if sc < 0 then
-				break
+			if self:gram_compat(v.an.t, f.an.t)  then
+				local sc = self:score(f.an, g)
+				if sc < 0 then
+					break
+				end
+				table.insert(res, { score = score + sc, pos = #res, word = v, flex = f })
 			end
-			table.insert(res, { score = score + sc, pos = #res, word = v, flex = f })
 		end
 	end
 	if #res == 0 then
@@ -367,7 +380,13 @@ function mrd:lookup(w, g)
 if false then
 	for i = 1, #res do
 		local w = res[i]
-		print(self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post), w.score)
+		local tt = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
+		if tt == 'взявший' then
+			for _, v in pairs(w.flex.an) do
+				print(_, v)
+			end
+		end
+--		print(tt, w.score)
 	end
 end
 	w = res[1]
@@ -641,11 +660,13 @@ std.obj.gram = function(self, ...)
 	local hint, ob, w
 	ob, w, hint = mrd:obj(self, ...)
 	local _, gram = mrd:word(w .. '/'..hint)
+	local thint = hint
 	hint = str_split(hint, ",")
 	local g = gram and gram[1] or {}
 	for _, v in ipairs(hint) do
 		g[v] = true
 	end
+	g.hint = thint
 	return g
 end
 
