@@ -905,21 +905,21 @@ function mp:events_call(events, oo, t)
 			end
 			local r, v
 			if std.is_obj(ob) then
-				r, v = self:call(ob, eany, std.unpack(e.args))
+				r, v = self:call(ob, eany, e.ev, std.unpack(e.args))
 				if r then std.pr(r) end
 				if not v then
 					r, v = self:call(ob, ename, std.unpack(e.args))
 					if r then std.pr(r) end
 					if not v then
-						r, v = self:call(ob, edef, std.unpack(e.args))
+						r, v = self:call(ob, e.ev, edef, std.unpack(e.args))
 						if r then std.pr(r) end
 					end
 				end
 			end
-			if v then return v end
 			if o == 'obj' then
 				table.insert(e.args, 1, ob)
 			end
+			if v and t ~= 'after_' then return v end
 		end
 	end
 	return false
@@ -1164,6 +1164,7 @@ function(cmd)
 		return true, false
 	end
 	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
+		mp.inp = mp:docompl(mp.inp)
 		return mp:key_enter()
 	end
 	if cmd[1] ~= '@mp_key' then
