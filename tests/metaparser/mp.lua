@@ -1314,6 +1314,22 @@ function std.obj:it(hint)
 	end
 end
 
-function std.obj:It(hint)
-	return mp.mrd.lang.cap(self:it(hint))
+function std.obj:attr(str)
+	local a = str_split(str, ",")
+	for _, v in ipairs(a) do
+		local val =  (v:find("~", 1, true) ~= 1)
+		v = v:gsub("^~", "")
+		self['__attr__' .. v] = val
+	end
+end
+
+function std.obj:has(attr)
+	attr = std.strip(attr)
+	local val =  (attr:find("~", 1, true) ~= 1)
+	attr = attr:gsub("^~", "")
+	if val then
+		return self['__attr__' .. attr]
+	else
+		return not self['__attr__' .. attr]
+	end
 end

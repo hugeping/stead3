@@ -38,8 +38,9 @@ obj {
 	nam = 'яблоко2';
 }: dict {
 --	['зеленое яблоко/дт,мн'] = 'кустом слово для объекта';
-}
+} : attr "~open,container"
 
+print("attr", _'яблоко2':has 'container')
 -- lifeon 'яблоко'
 parser.debug.trace_action = true
 
