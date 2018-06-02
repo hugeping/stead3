@@ -2,7 +2,6 @@ require "mp-ru"
 
 game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
--- -"нужен"
 }
 
 
@@ -20,7 +19,7 @@ end
 
 function parser:after_Take(w)
 	if not self.reaction then
-		p "{#Me} {#word/взять,#me,прш} {#first/вн}.";
+		p ("{#Me} {#word/взять,#me,прш} {#first/вн}.");
 	end
 end
 
@@ -44,9 +43,9 @@ obj {
 -- lifeon 'яблоко'
 parser.debug.trace_action = true
 
-game: dict {
+--game: dict {
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
-}
+--}
 
 parser.Exam = function(s, w)
 	if not w then

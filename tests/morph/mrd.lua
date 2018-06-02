@@ -387,8 +387,8 @@ if false then
 	for i = 1, #res do
 		local w = res[i]
 		local tt = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
-		print(tt)
-		if tt == 'нужен' then
+		print("res: ", tt)
+		if tt == 'взял' then
 			for _, v in pairs(w.flex.an) do
 				print(_, v)
 			end
@@ -413,7 +413,7 @@ end
 	end
 	return w, gram
 end
-
+local word_match = "[^ \t,%-!/:%+&]+"
 function mrd:word(w)
 	local s, e = w:find("/[^/]*$")
 	local g = {}
@@ -424,7 +424,7 @@ function mrd:word(w)
 		g = split(gg, "[^, ]+")
 	end
 	local found = true
-	w = w:gsub("[^ \t,%-!/:]+",
+	w = w:gsub(word_match,
 		   function(w)
 			   local ww, gg = self:lookup(w, g)
 			   if not ww then
@@ -447,11 +447,11 @@ function mrd:file(f, dict)
 	end
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
-			w = w:gsub('^-"', ""):gsub('"$', "")
+			w = w:gsub('^%-"', ""):gsub('"$', "")
 			local words = split(w, '[^|]+')
 			for _, word in ipairs(words) do
 				word = word:gsub("/[^/]*$", "")
-				for ww in word:gmatch("[^, |%-]+") do
+				for ww in word:gmatch(word_match) do
 					dict[self.lang.upper(ww)] = true;
 					print("added word: ", ww)
 				end
@@ -463,6 +463,7 @@ function mrd:file(f, dict)
 end
 
 local function str_hint(str)
+--	str = str:gsub("^%+", "")
 	local s, e = str:find("/[^/]*$")
 	if not s then
 		return str, ""
@@ -526,6 +527,7 @@ function mrd:dict(dict, word)
 end
 
 function mrd.dispof(w)
+	local d
 	if w.word ~= nil then
 		local d = std.call(w, 'word')
 		return d

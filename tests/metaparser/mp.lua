@@ -935,7 +935,6 @@ function mp:action()
 	end
 
 	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
-
 	-- parser:before_Any
 	-- parser:before_Take || before_Def
 	-- game:before_Any
@@ -996,7 +995,7 @@ function mp:parse(inp)
 	mp:action()
 	local tt = std.pget()
 	std.pclr()
-	pr(t, tt)
+	pr(t or '', tt or '')
 end
 
 std.world.display = function(s, state)
