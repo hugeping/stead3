@@ -329,9 +329,11 @@ function mp.token.noun(w)
 	local oo = {}
 	local ww = {}
 	std.here():for_each(function(v)
+			if v:disabled() then return nil, false end
 			table.insert(oo, v)
 			   end)
 	inv():for_each(function(v)
+			if v:disabled() then return nil, false end
 			table.insert(oo, v)
 			   end)
 	table.insert(oo, std.me())
