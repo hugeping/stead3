@@ -185,6 +185,24 @@ local function norm(str)
 	return str
 end
 
-lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap }
+local vowels = {
+	["у"] = true,
+	["е"] = true,
+	["ы"] = true,
+	["а"] = true,
+	["о"] = true,
+	["и"] = true,
+	["ю"] = true,
+	["ё"] = true,
+	["э"] = true,
+	["я"] = true,
+}
+
+local function is_vowel(l)
+	l = lower(l);
+	return vowels[l]
+end
+
+lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap, is_vowel = is_vowel }
 
 return lang

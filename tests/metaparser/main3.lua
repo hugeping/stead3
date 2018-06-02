@@ -47,19 +47,7 @@ parser.debug.trace_action = true
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
 --}
 
-parser.Exam = function(s, w)
-	if not w then
-		std.me():need_scene(true)
-	end
-	return false
-end
-
 Verb { "#take", "взять,забрать,схват/ить,забери,возьми,бери", "{noun}/вн : Take %1" }
-Verb { "#examine",
-	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть",
-	"{noun}/вн : Exam %1",
-	"Exam" }
-
 Verb { 'сказ/ать', "{noun}/дт * : Talk" }
 Verb { 'идти', "на северо-восток|север : Walk" }
 Verb { '~север', ": Walk" }

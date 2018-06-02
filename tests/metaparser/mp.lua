@@ -151,6 +151,12 @@ mp = std.obj {
 	{
 		inp = '';
 		cur = 1;
+		utf = {
+			bb = utf_bb;
+			ff = utf_ff;
+			len = utf_len;
+			char = utf_char;
+		};
 		cursor = fmt.b("|");
 		prompt = "> ";
 		ctrl = false;
@@ -1251,23 +1257,28 @@ function std.pr(...)
 		return opr(...)
 	end
 	for _, v in ipairs({...}) do
-		v = v:gsub("{#[^}]*}", function(w)
-			local ww = w
-			w = w:gsub("^{#", ""):gsub("}$", "")
-			local hint = w:gsub("^[^/]*/?", "")
-			w = w:gsub("/[^/]+$", "")
-			local cap = mp.mrd.lang.is_cap(w)
-			w = w:lower()
-			if mp.shortcut[w] then
-				w = mp.shortcut[w](hint)
-				if cap then
-					w = mp.mrd.lang.cap(w)
+		local finish
+		repeat
+			finish = true
+			v = v:gsub("{#[^{}]*}", function(w)
+				local ww = w
+				w = w:gsub("^{#", ""):gsub("}$", "")
+				local hint = w:gsub("^[^/]*/?", "")
+				w = w:gsub("/[^/]+$", "")
+				local cap = mp.mrd.lang.is_cap(w)
+				w = w:lower()
+				if mp.shortcut[w] then
+					w = mp.shortcut[w](hint)
+					if cap then
+						w = mp.mrd.lang.cap(w)
+					end
+				else
+					std.err("Wrong shortcut: ".. ww, 2)
 				end
-			else
-				std.err("Wrong shortcut: ".. ww, 2)
-			end
-			return w
-		end)
+				finish = false
+				return w
+			end)
+		until finish
 		table.insert(args, v)
 	end
 	return opr(std.unpack(args))

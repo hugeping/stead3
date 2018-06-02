@@ -1,6 +1,8 @@
 require "mp"
 local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
+local utf = mp.utf
+
 mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
 mp.msg.UNKNOWN_VERB = "Непонятный глагол"
@@ -79,5 +81,35 @@ function mp:err_noun(noun)
 		pr "именительном падеже"
 	end
 end
+
+function mp.shortcut.vo(hint)
+	local w = std.split(hint)
+	w = w[#w]
+	if mp.utf.len(w) > 2 and
+		(lang.is_vowel(utf.char(w, 1)) or
+		lang.is_vowel(utf.char(w, 2))) then
+		return "в ".. hint
+	end
+	return "во ".. hint
+end
+
+function mp:Exam(w)
+	if not w then
+		std.me():need_scene(true)
+	end
+	return false
+end
+
+--"увидеть"
+function mp:after_Exam(w)
+	if not self.reaction then
+		p ("{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.");
+	end
+end
+
+Verb { "#examine",
+	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
+	"?на {noun}/вн : Exam %1",
+	"Exam" }
 
 parser = mp

@@ -1,9 +1,12 @@
 local lang = {
 	norm = function(str)
+		return str
 	end;
 	upper = function(str)
+		return str:upper()
 	end;
 	lower = function(str)
+		return str:lower()
 	end;
 }
 
