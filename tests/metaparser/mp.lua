@@ -1210,6 +1210,14 @@ end
 
 mp.msg.verbs = {}
 
+function mp.shortcut.verb(hint)
+	local verb = mp.msg.verbs[hint]
+	if not verb then
+		return hint
+	end
+	return mp.shortcut.word(verb)
+end
+
 function mp.shortcut.word(hint)
 	local w = str_split(hint, ",")
 	if #w == 0 then

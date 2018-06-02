@@ -19,7 +19,7 @@ end
 
 function parser:after_Take(w)
 	if not self.reaction then
-		p ("{#Me} {#word/взять,#me,прш} {#first/вн}.");
+		p ("{#Me} {#verb/take} {#first/вн}.");
 	end
 end
 

@@ -26,6 +26,8 @@ mp.hint.third = '3л'
 mp.keyboard_space = '<пробел>'
 mp.keyboard_backspace = '<удалить>'
 
+mp.msg.verbs.take = -"взять,#me,прш"
+
 function mp:it(w, hint)
 	hint = hint or ''
 	if w:hint'plural' then
