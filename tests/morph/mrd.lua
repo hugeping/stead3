@@ -168,7 +168,7 @@ local function word_fn(l, self, dict)
 	local num = 0
 	local used = false
 	for k, v in ipairs(nflex) do
-		if v.an["им"] or v.an.t == 'ИНФИНИТИВ' then
+		if v.an["им"] or v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' then
 			for _, pref in ipairs(npref or { '' }) do
 				local tt = pref..v.pre .. t .. v.post
 				if self.lang.norm then
@@ -343,6 +343,12 @@ function mrd:gram_compat(a, b)
 	if b == 'ИНФИНИТИВ' then
 		return a == 'ИНФИНИТИВ' or a == 'Г'
 	end
+	if a == 'КР_ПРИЛ' then
+		return b == 'КР_ПРИЛ' or b == 'П'
+	end
+	if b == 'КР_ПРИЛ' then
+		return a == 'КР_ПРИЛ' or a == 'П'
+	end
 	return true
 end
 
@@ -381,7 +387,8 @@ if false then
 	for i = 1, #res do
 		local w = res[i]
 		local tt = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
-		if tt == 'взявший' then
+		print(tt)
+		if tt == 'нужен' then
 			for _, v in pairs(w.flex.an) do
 				print(_, v)
 			end

@@ -2,6 +2,7 @@ require "mp-ru"
 
 game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
+-- -"нужен"
 }
 
 
@@ -19,7 +20,7 @@ end
 
 function parser:after_Take(w)
 	if not self.reaction then
-		p "{#Me} {#verb/взять,#me,прш} {#first/вн}.";
+		p "{#Me} {#word/взять,#me,прш} {#first/вн}.";
 	end
 end
 
@@ -81,6 +82,7 @@ function start()
 	print(_'яблоко':noun('тв,мн')) -- даст яблокам
 	print(pl:Noun('тв')) -- даст мной
 	print(parser.mrd:noun(-"взять/прш,од,1л"))
+	print(parser.mrd:noun(-"нужен/жр"))
 
 	print(pl:noun())
 --	for k, v in pairs(_'яблоко':gram()) do

@@ -1211,7 +1211,7 @@ end
 
 mp.msg.verbs = {}
 
-function mp.shortcut.verb(hint)
+function mp.shortcut.word(hint)
 	local w = str_split(hint, ",")
 	if #w == 0 then
 		return hint
