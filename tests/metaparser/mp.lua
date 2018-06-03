@@ -1066,7 +1066,7 @@ function mp:parse(inp)
 end
 
 std.world.display = function(s, state)
-	local l, av, pv, t
+	local l, av, pv
 	local reaction = s:reaction() or nil
 	if state then
 --		reaction = iface:em(reaction)
@@ -1074,12 +1074,12 @@ std.world.display = function(s, state)
 		av = iface:em(av)
 		pv = iface:em(pv)
 		if s.player:need_scene() then
-			t = iface:bold(std.titleof(stead.here()))
+--			t = iface:bold(std.titleof(stead.here()))
 			l = s.player:look() -- objects [and scene]
 		end
 	end
 	l = std.par(std.scene_delim, reaction or false,
-		    av or false, t or false, l or false,
+		    av or false, l or false,
 		    pv or false) or ''
 	mp.text = mp.text ..  l .. '^^' .. fmt.anchor()
 	return mp.text
@@ -1478,4 +1478,8 @@ function std.obj:has(attr)
 	else
 		return not self['__attr__' .. attr]
 	end
+end
+
+function iface:title(t)
+	return iface:bold(t)
 end

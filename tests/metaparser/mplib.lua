@@ -65,7 +65,11 @@ function mp:room_content(w)
 end
 
 function std.obj:scene()
-	
+	local s = self
+	local title, dsc
+	title = iface:title(std.titleof(s))
+	dsc = std.call(s, 'decor')
+	return std.par(std.scene_delim, title or false, dsc)
 end
 
 std.player.where = function(s, where)
