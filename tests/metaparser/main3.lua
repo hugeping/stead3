@@ -18,6 +18,7 @@ end
 
 function parser:Take(w)
 	take(w)
+	return false
 end
 
 function parser:after_Take(w)
@@ -31,7 +32,8 @@ obj {
 	life = 'яблоко лежит';
 	dsc = [[На столе есть яблоко.]];
 	nam = 'яблоко';
-	Take = function(s) walk 'main2' end;
+--	Take = 'взял';
+--	Take = function(s) walk 'main2' end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';
 }

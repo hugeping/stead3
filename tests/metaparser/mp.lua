@@ -938,9 +938,10 @@ function mp:call(ob, ev, ...)
 		end
 	end
 
-	self.reaction = std.pget() or false
+--	self.reaction = std.pget() or false
 	local r, v = std.call(ob, ev, ...)
-	std.cctx().txt = self.reaction
+--	std.cctx().txt = self.reaction
+	self.reaction = self.reaction or v or false
 
 	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
 	for _, v in ipairs(self.aliases) do
@@ -993,6 +994,7 @@ function mp:action()
 	local events = get_events(self, ev)
 	local r
 
+	self.reaction = false
 	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
 	if not r then
 		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
