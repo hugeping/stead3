@@ -157,6 +157,9 @@ mp = std.obj {
 			len = utf_len;
 			char = utf_char;
 		};
+		history = {};
+		history_len = 100;
+		history_pos = 0;
 		cursor = fmt.b("|");
 		prompt = "> ";
 		ctrl = false;
@@ -200,6 +203,12 @@ function mp:key(key)
 	end
 	if key == 'right' then
 		return self:inp_right()
+	end
+	if key == 'up' then
+		return self:key_history_prev()
+	end
+	if key == 'down' then
+		return self:key_history_next()
 	end
 	if key == 'space' then
 		local inp = mp:docompl(self.inp)
@@ -877,7 +886,7 @@ local function get_events(self, ev)
 			local varg = ''
 			for _, vv in ipairs(self.vargs) do
 				if varg ~= '' then varg = varg .. ' ' end
-				vargs = varg .. vv
+				varg = varg .. vv
 			end
 			table.insert(args, varg)
 		end
@@ -1044,7 +1053,42 @@ function mp:completion(word)
 	self:compl_fill(self:compl(self.inp))
 end
 
+function mp:key_history_prev()
+	if #self.history == 0 then
+		return
+	end
+	self.history_pos = self.history_pos + 1
+	if self.history_pos > #self.history then
+		self.history_pos = #self.history
+	end
+	self.inp = self.history[self.history_pos]
+	self.cur = self.inp:len() + 1
+	return true
+end
+
+function mp:key_history_next()
+	if #self.history == 0 then
+		return
+	end
+	self.history_pos = self.history_pos - 1
+	if self.history_pos < 1 then
+		self.history_pos = 0
+		self.inp = ''
+		self.cur = 1
+		return true
+	end
+	self.inp = self.history[self.history_pos]
+	self.cur = self.inp:len() + 1
+	return true
+end
+
 function mp:key_enter()
+	table.insert(self.history, 1, self.inp)
+	self.history_pos = 0
+	if #self.history > self.history_len then
+		table.remove(self.history, #self.history)
+	end
+
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
