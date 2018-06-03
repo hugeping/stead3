@@ -746,6 +746,8 @@ function mp:match(verb, w)
 				end
 				table.insert(hints, { word = v, lev = lev })
 				break
+			else
+				table.insert(match.args, { word = false, optional = true } )
 			end
 		end
 		if #multi > 0 then
@@ -862,7 +864,7 @@ local function get_events(self, ev)
 			end
 		end
 		for _, vv in ipairs(self.args) do
-			if std.is_obj(vv.ob) then
+			if vv and std.is_obj(vv.ob) then
 				if reverse then
 					table.insert(args, 1, vv.ob)
 				else
@@ -1268,6 +1270,7 @@ function std.pr(...)
 	end
 	for _, v in ipairs({...}) do
 		local finish
+		if type(v) == 'string' then
 		repeat
 			finish = true
 			v = v:gsub("{#[^{}]*}", function(w)
@@ -1289,6 +1292,7 @@ function std.pr(...)
 				return w
 			end)
 		until finish
+		end
 		table.insert(args, v)
 	end
 	return opr(std.unpack(args))
