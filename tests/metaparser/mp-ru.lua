@@ -1,4 +1,6 @@
-require "mp"
+loadmod "mp"
+loadmod "mplib"
+
 local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
 local utf = mp.utf
@@ -122,5 +124,12 @@ Verb { "#examine",
 	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
 	"?на {noun}/вн : Exam",
 	"Exam" }
+
+-- Dialog
+std.phr.default_Verb = function(s)
+	return "сказать ".. std.tostr(s.__ph_idx)
+end
+
+Verb ({"сказать", "{noun}/вн : Exam" }, std.dlg)
 
 parser = mp

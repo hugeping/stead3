@@ -428,16 +428,19 @@ function mrd:word(w)
 	end
 	local found = true
 	w = w:gsub(word_match,
-		   function(w)
-			   local ww, gg = self:lookup(w, g)
-			   if not ww then
-				   found = false
-			   end
-			   table.insert(grams, gg)
-			   return ww or w
-	end)
+		function(w)
+			local ww, gg = self:lookup(w, g)
+			if not ww then
+				found = false
+			else
+				table.insert(grams, gg)
+			end
+			return ww or w
+		end)
 	if not found then
-		msg("Can not find word: "..w)
+		if not std.tonum(w) then
+			msg("Can not find word: "..w)
+		end
 	end
 	return w, grams
 end

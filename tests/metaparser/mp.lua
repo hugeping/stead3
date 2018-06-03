@@ -343,15 +343,19 @@ function mp.token.noun(w)
 	local attr = w.morph
 	local oo = {}
 	local ww = {}
-	std.here():for_each(function(v)
+	if type(std.here().nouns) == 'function' then
+		oo = std.here():nouns()
+	else
+		std.here():for_each(function(v)
 			if v:disabled() then return nil, false end
 			table.insert(oo, v)
-			   end)
-	inv():for_each(function(v)
+		end)
+		inv():for_each(function(v)
 			if v:disabled() then return nil, false end
 			table.insert(oo, v)
-			   end)
-	table.insert(oo, std.me())
+		end)
+		table.insert(oo, std.me())
+	end
 	for _, o in ipairs(oo) do
 		local d = {}
 		local r = o:noun(attr, d)
@@ -595,8 +599,10 @@ function mp:compl_fill(compl, eol, vargs)
 	self.completions = {}
 	self.completions.eol = eol
 	self.completions.vargs = vargs
+	local w = str_split(self.inp, inp_split)
+	local n = w and #w > 0 and utf_len(w[#w]) or 0
 	for _, v in ipairs(compl) do
-		if not v.hidden then
+		if not v.hidden then -- or n >= 3 then
 			table.insert(self.completions, v)
 		end
 	end
@@ -960,7 +966,7 @@ function mp:action()
 
 	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
 	if not r then
-		r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' })
+		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
 	end
 
 	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
@@ -1094,7 +1100,8 @@ function mp:key_enter()
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
-	self:completion()
+	self:compl_fill(self:compl(self.inp))
+--	self:completion()
 	return r, v
 end
 
@@ -1102,12 +1109,17 @@ function mp:lookup_noun(w)
 	local oo = {}
 	local k, len
 	local res = {}
-	std.here():for_each(function(v)
-		table.insert(oo, v)
-	end)
-	inv():for_each(function(v)
-		table.insert(oo, v)
-	end)
+	if type(std.here().nouns) == 'function' then
+		oo = std.here():nouns()
+	else
+		std.here():for_each(function(v)
+			table.insert(oo, v)
+		end)
+
+		inv():for_each(function(v)
+			table.insert(oo, v)
+		end)
+	end
 	for _, o in ipairs(oo) do
 		local ww = {}
 		o:noun(ww)
@@ -1153,7 +1165,7 @@ function mp:input(str)
 		end
 
 		-- it is the object!
-		if ob[1].ob.default_Act then
+		if ob[1].ob.default_Verb then
 			local r = std.call(ob[1].ob, 'default_Verb')
 			w = str_split(r)
 		else
@@ -1383,3 +1395,4 @@ function std.obj:has(attr)
 		return not self['__attr__' .. attr]
 	end
 end
+
