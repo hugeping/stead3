@@ -93,6 +93,17 @@ function mp.shortcut.vo(hint)
 	return "во ".. hint
 end
 
+function mp.shortcut.so(hint)
+	local w = std.split(hint)
+	w = w[#w]
+	if mp.utf.len(w) > 2 and
+		(lang.is_vowel(utf.char(w, 1)) or
+		lang.is_vowel(utf.char(w, 2))) then
+		return "с ".. hint
+	end
+	return "со ".. hint
+end
+
 function mp:Exam(w)
 	if not w then
 		std.me():need_scene(true)
@@ -109,7 +120,7 @@ end
 
 Verb { "#examine",
 	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
-	"{noun}/вн : Exam",
+	"?на {noun}/вн : Exam",
 	"Exam" }
 
 parser = mp
