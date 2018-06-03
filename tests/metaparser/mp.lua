@@ -159,6 +159,7 @@ mp = std.obj {
 			len = utf_len;
 			char = utf_char;
 		};
+		lev_thresh = 4;
 		history = {};
 		history_len = 100;
 		history_pos = 0;
@@ -768,7 +769,7 @@ function mp:match(verb, w)
 					table.insert(unknown, { word = a[i], lev = lev })
 				end
 				for _, pp in ipairs(pat) do -- single argument
-					local k, len = word_search(a, pp.word, 4)
+					local k, len = word_search(a, pp.word, self.lev_thresh)
 					if k then table.insert(hints, { word = pp.word, lev = lev, fuzzy = true }) end
 				end
 				table.insert(hints, { word = v, lev = lev })
@@ -819,7 +820,7 @@ function mp:err(err)
 		if verbs and #verbs > 0 then
 			local verb = verbs[1]
 			local fixed = verb.verb[verb.word_nr]
-			if verb.lev < 4 then
+			if verb.lev < self.lev_thresh then
 				hint = true
 				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[verb.verb_nr], ".")
 				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word .. (fixed.morph or ""), "?")
