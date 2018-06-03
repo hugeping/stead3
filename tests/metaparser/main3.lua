@@ -7,7 +7,6 @@ game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
 }
 
-
 function parser:before_Take(w)
 	if have(w) then
 		p "У {#me/вн} и так {#firstit} уже есть."
@@ -34,23 +33,14 @@ obj {
 	nam = 'яблоко';
 --	Take = 'взял';
 --	Take = function(s) walk 'main2' end;
-}: dict {
---	['яблоко/дт,мн'] = 'кустом слово для объекта';
 }
 
 obj {
 	-"зеленое яблоко,яблоко/ср",
 	life = 'яблоко лежит';
 	nam = 'яблоко2';
-}: dict {
---	['зеленое яблоко/дт,мн'] = 'кустом слово для объекта';
-} 
+}
 
-obj {
-	-"стол";
-	nam = 'стол';
-	dsc  = [[Здесь есть стол.]];
-} : with 'яблоко' :  attr "supporter"
 
 
 print("attr", _'яблоко2':has 'container')
@@ -72,6 +62,23 @@ end
 
 pl.word = -"я/од,мр,1л";
 
+obj {
+	-"рыба,рыбка";
+	nam = 'рыбка';
+}
+
+obj {
+	-"аквариум",
+	nam = 'аквариум',
+	obj = { 'рыбка' },
+} : attr 'container,transparent'
+
+obj {
+	-"стол";
+	nam = 'стол';
+	dsc = [[Здесь есть стол.]];
+	obj = { 'яблоко', 'аквариум' };
+} : attr "supporter"
 
 room {
 	nam = 'main';

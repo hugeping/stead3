@@ -86,7 +86,7 @@ end
 mp.msg.Exam = {}
 function mp:content(w)
 	local oo = {}
-	self:objects(w, oo)
+	self:objects(w, oo, false)
 	if #oo == 0 then
 		p (mp.msg.Exam.NOTHING or "notning.")
 	elseif #oo == 1 then

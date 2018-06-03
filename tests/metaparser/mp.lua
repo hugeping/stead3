@@ -342,12 +342,15 @@ local function str_split(str, delim)
 	return a
 end
 
-function mp:objects(wh, oo)
+function mp:objects(wh, oo, recurs)
 	wh:for_each(function(v)
 		if v:disabled() then return nil, false end
 		table.insert(oo, v)
 		if v:closed() then return nil, false end
 		if v:has 'container' and (not v:has 'open' and not v:has 'transparent') then
+			return nil, false
+		end
+		if recurs == false then
 			return nil, false
 		end
 	end)
