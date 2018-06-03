@@ -639,6 +639,12 @@ function mp:compl(str)
 end
 
 local function lev_sort(t)
+	local fuzzy = {}
+	for _, v in ipairs(t) do if v.fuzzy then table.insert(fuzzy, v) end end
+	if #fuzzy > 0 then
+		t = fuzzy
+		t.fuzzy = true
+	end
 	table.sort(t, function(a, b) return a.lev > b.lev end)
 	local lev = t[1] and t[1].lev
 	local res = {}
@@ -763,7 +769,7 @@ function mp:match(verb, w)
 				end
 				for _, pp in ipairs(pat) do -- single argument
 					local k, len = word_search(a, pp.word, 4)
-					if k then table.insert(hints, { word = pp.word, lev = lev }) end
+					if k then table.insert(hints, { word = pp.word, lev = lev, fuzzy = true }) end
 				end
 				table.insert(hints, { word = v, lev = lev })
 				break
