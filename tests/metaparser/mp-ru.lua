@@ -23,6 +23,10 @@ mp.msg.Exam.IS = "находится"
 mp.msg.Exam.ARE = "находятся"
 mp.msg.Exam.IN = "В {#first/пр,2}"
 mp.msg.Exam.ON = "На {#first/пр,2}"
+
+mp.msg.Look.HEREIS = "Здесь есть"
+mp.msg.Look.HEREARE = "Здесь есть"
+
 --"увидеть"
 mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.";
 

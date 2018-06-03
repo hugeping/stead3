@@ -31,6 +31,48 @@ visited. The player character has visited this location.
 workflag. This object has been temporarily selected by the Inform library for some reason.
 worn. The player character is currently wearing this object.
 ]]--
+-- player
+mp.msg.Look = {}
+function mp:room_content(w)
+	local oo = {}
+	local ooo = {}
+	self:objects(w, oo, false)
+	for _, v in ipairs(oo) do
+		if not v.dsc and not v:has'scenery' then
+			table.insert(ooo, v)
+		end
+	end
+	oo = ooo
+	if #oo == 0 then
+		return
+	elseif #oo == 1 then
+		p (mp.msg.Look.HEREIS or "Here is")
+		p(oo[1]:noun(), ".")
+	else
+		p (mp.msg.Look.HEREARE or "Here there are")
+		for _, v in ipairs(oo) do
+			if _ ~= 1 then
+				if _ == #oo then
+					p (" ", mp.msg.AND or "and")
+				else
+					p ","
+				end
+			end
+			pr (v:noun())
+		end
+		p "."
+	end
+end
+
+std.player.look = function(s)
+	local scene
+	local r = s:where()
+	if s:need_scene() then
+		scene = r:scene()
+	end
+	local c = std.call(mp, 'room_content', s:where())
+	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
+end;
 
 -- dialogs
 std.phr.word = function(s)
@@ -88,7 +130,7 @@ function mp:content(w)
 	local oo = {}
 	self:objects(w, oo, false)
 	if #oo == 0 then
-		p (mp.msg.Exam.NOTHING or "notning.")
+		p (mp.msg.Exam.NOTHING or "nothing.")
 	elseif #oo == 1 then
 		p (mp.msg.Exam.IS or "there is")
 		p(oo[1]:noun(), ".")
