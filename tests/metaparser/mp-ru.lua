@@ -16,7 +16,7 @@ mp.msg.HINT_WORDS = "Возможно, вы имели в виду"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
-mp.default_Verb = "осмотреть"
+mp.default_Event = "Exam"
 
 mp.msg.Exam.NOTHING = "ничего нет."
 mp.msg.Exam.IS = "находится"
@@ -133,9 +133,7 @@ Verb { "#examine",
 	"Exam" }
 
 -- Dialog
-std.phr.default_Verb = function(s)
-	return "сказать ".. std.tostr(s.__ph_idx)
-end
+std.phr.default_Event = "Exam"
 
 Verb ({"сказать", "{noun}/вн : Exam" }, std.dlg)
 

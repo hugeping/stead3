@@ -34,6 +34,9 @@ worn. The player character is currently wearing this object.
 -- player
 mp.msg.Look = {}
 function mp:room_content(w)
+	if w:type 'dlg' then
+		return
+	end
 	local oo = {}
 	local ooo = {}
 	self:objects(w, oo, false)

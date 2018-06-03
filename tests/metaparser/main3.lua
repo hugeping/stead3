@@ -31,7 +31,7 @@ obj {
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 --	Take = 'взял';
---	Take = function(s) walk 'main2' end;
+	Take = function(s) walk 'main2' end;
 }
 
 obj {

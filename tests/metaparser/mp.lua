@@ -989,19 +989,29 @@ function mp:events_call(events, oo, t)
 	return false
 end
 
+function mp:__action(events)
+	local r
+	self.reaction = false
+	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
+	if not r then
+		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
+	end
+	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+end
+
+function mp:xaction(verb, ...)
+	local events = { {ev = verb, args = { ... }}}
+	return self:__action(events)
+end
+
 function mp:action()
 	local parsed = self.parsed
 	local ev = str_split(parsed.ev, "|")
 	local events = get_events(self, ev)
 	local r
 
-	self.reaction = false
-	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
-	if not r then
-		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
-	end
+	self:__action(events)
 
-	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
 	-- parser:before_Any
 	-- parser:before_Take || before_Def
 	-- game:before_Any
@@ -1041,7 +1051,9 @@ function mp:parse(inp)
 	pn(fmt.b(self.prompt .. inp))
 	local r, v = self:input(self:norm(inp))
 	if not r then
-		self:err(v)
+		if v then
+			self:err(v)
+		end
 		return
 	end
 	local rinp = ''
@@ -1191,16 +1203,17 @@ function mp:input(str)
 		end
 
 		-- it is the object!
-		if ob[1].ob.default_Verb then
-			local r = std.call(ob[1].ob, 'default_Verb')
-			w = str_split(r)
+		if ob[1].ob.default_Event then
+			w = std.call(ob[1].ob, 'default_Event')
 		else
-			table.insert(w, 1, self.default_Verb or "examine")
+			w = self.default_Event or "Exam"
 		end
-		verbs = self:lookup_verb(w)
-		if #verbs == 0 then
-			return false, "UNKNOWN_VERB"
-		end
+		self:xaction(w, ob[1].ob)
+--		verbs = self:lookup_verb(w)
+--		if #verbs == 0 then
+--			return false, "UNKNOWN_VERB"
+--		end
+		return
 	end
 	local matches = {}
 	for _, v in ipairs(verbs) do
