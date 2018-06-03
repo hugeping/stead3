@@ -819,10 +819,15 @@ function mp:err(err)
 	elseif err == "INCOMPLETE" then
 		local need_noun = #self.hints > 0 and self.hints[1]:find("^{noun}")
 		if #self.unknown > 0 then
+			local unk = ''
+			for _, v in ipairs(self.unknown) do
+				if unk ~= '' then unk = unk .. ' ' end
+				unk = unk .. v
+			end
 			if need_noun then
-				p (self.msg.UNKNOWN_OBJ or "Do not see it here ", " (",self.unknown[1], ").")
+				p (self.msg.UNKNOWN_OBJ or "Do not see it here ", " (",unk, ").")
 			else
-				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", self.unknown[1], ").")
+				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
 			end
 		end
 		p (self.msg.INCOMPLETE or "Incomplete sentence.")
