@@ -749,6 +749,7 @@ function mp:match(verb, w)
 			end
 		end
 		local all_optional = true
+		local rlev = 1
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' then
 				found = #a > 0 or self.inp:find(" $")
@@ -769,8 +770,8 @@ function mp:match(verb, w)
 				end
 				local k, len = word_search(a, pp.word)
 				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
-					table.insert(multi, { word = found.ob:noun(found.alias), lev = lev })
-					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = lev })
+					table.insert(multi, { word = found.ob:noun(found.alias), lev = rlev })
+					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
 					found = false
 					break
 				elseif k and (k < best or len > best_len) then
@@ -785,15 +786,16 @@ function mp:match(verb, w)
 				table.remove(a, 1)
 				table.insert(match, word)
 				table.insert(match.args, found)
+				rlev = rlev + 1
 			elseif required then
 				for i = 1, best - 1 do
-					table.insert(unknown, { word = a[i], lev = lev })
+					table.insert(unknown, { word = a[i], lev = rlev })
 				end
 				for _, pp in ipairs(pat) do -- single argument
 					local k, len = word_search(a, pp.word, self.lev_thresh)
-					if k then table.insert(hints, { word = pp.word, lev = lev, fuzzy = true }) end
+					if k then table.insert(hints, { word = pp.word, lev = rlev, fuzzy = true }) end
 				end
-				table.insert(hints, { word = v, lev = lev })
+				table.insert(hints, { word = v, lev = rlev })
 				break
 			else
 				table.insert(match.args, { word = false, optional = true } )
@@ -828,6 +830,13 @@ function mp:match(verb, w)
 		matches = nmatches
 	end
 	table.sort(matches, function(a, b) return #a > #b end)
+--[[
+	for _, v in ipairs(hints) do
+		for _, vv in ipairs(hints) do
+			print(vv.word, vv.fuzzy, vv.lev)
+		end
+	end
+]]--
 	hints = lev_sort(hints)
 	unknown = lev_sort(unknown)
 	multi = lev_sort(multi)
