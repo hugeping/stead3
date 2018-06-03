@@ -1,5 +1,6 @@
 require "mp-ru"
 require "fmt"
+
 fmt.para = true
 
 game:dict {
@@ -26,13 +27,19 @@ function parser:after_Take(w)
 end
 
 obj {
-	-"красное яблоко,яблоко/ср,test|облако",
+	-"красное яблоко,яблоко/ср",
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 	Take = function(s) walk 'main2' end;
 }: dict {
 --	['яблоко/дт,мн'] = 'кустом слово для объекта';
 }
+
+obj {
+	-"стол";
+	nam = 'стол';
+	dsc  = [[Здесь есть стол.]];
+} : with 'яблоко' : attr "container,openable,open"
 
 obj {
 	-"зеленое яблоко,яблоко/ср",
@@ -65,7 +72,7 @@ pl.word = -"я/од,мр,1л";
 room {
 	nam = 'main';
 	dsc = 'Вы в комнате';
-}: with { 'яблоко', 'яблоко2' }
+}: with { 'стол' }
 
 
 function start()
@@ -73,7 +80,7 @@ function start()
 	print(pl:Noun('тв')) -- даст мной
 	print(parser.mrd:noun(-"взять/прш,од,1л"))
 	print(parser.mrd:noun(-"нужен/жр"))
-
+	print("ACCESS:", _'яблоко':access())
 	print(pl:noun())
 --	for k, v in pairs(_'яблоко':gram()) do
 --		print(k, v)

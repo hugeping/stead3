@@ -342,21 +342,32 @@ local function str_split(str, delim)
 	return a
 end
 
+function mp:objects(wh, oo)
+	wh:for_each(function(v)
+		if v:disabled() then return nil, false end
+		table.insert(oo, v)
+		if v:closed() then return nil, false end
+		if v:has 'container' and (not v:has 'open' and not v:has 'transparent') then
+			return nil, false
+		end
+	end)
+end
+
+function mp:nouns()
+	local oo = {}
+	self:objects(std.here(), oo)
+	self:objects(inv(), oo)
+	return oo
+end
+
 function mp.token.noun(w)
 	local attr = w.morph
-	local oo = {}
+	local oo
 	local ww = {}
 	if type(std.here().nouns) == 'function' then
 		oo = std.here():nouns()
 	else
-		std.here():for_each(function(v)
-			if v:disabled() then return nil, false end
-			table.insert(oo, v)
-		end)
-		inv():for_each(function(v)
-			if v:disabled() then return nil, false end
-			table.insert(oo, v)
-		end)
+		oo = mp:nouns()
 		table.insert(oo, std.me())
 	end
 	for _, o in ipairs(oo) do
@@ -1130,13 +1141,7 @@ function mp:lookup_noun(w)
 	if type(std.here().nouns) == 'function' then
 		oo = std.here():nouns()
 	else
-		std.here():for_each(function(v)
-			table.insert(oo, v)
-		end)
-
-		inv():for_each(function(v)
-			table.insert(oo, v)
-		end)
+		oo = self:nouns()
 	end
 	for _, o in ipairs(oo) do
 		local ww = {}
@@ -1394,8 +1399,31 @@ function std.obj:it(hint)
 	end
 end
 
+function std.obj:access()
+	local ww = {}
+	local o
+	local s = self
+	s:where(ww)
+	while #ww > 0 do
+		local nww = {}
+		for _, v in ipairs(ww) do
+			if v == me().room_where or v == std.here() then
+				return true
+			end
+			if v:has 'container'
+				and v:has 'openable'
+				and not v:has 'open' then
+				return false
+			end
+			v:where(nww)
+		end
+		ww = nww
+	end
+	return true
+end
+
 function std.obj:attr(str)
-	local a = str_split(str, ",")
+	local a = str_split(str, ", ")
 	for _, v in ipairs(a) do
 		local val =  (v:find("~", 1, true) ~= 1)
 		v = v:gsub("^~", "")
@@ -1413,4 +1441,3 @@ function std.obj:has(attr)
 		return not self['__attr__' .. attr]
 	end
 end
-
