@@ -61,7 +61,7 @@ end
 
 function mp:err_noun(noun)
 	local hint = std.split(noun, "/")
-	p "существительно в"
+	p "существительное в"
 	if #hint == 2 then
 		local h = hints(hint[2])
 		local acc = 'именительном'
