@@ -78,6 +78,8 @@ end
 -- https://gist.github.com/Badgerati/3261142
 
 local function utf_lev(str1, str2)
+	str1 = str1 or ''
+	str2 = str2 or ''
 	local len1 = utf_len(str1)
 	local len2 = utf_len(str2)
 	local matrix = {}
@@ -370,7 +372,8 @@ function mp:norm(t)
 	return std.strip(mrd.lang.lower(mrd.lang.norm(t)))
 end
 
-function mp:eq(t1, t2)
+function mp:eq(t1, t2, lev)
+	if lev and utf_lev(t1, t2) < lev then return true end
 	return self:norm(t1) == self:norm(t2)
 end
 
@@ -504,14 +507,14 @@ function mp:lookup_verb(words, lev)
 	return ret
 end
 
-local function word_search(t, w)
+local function word_search(t, w, lev)
 	w = str_split(w, " ")
 	for k, v in ipairs(t) do
 		local found = true
 		for i = 1, #w do
 			local found2 = false
 			for ii = k, k + #w - 1 do
-				if mp:eq(w[i], t[ii]) then
+				if mp:eq(w[i], t[ii], lev) then
 					found2 = true
 					break
 				end
@@ -731,7 +734,6 @@ function mp:match(verb, w)
 			local word
 			local required
 			found = false
-
 			for _, pp in ipairs(pat) do -- single argument
 				if not pp.optional then
 					required = true
@@ -758,6 +760,10 @@ function mp:match(verb, w)
 			elseif required then
 				for i = 1, best - 1 do
 					table.insert(unknown, { word = a[i], lev = lev })
+				end
+				for _, pp in ipairs(pat) do -- single argument
+					local k, len = word_search(a, pp.word, 4)
+					if k then table.insert(hints, { word = pp.word, lev = lev }) end
 				end
 				table.insert(hints, { word = v, lev = lev })
 				break
