@@ -1422,6 +1422,28 @@ function std.obj:access()
 	return true
 end
 
+function std.obj:visible()
+	local ww = {}
+	local o
+	local s = self
+	s:where(ww)
+	while #ww > 0 do
+		local nww = {}
+		for _, v in ipairs(ww) do
+			if v == me().room_where or v == std.here() then
+				return true
+			end
+			if v:has 'container'
+				and (not v:has 'open' and not v:has 'transparent') then
+				return false
+			end
+			v:where(nww)
+		end
+		ww = nww
+	end
+	return true
+end
+
 function std.obj:attr(str)
 	local a = str_split(str, ", ")
 	for _, v in ipairs(a) do
