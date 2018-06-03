@@ -1083,7 +1083,9 @@ function mp:key_history_next()
 end
 
 function mp:key_enter()
-	table.insert(self.history, 1, self.inp)
+	if #self.history == 0 or self.history[1] ~= self.inp then
+		table.insert(self.history, 1, self.inp)
+	end
 	self.history_pos = 0
 	if #self.history > self.history_len then
 		table.remove(self.history, #self.history)
