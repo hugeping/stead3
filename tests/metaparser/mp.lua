@@ -49,7 +49,7 @@ end
 local function utf_len(b)
 	local i = 1
 	local n = 0
-	if b:len() == 0 then
+	if not b or b:len() == 0 then
 		return 0
 	end
 	while i <= b:len() do
@@ -303,6 +303,20 @@ local keys_en = {
 	"S", "T", "U", "V", "W", "X",
 	"Y", "Z"
 }
+
+local function str_strip(str)
+	return std.strip(str)
+end
+
+
+local function str_split(str, delim)
+	local a = std.split(str, delim)
+	for k, _ in ipairs(a) do
+		a[k] = str_strip(a[k])
+	end
+	return a
+end
+
 instead.get_inv = std.cacheable('inv', function(horiz)
 	local delim = instead.hinv_delim
 	if not horiz then
@@ -311,6 +325,13 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	local pre, post = mp:inp_split()
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
 	delim = delim or ' | '
+
+--	local ww = str_split(mp.inp, inp_split)
+
+--	if utf_len(ww[#ww]) < 3 or mp.inp:find(" $") or true then
+--		return ret
+--	end
+
 	for _, v in ipairs(mp.completions) do
 		local t = iface:xref(v.word, mp, v.word)
 		if v.ob and have(v.ob) then t = iface:em(t) end
@@ -329,18 +350,6 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	ret = ret:gsub(delim .."$", "")
 	return ret
 end)
-
-local function str_strip(str)
-	return std.strip(str)
-end
-
-local function str_split(str, delim)
-	local a = std.split(str, delim)
-	for k, _ in ipairs(a) do
-		a[k] = str_strip(a[k])
-	end
-	return a
-end
 
 function mp:objects(wh, oo, recurs)
 	wh:for_each(function(v)
