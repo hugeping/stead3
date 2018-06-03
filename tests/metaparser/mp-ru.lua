@@ -18,6 +18,15 @@ mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
 mp.default_Verb = "осмотреть"
 
+mp.msg.Exam.NOTHING = "ничего нет."
+mp.msg.Exam.IS = "находится"
+mp.msg.Exam.ARE = "находятся"
+mp.msg.Exam.IN = "В {#first/пр,2}"
+mp.msg.Exam.ON = "На {#first/пр,2}"
+mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.";
+
+mp.msg.AND = "и"
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -114,9 +123,43 @@ function mp:Exam(w)
 end
 
 --"увидеть"
+function mp:content(w)
+	local oo = {}
+	self:objects(w, oo)
+	if #oo == 0 then
+		p "ничего нет."
+	elseif #oo == 1 then
+		p "находится"
+		p(oo[1]:noun(), ".")
+	else
+		p "находятся: "
+		for _, v in ipairs(oo) do
+			if _ ~= 1 then
+				if _ == #oo then
+					p " и"
+				else
+					p ","
+				end
+			end
+			pr (v:noun())
+		end
+		p "."
+	end
+end
+
 function mp:after_Exam(w)
 	if not self.reaction and w then
-		p ("{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.");
+		if w:has 'container' then
+			if w:has'transparent' or w:has'open' then
+				p("В {#first/пр,2}")
+				self:content(w)
+			end
+		elseif w:has 'supporter' then
+			p("На {#first/пр,2}")
+			self:content(w)
+		else
+			p ("{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.");
+		end
 	end
 end
 

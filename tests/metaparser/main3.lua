@@ -39,18 +39,19 @@ obj {
 }
 
 obj {
-	-"стол";
-	nam = 'стол';
-	dsc  = [[Здесь есть стол.]];
-} : with 'яблоко' : attr "container,openable,open"
-
-obj {
 	-"зеленое яблоко,яблоко/ср",
 	life = 'яблоко лежит';
 	nam = 'яблоко2';
 }: dict {
 --	['зеленое яблоко/дт,мн'] = 'кустом слово для объекта';
-} : attr "~open,container"
+} 
+
+obj {
+	-"стол";
+	nam = 'стол';
+	dsc  = [[Здесь есть стол.]];
+} : with 'яблоко' :  attr "supporter"
+
 
 print("attr", _'яблоко2':has 'container')
 -- lifeon 'яблоко'

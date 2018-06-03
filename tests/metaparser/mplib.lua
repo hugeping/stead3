@@ -81,3 +81,45 @@ std.phrase_prefix = function(n)
 	end
 	return (string.format("%d) ", n))
 end
+
+-- VERBS
+mp.msg.Exam = {}
+function mp:content(w)
+	local oo = {}
+	self:objects(w, oo)
+	if #oo == 0 then
+		p (mp.msg.Exam.NOTHING or "notning.")
+	elseif #oo == 1 then
+		p (mp.msg.Exam.IS or "there is")
+		p(oo[1]:noun(), ".")
+	else
+		p (mp.msg.Exam.ARE or "there are")
+		for _, v in ipairs(oo) do
+			if _ ~= 1 then
+				if _ == #oo then
+					p (" ", mp.msg.AND or "and")
+				else
+					p ","
+				end
+			end
+			pr (v:noun())
+		end
+		p "."
+	end
+end
+
+function mp:after_Exam(w)
+	if not self.reaction and w then
+		if w:has 'container' then
+			if w:has'transparent' or w:has'open' then
+				p(mp.msg.Exam.IN or "In the {#first/}")
+				self:content(w)
+			end
+		elseif w:has 'supporter' then
+			p(mp.msg.Exam.ON or "On the {#first/}")
+			self:content(w)
+		else
+			p (mp.msg.Exam.DEFAULT or "{#Me} did not see anything unusual.");
+		end
+	end
+end
