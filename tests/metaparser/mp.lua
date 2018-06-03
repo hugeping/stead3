@@ -1407,6 +1407,9 @@ function std.obj:access()
 	local ww = {}
 	local o
 	local s = self
+	if s:has 'concealed' then
+		return false
+	end
 	s:where(ww)
 	while #ww > 0 do
 		local nww = {}
@@ -1417,6 +1420,9 @@ function std.obj:access()
 			if v:has 'container'
 				and v:has 'openable'
 				and not v:has 'open' then
+				return false
+			end
+			if v:has 'concealed' then
 				return false
 			end
 			v:where(nww)
@@ -1430,6 +1436,9 @@ function std.obj:visible()
 	local ww = {}
 	local o
 	local s = self
+	if s:has 'concealed' then
+		return false
+	end
 	s:where(ww)
 	while #ww > 0 do
 		local nww = {}
@@ -1439,6 +1448,9 @@ function std.obj:visible()
 			end
 			if v:has 'container'
 				and (not v:has 'open' and not v:has 'transparent') then
+				return false
+			end
+			if v:has 'concealed' then
 				return false
 			end
 			v:where(nww)
