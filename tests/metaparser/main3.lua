@@ -83,6 +83,9 @@ room {
 	dsc = "Я в комнате.";
 }: with { 'стол' }
 
+function init()
+--	pl.room_where = _'аквариум'
+end
 
 function start()
 	print(_'яблоко':noun('тв,мн')) -- даст яблокам
@@ -91,6 +94,8 @@ function start()
 	print(parser.mrd:noun(-"нужен/жр"))
 	print("ACCESS:", _'яблоко':access())
 	print(pl:noun())
+	print("visible:", _"стол":visible())
+	print("visible:", _"рыбка":visible())
 --	for k, v in pairs(_'яблоко':gram()) do
 --		print(k, v)
 --	end

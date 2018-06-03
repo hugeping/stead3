@@ -64,6 +64,17 @@ function mp:room_content(w)
 	end
 end
 
+function std.obj:scene()
+	
+end
+
+std.player.where = function(s, where)
+	if type(where) == 'table' then
+		table.insert(where, std.ref(s.room_where or s.room))
+	end
+	return std.ref(s.room_where or s.room)
+end
+
 std.player.look = function(s)
 	local scene
 	local r = s:where()

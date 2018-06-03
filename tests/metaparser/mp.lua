@@ -345,11 +345,9 @@ end
 function mp:objects(wh, oo, recurs)
 	wh:for_each(function(v)
 		if v:disabled() then return nil, false end
+		if not v:visible() then return nil, false end
 		table.insert(oo, v)
 		if v:closed() then return nil, false end
-		if v:has 'container' and (not v:has 'open' and not v:has 'transparent') then
-			return nil, false
-		end
 		if recurs == false then
 			return nil, false
 		end
@@ -358,7 +356,7 @@ end
 
 function mp:nouns()
 	local oo = {}
-	self:objects(std.here(), oo)
+	self:objects(me():where(), oo)
 	self:objects(inv(), oo)
 	return oo
 end
@@ -1292,6 +1290,7 @@ function instead.fading()
 end
 
 instead.notitle = true
+instead.noways = true
 
 local opr = std.pr
 
@@ -1412,7 +1411,7 @@ function std.obj:access()
 	while #ww > 0 do
 		local nww = {}
 		for _, v in ipairs(ww) do
-			if v == me().room_where or v == std.here() then
+			if v == (me().room_where or std.here()) then
 				return true
 			end
 			if v:has 'container'
@@ -1424,7 +1423,7 @@ function std.obj:access()
 		end
 		ww = nww
 	end
-	return true
+	return false
 end
 
 function std.obj:visible()
@@ -1435,7 +1434,7 @@ function std.obj:visible()
 	while #ww > 0 do
 		local nww = {}
 		for _, v in ipairs(ww) do
-			if v == me().room_where or v == std.here() then
+			if v == (me().room_where or std.here()) then
 				return true
 			end
 			if v:has 'container'
@@ -1446,7 +1445,7 @@ function std.obj:visible()
 		end
 		ww = nww
 	end
-	return true
+	return false
 end
 
 function std.obj:attr(str)
