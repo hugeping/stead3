@@ -7,6 +7,7 @@ local utf = mp.utf
 
 mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
+mp.msg.EMPTY = 'Простите?'
 mp.msg.UNKNOWN_VERB = "Непонятный глагол"
 mp.msg.UNKNOWN_VERB_HINT = "Возможно, вы имели в виду"
 mp.msg.INCOMPLETE = "Нужно дополнить предложение."
@@ -17,6 +18,7 @@ mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
 mp.default_Event = "Exam"
+mp.default_Verb = "осмотреть"
 
 mp.msg.Exam.NOTHING = "ничего нет."
 mp.msg.Exam.IS = "находится"
@@ -147,7 +149,7 @@ function mp:Exam(w)
 end
 
 Verb { "#Enter",
-	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду",
+	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг",
 	"на|в|к {noun}/вн : Enter" }
 
 Verb { "#Exit",

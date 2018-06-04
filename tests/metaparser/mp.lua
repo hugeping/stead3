@@ -161,6 +161,7 @@ mp = std.obj {
 		};
 		lev_thresh = 4;
 		history = {};
+		winsize = 128 * 1024;
 		history_len = 100;
 		history_pos = 0;
 		cursor = fmt.b("|");
@@ -199,6 +200,18 @@ mp = std.obj {
 	text = '';
 	-- dict = {};
 }
+
+function mp:trim()
+	local text = self.text
+	while text:len() > self.winsize do
+		local text2 = text:gsub("^%^?[^%^]*%^%^", "")
+		if text2 == text then
+			break
+		end
+		text = text2
+	end
+	self.text = text
+end
 
 function mp:key(key)
 	if key == 'left' then
@@ -865,6 +878,8 @@ function mp:err(err)
 		if not hint then
 			p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[1], ".")
 		end
+	elseif err == "EMPTY_INPUT" then
+		p (self.msg.EMPTY or "Empty input.")
 	elseif err == "INCOMPLETE" then
 		local need_noun = #self.hints > 0 and self.hints[1]:find("^{noun}")
 		if #self.unknown > 0 then
@@ -1075,7 +1090,9 @@ function mp:action()
 end
 
 function mp:parse(inp)
+	inp = std.strip(inp)
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
+
 	pn(fmt.b(self.prompt .. inp))
 	local r, v = self:input(self:norm(inp))
 	if not r then
@@ -1107,6 +1124,7 @@ end
 
 std.world.display = function(s, state)
 	local l, av, pv
+	mp:trim()
 	local reaction = s:reaction() or nil
 	if state then
 --		reaction = iface:em(reaction)
@@ -1161,7 +1179,7 @@ function mp:key_history_next()
 end
 
 function mp:key_enter()
-	if #self.history == 0 or self.history[1] ~= self.inp then
+	if (#self.history == 0 or self.history[1] ~= self.inp) and std.strip(self.inp) ~= '' then
 		table.insert(self.history, 1, self.inp)
 	end
 	self.history_pos = 0
@@ -1210,6 +1228,11 @@ function mp:input(str)
 	local hints = {}
 	local unknown = {}
 	local multi = {}
+
+	if self.default_Verb and str == "" then
+		str = self.default_Verb
+	end
+
 	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
