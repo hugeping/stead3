@@ -76,11 +76,27 @@ function std.obj:scene()
 	return std.par(std.scene_delim, title or false, dsc)
 end
 
+local owalk = std.player.walk
+
+function std.player:walk(w, ...)
+	if std.is_obj(w, 'room') then
+		local r, v = owalk(self, w, ...)
+		self.__room_where = false
+		return r, v
+	end
+	if std.is_obj(w) then -- into object
+		self.__room_where = w
+		self:need_scene(true)
+		return nil, true
+	end
+	std.err("Can not enter into: "..std.tostr(w), 2)
+end
+
 std.player.where = function(s, where)
 	if type(where) == 'table' then
-		table.insert(where, std.ref(s.room_where or s.room))
+		table.insert(where, std.ref(s.__room_where or s.room))
 	end
-	return std.ref(s.room_where or s.room)
+	return std.ref(s.__room_where or s.room)
 end
 
 std.player.look = function(s)
@@ -164,10 +180,6 @@ std.phr.__xref = function(s, str)
 end
 
 std.dlg.scene = std.room.scene
-
-function mp.token.choose(w)
-	return mp.token.noun(w)
-end
 
 std.dlg.nouns = function(s)
 	local r, nr

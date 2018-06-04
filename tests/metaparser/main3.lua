@@ -82,6 +82,7 @@ obj {
 	nam = 'аквариум',
 	title = [[В аквариуме]];
 	decor = [[Я в аквариуме.]];
+	Exam = function() walk(_'аквариум') end;
 	obj = { 'рыбка' },
 } : attr 'container,transparent'
 
@@ -97,7 +98,8 @@ room {
 }: with { 'стол' }
 
 function init()
---	pl.room_where = _'аквариум'
+--	me().room_where = _'аквариум'
+--	print("where:", me().room_where)
 end
 
 function start()

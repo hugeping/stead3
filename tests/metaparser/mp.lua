@@ -390,6 +390,10 @@ function mp.token.noun(w)
 	return ww
 end
 
+function mp.token.select(w)
+	return mp.token.noun(w)
+end
+
 function mp:norm(t)
 	return std.strip(mrd.lang.lower(mrd.lang.norm(t)))
 end
