@@ -303,24 +303,22 @@ function mp:after_Exam(w)
 	end
 end
 
---"закрыт"
---"мочь"
---"держать"
+mp.msg.Enter = {}
 function mp:before_Enter(w)
 	if w == std.me():where() then
-		p ("{#Me} уже ", if_has(w, 'supporter', 'на', 'в'), " {#first/пр,2}.")
+		p (mp.msg.Enter.ALREADY)
 		return
 	end
 	if seen(w, me()) then
-		p ("{#Me} не {#word/мочь,#me,нст} зайти в то, что {#word/держать,#me,нст} в руках.")
+		p (mp.msg.Enter.INV)
 		return
 	end
 	if not w:has 'enterable' then
-		p ("Но в/на {#first/вн} невозможно войти, встать, сесть или лечь.")
+		p (mp.msg.Enter.IMPOSSIBLE)
 		return
 	end
 	if w:has 'openable' and not w:has 'open' then
-		p ("{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда.")
+		p (mp.msg.Enter.CLOSED)
 		return
 	end
 	return false
@@ -328,12 +326,12 @@ end
 
 function mp:Enter(w)
 	walk(w)
+	return false
 end
 
---"залезть"
 function mp:after_Enter(w)
 	if not self.reaction then
-		p ("{#Me} {#word/залезть,прш,#me} ", if_has(w, 'supporter', 'на', 'в'), " {#first/вн}.")
+		p (mp.msg.Enter.ENTERED)
 	end
 end
 
