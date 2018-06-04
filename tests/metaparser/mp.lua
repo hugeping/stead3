@@ -159,7 +159,7 @@ mp = std.obj {
 			len = utf_len;
 			char = utf_char;
 		};
-		lev_thresh = 4;
+		lev_thresh = 3;
 		history = {};
 		winsize = 128 * 1024;
 		history_len = 100;
@@ -880,7 +880,7 @@ function mp:err(err)
 		end
 	elseif err == "EMPTY_INPUT" then
 		p (self.msg.EMPTY or "Empty input.")
-	elseif err == "INCOMPLETE" then
+	elseif err == "INCOMPLETE" or err == "UNKNOWN_WORD" then
 		local need_noun = #self.hints > 0 and self.hints[1]:find("^{noun}")
 		if #self.unknown > 0 then
 			local unk = ''
@@ -894,7 +894,13 @@ function mp:err(err)
 				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
 			end
 		end
-		p (self.msg.INCOMPLETE or "Incomplete sentence.")
+
+		if err == "UNKNOWN_WORD" then
+			p (self.msg.UNKNOWN_WORD or "Unknown noun.")
+		else
+			p (self.msg.INCOMPLETE or "Incomplete sentence.")
+		end
+
 		if #self.hints > 0 then
 			p (self.msg.HINT_WORDS or "Possible words:", " ")
 		end
@@ -1195,7 +1201,7 @@ function mp:key_enter()
 	return r, v
 end
 
-function mp:lookup_noun(w)
+function mp:lookup_noun(w, lev)
 	local oo = {}
 	local k, len
 	local res = {}
@@ -1208,7 +1214,7 @@ function mp:lookup_noun(w)
 		local ww = {}
 		o:noun(ww)
 		for _, d in ipairs(ww) do
-			k, len = word_search(w, d.word)
+			k, len = word_search(w, d.word, lev)
 			if k and len == #w then
 				d.ob = o
 				table.insert(res, d)
@@ -1228,6 +1234,9 @@ function mp:input(str)
 	local hints = {}
 	local unknown = {}
 	local multi = {}
+	self.hints = hints
+	self.unknown = unknown
+	self.multi = multi
 
 	if self.default_Verb and str == "" then
 		str = self.default_Verb
@@ -1249,7 +1258,15 @@ function mp:input(str)
 			end
 			return false, "MULTIPLE"
 		end
-		if #ob == 0 then
+
+		if #ob == 0 then -- try fuzzy
+			ob = self:lookup_noun(w, self.lev_thresh)
+			if #ob >= 1 then
+				for _, v in ipairs(ob) do
+					table.insert(self.hints, v.word)
+				end
+				return false, "UNKNOWN_WORD"
+			end
 			return false, "UNKNOWN_VERB"
 		end
 
