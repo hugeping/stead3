@@ -371,7 +371,7 @@ function mp:nouns()
 end
 
 function mp.token.noun(w)
-	local attr = w.morph
+	local attr = w.morph or ''
 	local oo
 	local ww = {}
 	if type(std.here().nouns) == 'function' then
@@ -880,7 +880,7 @@ function mp:err(err)
 			p (self.msg.HINT_WORDS or "Possible words:", " ")
 		end
 		local first = true
-		for _, v in ipairs(self.hints) do
+		for kk, v in ipairs(self.hints) do
 			if v:find("^{noun}") or v:find("/[^/]*$") then
 				if not first then
 					pr (" ", mp.msg.HINT_OR or "or", " ")
@@ -892,12 +892,17 @@ function mp:err(err)
 				end
 			else
 				local pat = self:pattern(v)
-				for _, vv in ipairs(pat) do
+				for k, vv in ipairs(pat) do
 					if not first then
-						pr (" ", mp.msg.HINT_OR or "or", " ", vv.word)
+						if k == #pat and kk == #self.hints then
+							pr (" ", mp.msg.HINT_OR or "or", " ", vv.word)
+						else
+							pr (", ", vv.word)
+						end
 					else
 						pr (" ", vv.word)
 					end
+					first = false
 				end
 			end
 			first = false

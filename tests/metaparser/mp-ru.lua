@@ -135,6 +135,6 @@ Verb { "#examine",
 -- Dialog
 std.phr.default_Event = "Exam"
 
-Verb ({"сказать", "{noun}/вн : Exam" }, std.dlg)
+Verb ({"сказать", "{choose} : Exam" }, std.dlg)
 
 parser = mp

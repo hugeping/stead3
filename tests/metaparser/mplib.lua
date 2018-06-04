@@ -165,6 +165,10 @@ end
 
 std.dlg.scene = std.room.scene
 
+function mp.token.choose(w)
+	return mp.token.noun(w)
+end
+
 std.dlg.nouns = function(s)
 	local r, nr
 	local nouns = {}
