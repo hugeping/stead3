@@ -1378,9 +1378,9 @@ function mp.shortcut.word(hint)
 		if k == '#me' then
 			hint = hint .. std.me():gram().hint .. ','
 		elseif k == '#first' then
-			hint = hint .. self.first_hint .. ','
+			hint = hint .. mp.first_hint .. ','
 		elseif k == '#second' then
-			hint = hint .. self.second_hint .. ','
+			hint = hint .. mp.second_hint .. ','
 		else
 			hint = hint .. k .. ','
 		end

@@ -24,6 +24,11 @@ mp.msg.Exam.ARE = "находятся"
 mp.msg.Exam.IN = "В {#first/пр,2}"
 mp.msg.Exam.ON = "На {#first/пр,2}"
 
+--"открыт"
+mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,кр,#first}."
+--"закрыт"
+mp.msg.Exam.CLOSED = "{#First} {#word/закрыт,нст,кр,#first}."
+
 mp.msg.Look.HEREIS = "Здесь есть"
 mp.msg.Look.HEREARE = "Здесь есть"
 

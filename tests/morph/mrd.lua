@@ -370,6 +370,9 @@ function mrd:lookup(w, g)
 		for _, f in ipairs(flex) do
 			if self:gram_compat(v.an.t, f.an.t)  then
 				local sc = self:score(f.an, g)
+				if v.an.t == f.an.t then
+					sc = sc + 1
+				end
 				if sc < 0 then
 					break
 				end
@@ -391,7 +394,7 @@ if false then
 		local w = res[i]
 		local tt = self.lang.lower(w.word.pref .. w.flex.pre .. w.word.t .. w.flex.post)
 		print("res: ", tt)
-		if tt == 'взял' then
+		if tt == 'закрыт' then
 			for _, v in pairs(w.flex.an) do
 				print(_, v)
 			end

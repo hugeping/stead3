@@ -250,6 +250,13 @@ function mp:after_Exam(w)
 			p(mp.msg.Exam.ON or "On the {#first/}")
 			self:content(w)
 		else
+			if w:has'openable' then
+				if w:has 'open' then
+					p (mp.msg.Exam.OPENED or "{#First} is opened.");
+				else
+					p (mp.msg.Exam.CLOSED or "{#First} is closed.");
+				end
+			end
 			p (mp.msg.Exam.DEFAULT or "{#Me} did not see anything unusual.");
 		end
 	end

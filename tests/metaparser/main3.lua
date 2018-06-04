@@ -30,7 +30,7 @@ obj {
 	-"рюкзак";
 	nam = 'рюкзак';
 	obj = {'яблоко2'};
-} : attr 'container'
+} : attr 'container,openable'
 
 take 'рюкзак'
 
