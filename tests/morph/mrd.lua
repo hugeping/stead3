@@ -370,12 +370,24 @@ function mrd:lookup(w, g)
 		for _, f in ipairs(flex) do
 			if self:gram_compat(v.an.t, f.an.t)  then
 				local sc = self:score(f.an, g)
-				if v.an.t == f.an.t then
-					sc = sc + 1
-				end
 				if sc < 0 then
 					break
 				end
+				if t ~= f.an.t then sc = sc - 1 end
+if false then
+				local tt = v.pref .. f.pre .. v.t .. f.post
+				if tt == 'УВИДЕТЬ' or tt == 'УВИДЕЛ' then
+				print(v.t, score + sc)
+				print "looking for:"
+				for _, v in pairs(g) do
+					print(_, v)
+				end
+				print "looking got:"
+				for _, v in pairs(f.an) do
+					print(_, v)
+				end
+				end
+end
 				table.insert(res, { score = score + sc, pos = #res, word = v, flex = f })
 			end
 		end

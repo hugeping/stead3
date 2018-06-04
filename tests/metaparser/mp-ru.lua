@@ -33,7 +33,7 @@ mp.msg.Look.HEREIS = "Здесь есть"
 mp.msg.Look.HEREARE = "Здесь есть"
 
 --"увидеть"
-mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,прш} {#vo/{#first/пр}} ничего необычного.";
+mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,#me,прш} {#vo/{#first/пр}} ничего необычного.";
 
 mp.msg.AND = "и"
 
