@@ -241,6 +241,23 @@ function mp:content(w)
 	end
 end
 
+function mp:before_Any(ev, w, ww)
+	if ev == 'Exam' then
+		return false
+	end
+	if w and not w:access() then
+		p (self.msg.ACCESS1 or "{#First} is not accessible.")
+		return
+	end
+
+	if ww and not ww:access() then
+		p (self.msg.ACCESS2 or "{#Second} is not accessible.")
+		return
+	end
+
+	return false
+end
+
 function mp:after_Exam(w)
 	if not self.reaction and w then
 		if w:has 'container' and (w:has'transparent' or w:has'open') then
