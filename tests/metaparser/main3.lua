@@ -60,7 +60,10 @@ function parser.token.topic(w)
 end
 
 pl.word = -"я/од,мр,1л";
-
+pl:dict {
+	["я/вн"] = "себя";
+	["я/пр"] = "себе";
+}
 obj {
 	-"рыбка,рыба";
 	nam = 'рыбка';
@@ -69,6 +72,8 @@ obj {
 obj {
 	-"аквариум",
 	nam = 'аквариум',
+	title = [[В аквариуме]];
+	decor = [[Я в аквариуме.]];
 	obj = { 'рыбка' },
 } : attr 'container,transparent'
 

@@ -92,6 +92,62 @@ std.player.look = function(s)
 	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
 end;
 
+-- 
+
+function std.obj:access()
+	local plw = {}
+	local ww = {}
+	mp:trace(std.me(), function(v)
+		if v:has 'concealed' then
+			return nil, false
+		end
+		table.insert(plw, v)
+		if v:has 'container' or v:has 'supporter' then
+			return nil, false
+		end
+	end)
+	return mp:trace(self, function(v)
+		if v:has 'concealed' then
+			return nil, false
+		end
+		for _, o in ipairs(plw) do
+			if v == o then
+				return true
+			end
+		end
+		if v:has 'container' and not v:has 'open' then
+			return nil, false
+		end
+	end)
+end
+
+function std.obj:visible()
+	local plw = {}
+	local ww = {}
+	mp:trace(std.me(), function(v)
+		if v:has 'concealed' then
+			return nil, false
+		end
+		table.insert(plw, v)
+		if v:has 'container' and not v:has 'transparent' then
+			return nil, false
+		end
+	end)
+	return mp:trace(self, function(v)
+		if v:has 'concealed' then
+			return nil, false
+		end
+		for _, o in ipairs(plw) do
+			if v == o then
+				return true
+			end
+		end
+		if v:has 'container' and not v:has 'transparent' then
+			return nil, false
+		end
+	end)
+end
+
 -- dialogs
 std.phr.word = function(s)
 	return tostring(s.__ph_idx) or std.dispof(s)

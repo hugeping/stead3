@@ -354,9 +354,9 @@ end)
 function mp:objects(wh, oo, recurs)
 	wh:for_each(function(v)
 		if v:disabled() then return nil, false end
-		if not v:visible() then return nil, false end
-		table.insert(oo, v)
-		if v:closed() then return nil, false end
+		if v:visible() then
+			table.insert(oo, v)
+		end
 		if recurs == false then
 			return nil, false
 		end
@@ -365,7 +365,7 @@ end
 
 function mp:nouns()
 	local oo = {}
-	self:objects(me():where(), oo)
+	self:objects(me():inroom(), oo)
 	self:objects(inv(), oo)
 	return oo
 end
@@ -1434,61 +1434,22 @@ function std.obj:it(hint)
 	end
 end
 
-function std.obj:access()
+function mp:trace(w, fn)
 	local ww = {}
-	local o
-	local s = self
-	if s:has 'concealed' then
-		return false
-	end
-	s:where(ww)
+	w:where(ww)
 	while #ww > 0 do
 		local nww = {}
-		for _, v in ipairs(ww) do
-			if v == (me().room_where or std.here()) then
-				return true
+		for _, o in ipairs(ww) do
+			local r, v = fn(o)
+			if r ~= nil then
+				return r
 			end
-			if v:has 'container'
-				and v:has 'openable'
-				and not v:has 'open' then
-				return false
+			if v ~= false then
+				o:where(nww)
 			end
-			if v:has 'concealed' then
-				return false
-			end
-			v:where(nww)
 		end
 		ww = nww
 	end
-	return false
-end
-
-function std.obj:visible()
-	local ww = {}
-	local o
-	local s = self
-	if s:has 'concealed' then
-		return false
-	end
-	s:where(ww)
-	while #ww > 0 do
-		local nww = {}
-		for _, v in ipairs(ww) do
-			if v == (me().room_where or std.here()) then
-				return true
-			end
-			if v:has 'container'
-				and (not v:has 'open' and not v:has 'transparent') then
-				return false
-			end
-			if v:has 'concealed' then
-				return false
-			end
-			v:where(nww)
-		end
-		ww = nww
-	end
-	return false
 end
 
 function std.obj:attr(str)
