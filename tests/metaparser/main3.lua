@@ -94,7 +94,6 @@ obj {
 room {
 	nam = 'main';
 	dsc = "Я в комнате.";
-	Exit = function() if pl:where()^'аквариум' then walkback 'main' end end;
 }: with { 'стол' }
 
 function init()

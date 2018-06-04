@@ -78,15 +78,20 @@ end
 
 local owalk = std.player.walk
 
-function std.player:walk(w, ...)
+std.obj.from = std.room.from
+
+function std.player:walk(w, doexit, doenter, dofrom)
 	w = std.object(w)
 	if std.is_obj(w, 'room') then
-		local r, v = owalk(self, w, ...)
+		local r, v = owalk(self, w, doexit, doenter, dofrom)
 		self.__room_where = false
 		return r, v
 	end
 	if std.is_obj(w) then -- into object
-		self.__room_where = w
+		w.__from = std.me():where()
+		if dofrom ~= false then
+			self.__room_where = w
+		end
 		self:need_scene(true)
 		return nil, true
 	end
@@ -95,12 +100,7 @@ end
 
 function std.player:walkout(w, ...)
 	if w == nil then
-		w = self:where()
-		if type(w.from) == 'function' then
-			w = w:from()
-		else
-			w = w:where()
-		end
+		w = self:where():from()
 	end
 	return self:walk(w, true, false, ...)
 end;
@@ -331,4 +331,8 @@ function mp:after_Enter(w)
 	if not self.reaction then
 		p ([[{#Me} {#word/залезть,прш,#me} ]], w:has 'supporter' and 'на' or 'в', [[ {#first/вн}.]])
 	end
+end
+
+function mp:Exit()
+	walkback()
 end
