@@ -871,12 +871,12 @@ function mp:err(err)
 			local fixed = verb.verb[verb.word_nr]
 			if verb.lev < self.lev_thresh then
 				hint = true
-				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[verb.verb_nr], ".")
-				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", fixed.word .. (fixed.morph or ""), "?")
+				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", iface:em(self.words[verb.verb_nr]), ".")
+				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
 			end
 		end
 		if not hint then
-			p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", self.words[1], ".")
+			p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", iface:em(self.words[1]), ".")
 		end
 	elseif err == "EMPTY_INPUT" then
 		p (self.msg.EMPTY or "Empty input.")
@@ -927,7 +927,7 @@ function mp:err(err)
 			first = false
 		end
 		if #self.hints > 0 then
-			p "."
+			p "?"
 		end
 	elseif err == "MULTIPLE" then
 		pr (self.msg.MULTIPLE or "There are", " ", self.multi[1])
