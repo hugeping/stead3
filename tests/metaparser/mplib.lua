@@ -235,6 +235,10 @@ std.phrase_prefix = function(n)
 end
 
 -- VERBS
+local function if_has(w, a, t, f)
+	return w:has(a) and t or f
+end
+
 mp.msg.Exam = {}
 function mp:content(w)
 	local oo = {}
@@ -304,7 +308,7 @@ end
 --"держать"
 function mp:before_Enter(w)
 	if w == std.me():where() then
-		p ([[{#Me} уже ]], w:has 'supporter' and 'на' or 'в', [[ {#first/пр,2}.]])
+		p ("{#Me} уже ", if_has(w, 'supporter', 'на', 'в'), " {#first/пр,2}.")
 		return
 	end
 	if seen(w, me()) then
@@ -329,7 +333,7 @@ end
 --"залезть"
 function mp:after_Enter(w)
 	if not self.reaction then
-		p ([[{#Me} {#word/залезть,прш,#me} ]], w:has 'supporter' and 'на' or 'в', [[ {#first/вн}.]])
+		p ("{#Me} {#word/залезть,прш,#me} ", if_has(w, 'supporter', 'на', 'в'), " {#first/вн}.")
 	end
 end
 
