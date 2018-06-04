@@ -494,8 +494,11 @@ function mrd:file(f, dict)
 			for _, word in ipairs(words) do
 				word = word:gsub("/[^/]*$", "")
 				for ww in word:gmatch(word_match) do
-					dict[self.lang.upper(ww)] = true;
-					print("added word: ", ww)
+					local t = self.lang.upper(ww)
+					if not dict[t] then
+						dict[t] = true;
+						dprint("mrd: Added word: ", ww)
+					end
 				end
 			end
 		end

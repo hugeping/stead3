@@ -264,7 +264,7 @@ function mp:content(w)
 	end
 end
 
-function mp:before_Any(ev, w, ww)
+function mp:Any(ev, w, ww)
 	if ev == 'Exam' then
 		return false
 	end
