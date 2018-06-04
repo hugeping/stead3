@@ -39,7 +39,7 @@ obj {
 	life = 'яблоко лежит';
 	nam = 'яблоко';
 --	Take = 'взял';
-	Take = function(s) walk 'main2' end;
+--	Take = function(s) walk 'main2' end;
 }
 
 obj {
@@ -82,7 +82,7 @@ obj {
 	nam = 'аквариум',
 	title = [[В аквариуме]];
 	decor = [[Я в аквариуме.]];
-	Exam = function() walk(_'аквариум') end;
+	Enter = function() walk(_'аквариум') end;
 	obj = { 'рыбка' },
 } : attr 'container,transparent'
 
@@ -95,6 +95,7 @@ obj {
 room {
 	nam = 'main';
 	dsc = "Я в комнате.";
+	Exit = function() if pl:where()^'аквариум' then walkback 'main' end end;
 }: with { 'стол' }
 
 function init()

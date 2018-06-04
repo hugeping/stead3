@@ -79,6 +79,7 @@ end
 local owalk = std.player.walk
 
 function std.player:walk(w, ...)
+	w = std.object(w)
 	if std.is_obj(w, 'room') then
 		local r, v = owalk(self, w, ...)
 		self.__room_where = false
@@ -91,6 +92,18 @@ function std.player:walk(w, ...)
 	end
 	std.err("Can not enter into: "..std.tostr(w), 2)
 end
+
+function std.player:walkout(w, ...)
+	if w == nil then
+		w = self:where()
+		if type(w.from) == 'function' then
+			w = w:from()
+		else
+			w = w:where()
+		end
+	end
+	return self:walk(w, true, false, ...)
+end;
 
 std.player.where = function(s, where)
 	if type(where) == 'table' then

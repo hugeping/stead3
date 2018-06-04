@@ -1038,7 +1038,6 @@ function mp:action()
 	local ev = str_split(parsed.ev, "|")
 	local events = get_events(self, ev)
 	local r
-
 	self:__action(events)
 
 	-- parser:before_Any
