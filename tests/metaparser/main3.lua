@@ -82,9 +82,8 @@ obj {
 	nam = 'аквариум',
 	title = [[В аквариуме]];
 	decor = [[Я в аквариуме.]];
-	Enter = function() walk(_'аквариум') end;
 	obj = { 'рыбка' },
-} : attr 'container,transparent'
+} : attr 'container,transparent,enterable'
 
 obj {
 	-"стол";

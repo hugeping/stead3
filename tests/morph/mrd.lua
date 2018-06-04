@@ -130,6 +130,22 @@ local function dump(vv)
 	return s
 end
 
+local function gram_dump(v)
+	for _, f in ipairs(v.flex) do
+		local tt = v.pref .. f.pre .. v.t .. f.post
+		print("=== ", tt)
+		for _, v in pairs(f.an) do
+			print(_, v)
+		end
+	end
+end
+
+local function gram_filter(v)
+	if v.an["им"] or v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' then
+		return true
+	end
+end
+
 local function word_fn(l, self, dict)
 	local words = self.words
 	local words_list = self.words_list
@@ -171,12 +187,17 @@ local function word_fn(l, self, dict)
 	local num = 0
 	local used = false
 	for k, v in ipairs(nflex) do
-		if v.an["им"] or v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' then
+		if gram_filter(v) then
 			for _, pref in ipairs(npref or { '' }) do
 				local tt = pref..v.pre .. t .. v.post
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
+
+--				if tt == 'МОЧЬ' then
+--					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
+--				end
+
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do

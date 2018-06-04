@@ -291,3 +291,37 @@ function mp:after_Exam(w)
 		end
 	end
 end
+
+--"закрыт"
+--"мочь"
+--"держать"
+function mp:before_Enter(w)
+	if w == std.me():where() then
+		p ([[{#Me} уже ]], w:has 'supporter' and 'на' or 'в', [[ {#first/пр,2}.]])
+		return
+	end
+	if seen(w, me()) then
+		p ("{#Me} не {#word/мочь,#me,нст} зайти в то, что {#word/держать,#me,нст} в руках.")
+		return
+	end
+	if not w:has 'enterable' then
+		p ("Но в/на {#first/вн} невозможно войти, встать, сесть или лечь.")
+		return
+	end
+	if w:has 'openable' and not w:has 'open' then
+		p ("{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда.")
+		return
+	end
+	return false
+end
+
+function mp:Enter(w)
+	walk(w)
+end
+
+--"залезть"
+function mp:after_Enter(w)
+	if not self.reaction then
+		p ([[{#Me} {#word/залезть,прш,#me} ]], w:has 'supporter' and 'на' or 'в', [[ {#first/вн}.]])
+	end
+end
