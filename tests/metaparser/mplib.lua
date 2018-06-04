@@ -127,6 +127,9 @@ end;
 function std.obj:access()
 	local plw = {}
 	local ww = {}
+	if std.me():where() == self then
+		return true
+	end
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
@@ -154,6 +157,9 @@ end
 function std.obj:visible()
 	local plw = { }
 	local ww = {}
+	if std.me():where() == self then
+		return true
+	end
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
@@ -258,6 +264,7 @@ function mp:before_Any(ev, w, ww)
 	if ev == 'Exam' then
 		return false
 	end
+
 	if w and not w:access() then
 		p (self.msg.ACCESS1 or "{#First} is not accessible.")
 		return
