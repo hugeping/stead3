@@ -27,6 +27,14 @@ function parser:after_Take(w)
 end
 
 obj {
+	-"рюкзак";
+	nam = 'рюкзак';
+	obj = {'яблоко2'};
+} : attr 'container'
+
+take 'рюкзак'
+
+obj {
 	-"красное яблоко,яблоко/ср",
 	life = 'яблоко лежит';
 	nam = 'яблоко';

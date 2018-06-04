@@ -41,7 +41,8 @@ function mp:room_content(w)
 	local ooo = {}
 	self:objects(w, oo, false)
 	for _, v in ipairs(oo) do
-		if not v.dsc and not v:has'scenery' then
+		local r, rc = std.call(v, 'dsc')
+		if not rc and not v:has'scenery' then
 			table.insert(ooo, v)
 		end
 	end
@@ -122,14 +123,14 @@ function std.obj:access()
 end
 
 function std.obj:visible()
-	local plw = {}
+	local plw = { }
 	local ww = {}
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
 		end
 		table.insert(plw, v)
-		if v:has 'container' and not v:has 'transparent' then
+		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
 			return nil, false
 		end
 	end)
@@ -142,7 +143,7 @@ function std.obj:visible()
 				return true
 			end
 		end
-		if v:has 'container' and not v:has 'transparent' then
+		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
 			return nil, false
 		end
 	end)
@@ -226,11 +227,9 @@ end
 
 function mp:after_Exam(w)
 	if not self.reaction and w then
-		if w:has 'container' then
-			if w:has'transparent' or w:has'open' then
-				p(mp.msg.Exam.IN or "In the {#first/}")
-				self:content(w)
-			end
+		if w:has 'container' and (w:has'transparent' or w:has'open') then
+			p(mp.msg.Exam.IN or "In the {#first/}")
+			self:content(w)
 		elseif w:has 'supporter' then
 			p(mp.msg.Exam.ON or "On the {#first/}")
 			self:content(w)

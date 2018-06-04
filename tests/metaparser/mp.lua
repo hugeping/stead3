@@ -365,8 +365,8 @@ end
 
 function mp:nouns()
 	local oo = {}
-	self:objects(me():inroom(), oo)
-	self:objects(inv(), oo)
+	self:objects(std.me():inroom(), oo)
+	self:objects(std.me(), oo)
 	return oo
 end
 
@@ -703,7 +703,7 @@ function mp:compl_match(words)
 	local dup = {}
 	local multi
 	for _, v in ipairs(verbs) do
-		local m, h, u, mu = self:match(v, words)
+		local m, h, u, mu = self:match(v, words, true)
 		if #m > 0 then
 			table.insert(matches, { verb = v, match = m[1] })
 		end
@@ -732,7 +732,7 @@ function mp:compl_match(words)
 end
 
 
-function mp:match(verb, w)
+function mp:match(verb, w, compl)
 	local matches = {}
 	local found
 	local hints = {}
@@ -791,9 +791,11 @@ function mp:match(verb, w)
 				for i = 1, best - 1 do
 					table.insert(unknown, { word = a[i], lev = rlev })
 				end
-				for _, pp in ipairs(pat) do -- single argument
-					local k, len = word_search(a, pp.word, self.lev_thresh)
-					if k then table.insert(hints, { word = pp.word, lev = rlev, fuzzy = true }) end
+				if not compl then
+					for _, pp in ipairs(pat) do -- single argument
+						local k, len = word_search(a, pp.word, self.lev_thresh)
+						if k then table.insert(hints, { word = pp.word, lev = rlev, fuzzy = true }) end
+					end
 				end
 				table.insert(hints, { word = v, lev = rlev })
 				break
