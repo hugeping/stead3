@@ -1479,6 +1479,8 @@ function mp.shortcut.if_has(hint)
 		ob = mp.second
 	elseif ob == 'me' then
 		ob = std.me()
+	elseif ob == 'where' then
+		ob = std.me():where()
 	else
 		std.err("Wrong object in if_has shortcut: "..hint, 2)
 	end

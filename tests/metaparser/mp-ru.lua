@@ -56,7 +56,6 @@ mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,s
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 
-
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -161,7 +160,7 @@ Verb { "#Enter",
 
 Verb { "#Exit",
 	"выйти,выйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
-	"из|с|со ?{noun}/рд : Exit",
+	"из|с|со {noun}/рд : Exit",
 	"Exit" }
 
 Verb { "#Examine",

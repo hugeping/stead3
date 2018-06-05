@@ -341,7 +341,8 @@ function mp:after_Exam(w)
 end
 
 mp.msg.Enter = {}
-function mp:before_Enter(w)
+
+function mp:Enter(w)
 	if w == std.me():where() then
 		p (mp.msg.Enter.ALREADY)
 		return
@@ -358,10 +359,6 @@ function mp:before_Enter(w)
 		p (mp.msg.Enter.CLOSED)
 		return
 	end
-	return false
-end
-
-function mp:Enter(w)
 	walk(w)
 	return false
 end
