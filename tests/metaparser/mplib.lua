@@ -261,7 +261,7 @@ obj {
 		return false or true
 	end;
 --	before_Default = [[Can't do it with direction.]];
-	visible = function() return true end;
+--	visible = function() return true end;
 	before_Enter = function(s)
 		local d = s.dirs[s:multi_alias()]
 		local r = std.call(s, d)
