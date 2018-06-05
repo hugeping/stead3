@@ -20,11 +20,20 @@ mp.msg.MULTIPLE = "Тут есть"
 mp.default_Event = "Exam"
 mp.default_Verb = "осмотреть"
 
+--"доступен"
+mp.msg.ACCESS1 = "{#First} отсюда не{#word/доступен,#first}."
+mp.msg.ACCESS2 = "{#Second} отсюда не{#word/доступен,#second}."
+
+mp.msg.Look.HEREIS = "Здесь есть"
+mp.msg.Look.HEREARE = "Здесь есть"
+
 mp.msg.Exam.NOTHING = "ничего нет."
 mp.msg.Exam.IS = "находится"
 mp.msg.Exam.ARE = "находятся"
 mp.msg.Exam.IN = "В {#first/пр,2}"
 mp.msg.Exam.ON = "На {#first/пр,2}"
+--"увидеть"
+mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,#me,прш} {#vo/{#first/пр}} ничего необычного.";
 
 --"открыт"
 mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,кр,#first}."
@@ -41,15 +50,8 @@ mp.msg.Enter.IMPOSSIBLE = "Но в/на {#first/вн} невозможно во�
 mp.msg.Enter.CLOSED = "{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда."
 mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,supporter,на,в} {#first/вн}."
 
---"доступен"
-mp.msg.ACCESS1 = "{#First} отсюда не{#word/доступен,#first}."
-mp.msg.ACCESS2 = "{#Second} отсюда не{#word/доступен,#second}."
+mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 
-mp.msg.Look.HEREIS = "Здесь есть"
-mp.msg.Look.HEREARE = "Здесь есть"
-
---"увидеть"
-mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,#me,прш} {#vo/{#first/пр}} ничего необычного.";
 
 mp.msg.AND = "и"
 
@@ -154,7 +156,7 @@ Verb { "#Enter",
 
 Verb { "#Exit",
 	"выйти,выйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
-	"?из|?с|?со ?{noun}/рд : Exit",
+	"из|с|со ?{noun}/рд : Exit",
 	"Exit" }
 
 Verb { "#Examine",

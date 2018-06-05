@@ -335,14 +335,11 @@ function mp:after_Enter(w)
 	end
 end
 
+mp.msg.Exit = {}
 function mp:Exit(w)
 	if not w or std.me():where() == w then
 		walkback()
 		return
 	end
-	if std.here() == w then
-		p [[Но ты сейчаc1...]] -- TODO
-		return
-	end
-	p [[Но ты сейчас2...]]
+	p (mp.msg.Exit.NOTHERE)
 end

@@ -818,6 +818,7 @@ function mp:match(verb, w, compl)
 				break
 			else
 				table.insert(match.args, { word = false, optional = true } )
+				found = true
 			end
 		end
 		if #multi > 0 then
@@ -850,6 +851,13 @@ function mp:match(verb, w, compl)
 	end
 	table.sort(matches, function(a, b) return #a > #b end)
 --[[
+	print "MATCHES: "
+	for _, v in ipairs(matches) do
+		for _, vv in pairs(v.args) do
+			print(_, vv)
+		end
+	end
+
 	for _, v in ipairs(hints) do
 		for _, vv in ipairs(hints) do
 			print(vv.word, vv.fuzzy, vv.lev)
