@@ -848,6 +848,7 @@ function mp:match(verb, w, compl)
 				break
 			else
 				table.insert(match.args, { word = false, optional = true } )
+				table.insert(hints, { word = v, lev = rlev })
 				found = true
 			end
 		end
@@ -1390,7 +1391,7 @@ function(cmd)
 		return true, false
 	end
 	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
-		mp.inp = mp:docompl(mp.inp)
+--		mp.inp = mp:docompl(mp.inp)
 		return mp:key_enter()
 	end
 	if cmd[1] ~= '@mp_key' then
