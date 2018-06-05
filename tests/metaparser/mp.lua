@@ -150,6 +150,7 @@ end
 
 mp = std.obj {
 	nam = '@metaparser';
+	autohelp = false;
 	{
 		inp = '';
 		cur = 1;
@@ -216,6 +217,10 @@ function mp:trim()
 end
 
 function mp:key(key)
+	if key == 'f1' then
+		self.autohelp = not self.autohelp
+		return true
+	end
 	if key == 'left' then
 		return self:inp_left()
 	end
@@ -339,6 +344,9 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	end
 	local pre, post = mp:inp_split()
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
+	if not mp.autohelp then
+		return ret
+	end
 	delim = delim or ' | '
 
 --	local ww = str_split(mp.inp, inp_split)
@@ -362,6 +370,7 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 			end
 		end
 	end
+
 	ret = ret:gsub(delim .."$", "")
 	return ret
 end)
@@ -848,7 +857,7 @@ function mp:match(verb, w, compl)
 				break
 			else
 				table.insert(match.args, { word = false, optional = true } )
-				table.insert(hints, { word = v, lev = rlev })
+--				table.insert(hints, { word = v, lev = rlev })
 				found = true
 			end
 		end
