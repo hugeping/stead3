@@ -689,7 +689,7 @@ function mp:compl(str)
 			end
 		end
 	end
-	if #ret == 0 then -- try noun?
+	if #ret == 0 and not e and #words <= 1 then -- try noun?
 		local oo = self:nouns()
 		for _, o in ipairs(oo) do
 			local ww = {}
@@ -880,7 +880,7 @@ function mp:match(verb, w, compl)
 		matches = nmatches
 	end
 	table.sort(matches, function(a, b) return #a > #b end)
---[[
+if false then
 	print "MATCHES: "
 	for _, v in ipairs(matches) do
 		for _, vv in pairs(v.args) do
@@ -893,7 +893,7 @@ function mp:match(verb, w, compl)
 			print(vv.word, vv.fuzzy, vv.lev)
 		end
 	end
-]]--
+end
 	hints = lev_sort(hints)
 	unknown = lev_sort(unknown)
 	multi = lev_sort(multi)
