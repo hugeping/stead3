@@ -335,7 +335,11 @@ function mp:after_Exam(w)
 					p (mp.msg.Exam.CLOSED or "{#First} is closed.");
 				end
 			end
-			p (mp.msg.Exam.DEFAULT or "{#Me} did not see anything unusual.");
+			if w == std.here() then
+				std.me():need_scene(true)
+			else
+				p (mp.msg.Exam.DEFAULT or "{#Me} did not see anything unusual.");
+			end
 		end
 	end
 end

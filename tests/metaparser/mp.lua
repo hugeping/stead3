@@ -396,6 +396,7 @@ function mp:nouns()
 	self:objects(std.me(), oo)
 	self:objects(self.persistent, oo)
 	table.insert(oo, std.me())
+	table.insert(oo, std.here())
 	return oo
 end
 
