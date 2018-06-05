@@ -84,14 +84,15 @@ obj {
 } : attr 'container,transparent,enterable'
 
 obj {
-	-"стол";
-	nam = 'стол';
+	nam = -"стол";
 	obj = { 'яблоко', 'аквариум' };
 } : attr "supporter"
 
 room {
+	title = -"комната";
 	nam = 'main';
 	dsc = "Я в комнате.";
+--	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол' }
 
 function init()

@@ -370,10 +370,29 @@ function mp:after_Enter(w)
 end
 
 mp.msg.Exit = {}
+
+function mp:before_Exit(w)
+	if not w then
+		self:xaction('Exit', std.me():where())
+		return true
+	end
+	return false
+end
+
 function mp:Exit(w)
-	if not w or std.me():where() == w then
+	if std.me():where() == w then
+		if std.me():where():from() == std.me():where() then
+			p (mp.msg.Exit.NOWHERE)
+			return
+		end
 		walkback()
-		return
+		return false
 	end
 	p (mp.msg.Exit.NOTHERE)
+end
+
+function mp:after_Exit(w)
+	if w and not self.reaction then
+		p (mp.msg.Exit.EXITED)
+	end
 end

@@ -579,7 +579,7 @@ function mrd.dispof(w)
 		local d = std.call(w, 'word')
 		return d
 	end
-	return std.dispof(w)
+	return std.titleof(w)
 end
 
 function mrd:obj(w, n, nn)

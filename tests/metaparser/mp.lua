@@ -178,6 +178,7 @@ mp = std.obj {
 		token = {};
 		shortcut = {};
 		reaction = false;
+		redirect = false;
 		msg = {};
 		mrd = mrd;
 		args = {};
@@ -1057,13 +1058,13 @@ function mp:events_call(events, oo, t)
 			local r, v
 			if std.is_obj(ob) then
 				r, v = self:call(ob, eany, e.ev, std.unpack(e.args))
-				if r then std.pr(r) end
+				if r then std.pn(r) end
 				if not v then
 					r, v = self:call(ob, ename, std.unpack(e.args))
-					if r then std.pr(r) end
+					if r then std.pn(r) end
 					if not v then
 						r, v = self:call(ob, edef, e.ev, std.unpack(e.args))
-						if r then std.pr(r) end
+						if r then std.pn(r) end
 					end
 				end
 			end
@@ -1079,16 +1080,21 @@ end
 function mp:__action(events)
 	local r
 	self.reaction = false
+	self.redirect = false
 	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
 	if not r then
 		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
 	end
-	self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+	if not self.redirect then
+		self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+	end
 end
 
 function mp:xaction(verb, ...)
 	local events = { {ev = verb, args = { ... }}}
-	return self:__action(events)
+	local r, v = self:__action(events)
+	self.redirect = true
+	return r, v
 end
 
 function mp:action()
@@ -1591,5 +1597,5 @@ function std.obj:has(attr)
 end
 
 function iface:title(t)
-	return iface:bold(t)
+	return(iface:bold( mrd.lang.cap(t)))
 end
