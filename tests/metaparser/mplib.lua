@@ -260,7 +260,7 @@ obj {
 		end
 		return false or true
 	end;
-	before_Default = [[Can't do it with direction.]];
+--	before_Default = [[Can't do it with direction.]];
 	visible = function() return true end;
 	before_Enter = function(s)
 		local d = s.dirs[s:multi_alias()]

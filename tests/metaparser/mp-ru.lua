@@ -7,8 +7,8 @@ local utf = mp.utf
 
 _'@compass'.word = -"север,с|восток,в|запад,з|юг,ю|наверх,вверх,верх|вниз,низ";
 _'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
+_'@compass'.before_Default = 'Попробуйте глагол "идти".'
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
-
 mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
 mp.msg.EMPTY = 'Простите?'
