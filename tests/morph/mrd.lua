@@ -453,6 +453,7 @@ end
 	return w, gram
 end
 local word_match = "[^ \t,%-!/:%+&]+"
+local missed_words = {}
 function mrd:word(w)
 	local s, e = w:find("/[^/]*$")
 	local g = {}
@@ -474,7 +475,8 @@ function mrd:word(w)
 			return ww or w
 		end)
 	if not found then
-		if not std.tonum(w) then
+		if DEBUG and not std.tonum(w) and not missed_words[w] then
+			missed_words[w] = true
 			msg("Can not find word: "..w)
 		end
 	end
@@ -606,14 +608,14 @@ function mrd:obj(w, n, nn)
 		w, hint2 = str_hint(v)
 		local dd = str_split(w, ',')
 		for _, vv in ipairs(dd) do
-			table.insert(nd, { word = vv, hint = hint2 or '', alias = k })
+			table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
 		end
 	end
 	d = nd
 	if type(n) == 'table' then
 		local ret = n
 		for _, v in ipairs(d) do
-			table.insert(ret, { word = v.word, hint = hint ..','..v.hint, alias = v.alias });
+			table.insert(ret, { word = v.word, hint = hint ..','..v.hint, alias = v.alias, idx = v.idx });
 		end
 		return ob, ret
 	end

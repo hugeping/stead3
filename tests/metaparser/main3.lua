@@ -60,8 +60,6 @@ parser.debug.trace_action = true
 
 Verb { "#take", "взять,забрать,схват/ить,забери,возьми,бери", "{noun}/вн : Take" }
 Verb { 'сказ/ать', "{noun}/дт * : Talk" }
-Verb { 'идти', "на северо-восток|север : Walk" }
-Verb { '~север', ": Walk" }
 
 function parser.token.topic(w)
 	return "пароль"

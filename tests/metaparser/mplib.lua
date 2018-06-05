@@ -68,6 +68,10 @@ function mp:room_content(w)
 	end
 end
 
+function std.obj:multi_alias()
+	return self.__word_alias
+end
+
 function std.obj:scene()
 	local s = self
 	local title, dsc
@@ -160,6 +164,15 @@ function std.obj:visible()
 	if std.me():where() == self then
 		return true
 	end
+
+	if self:has 'persist' then
+		if not self.found_in then
+			return true
+		end
+		local r, v = std.call(self, 'found_in')
+		return v
+	end
+
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
@@ -233,6 +246,30 @@ std.phrase_prefix = function(n)
 	end
 	return (string.format("%d) ", n))
 end
+
+obj {
+	"north,n|south,s|east,e|west,w|up,u|down,d";
+	nam = '@compass';
+	{
+		dirs = { 'n_to', 's_to', 'e_to', 'w_to', 'u_to', 'd_to' };
+	};
+	default_Event = 'Enter';
+	found_in = function(s)
+		for _, v in ipairs(s.dirs) do
+			if std.here()[v] then return true end
+		end
+		return false or true
+	end;
+	before_Default = [[Can't do it with direction.]];
+	visible = function() return true end;
+	before_Enter = function(s)
+		local d = s.dirs[s:multi_alias()]
+		local r = std.call(s, d)
+		if not r then
+			p (mp.msg.COMPASS_NOWAY)
+		end
+	end;
+}:persist():attr'multi,enterable'
 
 -- VERBS
 local function if_has(w, a, t, f)

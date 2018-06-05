@@ -161,6 +161,7 @@ mp = std.obj {
 		};
 		lev_thresh = 3;
 		history = {};
+		persistent = std.list {};
 		winsize = 128 * 1024;
 		history_len = 100;
 		history_pos = 0;
@@ -227,13 +228,13 @@ function mp:key(key)
 		return self:key_history_next()
 	end
 	if key == 'space' then
-		local inp = mp:docompl(self.inp)
-		if inp == self.inp then
+--		local inp = mp:docompl(self.inp)
+--		if inp == self.inp then
 			mp:inp_insert(' ')
-		else
-			self.inp = inp
-			self.cur = self.inp:len() + 1
-		end
+--		else
+--			self.inp = inp
+--			self.cur = self.inp:len() + 1
+--		end
 		return true
 	end
 	if key == 'tab' then
@@ -377,27 +378,42 @@ function mp:objects(wh, oo, recurs)
 end
 
 function mp:nouns()
+	if type(std.here().nouns) == 'function' then
+		return std.here():nouns()
+	end
 	local oo = {}
 	self:objects(std.me():inroom(), oo)
 	self:objects(std.me(), oo)
+	self:objects(self.persistent, oo)
+	table.insert(oo, std.me())
 	return oo
+end
+
+function mp.token.noun_obj(w)
+	return mp.token.noun(w)
 end
 
 function mp.token.noun(w)
 	local attr = w.morph or ''
 	local oo
 	local ww = {}
-	if type(std.here().nouns) == 'function' then
-		oo = std.here():nouns()
+	if w.pat == '{noun_obj}' then
+		local hint = str_split(w.morph, ",")
+		local o = std.ref(hint[1])
+		oo = {}
+		table.insert(oo, o)
 	else
 		oo = mp:nouns()
-		table.insert(oo, std.me())
 	end
 	for _, o in ipairs(oo) do
 		local d = {}
 		local r = o:noun(attr, d)
 		for k, v in ipairs(d) do
-			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = (k ~= 1) })
+			local hidden = (k ~= 1)
+			if o:has 'multi' then
+				hidden = (v.idx ~= 1)
+			end
+			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = hidden })
 		end
 	end
 	return ww
@@ -420,7 +436,7 @@ function mp:pattern(t)
 	local words = {}
 	local pat = str_split(self:norm(t), "|,")
 	for _, v in ipairs(pat) do
-		local w = {}
+		local w = { }
 		if v:sub(1, 1) == '?' then
 			v = v:sub(2)
 			v = str_strip(v)
@@ -437,6 +453,7 @@ function mp:pattern(t)
 			v = v:sub(1, s - 1)
 			v = str_strip(v)
 		end
+		w.pat = v
 		if v:find("^{[^}]+}$") then -- completion function
 			v = v:gsub("^{", ""):gsub("}$", "")
 			if type(self.token[v]) ~= 'function' then
@@ -668,6 +685,18 @@ function mp:compl(str)
 			if not dups[v.word] then
 				dups[v.word] = true
 				table.insert(ret, v)
+			end
+		end
+	end
+	if #ret == 0 then -- try noun?
+		local oo = self:nouns()
+		for _, o in ipairs(oo) do
+			local ww = {}
+			o:noun(ww)
+			for _, d in ipairs(ww) do
+				if (self:startswith(d.word, words[#words]) and not e) then
+					table.insert(ret, d)
+				end
 			end
 		end
 	end
@@ -1213,11 +1242,7 @@ function mp:lookup_noun(w, lev)
 	local oo = {}
 	local k, len
 	local res = {}
-	if type(std.here().nouns) == 'function' then
-		oo = std.here():nouns()
-	else
-		oo = self:nouns()
-	end
+	oo = self:nouns()
 	for _, o in ipairs(oo) do
 		local ww = {}
 		o:noun(ww)
@@ -1235,6 +1260,10 @@ function mp:lookup_noun(w, lev)
 	table.sort(res, function(a, b)
 		return a.word:len() > b.word:len()
 	end)
+	self.aliases = {}
+	for _, o in ipairs(res) do
+		self.aliases[o.ob] = o.alias
+	end
 	return res
 end
 
@@ -1493,6 +1522,12 @@ function std.pr(...)
 		table.insert(args, v)
 	end
 	return opr(std.unpack(args))
+end
+
+function std.obj:persist()
+	self:attr 'persist'
+	mp.persistent:add(self)
+	return self
 end
 
 function std.obj:hint(hint)

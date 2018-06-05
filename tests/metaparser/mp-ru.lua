@@ -5,6 +5,10 @@ local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
 local utf = mp.utf
 
+_'@compass'.word = -"север,с|восток,в|запад,з|юг,ю|наверх,вверх,верх|вниз,низ";
+_'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
+mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
+
 mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
 mp.msg.EMPTY = 'Простите?'
@@ -152,7 +156,8 @@ end
 
 Verb { "#Enter",
 	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг",
-	"на|в|к {noun}/вн : Enter" }
+	"на|в|к {noun}/вн : Enter",
+	"{noun_obj}/@compass : Enter" }
 
 Verb { "#Exit",
 	"выйти,выйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
