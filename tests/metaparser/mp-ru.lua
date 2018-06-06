@@ -133,25 +133,27 @@ function mp:err_noun(noun)
 end
 
 function mp.shortcut.vo(hint)
-	local w = std.split(hint)
-	w = w[#w]
-	if mp.utf.len(w) > 2 and
-		(lang.is_vowel(utf.char(w, 1)) or
-		lang.is_vowel(utf.char(w, 2))) then
-		return "в ".. hint
-	end
-	return "во ".. hint
+	return "в ".. hint
+--	local w = std.split(hint)
+--	w = w[#w]
+--	if mp.utf.len(w) > 2 and
+--		(lang.is_vowel(utf.char(w, 1)) or
+--		lang.is_vowel(utf.char(w, 2))) then
+--		return "в ".. hint
+--	end
+--	return "во ".. hint
 end
 
 function mp.shortcut.so(hint)
-	local w = std.split(hint)
-	w = w[#w]
-	if mp.utf.len(w) > 2 and
-		(lang.is_vowel(utf.char(w, 1)) or
-		lang.is_vowel(utf.char(w, 2))) then
-		return "с ".. hint
-	end
-	return "со ".. hint
+	return "с ".. hint
+--	local w = std.split(hint)
+--	w = w[#w]
+--	if mp.utf.len(w) > 2 and
+--		(lang.is_vowel(utf.char(w, 1)) or
+--		lang.is_vowel(utf.char(w, 2))) then
+--		return "с ".. hint
+--	end
+--	return "со ".. hint
 end
 
 function mp:Exam(w)

@@ -108,18 +108,18 @@ function init()
 end
 
 function start()
-	print(_'яблоко':noun('тв,мн')) -- даст яблокам
-	print(pl:Noun('тв')) -- даст мной
-	print(parser.mrd:noun(-"взять/прш,од,1л"))
-	print(parser.mrd:noun(-"нужен/жр"))
-	print("ACCESS:", _'яблоко':access())
-	print(pl:noun())
-	print("visible:", _"стол":visible())
-	print("visible:", _"рыбка":visible())
+--	print(_'яблоко':noun('тв,мн')) -- даст яблокам
+--	print(pl:Noun('тв')) -- даст мной
+--	print(parser.mrd:noun(-"взять/прш,од,1л"))
+--	print(parser.mrd:noun(-"нужен/жр"))
+--	print("ACCESS:", _'яблоко':access())
+--	print(pl:noun())
+--	print("visible:", _"стол":visible())
+--	print("visible:", _"рыбка":visible())
 
-	for k, v in pairs(_'дверь':gram()) do
-		print(k, v)
-	end
+--	for k, v in pairs(_'дверь':gram()) do
+--		print(k, v)
+--	end
 end
 
 dlg {
