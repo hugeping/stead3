@@ -384,15 +384,22 @@ function mp:before_Exit(w)
 end
 
 function mp:Exit(w)
-	if std.me():where() == w then
-		if std.me():where():from() == std.me():where() then
-			p (mp.msg.Exit.NOWHERE)
-			return
-		end
-		walkback()
-		return false
+	local wh = std.me():where()
+	w = w or std.me():where()
+	if wh ~= w then
+		p (mp.msg.Exit.NOTHERE)
+		return
 	end
-	p (mp.msg.Exit.NOTHERE)
+	if wh:has'openable' and not wh:has'open' then
+		p (mp.msg.Exit.CLOSED)
+		return
+	end
+	if wh:from() == wh then
+		p (mp.msg.Exit.NOWHERE)
+		return
+	end
+	walkback()
+	return false
 end
 
 function mp:after_Exit(w)

@@ -56,6 +56,8 @@ mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,s
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 mp.msg.Exit.NOWHERE = "Но {#me/дт} некуда выходить."
+mp.msg.Exit.CLOSED = "Но {#first} {#word/закрыт,#first}."
+
 
 --"покинуть"
 --"слезть"
