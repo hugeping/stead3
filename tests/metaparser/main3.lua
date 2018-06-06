@@ -81,7 +81,7 @@ obj {
 	title = [[В аквариуме]];
 	decor = [[Я в аквариуме.]];
 	obj = { 'рыбка' },
-} : attr 'container,transparent,enterable'
+} : attr 'container,transparent,enterable,open'
 
 obj {
 	nam = -"стол";

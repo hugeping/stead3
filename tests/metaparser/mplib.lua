@@ -359,7 +359,7 @@ function mp:Enter(w)
 		p (mp.msg.Enter.IMPOSSIBLE)
 		return
 	end
-	if w:has 'openable' and not w:has 'open' then
+	if w:has 'container' and not w:has 'open' then
 		p (mp.msg.Enter.CLOSED)
 		return
 	end
@@ -390,7 +390,7 @@ function mp:Exit(w)
 		p (mp.msg.Exit.NOTHERE)
 		return
 	end
-	if wh:has'openable' and not wh:has'open' then
+	if wh:has'container' and not wh:has'open' then
 		p (mp.msg.Exit.CLOSED)
 		return
 	end
