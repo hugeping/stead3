@@ -53,6 +53,7 @@ mp.msg.Enter.INV = "{#Me} не {#word/мочь,#me,нст} зайти в то, �
 mp.msg.Enter.IMPOSSIBLE = "Но в/на {#first/вн} невозможно войти, встать, сесть или лечь."
 mp.msg.Enter.CLOSED = "{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда."
 mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,supporter,на,в} {#first/вн}."
+-- mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 mp.msg.Exit.NOWHERE = "Но {#me/дт} некуда выходить."

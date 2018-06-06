@@ -351,10 +351,17 @@ function mp:Enter(w)
 		p (mp.msg.Enter.ALREADY)
 		return
 	end
+
 	if seen(w, me()) then
 		p (mp.msg.Enter.INV)
 		return
 	end
+
+--	if std.me():where() ~= std.here() then
+--		p (mp.msg.Enter.EXITBEFORE)
+--		return
+--	end
+
 	if not w:has 'enterable' then
 		p (mp.msg.Enter.IMPOSSIBLE)
 		return

@@ -1433,6 +1433,10 @@ local function shortcut(ob, hint)
 	return ob:noun(hint)
 end
 
+function mp.shortcut.where(hint)
+	return shortcut(std.me():where(), hint)
+end
+
 function mp.shortcut.first(hint)
 	return shortcut(mp.first, hint)
 end
@@ -1610,3 +1614,9 @@ end
 function iface:title(t)
 	return(iface:bold( mrd.lang.cap(t)))
 end
+
+mp.door = std.class({
+	Enter = function(s)
+		
+	end;
+}, std.obj):attr 'enterable'
