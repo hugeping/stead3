@@ -26,6 +26,13 @@ function parser:after_Take(w)
 	end
 end
 
+parser.door {
+	word = -"дверь";
+	nam = "дверь";
+	door_to = 'main2';
+	dsc = [[Тут есть дверь.]];
+}
+
 obj {
 	-"рюкзак";
 	nam = 'рюкзак';
@@ -93,7 +100,7 @@ room {
 	nam = 'main';
 	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
-}: with { 'стол' }
+}: with { 'стол', 'дверь' }
 
 function init()
 --	me().room_where = _'аквариум'
@@ -109,9 +116,10 @@ function start()
 	print(pl:noun())
 	print("visible:", _"стол":visible())
 	print("visible:", _"рыбка":visible())
---	for k, v in pairs(_'яблоко':gram()) do
---		print(k, v)
---	end
+
+	for k, v in pairs(_'дверь':gram()) do
+		print(k, v)
+	end
 end
 
 dlg {

@@ -1042,7 +1042,6 @@ function mp:call(ob, ev, ...)
 	local r, v = std.call(ob, ev, ...)
 --	std.cctx().txt = self.reaction
 	self.reaction = self.reaction or v or false
-
 	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
 	for _, v in ipairs(self.aliases) do
 		std.rawset(v, '__word_alias', nil)
@@ -1598,6 +1597,7 @@ function std.obj:attr(str)
 		v = v:gsub("^~", "")
 		self['__attr__' .. v] = val
 	end
+	return self
 end
 
 function std.obj:has(attr)
@@ -1617,6 +1617,11 @@ end
 
 mp.door = std.class({
 	Enter = function(s)
-		
+		local r = std.call(s, 'door_to')
+		if not r then
+			return false
+		end
+		walk(r)
+		return false
 	end;
 }, std.obj):attr 'enterable'

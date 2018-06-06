@@ -301,11 +301,10 @@ function mp:content(w)
 	end
 end
 
-function mp:Any(ev, w, ww)
+function mp:before_Any(ev, w, ww)
 	if ev == 'Exam' then
 		return false
 	end
-
 	if w and not w:access() then
 		p (self.msg.ACCESS1 or "{#First} is not accessible.")
 		return

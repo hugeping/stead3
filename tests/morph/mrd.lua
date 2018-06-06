@@ -394,7 +394,7 @@ function mrd:lookup(w, g)
 				if sc < 0 then
 					break
 				end
-				if t ~= f.an.t then sc = sc - 1 end
+				if t == f.an.t then sc = sc + 2 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
 				if tt == 'УВИДЕТЬ' or tt == 'УВИДЕЛ' then
@@ -716,11 +716,16 @@ std.obj.gram = function(self, ...)
 	local hint, ob, w
 	ob, w, hint = mrd:obj(self, ...)
 	local _, gram = mrd:word(w .. '/'..hint)
-	local thint = hint
+	local thint = ''
 	hint = str_split(hint, ",")
 	local g = gram and gram[1] or {}
 	for _, v in ipairs(hint) do
 		g[v] = true
+	end
+	for k, v in pairs(g) do
+		if v then
+			thint = thint .. k .. ','
+		end
 	end
 	g.hint = thint
 	return g
