@@ -31,6 +31,18 @@ visited. The player character has visited this location.
 workflag. This object has been temporarily selected by the Inform library for some reason.
 worn. The player character is currently wearing this object.
 ]]--
+
+mp.door = std.class({
+	Enter = function(s)
+		local r = std.call(s, 'door_to')
+		if not r then
+			return false
+		end
+		walk(r)
+		return false
+	end;
+}, std.obj):attr 'enterable'
+
 -- player
 mp.msg.Look = {}
 function mp:room_content(w)

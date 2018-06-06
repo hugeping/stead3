@@ -1614,14 +1614,3 @@ end
 function iface:title(t)
 	return(iface:bold( mrd.lang.cap(t)))
 end
-
-mp.door = std.class({
-	Enter = function(s)
-		local r = std.call(s, 'door_to')
-		if not r then
-			return false
-		end
-		walk(r)
-		return false
-	end;
-}, std.obj):attr 'enterable'
