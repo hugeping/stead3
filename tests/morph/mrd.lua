@@ -368,10 +368,10 @@ function mrd:gram_compat(a, b)
 		return a == 'ИНФИНИТИВ' or a == 'Г'
 	end
 	if a == 'КР_ПРИЛ' then
-		return b == 'КР_ПРИЛ' or b == 'П'
+		return b == 'КР_ПРИЛ' -- or b == 'П'
 	end
 	if b == 'КР_ПРИЛ' then
-		return a == 'КР_ПРИЛ' or a == 'П'
+		return a == 'КР_ПРИЛ' -- or a == 'П'
 	end
 	return true
 end
@@ -394,7 +394,7 @@ function mrd:lookup(w, g)
 				if sc < 0 then
 					break
 				end
-				if t == f.an.t then sc = sc + 2 end -- todo
+				if t ~= f.an.t then sc = sc - 1 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
 				if tt == 'УВИДЕТЬ' or tt == 'УВИДЕЛ' then
