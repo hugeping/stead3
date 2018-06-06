@@ -678,6 +678,27 @@ function mp:compl_fill(compl, eol, vargs)
 	end
 end
 
+function mp:compl_strip(w, ww)
+	local ot = w
+	w = str_split(w)
+	local max = 0
+	local len = #w
+	if len > #ww then len = #ww end
+	for i = #ww, #ww - len + 1, -1 do
+		local match = true
+		for k = 1, #ww - i + 1 do
+			if not self:eq(w[k], ww[i]) then match = false; break end
+		end
+		if match then
+			max = #ww - i
+		end
+	end
+	if max == 0 then
+		return ot
+	end
+	return w[max + 1]
+end
+
 function mp:compl(str)
 	local words = str_split(self:norm(str), inp_split)
 	local poss
