@@ -146,6 +146,15 @@ function std.obj:access()
 	if std.me():where() == self then
 		return true
 	end
+
+	if self:has 'persist' then
+		if not self.found_in then
+			return true
+		end
+		local r, v = std.call(self, 'found_in')
+		return v
+	end
+
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
