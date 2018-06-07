@@ -535,6 +535,31 @@ function mp:verbs()
 	return std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
 end
 
+local function word_search(t, w, lev)
+	local rlev
+	w = str_split(w, inp_split)
+	for k = 1, #t - #w + 1 do
+		local found = true
+		for i = 1, #w do
+			local found2 = false
+			for ii = k, k + #w - 1 do
+				rlev = mp:eq(w[i], t[ii], lev)
+				if rlev then
+					found2 = true
+					break
+				end
+			end
+			if not found2 then
+				found = false
+				break
+			end
+		end
+		if found then
+			return k, #w, rlev
+		end
+	end
+end
+
 function mp:lookup_verb(words, lev)
 	local ret = {}
 	local w = self:verbs()
@@ -542,17 +567,16 @@ function mp:lookup_verb(words, lev)
 		local found = false
 		local lev_v = {}
 		for _, vv in ipairs(v.verb) do
-			for i, vvv in ipairs(words) do
-				local verb = vv.word .. (vv.morph or "")
-				local pfx = vv.word
+			local verb = vv.word .. (vv.morph or "")
+			local i, len, rlev = word_search(words, verb, lev and self.lev_thresh)
+			if i then
 				if lev then
-					local lev = utf_lev(verb, vvv)
-					table.insert(lev_v, { lev = lev, verb = v, verb_nr = i, word_nr = _ } )
-				elseif verb == vvv or (vvv:find(pfx, 1, true) == 1 and i == 1) then
+					table.insert(lev_v, { lev = rlev, verb = v, verb_nr = i, verb_len = len, word_nr = _ } )
+				else
 					v.verb_nr = i
+					v.verb_len = len
 					v.word_nr = _
 					table.insert(ret, v)
-					break
 				end
 			end
 		end
@@ -561,6 +585,7 @@ function mp:lookup_verb(words, lev)
 					   return a.lev < b.lev
 			end)
 			lev_v[1].verb.verb_nr = lev_v[1].verb_nr
+			lev_v[1].verb.verb_len = lev_v[1].verb_len
 			lev_v[1].verb.word_nr = lev_v[1].word_nr
 			lev_v[1].verb.lev = lev_v[1].lev
 			table.insert(ret, lev_v[1].verb)
@@ -573,29 +598,6 @@ function mp:lookup_verb(words, lev)
 		ret = { ret[1] }
 	end
 	return ret
-end
-
-local function word_search(t, w, lev)
-	w = str_split(w, inp_split)
-	for k = 1, #t - #w + 1 do
-		local found = true
-		for i = 1, #w do
-			local found2 = false
-			for ii = k, k + #w - 1 do
-				if mp:eq(w[i], t[ii], lev) then
-					found2 = true
-					break
-				end
-			end
-			if not found2 then
-				found = false
-				break
-			end
-		end
-		if found then
-			return k, #w
-		end
-	end
 end
 
 local function tab_sub(t, s, e)
@@ -860,7 +862,7 @@ function mp:match(verb, w, compl)
 		local a = {}
 		found = (#d.pat == 0)
 		for k, v in ipairs(w) do
-			if k ~= verb.verb_nr then
+			if k < verb.verb_nr or k >= verb.verb_nr + verb.verb_len then
 				table.insert(a, v)
 			end
 		end
