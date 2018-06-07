@@ -1129,9 +1129,10 @@ function mp:events_call(events, oo, t)
 				r, v = self:call(ob, eany, e.ev, std.unpack(e.args))
 				if r then std.pn(r) end
 				if not v then
-					r, v = self:call(ob, ename, std.unpack(e.args))
-					if r then std.pn(r) end
-					if not v then
+					if ob[ename] then
+						r, v = self:call(ob, ename, std.unpack(e.args))
+						if r then std.pn(r) end
+					else
 						r, v = self:call(ob, edef, e.ev, std.unpack(e.args))
 						if r then std.pn(r) end
 					end

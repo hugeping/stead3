@@ -8,7 +8,27 @@ local utf = mp.utf
 _'@compass'.word = -"север,с|восток,в|запад,з|юг,ю|наверх,вверх,верх|вниз,низ";
 _'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
+
+mp.door.word = -"дверь";
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
+mp.msg.COMPASS_EXAM_NO = "В этом направлении ничего необычного нет."
+
+mp.msg.COMPASS_EXAM = function(dir, ob)
+	if dir == 'u_to' then
+		p "Вверху"
+	elseif dir == 'd_to' then
+		p "Внизу"
+	else
+		p "На {#first/пр,2}"
+	end
+	if ob:hint'plural' then
+		p "находятся"
+	else
+		p "находится"
+	end
+	p (ob:noun())
+end
+
 mp.msg.enter = "<ввод>"
 mp.mrd.lang = lang
 mp.msg.EMPTY = 'Простите?'
@@ -40,9 +60,9 @@ mp.msg.Exam.ON = "На {#first/пр,2}"
 mp.msg.Exam.DEFAULT = "{#Me} не {#word/увидеть,#me,прш} {#vo/{#first/пр}} ничего необычного.";
 
 --"открыт"
-mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,кр,#first}."
+mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,#first}."
 --"закрыт"
-mp.msg.Exam.CLOSED = "{#First} {#word/закрыт,нст,кр,#first}."
+mp.msg.Exam.CLOSED = "{#First} {#word/закрыт,нст,#first}."
 
 --"мочь"
 --"закрыт"
@@ -53,6 +73,10 @@ mp.msg.Enter.INV = "{#Me} не {#word/мочь,#me,нст} зайти в то, �
 mp.msg.Enter.IMPOSSIBLE = "Но в/на {#first/вн} невозможно войти, встать, сесть или лечь."
 mp.msg.Enter.CLOSED = "{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда."
 mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,supporter,на,в} {#first/вн}."
+mp.msg.Enter.DOOR_NOWHERE = "{#First} никуда не ведёт."
+--"закрыт"
+mp.msg.Enter.DOOR_CLOSED = "{#First} {#word/закрыт,#first}."
+
 -- mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."

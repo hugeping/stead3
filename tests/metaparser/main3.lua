@@ -27,11 +27,10 @@ function parser:after_Take(w)
 end
 
 parser.door {
-	word = -"дверь";
 	nam = "дверь";
 	door_to = 'main2';
-	dsc = [[Тут есть дверь.]];
-}
+--	dsc = [[Тут есть дверь.]];
+}:attr 'open'
 
 obj {
 	-"рюкзак";
@@ -99,6 +98,7 @@ obj {
 room {
 	title = -"комната";
 	nam = 'main';
+	n_to = 'дверь';
 	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол', 'дверь' }
@@ -118,9 +118,9 @@ function start()
 --	print("visible:", _"стол":visible())
 --	print("visible:", _"рыбка":visible())
 
---	for k, v in pairs(_'дверь':gram()) do
---		print(k, v)
---	end
+	for k, v in pairs(_'дверь':gram()) do
+		print(k, v)
+	end
 end
 
 dlg {

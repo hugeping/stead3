@@ -33,14 +33,20 @@ worn. The player character is currently wearing this object.
 ]]--
 
 mp.door = std.class({
-	Enter = function(s)
+	before_Enter = function(s)
+		if not s:has 'open' then
+			local r = std.call(s, 'when_closed')
+			p (r or mp.msg.Enter.DOOR_CLOSED)
+			return
+		end
 		local r = std.call(s, 'door_to')
 		if not r then
-			return false
+			p (mp.msg.Enter.DOOR_NOWHERE)
+			return
 		end
 		walk(r)
 	end;
-}, std.obj):attr 'enterable'
+}, std.obj):attr 'enterable,openable,door'
 
 -- player
 mp.msg.Look = {}
@@ -283,12 +289,23 @@ obj {
 	end;
 --	before_Default = [[Can't do it with direction.]];
 --	visible = function() return true end;
+	before_Exam = function(s)
+		local d = s.dirs[s:multi_alias()]
+		local r = std.call(std.here(), d)
+		if not r then
+			p (mp.msg.COMPASS_EXAM_NO)
+			return
+		end
+		p (mp.msg.COMPASS_EXAM(d, std.object(r)))
+	end;
 	before_Enter = function(s)
 		local d = s.dirs[s:multi_alias()]
-		local r = std.call(s, d)
+		local r = std.call(std.here(), d)
 		if not r then
 			p (mp.msg.COMPASS_NOWAY)
+			return
 		end
+		mp:xaction("Enter", std.object(r))
 	end;
 }:persist():attr'multi,enterable'
 
@@ -342,23 +359,23 @@ end
 function mp:after_Exam(w)
 	if not self.reaction and w then
 		if w:has 'container' and (w:has'transparent' or w:has'open') then
-			p(mp.msg.Exam.IN or "In the {#first/}")
+			p(mp.msg.Exam.IN)
 			self:content(w)
 		elseif w:has 'supporter' then
-			p(mp.msg.Exam.ON or "On the {#first/}")
+			p(mp.msg.Exam.ON)
 			self:content(w)
 		else
 			if w:has'openable' then
 				if w:has 'open' then
-					p (mp.msg.Exam.OPENED or "{#First} is opened.");
+					p (mp.msg.Exam.OPENED);
 				else
-					p (mp.msg.Exam.CLOSED or "{#First} is closed.");
+					p (mp.msg.Exam.CLOSED);
 				end
 			end
 			if w == std.here() then
 				std.me():need_scene(true)
 			else
-				p (mp.msg.Exam.DEFAULT or "{#Me} did not see anything unusual.");
+				p (mp.msg.Exam.DEFAULT);
 			end
 		end
 	end
