@@ -39,7 +39,6 @@ mp.door = std.class({
 			return false
 		end
 		walk(r)
-		return false
 	end;
 }, std.obj):attr 'enterable'
 
@@ -138,7 +137,7 @@ std.player.look = function(s)
 	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
 end;
 
--- 
+--
 
 function std.obj:access()
 	local plw = {}
