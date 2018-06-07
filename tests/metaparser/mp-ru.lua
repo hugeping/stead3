@@ -122,6 +122,13 @@ function mp:it(w, hint)
 	return mp.mrd:noun(-"он/"..hint)
 end
 
+function mp:synonyms(w, hint)
+	local t = self:it(w, hint)
+	local w = { t }
+	if t == 'его' or t == 'её' or t == 'ее' then t = 'н'..t; w[2] = t end
+	return w
+end
+
 mp.keyboard = {
 	'А','Б','В','Г','Д','Е','Ё','Ж','З','И','Й',
 	'К','Л','М','Н','О','П','Р','О','С','Т','У','Ф',
