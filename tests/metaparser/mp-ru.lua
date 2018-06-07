@@ -11,7 +11,7 @@ _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
 mp.door.word = -"дверь";
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
-mp.msg.COMPASS_EXAM_NO = "В этом направлении ничего необычного нет."
+mp.msg.COMPASS_EXAM_NO = "В этом направлении не видно ничего примечательного."
 
 mp.msg.COMPASS_EXAM = function(dir, ob)
 	if dir == 'u_to' then
