@@ -30,7 +30,7 @@ parser.door {
 	nam = "дверь";
 	door_to = 'main2';
 --	dsc = [[Тут есть дверь.]];
-}:attr 'open'
+}:attr 'open,scenery'
 
 obj {
 	-"рюкзак";

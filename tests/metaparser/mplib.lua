@@ -339,20 +339,18 @@ function mp:content(w)
 	end
 end
 
-function mp:before_Any(ev, w, ww)
-	if ev == 'Exam' then
-		return false
-	end
-	if self.first and not self.first:access() then
+std.room:attr 'enterable'
+
+function mp:before_Any()
+	if self.first and not self.first:access() and not self.first:type'room' then
 		p (self.msg.ACCESS1 or "{#First} is not accessible.")
 		return
 	end
 
-	if self.second and not self.second:access() then
+	if self.second and not self.second:access() and not self.first:type'room' then
 		p (self.msg.ACCESS2 or "{#Second} is not accessible.")
 		return
 	end
-
 	return false
 end
 
