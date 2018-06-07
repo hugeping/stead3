@@ -326,12 +326,12 @@ function mp:before_Any(ev, w, ww)
 	if ev == 'Exam' then
 		return false
 	end
-	if w and not w:access() then
+	if self.first and not self.first:access() then
 		p (self.msg.ACCESS1 or "{#First} is not accessible.")
 		return
 	end
 
-	if ww and not ww:access() then
+	if self.second and not self.second:access() then
 		p (self.msg.ACCESS2 or "{#Second} is not accessible.")
 		return
 	end

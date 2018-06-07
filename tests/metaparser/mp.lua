@@ -435,7 +435,8 @@ function mp.token.select(w)
 end
 
 function mp:norm(t)
-	return std.strip(mrd.lang.lower(mrd.lang.norm(t)))
+	t = mrd.lang.lower(mrd.lang.norm(t)):gsub("[ \t]+", " ")
+	return t
 end
 
 function mp:eq(t1, t2, lev)
@@ -576,7 +577,7 @@ end
 
 local function word_search(t, w, lev)
 	w = str_split(w, " ")
-	for k, v in ipairs(t) do
+	for k = 1, #t - #w + 1 do
 		local found = true
 		for i = 1, #w do
 			local found2 = false
@@ -608,6 +609,9 @@ end
 
 function mp:docompl(str, maxw)
 	local full = false
+	local force = maxw
+	local inp, pre = self:compl_ctx()
+
 	if not maxw then
 		full = false
 		local compl = self:compl(str)
@@ -615,8 +619,6 @@ function mp:docompl(str, maxw)
 			if not maxw then
 				full = true
 				maxw = v.word
-				--		elseif v.word:find(maxw, 1, true) == 1 then
-				--			maxw = v.word
 			else
 				local maxw2 = ''
 				for k = 1, utf_len(maxw) do
@@ -634,18 +636,10 @@ function mp:docompl(str, maxw)
 		full = true
 	end
 	if maxw and maxw ~= '' then
-		local words = str_split(str, inp_split)
-		if not str:find(" $") then
-			table.remove(words, #words)
-		end
-		str = ''
-		table.insert(words, maxw)
-		for _, v in ipairs(words) do
-			str = str .. v .. ' '
-		end
-		if not full then
-			str = str:gsub(" $", "")
-		end
+		str = inp .. maxw
+	end
+	if force or full then
+		str = str .. ' '
 	end
 	return str
 end
@@ -666,7 +660,9 @@ function mp:compl_verb(words)
 end
 
 function mp:compl_fill(compl, eol, vargs)
+	local ctx = self.completions.ctx
 	self.completions = {}
+	self.completions.ctx = ctx
 	self.completions.eol = eol
 	self.completions.vargs = vargs
 	local w = str_split(self.inp, inp_split)
@@ -678,25 +674,65 @@ function mp:compl_fill(compl, eol, vargs)
 	end
 end
 
-function mp:compl_strip(w, ww)
-	local ot = w
-	w = str_split(w)
-	local max = 0
-	local len = #w
-	if len > #ww then len = #ww end
-	for i = #ww, #ww - len + 1, -1 do
-		local match = true
-		for k = 1, #ww - i + 1 do
-			if not self:eq(w[k], ww[i]) then match = false; break end
-		end
-		if match then
-			max = #ww - i
+function mp:compl_reset()
+	self.completions = { ctx = {} }
+end
+
+function mp:compl_ctx_current()
+	local ctx = self.completions.ctx
+	local new = {}
+	local top = 0
+	for k, v in ipairs(ctx) do
+		if self:startswith(self.inp, v.inp) then
+			table.insert(new, v)
+		else
+			break
 		end
 	end
-	if max == 0 then
-		return ot
+	self.completions.ctx = new
+end
+
+function mp:compl_ctx_push(poss)
+	if #poss == 0 then
+		return
 	end
-	return w[max + 1]
+	local ctx = self.completions.ctx
+	table.insert(ctx, poss)
+	local top = #ctx
+	ctx[top].inp = self.inp
+end
+
+function mp:compl_ctx()
+	local ctx = self.completions.ctx
+	local top = #ctx
+	if top == 0 then
+		return self.inp, ''
+	end
+	local inp = self:norm(self.inp)
+	local ctx_inp = self:norm(ctx[top].inp)
+	local s, e = inp:find(ctx_inp, 1, true)
+	local pre = ''
+	if e then
+		pre = inp:sub(e + 1)
+	end
+	return ctx[top].inp, pre
+end
+
+function mp:compl_ctx_poss()
+	local ctx = self.completions.ctx
+	local top = #ctx
+	local res = {}
+	if top == 0 then
+		return res
+	end
+	ctx = ctx[top]
+	local _, pre = self:compl_ctx()
+	for _, v in ipairs(ctx) do
+		if self:startswith(v.word, pre) then
+			table.insert(res, v)
+		end
+	end
+	return res
 end
 
 function mp:compl(str)
@@ -707,28 +743,31 @@ function mp:compl(str)
 	local eol
 	local e = str:find(" $")
 	local vargs
-	if #words == 0 or (#words == 1 and not e) then -- verb?
-		poss, eol = self:compl_verb(words)
-	else -- matches
-		poss, eol, vargs = self:compl_match(words)
+
+	self:compl_ctx_current();
+	poss = self:compl_ctx_poss()
+	if (#poss == 0 and e) or #words == 0 then -- no context
+		if #words == 0 or (#words == 1 and not e) then -- verb?
+			poss, eol = self:compl_verb(words)
+			local oo = self:nouns() -- and hidden nouns
+			for _, o in ipairs(oo) do
+				local ww = {}
+				o:noun(ww)
+				for _, n in ipairs(ww) do
+					table.insert(poss, { word = n.word, hidden = true })
+				end
+			end
+		else -- matches
+			poss, eol, vargs = self:compl_match(words)
+		end
+		self:compl_ctx_push(poss)
 	end
+	local _, pre = self:compl_ctx()
 	for _, v in ipairs(poss) do
-		if #words == 0 or e or (self:startswith(v.word, words[#words]) and not e) then
+		if self:startswith(v.word, pre) then
 			if not dups[v.word] then
 				dups[v.word] = true
 				table.insert(ret, v)
-			end
-		end
-	end
-	if #ret == 0 and not e and #words <= 1 then -- try noun?
-		local oo = self:nouns()
-		for _, o in ipairs(oo) do
-			local ww = {}
-			o:noun(ww)
-			for _, d in ipairs(ww) do
-				if (self:startswith(d.word, words[#words]) and not e) then
-					table.insert(ret, d)
-				end
 			end
 		end
 	end
@@ -1270,6 +1309,7 @@ function mp:key_enter()
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
+	self:compl_reset();
 	self:compl_fill(self:compl(self.inp))
 --	self:completion()
 	return r, v
@@ -1435,6 +1475,7 @@ function()
 	mrd:gramtab("morph/rgramtab.tab")
 	local _, crc = mrd:load("dict.mrd")
 	mrd:create("dict.mrd", crc) -- create or update
+	mp:compl_reset()
 	mp:compl_fill(mp:compl(""))
 end)
 
