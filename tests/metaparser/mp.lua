@@ -1498,6 +1498,10 @@ function mp.shortcut.where(hint)
 	return shortcut(std.me():where(), hint)
 end
 
+function mp.shortcut.here(hint)
+	return shortcut(std.here(), hint)
+end
+
 function mp.shortcut.first(hint)
 	return shortcut(mp.first, hint)
 end
@@ -1563,6 +1567,8 @@ function mp.shortcut.if_has(hint)
 		ob = std.me()
 	elseif ob == 'where' then
 		ob = std.me():where()
+	elseif ob == 'here' then
+		ob = std.here()
 	else
 		std.err("Wrong object in if_has shortcut: "..hint, 2)
 	end

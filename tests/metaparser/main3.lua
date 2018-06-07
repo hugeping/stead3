@@ -86,7 +86,6 @@ obj {
 	-"аквариум",
 	nam = 'аквариум',
 	title = [[В аквариуме]];
-	decor = [[Я в аквариуме.]];
 	obj = { 'рыбка' },
 } : attr 'container,transparent,enterable,open'
 
@@ -100,7 +99,7 @@ room {
 	nam = 'main';
 	n_to = 'дверь';
 	e_to = 'main2';
-	dsc = "Я в комнате.";
+--	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол', 'дверь' }
 

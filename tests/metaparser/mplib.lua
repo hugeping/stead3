@@ -89,11 +89,19 @@ function std.obj:multi_alias()
 	return self.__word_alias
 end
 
+std.room.dsc = function(s)
+	p (mp.msg.SCENE);
+end
+
+std.obj.inside_dsc = function(s)
+	p (mp.msg.INSIDE_SCENE);
+end
+
 function std.obj:scene()
 	local s = self
 	local title, dsc
 	title = iface:title(std.titleof(s))
-	dsc = std.call(s, 'decor')
+	dsc = std.call(s, 'inside_dsc')
 	return std.par(std.scene_delim, title or false, dsc)
 end
 
@@ -305,7 +313,11 @@ obj {
 			p (mp.msg.COMPASS_NOWAY)
 			return
 		end
-		mp:xaction("Enter", std.object(r))
+		if std.object(r):type 'room' then
+			walk(r)
+		else
+			mp:xaction("Enter", std.object(r))
+		end
 	end;
 }:persist():attr'multi,enterable'
 
