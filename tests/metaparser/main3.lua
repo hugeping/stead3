@@ -99,6 +99,7 @@ room {
 	title = -"комната";
 	nam = 'main';
 	n_to = 'дверь';
+	e_to = 'main2';
 	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол', 'дверь' }

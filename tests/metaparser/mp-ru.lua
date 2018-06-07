@@ -26,7 +26,7 @@ mp.msg.COMPASS_EXAM = function(dir, ob)
 	else
 		p "находится"
 	end
-	p (ob:noun())
+	p (ob:noun(),".")
 end
 
 mp.msg.enter = "<ввод>"

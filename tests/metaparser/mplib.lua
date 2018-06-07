@@ -292,7 +292,7 @@ obj {
 	before_Exam = function(s)
 		local d = s.dirs[s:multi_alias()]
 		local r = std.call(std.here(), d)
-		if not r then
+		if not r or std.object(r):type 'room' then
 			p (mp.msg.COMPASS_EXAM_NO)
 			return
 		end
