@@ -576,7 +576,7 @@ function mp:lookup_verb(words, lev)
 end
 
 local function word_search(t, w, lev)
-	w = str_split(w, " ")
+	w = str_split(w, inp_split)
 	for k = 1, #t - #w + 1 do
 		local found = true
 		for i = 1, #w do
@@ -743,7 +743,6 @@ function mp:compl(str)
 	local eol
 	local e = str:find(" $")
 	local vargs
-
 	self:compl_ctx_current();
 	poss = self:compl_ctx_poss()
 	if (#poss == 0 and e) or #words == 0 then -- no context
@@ -1210,9 +1209,8 @@ end
 
 function mp:parse(inp)
 	inp = std.strip(inp)
-	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
-
 	pn(fmt.b(self.prompt .. inp))
+	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	local r, v = self:input(self:norm(inp))
 	if not r then
 		if v then
@@ -1305,7 +1303,6 @@ function mp:key_enter()
 	if #self.history > self.history_len then
 		table.remove(self.history, #self.history)
 	end
-
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;

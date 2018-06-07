@@ -218,8 +218,9 @@ function std.obj:visible()
 end
 
 -- dialogs
-std.phr.word = function(s)
-	return tostring(s.__ph_idx) or std.dispof(s)
+std.phr.raw_word = function(s)
+	local dsc = std.call(s, 'dsc')
+	return (tostring(s.__ph_idx) or std.dispof(s)) .. '|'.. dsc
 end
 
 std.phr.Exam = function(s, ...)

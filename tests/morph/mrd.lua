@@ -575,6 +575,10 @@ end
 
 function mrd.dispof(w)
 	local d
+	if w.raw_word ~= nil then
+		local d = std.call(w, 'raw_word')
+		return d, true
+	end
 	if w.word ~= nil then
 		local d = std.call(w, 'word')
 		return d
@@ -584,7 +588,7 @@ end
 
 function mrd:obj(w, n, nn)
 	local hint = ''
-	local hint2, disp, ob
+	local hint2, disp, ob, raw
 	if type(w) == 'string' then
 		w, hint = str_hint(w)
 	elseif type(n) == 'string' then
@@ -594,7 +598,7 @@ function mrd:obj(w, n, nn)
 	if type(w) ~= 'string' then
 		w = std.object(w)
 		ob = w
-		disp = self.dispof(w)
+		disp, raw = self.dispof(w)
 	else
 		disp = w
 	end
@@ -606,7 +610,7 @@ function mrd:obj(w, n, nn)
 	local nd = {}
 	for k, v in ipairs(d) do
 		w, hint2 = str_hint(v)
-		local dd = str_split(w, ',')
+		local dd = raw and { w } or str_split(w, ',')
 		for _, vv in ipairs(dd) do
 			table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
 		end
