@@ -72,7 +72,9 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"я/од,мр,1л";
+--pl.word = -"я/од,мр,1л";
+pl.word = -"вы";
+
 pl:dict {
 	["я/вн"] = "себя";
 	["я/пр"] = "себе";

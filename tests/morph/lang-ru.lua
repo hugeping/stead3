@@ -203,6 +203,13 @@ local function is_vowel(l)
 	return vowels[l]
 end
 
-lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap, is_vowel = is_vowel }
+local weights = {
+	["мр"] = 2;
+	["жр"] = 2;
+	["мн"] = 4;
+	["ед"] = 4;
+}
+
+lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap, is_vowel = is_vowel, weights = weights }
 
 return lang

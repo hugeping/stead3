@@ -351,10 +351,10 @@ function mrd:score(an, g)
 		if vv:sub(1, 1) == '~' then
 			vv = vv:sub(2)
 			if an[vv] then
-				score = score - 1
+				score = score - 1 * (self.lang.weights[vv] or 1)
 			end
 		elseif an[vv] then
-			score = score + 1
+			score = score + 1 * (self.lang.weights[vv] or 1)
 		end
 	end
 	return score
@@ -397,13 +397,13 @@ function mrd:lookup(w, g)
 				if t ~= f.an.t then sc = sc - 1 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'УВИДЕТЬ' or tt == 'УВИДЕЛ' then
-				print(v.t, score + sc)
+				if tt == 'ЗАЛЕЗТЬ' or tt == 'ЗАЛЕЗ' or tt == 'ЗАЛЕЗЛИ' or tt == 'ЗАЛЕЗАЕТЕ' then
+				print(tt, v.t, score + sc)
 				print "looking for:"
 				for _, v in pairs(g) do
 					print(_, v)
 				end
-				print "looking got:"
+				print ("looking got:", score, sc)
 				for _, v in pairs(f.an) do
 					print(_, v)
 				end
