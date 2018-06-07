@@ -88,6 +88,9 @@ mp.msg.Exit.CLOSED = "Но {#first} {#word/закрыт,#first}."
 --"слезть"
 mp.msg.Exit.EXITED = "{#Me} {#if_has/first,supporter,{#word/слезть с,#me,прш} {#first/рд},{#word/покинуть,#me,прш} {#first/вн}}."
 
+mp.msg.Inv.NOTHING = "У {#me/рд} с собой ничего нет."
+mp.msg.Inv.INV = "У {#me/рд} с собой"
+
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -202,6 +205,10 @@ Verb { "#Examine",
 	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
 	"?на {noun}/вн : Exam",
 	"?всё : Exam" }
+
+Verb { "#Inv",
+       "инв/ентарь",
+       "Inv" }
 
 -- Dialog
 std.phr.default_Event = "Exam"

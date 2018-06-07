@@ -449,3 +449,25 @@ function mp:after_Exit(w)
 		p (mp.msg.Exit.EXITED)
 	end
 end
+
+mp.msg.Inv = {}
+function mp:after_Inv()
+	if not self.reaction then
+		local oo = {}
+		self:objects(std.me(), oo, false)
+		if #oo == 0 then
+			p(mp.msg.Inv.NOTHING)
+			return
+		end
+		p(mp.msg.Inv.INV)
+		for _, v in ipairs(oo) do
+			pr(v)
+			if _ == #oo - 1 then
+				pr(" ",mp.msg.AND, " ")
+			elseif _ ~= #oo then
+				pr(', ')
+			end
+		end
+		pr(".")
+	end
+end
