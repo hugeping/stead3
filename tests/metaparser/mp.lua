@@ -356,7 +356,7 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 --	end
 
 	for _, v in ipairs(mp.completions) do
-		local t = iface:xref(v.word, mp, v.word)
+		local t = iface:xref(std.fmt(v.word), mp, v.word)
 		if v.ob and have(v.ob) then t = iface:em(t) end
 		ret = ret .. t .. delim
 	end
