@@ -571,6 +571,21 @@ local function word_search(t, w, lev)
 	end
 end
 
+function mp:lookup_short(words, w)
+	local ret = { }
+	for _,v in ipairs(words) do
+		if self:startswith(v, w) then
+			table.insert(ret, { i = _, w = v, pos = #ret })
+		end
+	end
+	table.sort(ret, function(a, b)
+		if a.w:len() == b.w:len() then return a.pos < b.pos end
+		return a.w:len() < b.w:len()
+	end)
+	if #ret == 0 then return end
+	return ret[1].i, 1
+end
+
 function mp:lookup_verb(words, lev)
 	local ret = {}
 	local w = self:verbs()
@@ -579,7 +594,13 @@ function mp:lookup_verb(words, lev)
 		local lev_v = {}
 		for _, vv in ipairs(v.verb) do
 			local verb = vv.word .. (vv.morph or "")
-			local i, len, rlev = word_search(words, verb, lev and self.lev_thresh)
+			local i, len, rlev
+			if not lev and verb ~= vv.word then
+				i, len = self:lookup_short(words, vv.word)
+			end
+			if not i then
+				i, len, rlev = word_search(words, verb, lev and self.lev_thresh)
+			end
 			if i then
 				if lev then
 					table.insert(lev_v, { lev = rlev, verb = v, verb_nr = i, verb_len = len, word_nr = _ } )
