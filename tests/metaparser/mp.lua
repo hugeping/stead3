@@ -428,7 +428,7 @@ function mp.token.noun(w)
 		end
 		if o == mp.first then
 			for _, v in ipairs(mp:synonyms(o, w.morph)) do
-				table.insert(ww, { optional = w.optional, word = v, ob = o, alias = 1, hidden = true })
+				table.insert(ww, { optional = w.optional, word = v, ob = o, alias = o.alias, hidden = true })
 			end
 		end
 	end

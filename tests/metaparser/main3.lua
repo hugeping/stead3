@@ -72,7 +72,7 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"я"
+pl.word = -"ты"
 
 --/од,мр,1л";
 --pl.word = -"вы";
