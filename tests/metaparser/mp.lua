@@ -445,7 +445,13 @@ function mp:norm(t)
 end
 
 function mp:eq(t1, t2, lev)
-	if lev and utf_lev(t1, t2) < lev then return true end
+	if lev then
+		local l = utf_lev(t1, t2)
+		if l < lev then
+			return l
+		end
+		return false
+	end
 	return self:norm(t1) == self:norm(t2)
 end
 
