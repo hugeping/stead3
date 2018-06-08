@@ -94,6 +94,14 @@ mp.msg.Exit.EXITED = "{#Me} {#if_has/first,supporter,{#word/слезть с,#me,
 mp.msg.Inv.NOTHING = "У {#me/рд} с собой ничего нет."
 mp.msg.Inv.INV = "У {#me/рд} с собой"
 
+--"открыть"
+mp.msg.Open.OPEN = "{#Me} {#word/открыть,прш,#me} {#first/вн}."
+mp.msg.Open.NOTOPENABLE = "{#First/вн} невозможно открыть."
+--"открыт"
+mp.msg.Open.WHENOPEN = "{#First/вн} уже {#word/открыт,#first}."
+--"заперт"
+mp.msg.Open.WHENLOCKED = "Похоже, что {#first/} {#word/заперт,#first}."
+
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -209,6 +217,13 @@ Verb { "#Examine",
 	"осм/отреть,смотр/еть,рассмотр/еть,изуч/ить,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
 	"?на {noun}/вн : Exam",
 	"?всё : Exam" }
+
+Verb { "#Open",
+       "откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
+       "{noun}/вн : Open",
+       "{noun}/вн {noun}/тв : Unlock",
+       "~{noun}/тв ~{noun}/вн : Unlock reverse"
+}
 
 Verb { "#Inv",
        "инв/ентарь|с собой",

@@ -420,9 +420,9 @@ function mp.token.noun(w)
 		local d = {}
 		local r = o:noun(attr, d)
 		for k, v in ipairs(d) do
-			local hidden = (k ~= 1)
+			local hidden = (k ~= 1) or w.hidden
 			if o:has 'multi' then
-				hidden = (v.idx ~= 1)
+				hidden = hidden or (v.idx ~= 1)
 			end
 			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = hidden })
 		end

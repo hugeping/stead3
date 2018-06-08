@@ -384,10 +384,13 @@ function mp:after_Exam(w)
 		else
 			if w:has'openable' then
 				if w:has 'open' then
-					p (mp.msg.Exam.OPENED);
+					local r = std.call(w, 'when_open')
+					p (r or mp.msg.Exam.OPENED);
 				else
-					p (mp.msg.Exam.CLOSED);
+					local r = std.call(w, 'when_closed')
+					p (r or mp.msg.Exam.CLOSED);
 				end
+				return
 			end
 			if w == std.here() then
 				std.me():need_scene(true)
@@ -488,5 +491,36 @@ function mp:after_Inv()
 			end
 		end
 		pr(".")
+	end
+end
+
+mp.msg.Open = {}
+
+function mp:Open(w)
+	if not w:has'openable' then
+		p(mp.msg.Open.NOTOPENABLE)
+		return
+	end
+	if w:has'open' then
+		local r = std.call(w, 'when_open')
+		p(r or mp.msg.Open.WHENOPEN)
+		return
+	end
+	if w:has'locked' then
+		local r = std.call(w, 'when_locked')
+		p(r or mp.msg.Open.WHENLOCKED)
+		return
+	end
+	w:attr'open'
+	return false
+end
+
+function mp:after_Open(w)
+	if not self.reaction then
+		p(mp.msg.Open.OPEN)
+		if w:has'container' then
+			p(mp.msg.Exam.IN)
+			self:content(w)
+		end
 	end
 end
