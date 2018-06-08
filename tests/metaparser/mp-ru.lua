@@ -102,6 +102,12 @@ mp.msg.Open.WHENOPEN = "{#First/вн} уже {#word/открыт,#first}."
 --"заперт"
 mp.msg.Open.WHENLOCKED = "Похоже, что {#first/} {#word/заперт,#first}."
 
+--"закрыть"
+mp.msg.Close.CLOSE = "{#Me} {#word/закрыть,прш,#me} {#first/вн}."
+mp.msg.Close.NOTOPENABLE = "{#First/вн} невозможно закрыть."
+--"закрыт"
+mp.msg.Close.WHENCLOSED = "{#First/вн} уже {#word/закрыт,#first}."
+
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -219,10 +225,17 @@ Verb { "#Examine",
 	"?всё : Exam" }
 
 Verb { "#Open",
-       "откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
-       "{noun}/вн : Open",
-       "{noun}/вн {noun}/тв : Unlock",
-       "~{noun}/тв ~{noun}/вн : Unlock reverse"
+	"откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
+	"{noun}/вн : Open",
+	"{noun}/вн {noun}/тв : Unlock",
+	"~{noun}/тв ~{noun}/вн : Unlock reverse"
+}
+
+Verb { "#Close",
+	"закр/ыть,запереть",
+	"{noun}/вн : Close",
+	"{noun}/вн {noun}/тв : Lock",
+	"~{noun}/тв ~{noun}/вн : Lock reverse"
 }
 
 Verb { "#Inv",

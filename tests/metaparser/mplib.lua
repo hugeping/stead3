@@ -524,3 +524,25 @@ function mp:after_Open(w)
 		end
 	end
 end
+
+mp.msg.Close = {}
+
+function mp:Close(w)
+	if not w:has'openable' then
+		p(mp.msg.Close.NOTOPENABLE)
+		return
+	end
+	if not w:has'open' then
+		local r = std.call(w, 'when_closed')
+		p(r or mp.msg.Close.WHENCLOSED)
+		return
+	end
+	w:attr'~open'
+	return false
+end
+
+function mp:after_Close(w)
+	if not self.reaction then
+		p(mp.msg.Close.CLOSE)
+	end
+end
