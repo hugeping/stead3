@@ -193,12 +193,6 @@ function mp.shortcut.so(hint)
 --	return "со ".. hint
 end
 
-function mp:Exam(w)
-	if not w then
-		std.me():need_scene(true)
-	end
-	return false
-end
 
 Verb { "#Enter",
 	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,лез/ть,влез/ть",

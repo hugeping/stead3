@@ -366,6 +366,13 @@ function mp:before_Any()
 	return false
 end
 
+function mp:Exam(w)
+	if not w then
+		std.me():need_scene(true)
+	end
+	return false
+end
+
 function mp:after_Exam(w)
 	if not self.reaction and w then
 		if w:has 'container' and (w:has'transparent' or w:has'open') then
