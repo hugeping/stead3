@@ -840,7 +840,11 @@ local function lev_sort(t)
 		t = fuzzy
 		t.fuzzy = true
 	end
-	table.sort(t, function(a, b) return a.lev > b.lev end)
+	for _, v in ipairs(t) do v.i = _ end
+	table.sort(t, function(a, b)
+			   if a.lev == b.lev then return a.i < b.i end
+			   return a.lev > b.lev
+	end)
 	local lev = t[1] and t[1].lev
 	local res = {}
 	local dup = {}
@@ -962,8 +966,8 @@ function mp:match(verb, w, compl)
 				if false then
 					a = tab_exclude(a, best, best + best_len - 1)
 				else
-					a = tab_sub(a, best + best_len - 1)
-					table.remove(a, 1)
+					a = tab_sub(a, best + best_len)
+--					table.remove(a, 1)
 				end
 				table.insert(match, word)
 				table.insert(match.args, found)

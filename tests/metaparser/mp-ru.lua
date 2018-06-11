@@ -246,10 +246,7 @@ Verb { "#Open",
 	"откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
 	"{noun}/вн : Open",
 	"{noun}/вн {noun}/тв : Unlock",
-	"~ {noun}/вн +используя {noun} : Unlock",
 	"~ {noun}/тв {noun}/вн : Unlock reverse",
-	"~ {noun}/вн с+помощью|при+помощи {noun}/рд : Unlock",
-	"~ при+помощи|с+помощью {noun}/рд {noun}/вн : Unlock reverse",
 }
 
 Verb { "#Close",
@@ -257,10 +254,6 @@ Verb { "#Close",
 	"{noun}/вн : Close",
 	"{noun}/вн {noun}/тв : Lock",
 	"~ {noun}/тв {noun}/вн : Lock reverse",
-	"~ {noun}/вн +на {noun} : Lock",
-	"~ {noun}/вн при+помощи|с+помощью {noun}/рд : Lock",
-	"~ при+помощи|с+помощью {noun}/рд {noun}/вн : Lock reverse",
-	"~ +на {noun} {noun}/вн : Lock reverse",
 }
 
 Verb { "#Inv",
