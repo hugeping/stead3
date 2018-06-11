@@ -1649,18 +1649,12 @@ function mp.shortcut.if_has(hint)
 end
 
 function std.pr(...)
-	local args = {...}
-	local nargs = {}
+	local args = {}
 	local ctx = std.cctx()
 	if not ctx or not ctx.self then
 		return opr(...)
 	end
-	if type(args[1]) == 'function' then
-		local fn = args[1]
-		table.remove(args, 1)
-		args = { fn(std.unpack(args)) }
-	end
-	for _, v in ipairs(args) do
+	for _, v in ipairs({...}) do
 		local finish
 		if type(v) == 'string' then
 		repeat
@@ -1685,9 +1679,9 @@ function std.pr(...)
 			end)
 		until finish
 		end
-		table.insert(nargs, v)
+		table.insert(args, v)
 	end
-	return opr(std.unpack(nargs))
+	return opr(std.unpack(args))
 end
 
 function std.obj:persist()

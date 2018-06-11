@@ -404,6 +404,9 @@ end
 mp.msg.Enter = {}
 
 function mp:Enter(w)
+	if not mp:check_live(w) then
+		return
+	end
 	if w == std.me():where() then
 		p (mp.msg.Enter.ALREADY)
 		return
@@ -497,6 +500,9 @@ end
 mp.msg.Open = {}
 
 function mp:Open(w)
+	if not mp:check_live(w) then
+		return
+	end
 	if not w:has'openable' then
 		p(mp.msg.Open.NOTOPENABLE)
 		return
@@ -528,6 +534,9 @@ end
 mp.msg.Close = {}
 
 function mp:Close(w)
+	if not mp:check_live(w) then
+		return
+	end
 	if not w:has'openable' then
 		p(mp.msg.Close.NOTOPENABLE)
 		return
@@ -546,16 +555,25 @@ function mp:after_Close(w)
 		p(mp.msg.Close.CLOSE)
 	end
 end
-
+function mp:check_live(w)
+	if w:hint'live' then
+		p(mp.msg.LIVE_ACTION)
+		return false
+	end
+	return true
+end
 function mp:check_held(t)
 	if std.me():lookup(t) then
 		return true
 	end
-	p(mp.msg.NOTINV, t)
+	mp.msg.NOTINV(t)
 end
 
 mp.msg.Lock = {}
 function mp:Lock(w, t)
+	if not mp:check_live(w) then
+		return
+	end
 	if not mp:check_held(t) then
 		return
 	end
@@ -588,6 +606,9 @@ end
 
 mp.msg.Unlock = {}
 function mp:Unlock(w, t)
+	if not mp:check_live(w) then
+		return
+	end
 	if not mp:check_held(t) then
 		return
 	end
