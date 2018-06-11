@@ -464,6 +464,12 @@ function mp:pattern(t)
 			v = str_strip(v)
 			w.hidden = true
 		end
+		if v:sub(1, 1) == '+' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+			w.default = true
+		end
 		if v:sub(1, 1) == '?' then
 			v = v:sub(2)
 			v = str_strip(v)
@@ -536,8 +542,11 @@ function mp:verb(t, w)
 			if pat[1] == '~' then
 				table.remove(pat, 1)
 				hidden = true
+				for k, v in ipairs(pat) do
+					pat[k] = v:gsub("[^ |]+", function(s) return "~" .. s end)
+				end
 			end
-			table.insert(verb.dsc, { pat = pat, hidden = hidden, ev = dsc[2] })
+			table.insert(verb.dsc, { pat = pat, ev = dsc[2] })
 		else
 			std.err("Wrong verb descriptor: " .. t[n])
 		end
@@ -921,7 +930,6 @@ function mp:match(verb, w, compl)
 				vargs = found
 				break
 			end
-			if d.hidden then v = "~".. v end
 
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
@@ -933,6 +941,9 @@ function mp:match(verb, w, compl)
 				if not pp.optional then
 					required = true
 					all_optional = false
+				end
+				if pp.default then
+					word = pp.word
 				end
 				local k, len = word_search(a, pp.word)
 				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
