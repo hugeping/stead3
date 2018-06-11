@@ -29,16 +29,20 @@ end
 parser.door {
 	nam = "дверь";
 	door_to = 'main2';
+	with_key = 'ключ'
 --	dsc = [[Тут есть дверь.]];
-}:attr 'scenery,openable'
+}:attr 'scenery,openable,lockable,locked'
 
 obj {
 	-"рюкзак";
 	nam = 'рюкзак';
 	obj = {'яблоко2'};
 } : attr 'container,openable'
-
+obj {
+	nam = -"ключ";
+}
 take 'рюкзак'
+take 'ключ'
 
 obj {
 	-"красное яблоко,яблоко/ср",

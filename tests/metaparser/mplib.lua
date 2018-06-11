@@ -546,3 +546,56 @@ function mp:after_Close(w)
 		p(mp.msg.Close.CLOSE)
 	end
 end
+mp.msg.Lock = {}
+function mp:Lock(w, t)
+	local r = std.call(w, 'with_key')
+	if not w:has 'lockable' or not r then
+		p(mp.msg.Lock.IMPOSSIBLE)
+		return
+	end
+	if w:has 'locked' then
+		p(mp.msg.Lock.LOCKED)
+		return
+	end
+	if w:has 'open' then
+		p(mp.msg.Lock.OPEN)
+		return
+	end
+	if std.object(r) ~= t then
+		p(mp.msg.Lock.WRONGKEY)
+		return
+	end
+	w:attr'locked'
+	return false
+end
+
+function mp:after_Lock(w, t)
+	if not self.reaction then
+		p(mp.msg.Lock.LOCK)
+	end
+end
+
+mp.msg.Unlock = {}
+function mp:Unlock(w, t)
+	local r = std.call(w, 'with_key')
+	if not w:has 'lockable' or not r then
+		p(mp.msg.Unlock.IMPOSSIBLE)
+		return
+	end
+	if not w:has 'locked' then
+		p(mp.msg.Unlock.NOTLOCKED)
+		return
+	end
+	if std.object(r) ~= t then
+		p(mp.msg.Unlock.WRONGKEY)
+		return
+	end
+	w:attr'~locked'
+	return false
+end
+
+function mp:after_Unlock(w, t)
+	if not self.reaction then
+		p(mp.msg.Unlock.UNLOCK)
+	end
+end

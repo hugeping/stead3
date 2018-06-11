@@ -141,9 +141,14 @@ local function gram_dump(v)
 end
 
 local function gram_filter(v)
-	if v.an["им"] or v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' then
+	local tt = { "им", "рд", "дт", "тв", "пр", "вн" }
+	if v.an["им"] then
 		return true
 	end
+	for _, p in ipairs(tt) do
+		if v.an[p] then return false end
+	end
+	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ'
 end
 
 local function word_fn(l, self, dict)
@@ -194,7 +199,7 @@ local function word_fn(l, self, dict)
 					tt = self.lang.norm(tt)
 				end
 
---				if tt == 'МОЧЬ' then
+--				if tt == 'ЗАПЕРТ' then
 --					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
 --				end
 
@@ -373,6 +378,8 @@ function mrd:gram_compat(a, b)
 	if b == 'КР_ПРИЛ' then
 		return a == 'КР_ПРИЛ' -- or a == 'П'
 	end
+	if a == 'КР_ПРИЧАСТИЕ' then return b == 'КР_ПРИЧАСТИЕ' end
+	if a == 'ПРИЧАСТИЕ' then return b == 'ПРИЧАСТИЕ' end
 	return true
 end
 

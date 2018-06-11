@@ -469,12 +469,6 @@ function mp:pattern(t)
 			v = str_strip(v)
 			w.optional = true
 		end
-		if v:sub(1, 1) == '+' then
-			v = v:sub(2)
-			v = str_strip(v)
-			w.optional = true
-			w.default = true
-		end
 		v = v:gsub("%+", " ") -- spaces
 		if v:find("[^/]+/[^/]*$") then
 			local s, e = v:find("/[^/]*$")
@@ -538,7 +532,12 @@ function mp:verb(t, w)
 			table.insert(verb.dsc, { pat = {}, ev = dsc[1] })
 		elseif #dsc == 2 then
 			pat = str_split(dsc[1], ' ')
-			table.insert(verb.dsc, { pat = pat, ev = dsc[2] })
+			local hidden = false
+			if pat[1] == '~' then
+				table.remove(pat, 1)
+				hidden = true
+			end
+			table.insert(verb.dsc, { pat = pat, hidden = hidden, ev = dsc[2] })
 		else
 			std.err("Wrong verb descriptor: " .. t[n])
 		end
@@ -915,12 +914,14 @@ function mp:match(verb, w, compl)
 		end
 		local all_optional = true
 		local rlev = 1
+
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' then
 				found = #a > 0 or self.inp:find(" $")
 				vargs = found
 				break
 			end
+			if d.hidden then v = "~".. v end
 
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
@@ -932,8 +933,6 @@ function mp:match(verb, w, compl)
 				if not pp.optional then
 					required = true
 					all_optional = false
-				elseif pp.default then
-					word = pp.word
 				end
 				local k, len = word_search(a, pp.word)
 				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
@@ -949,9 +948,12 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
---				a = tab_sub(a, best + best_len - 1)
-				a = tab_exclude(a, best, best + best_len - 1)
---				table.remove(a, 1)
+				if false then
+					a = tab_exclude(a, best, best + best_len - 1)
+				else
+					a = tab_sub(a, best + best_len - 1)
+					table.remove(a, 1)
+				end
 				table.insert(match, word)
 				table.insert(match.args, found)
 				rlev = rlev + 1
@@ -1646,7 +1648,7 @@ function std.pr(...)
 				local ww = w
 				w = w:gsub("^{#", ""):gsub("}$", "")
 				local hint = w:gsub("^[^/]*/?", "")
-				w = w:gsub("/[^/]+$", "")
+				w = w:gsub("/[^/]*$", "")
 				local cap = mp.mrd.lang.is_cap(w)
 				w = w:lower()
 				if mp.shortcut[w] then

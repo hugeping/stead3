@@ -108,6 +108,24 @@ mp.msg.Close.NOTOPENABLE = "{#First/вн} невозможно закрыть."
 --"закрыт"
 mp.msg.Close.WHENCLOSED = "{#First/вн} уже {#word/закрыт,#first}."
 
+mp.msg.Lock.IMPOSSIBLE = "{#First/вн} невозможно запереть."
+--"заперт"
+mp.msg.Lock.LOCKED = "{#First} уже {#word/заперт,#first}."
+--"закрыть"
+mp.msg.Lock.OPEN = "Сначала необходимо закрыть {#first/вн}."
+--"подходит"
+mp.msg.Lock.WRONGKEY = "{#Second} не {#word/подходит,#second} к замку."
+--"запирать"
+mp.msg.Lock.LOCK = "{#Me} {#word/запирать,#me,нст} {#first/вн}."
+
+mp.msg.Unlock.IMPOSSIBLE = "{#First/вн} невозможно отпереть."
+--"заперт"
+mp.msg.Unlock.NOTLOCKED = "{#First} не {#word/заперт,#first}."
+--"подходит"
+mp.msg.Unlock.WRONGKEY = "{#Second} не {#word/подходит,#second} к замку."
+--"отпирать"
+mp.msg.Unlock.UNLOCK = "{#Me} {#word/отпирать,#me,нст} {#first/вн}."
+
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -228,14 +246,18 @@ Verb { "#Open",
 	"откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
 	"{noun}/вн : Open",
 	"{noun}/вн {noun}/тв : Unlock",
-	"{noun}/вн +при+помощи {noun}/рд : Unlock",
+	"~ {noun}/тв {noun}/вн : Unlock reverse",
+	"~ {noun}/вн с|при помощью|помощи {noun}/рд : Unlock",
+	"~ с|при помощи|помощью {noun}/рд {noun}/вн : Unlock reverse",
 }
 
 Verb { "#Close",
 	"закр/ыть,запереть",
 	"{noun}/вн : Close",
 	"{noun}/вн {noun}/тв : Lock",
-	"~{noun}/тв ~{noun}/вн : Lock reverse"
+	"~ {noun}/тв {noun}/вн : Lock reverse",
+	"~ {noun}/вн на {noun} : Lock",
+	"~ на {noun} {noun}/вн : Lock reverse",
 }
 
 Verb { "#Inv",
