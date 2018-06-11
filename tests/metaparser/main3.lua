@@ -7,24 +7,6 @@ game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
 }
 
-function parser:before_Take(w)
-	if have(w) then
-		p "У {#me/вн} и так {#firstit} уже есть."
-		return
-	end
-	return false
-end
-
-function parser:Take(w)
-	take(w)
-	return false
-end
-
-function parser:after_Take(w)
-	if not self.reaction then
-		p ("{#Me} {#verb/take} {#first/вн}.");
-	end
-end
 
 parser.door {
 	nam = "дверь";
@@ -68,8 +50,6 @@ parser.debug.trace_action = true
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
 --}
 
-Verb { "#take", "взять,забрать,схват/ить,забери,возьми,бери",
-    "{noun}/вн : Take" }
 Verb { 'сказ/ать', "{noun}/дт * : Talk" }
 
 function parser.token.topic(w)

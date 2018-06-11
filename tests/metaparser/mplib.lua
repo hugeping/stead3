@@ -404,7 +404,7 @@ end
 mp.msg.Enter = {}
 
 function mp:Enter(w)
-	if not mp:check_live(w) then
+	if mp:check_live(w) then
 		return
 	end
 	if w == std.me():where() then
@@ -500,7 +500,7 @@ end
 mp.msg.Open = {}
 
 function mp:Open(w)
-	if not mp:check_live(w) then
+	if mp:check_live(w) then
 		return
 	end
 	if not w:has'openable' then
@@ -534,9 +534,6 @@ end
 mp.msg.Close = {}
 
 function mp:Close(w)
-	if not mp:check_live(w) then
-		return
-	end
 	if not w:has'openable' then
 		p(mp.msg.Close.NOTOPENABLE)
 		return
@@ -558,23 +555,21 @@ end
 function mp:check_live(w)
 	if w:hint'live' then
 		p(mp.msg.LIVE_ACTION)
-		return false
+		return true
 	end
-	return true
+	return false
 end
 function mp:check_held(t)
 	if std.me():lookup(t) then
-		return true
+		return false
 	end
 	mp.msg.NOTINV(t)
+	return true
 end
 
 mp.msg.Lock = {}
 function mp:Lock(w, t)
-	if not mp:check_live(w) then
-		return
-	end
-	if not mp:check_held(t) then
+	if mp:check_held(t) then
 		return
 	end
 	local r = std.call(w, 'with_key')
@@ -606,10 +601,7 @@ end
 
 mp.msg.Unlock = {}
 function mp:Unlock(w, t)
-	if not mp:check_live(w) then
-		return
-	end
-	if not mp:check_held(t) then
+	if mp:check_held(t) then
 		return
 	end
 	local r = std.call(w, 'with_key')
@@ -632,5 +624,29 @@ end
 function mp:after_Unlock(w, t)
 	if not self.reaction then
 		p(mp.msg.Unlock.UNLOCK)
+	end
+end
+
+mp.msg.Take = {}
+function mp:Take(w)
+	if w == std.me() then
+		p (mp.msg.Take.SELF)
+		return
+	end
+	if w:hint'live' then
+		p (mp.msg.Take.LIFE)
+		return
+	end
+	if have(w) then
+		p (mp.msg.Take.HAVE)
+		return
+	end
+	take(w)
+	return false
+end
+
+function mp:after_Take(w)
+	if not self.reaction then
+		p (mp.msg.Take.TAKE)
 	end
 end
