@@ -44,6 +44,11 @@ mp.msg.HINT_WORDS = "Возможно, вы имели в виду"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
+
+mp.msg.NOTINV = function(t)
+	return (lang.cap(t:noun'вн') .. " сначала нужно взять.")
+end
+
 mp.default_Event = "Exam"
 mp.default_Verb = "осмотреть"
 

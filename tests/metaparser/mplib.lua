@@ -546,8 +546,19 @@ function mp:after_Close(w)
 		p(mp.msg.Close.CLOSE)
 	end
 end
+
+function mp:check_held(t)
+	if std.me():lookup(t) then
+		return true
+	end
+	p(mp.msg.NOTINV, t)
+end
+
 mp.msg.Lock = {}
 function mp:Lock(w, t)
+	if not mp:check_held(t) then
+		return
+	end
 	local r = std.call(w, 'with_key')
 	if not w:has 'lockable' or not r then
 		p(mp.msg.Lock.IMPOSSIBLE)
@@ -577,6 +588,9 @@ end
 
 mp.msg.Unlock = {}
 function mp:Unlock(w, t)
+	if not mp:check_held(t) then
+		return
+	end
 	local r = std.call(w, 'with_key')
 	if not w:has 'lockable' or not r then
 		p(mp.msg.Unlock.IMPOSSIBLE)
