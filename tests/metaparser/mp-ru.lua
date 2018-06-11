@@ -228,7 +228,7 @@ Verb { "#Open",
 	"откр/ыть,распах/нуть,раскр/ыть,отпереть,отопр/и",
 	"{noun}/вн : Open",
 	"{noun}/вн {noun}/тв : Unlock",
-	"~{noun}/тв ~{noun}/вн : Unlock reverse"
+	"{noun}/вн +при+помощи {noun}/рд : Unlock",
 }
 
 Verb { "#Close",

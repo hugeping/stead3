@@ -121,7 +121,6 @@ function start()
 --	print(pl:noun())
 --	print("visible:", _"стол":visible())
 --	print("visible:", _"рыбка":visible())
-
 	for k, v in pairs(_'дверь':gram()) do
 		print(k, v)
 	end

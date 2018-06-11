@@ -328,7 +328,6 @@ local function str_strip(str)
 	return std.strip(str)
 end
 
-
 local function str_split(str, delim)
 	local a = std.split(str, delim)
 	for k, _ in ipairs(a) do
@@ -460,16 +459,23 @@ function mp:pattern(t)
 	local pat = str_split(self:norm(t), "|,")
 	for _, v in ipairs(pat) do
 		local w = { }
-		if v:sub(1, 1) == '?' then
-			v = v:sub(2)
-			v = str_strip(v)
-			w.optional = true
-		end
 		if v:sub(1, 1) == '~' then
 			v = v:sub(2)
 			v = str_strip(v)
 			w.hidden = true
 		end
+		if v:sub(1, 1) == '?' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+		end
+		if v:sub(1, 1) == '+' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+			w.default = true
+		end
+		v = v:gsub("%+", " ") -- spaces
 		if v:find("[^/]+/[^/]*$") then
 			local s, e = v:find("/[^/]*$")
 			w.morph = v:sub(s + 1, e)
@@ -635,6 +641,17 @@ local function tab_sub(t, s, e)
 	e = e or #t
 	for i = s, e do
 		table.insert(r, t[i])
+	end
+	return r
+end
+
+local function tab_exclude(t, s, e)
+	local r = {}
+	e = e or #t
+	for i = 1, #t do
+		if i < s or i > e then
+			table.insert(r, t[i])
+		end
 	end
 	return r
 end
@@ -915,6 +932,8 @@ function mp:match(verb, w, compl)
 				if not pp.optional then
 					required = true
 					all_optional = false
+				elseif pp.default then
+					word = pp.word
 				end
 				local k, len = word_search(a, pp.word)
 				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
@@ -930,8 +949,9 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
-				a = tab_sub(a, best + best_len - 1)
-				table.remove(a, 1)
+--				a = tab_sub(a, best + best_len - 1)
+				a = tab_exclude(a, best, best + best_len - 1)
+--				table.remove(a, 1)
 				table.insert(match, word)
 				table.insert(match.args, found)
 				rlev = rlev + 1
@@ -948,6 +968,9 @@ function mp:match(verb, w, compl)
 				table.insert(hints, { word = v, lev = rlev })
 				break
 			else
+				if word then
+					table.insert(match, word)
+				end
 				table.insert(match.args, { word = false, optional = true } )
 --				table.insert(hints, { word = v, lev = rlev })
 				found = true
