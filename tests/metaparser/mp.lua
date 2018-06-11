@@ -1376,10 +1376,10 @@ function mp:key_enter()
 	if #self.history > self.history_len then
 		table.remove(self.history, #self.history)
 	end
+	self:compl_reset();
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
-	self:compl_reset();
 	self:compl_fill(self:compl(self.inp))
 --	self:completion()
 	return r, v

@@ -5,7 +5,18 @@ local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
 local utf = mp.utf
 
-_'@compass'.word = -"север,с|восток,в|запад,з|юг,ю|наверх,вверх,верх|вниз,низ";
+_'@compass'.word = function()
+	local dir = -"север,с|восток,в|запад,з|юг,ю"
+	local up = -"наверх,вверх,верх|вниз,низ"
+	local inp, pre = mp:compl_ctx()
+	if pre == '' then
+		return dir .. '|'.. up
+	end
+	if pre == "на " then
+		return dir
+	end
+	return up
+end
 _'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
