@@ -515,7 +515,7 @@ function mp:after_Inv()
 		end
 		p(mp.msg.Inv.INV)
 		for _, v in ipairs(oo) do
-			pr(v)
+			pr(v:noun())
 			if _ == #oo - 1 then
 				pr(" ",mp.msg.AND, " ")
 			elseif _ ~= #oo then

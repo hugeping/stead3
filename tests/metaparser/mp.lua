@@ -384,6 +384,7 @@ function mp:objects(wh, oo, recurs)
 			return nil, false
 		end
 	end)
+	table.sort(function(a, b) return a:noun() < b:noun() end)
 end
 
 function mp:nouns()
@@ -957,7 +958,9 @@ function mp:match(verb, w, compl)
 					word = pp.word
 				end
 				local k, len = word_search(a, pp.word)
-				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
+				if found and self:eq(found.word, pp.word) and
+					(found.ob:noun(found.alias) ~= pp.ob:noun(pp.alias)) and
+					found.ob and pp.ob then -- few ob candidates
 					table.insert(multi, { word = found.ob:noun(found.alias), lev = rlev })
 					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
 					found = false

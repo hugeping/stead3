@@ -339,10 +339,14 @@ Verb { "#Drop",
 }
 
 Verb {
-	"#Drop2",
-	"брос/ить,кин/уть,кида/ть,швыр/нуть,метн/уть,метать",
+	"#Throw",
+	"брос/ить,выбро/сить,кин/уть,кида/ть,швыр/нуть,метн/уть,метать",
 	"{noun}/вн : Drop",
---	"{noun}/вн в|во|на",
+	"{noun}/вн в|во|на {noun}/вн : ThrowAt",
+	"~ в|во|на {noun}/вн {noun}/вн : ThrowAt reverse",
+	"~ {noun}/вн {noun}/дт : ThrowAt",
+	"~ {noun}/дт {noun}/вн : ThrowAt reverse",
+
 }
 -- Dialog
 std.phr.default_Event = "Exam"
