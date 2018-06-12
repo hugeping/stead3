@@ -646,6 +646,7 @@ function mp:Unlock(w, t)
 		return
 	end
 	w:attr'~locked'
+	w:attr'open'
 	return false
 end
 
