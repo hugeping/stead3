@@ -740,12 +740,12 @@ function mp:Insert(w, wh)
 		mp:xaction('Take', w)
 		return
 	end
-	if wh == std.me():where() then
-		mp:xaction('Drop', w)
-		return
-	end
 	if w == std.me() then
 		mp:xaction('Enter', wh)
+		return
+	end
+	if wh == std.me():where() then
+		mp:xaction('Drop', w)
 		return
 	end
 	if mp:check_held(w) then
