@@ -1636,6 +1636,33 @@ function mp.shortcut.word(hint)
 	return t
 end
 
+function mp.shortcut.if_hint(hint)
+	local w = str_split(hint, ",")
+	if #w < 3 then
+		return hint
+	end
+	local attr = w[2]
+	local ob = w[1]
+
+	if ob == 'first' then
+		ob = mp.first
+	elseif ob == 'second' then
+		ob = mp.second
+	elseif ob == 'me' then
+		ob = std.me()
+	elseif ob == 'where' then
+		ob = std.me():where()
+	elseif ob == 'here' then
+		ob = std.here()
+	else
+		std.err("Wrong object in if_has shortcut: "..hint, 2)
+	end
+	if not ob:hint(attr) then
+		return w[4] or ''
+	end
+	return w[3] or ''
+end
+
 function mp.shortcut.if_has(hint)
 	local w = str_split(hint, ",")
 	if #w < 3 then

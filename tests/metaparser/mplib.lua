@@ -45,7 +45,7 @@ mp.door = std.class({
 			return
 		end
 --		walk(r)
-		move(std.me(), r)
+		if not move(std.me(), r) then return true end
 	end;
 }, std.obj):attr 'enterable,openable,door'
 
@@ -331,7 +331,7 @@ obj {
 			return
 		end
 		if std.object(r):type 'room' then
-			move(std.me(), r)
+			if not move(std.me(), r) then return true end
 		else
 			mp:xaction("Enter", std.object(r))
 		end
@@ -459,7 +459,7 @@ function mp:Enter(w)
 		p (mp.msg.Enter.CLOSED)
 		return
 	end
-	move(std.me(), w)
+	if not move(std.me(), w) then return true end
 	return false
 end
 
@@ -588,7 +588,7 @@ function mp:check_live(w)
 	return false
 end
 function mp:check_held(t)
-	if std.me():lookup(t) or std.me() == t then
+	if have(t) or std.me() == t then
 		return false
 	end
 	mp.msg.NOTINV(t)
@@ -662,7 +662,7 @@ function move(w, wh)
 	local r, v = std.call(wh, 'before_Receive', w)
 	if r then p(r) end
 	if v == true then
-		return
+		return false
 	end
 	if w:type'player' then
 		r, v = w:walk(wh)
@@ -673,6 +673,7 @@ function move(w, wh)
 	w:attr 'moved'
 	r, v = std.call(wh, 'after_Receive', w)
 	if r then p(r) end
+	return true
 end
 
 mp.msg.Take = {}
@@ -681,7 +682,7 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.SELF)
 		return
 	end
-	if std.me():lookup(w) then
+	if have(w) then
 		p (mp.msg.Take.HAVE)
 		return
 	end
@@ -703,7 +704,7 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.PARTOF)
 		return
 	end
-	move(w, std.me())
+	if not move(w, std.me()) then return true end
 	return false
 end
 
@@ -722,12 +723,51 @@ function mp:Drop(w)
 		p (mp.msg.Drop.SELF)
 		return
 	end
-	move(w, std.me():where())
+	if not move(w, std.me():where()) then return true end
 	return false
 end
 
 function mp:after_Drop(w)
 	if not self.reaction then
 		p (mp.msg.Drop.DROP)
+	end
+end
+
+mp.msg.Insert = {}
+
+function mp:Insert(w, wh)
+	if wh == std.me() then
+		mp:xaction('Take', w)
+		return
+	end
+	if wh == std.me():where() then
+		mp:xaction('Drop', w)
+		return
+	end
+	if w == std.me() then
+		mp:xaction('Enter', wh)
+		return
+	end
+	if mp:check_held(w) then
+		return
+	end
+	if mp:check_live(wh) then
+		return
+	end
+	if not wh:has'container' then
+		p(mp.msg.Insert.NOTCONTAINER)
+		return
+	end
+	if not wh:has'open' then
+		p(mp.msg.Insert.CLOSED)
+		return
+	end
+	if not move(w, wh) then return true end
+	return false
+end
+
+function mp:after_Insert(w, wh)
+	if not self.reaction then
+		p(mp.msg.Insert.INSERT)
 	end
 end

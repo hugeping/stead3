@@ -152,9 +152,16 @@ mp.msg.Take.SCENERY = "{#First/вн} невозможно взять."
 mp.msg.Take.PARTOF = "{#First} является частью {#firstwhere/рд}."
 
 mp.msg.Drop.SELF = "У {#me/рд} не хватит ловкости."
+
+--"поместить"
+mp.msg.Insert.INSERT = "{#Me} {#word/поместить,прш,#me} {#first/вн} в {#second/вн}."
+mp.msg.Insert.CLOSED = "{#Second} {#word/закрыт,#second}."
+mp.msg.Insert.NOTCONTAINER = "{#Second} не {#if_hint/second,plural,могут,может} что-либо содержать."
+
 --"брошен"
 mp.msg.Drop.DROP = "{#First} {#word/брошен,#first}."
 mp.msg.AND = "и"
+
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
