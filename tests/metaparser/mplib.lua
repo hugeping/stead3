@@ -44,7 +44,8 @@ mp.door = std.class({
 			p (mp.msg.Enter.DOOR_NOWHERE)
 			return
 		end
-		walk(r)
+--		walk(r)
+		move(std.me(), r)
 	end;
 }, std.obj):attr 'enterable,openable,door'
 
@@ -107,7 +108,7 @@ function std.obj:scene()
 	local title, dsc
 	title = iface:title(std.titleof(s))
 	dsc = std.call(s, 'inside_dsc')
-	return std.par(std.scene_delim, title or false, dsc)
+	return std.par(std.scene_delim, title or false, dsc or false)
 end
 
 local owalk = std.player.walk
@@ -146,6 +147,15 @@ std.player.where = function(s, where)
 	return std.ref(s.__room_where or s.room)
 end
 
+std.room.display = function(s)
+	local c = std.call(mp, 'room_content', s)
+	return c
+end
+
+std.obj.display = function(s)
+	local c = std.call(mp, 'room_content', s)
+	return c
+end
 
 std.player.look = function(s)
 	local scene
@@ -153,9 +163,9 @@ std.player.look = function(s)
 	if s:need_scene() then
 		scene = r:scene()
 	end
-	local c = std.call(mp, 'room_content', s:where())
-	return (std.par(std.scene_delim, scene or false, c))
---	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
+--	local c = std.call(mp, 'room_content', s:where())
+--	return (std.par(std.scene_delim, scene or false, c))
+	return (std.par(std.scene_delim, scene or false, r:display() or false))
 end;
 
 --
@@ -321,7 +331,7 @@ obj {
 			return
 		end
 		if std.object(r):type 'room' then
-			walk(r)
+			move(std.me(), r)
 		else
 			mp:xaction("Enter", std.object(r))
 		end
@@ -449,7 +459,7 @@ function mp:Enter(w)
 		p (mp.msg.Enter.CLOSED)
 		return
 	end
-	walk(w)
+	move(std.me(), w)
 	return false
 end
 
@@ -645,6 +655,26 @@ function mp:after_Unlock(w, t)
 	end
 end
 
+function move(w, wh)
+	wh = wh or std.here()
+	wh = std.object(wh)
+	w = std.object(w)
+	local r, v = std.call(wh, 'before_Receive', w)
+	if r then p(r) end
+	if v == true then
+		return
+	end
+	if w:type'player' then
+		r, v = w:walk(wh)
+		if r then p(r) end
+	else
+		place(w, wh)
+	end
+	w:attr 'moved'
+	r, v = std.call(wh, 'after_Receive', w)
+	if r then p(r) end
+end
+
 mp.msg.Take = {}
 function mp:Take(w, ww)
 	if w == std.me() then
@@ -673,12 +703,31 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.PARTOF)
 		return
 	end
-	take(w)
+	move(w, std.me())
 	return false
 end
 
 function mp:after_Take(w)
 	if not self.reaction then
 		p (mp.msg.Take.TAKE)
+	end
+end
+
+mp.msg.Drop = {}
+function mp:Drop(w)
+	if mp:check_held(w) then
+		return
+	end
+	if w == std.me() then
+		p (mp.msg.Drop.SELF)
+		return
+	end
+	move(w, std.me():where())
+	return false
+end
+
+function mp:after_Drop(w)
+	if not self.reaction then
+		p (mp.msg.Drop.DROP)
 	end
 end

@@ -83,12 +83,12 @@ mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,#first}."
 --"закрыт"
 mp.msg.Exam.CLOSED = "{#First} {#word/закрыт,нст,#first}."
 
---"мочь"
+--"могу"
 --"закрыт"
 --"держать"
 --"залезть"
 mp.msg.Enter.ALREADY = "{#Me} уже {#if_has/first,supporter,на,в} {#first/пр,2}."
-mp.msg.Enter.INV = "{#Me} не {#word/мочь,#me,нст} зайти в то, что {#word/держать,#me,нст} в руках."
+mp.msg.Enter.INV = "{#Me} не {#word/могу,#me,нст} зайти в то, что {#word/держать,#me,нст} в руках."
 mp.msg.Enter.IMPOSSIBLE = "Но в/на {#first/вн} невозможно войти, встать, сесть или лечь."
 mp.msg.Enter.CLOSED = "{#First} {#word/закрыт,#first}, и {#me} не {#word/мочь,#me,нст} зайти туда."
 mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,supporter,на,в} {#first/вн}."
@@ -150,6 +150,10 @@ mp.msg.Take.LIFE = "{#First/дт} это вряд ли понравится."
 mp.msg.Take.STATIC = "{#First} жестко {#word/закреплён,#first}."
 mp.msg.Take.SCENERY = "{#First/вн} невозможно взять."
 mp.msg.Take.PARTOF = "{#First} является частью {#firstwhere/рд}."
+
+mp.msg.Drop.SELF = "У {#me/рд} не хватит ловкости."
+--"брошен"
+mp.msg.Drop.DROP = "{#First} {#word/брошен,#first}."
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -323,8 +327,8 @@ Verb { "#Drop",
 Verb {
 	"#Drop2",
 	"брос/ить,кин/уть,кида/ть,швыр/нуть,метн/уть,метать",
-	"{nount}/вн : Drop",
---	"{nount}/вн в|во|на",
+	"{noun}/вн : Drop",
+--	"{noun}/вн в|во|на",
 }
 -- Dialog
 std.phr.default_Event = "Exam"
