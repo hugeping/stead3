@@ -231,9 +231,7 @@ local function word_fn(l, self, dict)
 		table.insert(words_list, { t = w[1], flex = nflex, pref = npref, an = an_name })
 	end
 	self.words_nr = self.words_nr + num
-	if self.words_nr % 1000 == 0 then
-		std.busy(true)
-	end
+	std.busy(true)
 	return
 end
 

@@ -163,6 +163,26 @@ mp.keyboard_backspace = '<удалить>'
 
 mp.msg.verbs.take = -"взять,#me,прш"
 
+local function dict(t, hint)
+	local g = std.split(hint, ",")
+	for _, v in ipairs(g) do
+		if t[v] then
+			return t[v]
+		end
+	end
+end
+
+function mp:myself(w, hint)
+	local ww = dict({
+			["вн"] = "себя";
+			["дт"] = "себе";
+			["тв"] = "собой";
+			["пр"] = "себе";
+			["рд"] = "себя";
+		 }, hint)
+	return { ww }
+end
+
 function mp:it(w, hint)
 	hint = hint or ''
 	if w:hint'plural' then
