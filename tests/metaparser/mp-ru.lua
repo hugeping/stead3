@@ -158,6 +158,9 @@ mp.msg.Insert.INSERT = "{#Me} {#word/поместить,прш,#me} {#first/вн
 mp.msg.Insert.CLOSED = "{#Second} {#word/закрыт,#second}."
 mp.msg.Insert.NOTCONTAINER = "{#Second} не {#if_hint/second,plural,могут,может} что-либо содержать."
 
+mp.msg.PutOn.NOTSUPPORTER = "Класть что-либо на {#second} бессмыслено."
+mp.msg.PutOn.PUTON = "{#Me} {#word/класть,нст,#me} {#first/вн} на {#second/вн}."
+
 --"брошен"
 mp.msg.Drop.DROP = "{#First} {#word/брошен,#first}."
 mp.msg.AND = "и"

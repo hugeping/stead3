@@ -772,3 +772,38 @@ function mp:after_Insert(w, wh)
 		p(mp.msg.Insert.INSERT)
 	end
 end
+
+mp.msg.PutOn = {}
+
+function mp:PutOn(w, wh)
+	if wh == std.me() then
+		mp:xaction('Take', w)
+		return
+	end
+	if w == std.me() then
+		mp:xaction('Enter', wh)
+		return
+	end
+	if wh == std.me():where() then
+		mp:xaction('Drop', w)
+		return
+	end
+	if mp:check_held(w) then
+		return
+	end
+	if mp:check_live(wh) then
+		return
+	end
+	if not wh:has'supporter' then
+		p(mp.msg.PutOn.NOTSUPPORTER)
+		return
+	end
+	if not move(w, wh) then return true end
+	return false
+end
+
+function mp:after_PutOn(w, wh)
+	if not self.reaction then
+		p(mp.msg.PutOn.PUTON)
+	end
+end
