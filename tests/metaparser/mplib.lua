@@ -745,7 +745,7 @@ function mp:Insert(w, wh)
 		mp:xaction('Enter', wh)
 		return
 	end
-	if wh == std.me():where() then
+	if wh == std.me():where() or mp.down_obj(wh) then
 		mp:xaction('Drop', w)
 		return
 	end
@@ -784,7 +784,7 @@ function mp:PutOn(w, wh)
 		mp:xaction('Enter', wh)
 		return
 	end
-	if wh == std.me():where() then
+	if wh == std.me():where() or mp.down_obj(wh) then
 		mp:xaction('Drop', w)
 		return
 	end

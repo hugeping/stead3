@@ -20,6 +20,10 @@ end
 _'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
+mp.down_obj = function(w)
+	return w == _'@compass' and w:multi_alias() == 6
+end
+
 mp.door.word = -"дверь";
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
 mp.msg.COMPASS_EXAM_NO = "В этом направлении не видно ничего примечательного."
