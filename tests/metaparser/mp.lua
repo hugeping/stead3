@@ -384,7 +384,6 @@ function mp:objects(wh, oo, recurs)
 			return nil, false
 		end
 	end)
-	table.sort(oo, function(a, b) return a:noun() < b:noun() end)
 end
 
 function mp:nouns()
