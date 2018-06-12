@@ -13,7 +13,7 @@ parser.door {
 	door_to = 'main2';
 	with_key = 'ключ'
 --	dsc = [[Тут есть дверь.]];
-}:attr 'scenery,openable,lockable,locked'
+}:attr 'static,openable,lockable,locked'
 
 obj {
 	-"рюкзак";
@@ -32,6 +32,11 @@ obj {
 	nam = 'яблоко';
 --	Take = 'взял';
 --	Take = function(s) walk 'main2' end;
+}: with {
+	obj {
+		nam = -"червяк";
+--		dsc = 'В яблоке есть червяк.';
+	}
 }
 
 obj {

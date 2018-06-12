@@ -198,11 +198,11 @@ local function word_fn(l, self, dict)
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
---[[
-				if tt == 'ПОДХОДИТ' or tt == 'ПОДХОДИШЬ' then
-					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
-				end
-]]--
+
+--				if tt == 'ЗАКРЕПЛЕН' then
+--					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
+--				end
+
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do
@@ -383,7 +383,7 @@ end
 
 function mrd:lookup(w, g)
 	local cap, upper = self.lang.is_cap(w)
-	local t = self.lang.upper(w)
+	local t = self.lang.upper(self.lang.norm(w))
 	w = self.words[t]
 	if not w then
 		return false, "No word in dictionary"
@@ -501,7 +501,7 @@ function mrd:file(f, dict)
 			for _, word in ipairs(words) do
 				word = word:gsub("/[^/]*$", "")
 				for ww in word:gmatch(word_match) do
-					local t = self.lang.upper(ww)
+					local t = self.lang.upper(self.lang.norm(ww))
 					if not dict[t] then
 						dict[t] = true;
 						dprint("mrd: Added word: ", ww)

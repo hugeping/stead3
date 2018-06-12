@@ -1575,6 +1575,14 @@ function mp.shortcut.where(hint)
 	return shortcut(std.me():where(), hint)
 end
 
+function mp.shortcut.firstwhere(hint)
+	return shortcut(mp.first:where(), hint)
+end
+
+function mp.shortcut.secondwhere(hint)
+	return shortcut(mp.second:where(), hint)
+end
+
 function mp.shortcut.here(hint)
 	return shortcut(std.here(), hint)
 end

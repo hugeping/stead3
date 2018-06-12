@@ -58,10 +58,15 @@ function mp:room_content(w)
 	local ooo = {}
 	self:objects(w, oo, false)
 	for _, v in ipairs(oo) do
-		local r, rc = std.call(v, 'dsc')
-		if not rc and not v:has'scenery' then
+		local r = std.call(v, 'dsc')
+		if not r and not v:has'scenery' then
 			table.insert(ooo, v)
+		else
+			p(r)
 		end
+	end
+	if #ooo > 0 then
+		p(std.scene_delim)
 	end
 	oo = ooo
 	if #oo == 0 then
@@ -141,6 +146,7 @@ std.player.where = function(s, where)
 	return std.ref(s.__room_where or s.room)
 end
 
+
 std.player.look = function(s)
 	local scene
 	local r = s:where()
@@ -148,7 +154,8 @@ std.player.look = function(s)
 		scene = r:scene()
 	end
 	local c = std.call(mp, 'room_content', s:where())
-	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
+	return (std.par(std.scene_delim, scene or false, c))
+--	return (std.par(std.scene_delim, scene or false, r:display() or false, c))
 end;
 
 --
@@ -327,9 +334,23 @@ local function if_has(w, a, t, f)
 end
 
 mp.msg.Exam = {}
-function mp:content(w)
+function mp:content(w, msg)
 	local oo = {}
+	local ooo = {}
 	self:objects(w, oo, false)
+	for _, v in ipairs(oo) do
+		local r = std.call(v, 'dsc')
+		if r and not v:has'scenery' then
+			p(r)
+		else
+			table.insert(ooo, v)
+		end
+	end
+	if #ooo == 0 and #oo > 0 then
+		return
+	end
+	oo = ooo
+	p (msg)
 	if #oo == 0 then
 		p (mp.msg.Exam.NOTHING or "nothing.")
 	elseif #oo == 1 then
@@ -376,11 +397,9 @@ end
 function mp:after_Exam(w)
 	if not self.reaction and w then
 		if w:has 'container' and (w:has'transparent' or w:has'open') then
-			p(mp.msg.Exam.IN)
-			self:content(w)
+			self:content(w, mp.msg.Exam.IN)
 		elseif w:has 'supporter' then
-			p(mp.msg.Exam.ON)
-			self:content(w)
+			self:content(w, mp.msg.Exam.ON)
 		else
 			if w:has'openable' then
 				if w:has 'open' then
@@ -525,8 +544,7 @@ function mp:after_Open(w)
 	if not self.reaction then
 		p(mp.msg.Open.OPEN)
 		if w:has'container' then
-			p(mp.msg.Exam.IN)
-			self:content(w)
+			self:content(w, mp.msg.Exam.IN)
 		end
 	end
 end
@@ -628,17 +646,31 @@ function mp:after_Unlock(w, t)
 end
 
 mp.msg.Take = {}
-function mp:Take(w)
+function mp:Take(w, ww)
 	if w == std.me() then
 		p (mp.msg.Take.SELF)
+		return
+	end
+	if std.me():lookup(w) then
+		p (mp.msg.Take.HAVE)
 		return
 	end
 	if w:hint'live' then
 		p (mp.msg.Take.LIFE)
 		return
 	end
-	if have(w) then
-		p (mp.msg.Take.HAVE)
+	if w:has'static' then
+		p (mp.msg.Take.STATIC)
+		return
+	end
+	if w:has'scenery' then
+		p (mp.msg.Take.SCENERY)
+		return
+	end
+	if not w:where():type'room' and
+		not w:where():has'container' and
+		not w:where():has'supporter' then
+		p (mp.msg.Take.PARTOF)
 		return
 	end
 	take(w)

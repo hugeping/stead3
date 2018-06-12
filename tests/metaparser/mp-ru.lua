@@ -146,7 +146,10 @@ mp.msg.Take.HAVE = "У {#me/вн} и так {#firstit} уже есть."
 mp.msg.Take.TAKE = "{#Me} {#verb/take} {#first/вн}."
 mp.msg.Take.SELF = "{#Me} есть у {#me/рд}."
 mp.msg.Take.LIFE = "{#First/дт} это вряд ли понравится."
-
+--"закреплён"
+mp.msg.Take.STATIC = "{#First} жестко {#word/закреплён,#first}."
+mp.msg.Take.SCENERY = "{#First/вн} невозможно взять."
+mp.msg.Take.PARTOF = "{#First} является частью {#firstwhere/рд}."
 mp.msg.AND = "и"
 
 mp.hint.live = 'од'
@@ -304,6 +307,24 @@ Verb { "#Inv",
 Verb { "#Take",
        "вз/ять,возьм/и,брать,бери/,доста/ть,схват/ить,укра/сть,извле/чь,вын/уть,вытащ/ить",
        "{noun}/вн : Take"
+}
+
+Verb { "#Drop",
+       "полож/ить,класть,клади/,вставь/,помест/ить,сун/уть,засун/уть,воткн/уть,втык/ать,встав/ить,влож/ить",
+       "{noun}/вн : Drop",
+       "{noun}/вн в|во {noun}/вн : Insert",
+       "~ {noun}/вн внутрь {noun}/рд : Insert",
+       "~ {noun}/вн на {noun}/вн : PutOn",
+       "~ в|во {noun}/вн {noun}/вн : Insert reverse",
+       "~ внутрь {noun}/рд {noun}/вн : Insert reverse",
+       "~ на {noun}/вн {noun}/вн : PutOn reverse",
+}
+
+Verb {
+	"#Drop2",
+	"брос/ить,кин/уть,кида/ть,швыр/нуть,метн/уть,метать",
+	"{nount}/вн : Drop",
+--	"{nount}/вн в|во|на",
 }
 -- Dialog
 std.phr.default_Event = "Exam"
