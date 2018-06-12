@@ -560,7 +560,7 @@ function mp:check_live(w)
 	return false
 end
 function mp:check_held(t)
-	if std.me():lookup(t) then
+	if std.me():lookup(t) or std.me() == t then
 		return false
 	end
 	mp.msg.NOTINV(t)

@@ -427,6 +427,7 @@ function mp.token.noun(w)
 				for _, v in ipairs(mp:myself(o, w.morph)) do
 					table.insert(ww, { optional = w.optional, word = v, ob = o, alias = o.alias, hidden = o.hidden })
 				end
+				break
 			else
 				table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = hidden })
 			end

@@ -148,7 +148,7 @@ local function gram_filter(v)
 	for _, p in ipairs(tt) do
 		if v.an[p] then return false end
 	end
-	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ'
+	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ' or v.an.t == 'Г'
 end
 
 local function word_fn(l, self, dict)
@@ -198,11 +198,11 @@ local function word_fn(l, self, dict)
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
-
---				if tt == 'ЗАПЕРТ' then
---					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
---				end
-
+--[[
+				if tt == 'ПОДХОДИТ' or tt == 'ПОДХОДИШЬ' then
+					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
+				end
+]]--
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do
