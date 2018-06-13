@@ -844,6 +844,18 @@ function mp:ThrowAt(w, wh)
 	if mp:check_held(w) then
 		return
 	end
+	if not wh:hint'live' then
+		if wh:has'container' then
+			mp:xaction("Insert", w, wh)
+			return
+		end
+		p(mp.msg.ThrowAt.NOTLIFE)
+		return
+	end
+	return false
 end
 function mp:after_ThrowAt(w, wh)
+	if not self.reaction then
+		p(mp.msg.ThrowAt.THROW)
+	end
 end
