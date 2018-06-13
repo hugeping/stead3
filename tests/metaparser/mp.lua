@@ -412,7 +412,9 @@ function mp.token.noun(w)
 		local hint = str_split(w.morph, ",")
 		local o = std.ref(hint[1])
 		oo = {}
-		table.insert(oo, o)
+		if o:visible() and not o:disabled() then
+			table.insert(oo, o)
+		end
 	else
 		oo = mp:nouns()
 	end

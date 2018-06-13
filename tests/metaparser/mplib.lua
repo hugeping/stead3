@@ -106,10 +106,19 @@ end
 function std.obj:scene()
 	local s = self
 	local title, dsc
-	title = iface:title(std.titleof(s))
-	dsc = std.call(s, 'inside_dsc')
+	if not mp:offerslight(s) then
+		title = iface:title(std.titleof(s))
+		dsc = std.call(s, 'when_dark')
+		dsc = dsc or mp.msg.WHEN_DARK
+	else
+		if not s.type'room' then
+			title = iface:title(std.titleof(s))
+		end
+		dsc = std.call(s, s:type'room' and 'dsc' or 'inside_dsc')
+	end
 	return std.par(std.scene_delim, title or false, dsc or false)
 end
+std.room.scene = std.obj.scene
 
 local owalk = std.player.walk
 
@@ -209,9 +218,28 @@ function std.obj:access()
 	end)
 end
 
+function mp:offerslight(what)
+	local w = std.me()
+	if w:has'light' or what:has'light' or std.me():lookup(what) then
+		return true
+	end
+	local l = mp:trace(w, function(v)
+		if v:has 'light' then
+			return true
+		end
+		if not v:has 'transparent' and not v:has 'open' then
+			return nil, false
+		end
+	end)
+	return l
+end
+
 function std.obj:visible()
 	local plw = { }
 	local ww = {}
+	if not mp:offerslight(self) then
+		return false
+	end
 	if std.me():where() == self then
 		return true
 	end
@@ -339,7 +367,7 @@ obj {
 	dir = function(self)
 		return self.dirs[self:multi_alias()]
 	end
-}:persist():attr'multi,enterable'
+}:persist():attr'multi,enterable,light'
 
 mp.compass_dir = function(w, dir)
 	return w == _'@compass' and w:dir() == dir
@@ -389,7 +417,7 @@ function mp:content(w, msg)
 	end
 end
 
-std.room:attr 'enterable'
+std.room:attr 'enterable,light'
 
 function mp:before_Any()
 	if self.first and not self.first:access() and not self.first:type'room' then
