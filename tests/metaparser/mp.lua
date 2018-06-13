@@ -1338,6 +1338,7 @@ end
 
 std.world.display = function(s, state)
 	local l, av, pv
+	if player_moved() then mp.text = '' end
 	mp:trim()
 	local reaction = s:reaction() or nil
 	if state then
@@ -1576,7 +1577,7 @@ end)
 instead.mouse_filter(0)
 
 function instead.fading()
-	return instead.need_fading()
+	return instead.need_fading() or player_moved()
 end
 
 instead.notitle = true
