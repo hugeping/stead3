@@ -348,8 +348,22 @@ function mrd:dump(path, crc)
 	f:close()
 end
 
+function mrd:gram_norm(an)
+	local a = {}
+	local g = {}
+	for _, v in ipairs(an) do
+		a[v] = true
+		table.insert(g, v)
+	end
+	if not a['1л'] and not a['2л'] and not a['3л'] then
+		table.insert(g, '3л')
+	end
+	return g
+end
+
 function mrd:score(an, g)
 	local score = 0
+	g = self:gram_norm(g)
 	for kk, vv in ipairs(g or {}) do
 		if vv:sub(1, 1) == '~' then
 			vv = vv:sub(2)
@@ -363,22 +377,89 @@ function mrd:score(an, g)
 	return score
 end
 
-function mrd:gram_compat(a, b)
-	if a == 'ИНФИНИТИВ' then
-		return b == 'ИНФИНИТИВ' or b == 'Г'
+function mrd:gram_info(a)
+	local t = { }
+	if a['мр'] then
+		t.gen = 'male'
+	elseif a['жр'] then
+		t.gen = 'female'
+	elseif a['ср'] then
+		t.gen = 'neuter'
+	else
+		t.gen = 'any'
 	end
-	if b == 'ИНФИНИТИВ' then
-		return a == 'ИНФИНИТИВ' or a == 'Г'
+
+	if a['мн'] then
+		t.num = 'singular'
+	elseif a['ед'] then
+		t.num = 'plural'
+	else
+		t.num = 'any'
 	end
-	if a == 'КР_ПРИЛ' then
-		return b == 'КР_ПРИЛ' -- or b == 'П'
+
+	if a['буд'] then
+		t.time = 'future'
+	elseif a['прш'] then
+		t.time = 'past'
+	elseif a['нст'] then
+		t.time = 'present'
+	else
+		t.time = 'any'
 	end
-	if b == 'КР_ПРИЛ' then
-		return a == 'КР_ПРИЛ' -- or a == 'П'
+
+	if a['1л'] then
+		t.face = 'first'
+	elseif a['2л'] then
+		t.face = 'second'
+	elseif a['3л'] then
+		t.face = 'third'
+	else
+		t.face = 'any'
 	end
-	if a == 'КР_ПРИЧАСТИЕ' then return b == 'КР_ПРИЧАСТИЕ' end
-	if a == 'ПРИЧАСТИЕ' then return b == 'ПРИЧАСТИЕ' end
+
+	return t
+end
+
+function mrd:gram_compat(aa, bb)
+	local a, b = aa.t, bb.t
+	local g1, g2 = self:gram_info(aa), self:gram_info(bb)
+	if g1.gen ~= g2.gen and g1.gen ~= 'any' and g2.gen ~= 'any' then return false end
+	if g1.num ~= g2.num and g1.num ~= 'any' and g2.num ~= 'any' then return false end
+	if g1.time ~= g2.time and g1.time ~= 'any' and g2.time ~= 'any' then return false end
+	if g1.face ~= g2.face and g1.face ~= 'any' and g2.face ~= 'any' then return false end
 	return true
+end
+
+function mrd:gram_eq(a, b)
+	if not a or not b then return true end
+
+	if a == 'ИНФИНИТИВ' or b == 'ИНФИНИТИВ' then
+		return b == a or b == 'Г' or a == 'Г'
+	end
+	if a == 'КР_ПРИЛ' or b == 'КР_ПРИЛ' then
+		return b == a -- or b == 'П'
+	end
+	if a == 'КР_ПРИЧАСТИЕ' or b == 'КР_ПРИЧАСТИЕ' then
+		return b == a
+	end
+	if a == 'ПРИЧАСТИЕ' or b == 'ПРИЧАСТИЕ' then
+		return b == a
+	end
+	if a == 'Г' or b == 'Г' then return a == b end
+	return true
+end
+
+local function gram2an(g)
+	local a = {}
+	for _, v in ipairs(g) do
+		if v:sub(1, 1) == '~' then
+			a[v:sub(2)] = false
+		else
+			a[v] = true
+		end
+	end
+	a.t = nil
+	return a
 end
 
 function mrd:lookup(w, g)
@@ -394,7 +475,7 @@ function mrd:lookup(w, g)
 		local score = self:score(v.an, g)
 		local t = v.an.t
 		for _, f in ipairs(flex) do
-			if self:gram_compat(v.an.t, f.an.t)  then
+			if self:gram_eq(v.an.t, f.an.t) and self:gram_compat(f.an, gram2an(g)) then
 				local sc = self:score(f.an, g)
 				if sc < 0 then
 					break
@@ -402,13 +483,13 @@ function mrd:lookup(w, g)
 				if t ~= f.an.t then sc = sc - 1 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'ЗАЛЕЗТЬ' or tt == 'ЗАЛЕЗ' or tt == 'ЗАЛЕЗЛИ' or tt == 'ЗАЛЕЗАЕТЕ' then
+				if tt == 'ПОДХОЖУ' or tt == 'ПОДХОДИТЬ' or tt == 'ПОДХОДИШЬ' then
 				print(tt, v.t, score + sc)
-				print "looking for:"
+				print ("looking for:", g['2л'])
 				for _, v in pairs(g) do
 					print(_, v)
 				end
-				print ("looking got:", score, sc)
+				print ("looking got:", score, sc, f.an['3л'])
 				for _, v in pairs(f.an) do
 					print(_, v)
 				end

@@ -142,13 +142,16 @@ mp.msg.Unlock.IMPOSSIBLE = "{#First/вн} невозможно отпереть.
 --"заперт"
 mp.msg.Unlock.NOTLOCKED = "{#First} не {#word/заперт,#first}."
 --"подходит"
-mp.msg.Unlock.WRONGKEY = "{#Second} не {#word/подходит,#second} к замку."
+mp.msg.Unlock.WRONGKEY = "{#Second} не {#word/подходит,нст,#second} к замку."
 --"отпирать"
 mp.msg.Unlock.UNLOCK = "{#Me} {#word/отпирать,#me,нст} {#first/вн}."
 
 mp.msg.Take.HAVE = "У {#me/вн} и так {#firstit} уже есть."
 mp.msg.Take.TAKE = "{#Me} {#verb/take} {#first/вн}."
 mp.msg.Take.SELF = "{#Me} есть у {#me/рд}."
+--"находиться"
+mp.msg.Take.WHERE = "Нельзя взять то, в/на чём {#me} {#word/находиться,#me}."
+
 mp.msg.Take.LIFE = "{#First/дт} это вряд ли понравится."
 --"закреплён"
 mp.msg.Take.STATIC = "{#First} жестко {#word/закреплён,#first}."

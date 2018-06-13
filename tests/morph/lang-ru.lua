@@ -204,10 +204,10 @@ local function is_vowel(l)
 end
 
 local weights = {
-	["мр"] = 2;
-	["жр"] = 2;
-	["мн"] = 4;
-	["ед"] = 4;
+--	["мр"] = 2;
+--	["жр"] = 2;
+--	["мн"] = 4;
+--	["ед"] = 4;
 }
 
 lang = { yo = false, kbd = kbdru, norm = norm, upper = upper, lower = lower, cap = cap, is_cap = is_cap, is_vowel = is_vowel, weights = weights }

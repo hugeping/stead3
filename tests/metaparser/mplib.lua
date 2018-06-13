@@ -687,6 +687,13 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.HAVE)
 		return
 	end
+	local n = mp:trace(std.me(), function(v)
+		if v == w then return true end
+	end)
+	if n then
+		p (mp.msg.Take.WHERE)
+		return
+	end
 	if w:hint'live' then
 		p (mp.msg.Take.LIFE)
 		return
