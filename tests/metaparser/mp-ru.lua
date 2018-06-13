@@ -154,6 +154,9 @@ mp.msg.Take.STATIC = "{#First} жестко {#word/закреплён,#first}."
 mp.msg.Take.SCENERY = "{#First/вн} невозможно взять."
 mp.msg.Take.PARTOF = "{#First} является частью {#firstwhere/рд}."
 
+mp.msg.Remove.WHERE = "{#First} не находится {#if_has/second,supporter,на,в} {#second/пр,2}."
+mp.msg.Remove.REMOVE = "{#First} {#if_has/second,supporter,поднят,извлечён из} {#second/рд}."
+
 mp.msg.Drop.SELF = "У {#me/рд} не хватит ловкости."
 
 --"поместить"
@@ -296,8 +299,8 @@ end
 
 Verb { "#Enter",
 	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,лез/ть,влез/ть",
-	"на|в {noun}/вн,scene : Enter",
-	"к {noun}/дт,scene : Enter",
+	"на|в {noun}/вн,scene,enterable : Enter",
+	"к {noun}/дт,scene,enterable : Enter",
 	"{noun_obj}/@compass : Enter" }
 
 Verb { "#Exit",
@@ -330,13 +333,15 @@ Verb { "#Inv",
 
 Verb { "#Take",
        "вз/ять,возьм/и,брать,забрать,забер/и,бери/,доста/ть,схват/ить,укра/сть,извле/чь,вын/уть,вытащ/ить",
-       "{noun}/вн,scene : Take"
+       "{noun}/вн,scene : Take",
+       "{noun}/вн из|с|со|у {noun}/рд,inside: Remove",
+       "~ из|с|со|у {noun}/рд,container {noun}/вн: Remove reverse",
 }
 
 Verb { "#Drop",
        "полож/ить,класть,клади/,вставь/,помест/ить,сун/уть,засун/уть,воткн/уть,втык/ать,встав/ить,влож/ить",
        "{noun}/вн,held : Drop",
-       "{noun}/вн,held в|во {noun}/вн : Insert",
+       "{noun}/вн,held в|во {noun}/вн,inside : Insert",
        "~ {noun}/вн внутрь {noun}/рд : Insert",
        "~ {noun}/вн на {noun}/вн : PutOn",
        "~ в|во {noun}/вн {noun}/вн : Insert reverse",

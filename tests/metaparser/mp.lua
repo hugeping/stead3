@@ -735,15 +735,23 @@ function mp:compl_filter(v)
 	if not v.ob or not v.morph then
 		return true
 	end
-	local held
-	local scene
+	local attrs = {
+		held = false;
+		scene = false;
+		container = false;
+		inside = false;
+		enterable = false;
+	}
 	for _, h in ipairs(str_split(v.morph, ",")) do
-		if h == 'held' then held = true; break; end
-		if h == 'scene' then scene = true; break; end
+		if attrs[h] ~= nil then attrs[h] = h end
 	end
-	if not held and not scene then return true end
-	if held and have(v.ob) then return true end
-	if scene and (not have(v.ob) and v.ob ~= std.me()) then return true end
+	for _, a in ipairs { 'container', 'enterable' } do
+		if attrs[a] and not v.ob:has(a) then return false end
+	end
+	if attrs.inside and not v.ob:has'container' and not v.ob:has'supporter' then return false end
+	if not attrs.held and not attrs.scene then return true end
+	if attrs.held and have(v.ob) then return true end
+	if attrs.scene and (not have(v.ob) and v.ob ~= std.me()) then return true end
 	return false
 end
 

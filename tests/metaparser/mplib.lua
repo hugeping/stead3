@@ -728,6 +728,20 @@ function mp:after_Take(w)
 		p (mp.msg.Take.TAKE)
 	end
 end
+mp.msg.Remove = {}
+function mp:Remove(w, wh)
+	if w:where() ~= wh then
+		p (mp.msg.Remove.WHERE)
+		return
+	end
+	mp:xaction('Take', w)
+end
+
+function mp:after_Remove(w, wh)
+	if not self.reaction then
+		p (mp.msg.Remove.REMOVE)
+	end
+end
 
 mp.msg.Drop = {}
 function mp:Drop(w)
