@@ -425,16 +425,16 @@ function mp.token.noun(w)
 			end
 			if o == std.me() and mp.myself then
 				for _, v in ipairs(mp:myself(o, w.morph)) do
-					table.insert(ww, { optional = w.optional, word = v, ob = o, alias = o.alias, hidden = o.hidden })
+					table.insert(ww, { optional = w.optional, word = v, morph = attr, ob = o, alias = o.alias, hidden = hidden })
 				end
 				break
 			else
-				table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = hidden })
+				table.insert(ww, { optional = w.optional, word = r[k], ob = o, morph = attr, alias = v.alias, hidden = hidden })
 			end
 		end
 		if o == mp.first then
 			for _, v in ipairs(mp:synonyms(o, w.morph)) do
-				table.insert(ww, { optional = w.optional, word = v, ob = o, alias = o.alias, hidden = true })
+				table.insert(ww, { optional = w.optional, word = v, ob = o, morph = attr, alias = o.alias, hidden = true })
 			end
 		end
 	end
@@ -461,9 +461,9 @@ function mp:eq(t1, t2, lev)
 	return self:norm(t1) == self:norm(t2)
 end
 
-function mp:pattern(t)
+function mp:pattern(t, delim)
 	local words = {}
-	local pat = str_split(self:norm(t), "|,")
+	local pat = str_split(self:norm(t), delim or "|")
 	for _, v in ipairs(pat) do
 		local w = { }
 		if v:sub(1, 1) == '~' then
@@ -532,7 +532,7 @@ function mp:verb(t, w)
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb pattern in mp:verb()", 2)
 	end
-	verb.verb = self:pattern(t[n])
+	verb.verb = self:pattern(t[n], ",")
 	n = n + 1
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb descriptor mp:verb()", 2)
@@ -723,6 +723,23 @@ function mp:compl_verb(words)
 	return poss
 end
 
+function mp:compl_filter(v)
+	if v.hidden then return false end
+	if not v.ob or not v.morph then
+		return true
+	end
+	local held
+	local scene
+	for _, h in ipairs(str_split(v.morph, ",")) do
+		if h == 'held' then held = true; break; end
+		if h == 'scene' then scene = true; break; end
+	end
+	if not held and not scene then return true end
+	if held and have(v.ob) then return true end
+	if scene and not have(v.ob) then return true end
+	return false
+end
+
 function mp:compl_fill(compl, eol, vargs)
 	local ctx = self.completions.ctx
 	self.completions = {}
@@ -732,7 +749,7 @@ function mp:compl_fill(compl, eol, vargs)
 	local w = str_split(self.inp, inp_split)
 	local n = w and #w > 0 and utf_len(w[#w]) or 0
 	for _, v in ipairs(compl) do
-		if not v.hidden then -- or n >= 3 then
+		if self:compl_filter(v) then -- or n >= 3 then
 			table.insert(self.completions, v)
 		end
 	end

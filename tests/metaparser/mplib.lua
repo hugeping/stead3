@@ -762,6 +762,15 @@ function mp:Insert(w, wh)
 	if mp:check_live(wh) then
 		return
 	end
+
+	local n = mp:trace(wh, function(v)
+		if v == w then return true end
+	end)
+	if n or w == wh then
+		p (mp.msg.Insert.WHERE)
+		return
+	end
+
 	if not wh:has'container' then
 		p(mp.msg.Insert.NOTCONTAINER)
 		return
@@ -799,6 +808,13 @@ function mp:PutOn(w, wh)
 		return
 	end
 	if mp:check_live(wh) then
+		return
+	end
+	local n = mp:trace(wh, function(v)
+		if v == w then return true end
+	end)
+	if n or w == wh then
+		p (mp.msg.PutOn.WHERE)
 		return
 	end
 	if not wh:has'supporter' then

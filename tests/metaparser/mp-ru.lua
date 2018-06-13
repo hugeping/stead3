@@ -164,9 +164,11 @@ mp.msg.Drop.SELF = "У {#me/рд} не хватит ловкости."
 mp.msg.Insert.INSERT = "{#Me} {#word/поместить,прш,#me} {#first/вн} в {#second/вн}."
 mp.msg.Insert.CLOSED = "{#Second} {#word/закрыт,#second}."
 mp.msg.Insert.NOTCONTAINER = "{#Second} не {#if_hint/second,plural,могут,может} что-либо содержать."
+mp.msg.Insert.WHERE = "Нельзя поместить {#first/вн} внутрь себя."
 
 mp.msg.PutOn.NOTSUPPORTER = "Класть что-либо на {#second} бессмыслено."
 mp.msg.PutOn.PUTON = "{#Me} {#word/класть,нст,#me} {#first/вн} на {#second/вн}."
+mp.msg.PutOn.WHERE = "Нельзя поместить {#first/вн} на себя."
 
 --"брошен"
 mp.msg.Drop.DROP = "{#First} {#word/брошен,#first}."
@@ -293,13 +295,13 @@ end
 
 Verb { "#Enter",
 	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,лез/ть,влез/ть",
-	"на|в {noun}/вн : Enter",
-	"к {noun}/дт : Enter",
+	"на|в {noun}/вн,scene : Enter",
+	"к {noun}/дт,scene : Enter",
 	"{noun_obj}/@compass : Enter" }
 
 Verb { "#Exit",
 	"выйти,выйд/и,уйти,уйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
-	"из|с|со {noun}/рд : Exit",
+	"из|с|со {noun}/рд,scene : Exit",
 	"Exit" }
 
 Verb { "#Examine",
@@ -322,18 +324,18 @@ Verb { "#Close",
 }
 
 Verb { "#Inv",
-       "инв/ентарь|с собой",
+       "инв/ентарь,с собой",
        "Inv" }
 
 Verb { "#Take",
        "вз/ять,возьм/и,брать,бери/,доста/ть,схват/ить,укра/сть,извле/чь,вын/уть,вытащ/ить",
-       "{noun}/вн : Take"
+       "{noun}/вн,scene : Take"
 }
 
 Verb { "#Drop",
        "полож/ить,класть,клади/,вставь/,помест/ить,сун/уть,засун/уть,воткн/уть,втык/ать,встав/ить,влож/ить",
-       "{noun}/вн : Drop",
-       "{noun}/вн в|во {noun}/вн : Insert",
+       "{noun}/вн,held : Drop",
+       "{noun}/вн,held в|во {noun}/вн : Insert",
        "~ {noun}/вн внутрь {noun}/рд : Insert",
        "~ {noun}/вн на {noun}/вн : PutOn",
        "~ в|во {noun}/вн {noun}/вн : Insert reverse",
@@ -344,8 +346,8 @@ Verb { "#Drop",
 Verb {
 	"#Throw",
 	"брос/ить,выбро/сить,кин/уть,кида/ть,швыр/нуть,метн/уть,метать",
-	"{noun}/вн : Drop",
-	"{noun}/вн в|во|на {noun}/вн : ThrowAt",
+	"{noun}/вн,held : Drop",
+	"{noun}/вн,held в|во|на {noun}/вн : ThrowAt",
 	"~ в|во|на {noun}/вн {noun}/вн : ThrowAt reverse",
 	"~ {noun}/вн {noun}/дт : ThrowAt",
 	"~ {noun}/дт {noun}/вн : ThrowAt reverse",
