@@ -251,7 +251,7 @@ end
 -- dialogs
 std.phr.raw_word = function(s)
 	local dsc = std.call(s, 'dsc')
-	return (tostring(s.__ph_idx) or std.dispof(s)) .. '|'.. dsc
+	return dsc .. '|'.. (tostring(s.__ph_idx) or std.dispof(s))
 end
 
 std.phr.Exam = function(s, ...)

@@ -834,7 +834,9 @@ function mp:compl(str)
 				local ww = {}
 				o:noun(ww)
 				for _, n in ipairs(ww) do
-					table.insert(poss, { word = n.word, hidden = true })
+					local hidden = true
+					if o.raw_word then hidden = n.alias ~= 1 and not o:has'multi' end
+					table.insert(poss, { word = n.word, hidden = hidden })
 				end
 			end
 		else -- matches
