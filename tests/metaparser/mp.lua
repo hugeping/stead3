@@ -151,6 +151,7 @@ end
 mp = std.obj {
 	nam = '@metaparser';
 	autohelp = false;
+	compl_thresh = 0;
 	{
 		inp = '';
 		cur = 1;
@@ -675,7 +676,9 @@ function mp:docompl(str, maxw)
 	local full = false
 	local force = maxw
 	local inp, pre = self:compl_ctx()
-
+	if utf_len(pre) < self.compl_thresh then
+		return str
+	end
 	if not maxw then
 		full = false
 		local compl = self:compl(str)
@@ -725,6 +728,10 @@ end
 
 function mp:compl_filter(v)
 	if v.hidden then return false end
+	local inp, pre = self:compl_ctx()
+	if utf_len(pre) < self.compl_thresh then
+		return false
+	end
 	if not v.ob or not v.morph then
 		return true
 	end
@@ -736,7 +743,7 @@ function mp:compl_filter(v)
 	end
 	if not held and not scene then return true end
 	if held and have(v.ob) then return true end
-	if scene and not have(v.ob) then return true end
+	if scene and (not have(v.ob) and v.ob ~= std.me()) then return true end
 	return false
 end
 
@@ -747,9 +754,8 @@ function mp:compl_fill(compl, eol, vargs)
 	self.completions.eol = eol
 	self.completions.vargs = vargs
 	local w = str_split(self.inp, inp_split)
-	local n = w and #w > 0 and utf_len(w[#w]) or 0
 	for _, v in ipairs(compl) do
-		if self:compl_filter(v) then -- or n >= 3 then
+		if self:compl_filter(v) then
 			table.insert(self.completions, v)
 		end
 	end
