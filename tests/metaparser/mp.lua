@@ -1125,15 +1125,19 @@ function mp:err(err)
 			p (self.msg.HINT_WORDS or "Possible words:", " ")
 		end
 		local first = true
+		local noun = false
 		for kk, v in ipairs(self.hints) do
 			if v:find("^{noun}") or v:find("/[^/]*$") then
-				if not first then
-					pr (" ", mp.msg.HINT_OR or "or", " ")
-				end
-				if mp.err_noun then
-					mp:err_noun(v)
-				else
-					pr ("noun")
+				if not noun then
+					noun = true
+					if not first then
+						pr (" ", mp.msg.HINT_OR or "or", " ")
+					end
+					if mp.err_noun then
+						mp:err_noun(v)
+					else
+						pr ("noun")
+					end
 				end
 			else
 				local pat = self:pattern(v)
