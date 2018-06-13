@@ -336,7 +336,14 @@ obj {
 			mp:xaction("Enter", std.object(r))
 		end
 	end;
+	dir = function(self)
+		return self.dirs[self:multi_alias()]
+	end
 }:persist():attr'multi,enterable'
+
+mp.compass_dir = function(w, dir)
+	return w == _'@compass' and w:dir() == dir
+end
 
 -- VERBS
 local function if_has(w, a, t, f)
@@ -752,7 +759,7 @@ function mp:Insert(w, wh)
 		mp:xaction('Enter', wh)
 		return
 	end
-	if wh == std.me():where() or mp.down_obj(wh) then
+	if wh == std.me():where() or mp.compass_dir(wh, 'd_to') then
 		mp:xaction('Drop', w)
 		return
 	end
@@ -800,7 +807,7 @@ function mp:PutOn(w, wh)
 		mp:xaction('Enter', wh)
 		return
 	end
-	if wh == std.me():where() or mp.down_obj(wh) then
+	if wh == std.me():where() or mp.compass_dir(wh, 'd_to') then
 		mp:xaction('Drop', w)
 		return
 	end

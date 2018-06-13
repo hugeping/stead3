@@ -101,6 +101,7 @@ room {
 	nam = 'main';
 	n_to = 'дверь';
 	e_to = 'main2';
+	before_Enter = function(s, w) p ([[Попытка идти: ]],w:dir()) end;
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол', 'дверь' }
