@@ -1229,7 +1229,7 @@ function mp:events_call(events, oo, t)
 				table.remove(e.args, 1)
 			end
 			local r, v
-			if std.is_obj(ob) then
+			if std.is_obj(ob) and (o ~= 'obj' or ob ~= std.here()) then
 				r, v = self:call(ob, eany, e.ev, std.unpack(e.args))
 				if r then std.pn(r) end
 				if not v then
@@ -1255,12 +1255,12 @@ function mp:__action(events)
 	local r
 	self.reaction = false
 	self.redirect = false
-	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
+	r = self:events_call(events, { parser, game, std.here(), 'obj' }, 'before')
 	if not r then
-		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
+		r = self:events_call(events, { 'obj', std.here(), game, parser })
 	end
 	if not self.redirect then
-		self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+		self:events_call(events, { 'obj', std.here(), game, parser }, 'after')
 	end
 end
 
