@@ -1099,9 +1099,7 @@ function mp:err(err)
 			else
 				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
 			end
-		end
-
-		if err == "UNKNOWN_WORD" then
+		elseif err == "UNKNOWN_WORD" then
 			p (self.msg.UNKNOWN_WORD or "Unknown noun.")
 		else
 			p (self.msg.INCOMPLETE or "Incomplete sentence.")

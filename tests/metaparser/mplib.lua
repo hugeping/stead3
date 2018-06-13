@@ -830,3 +830,13 @@ function mp:after_PutOn(w, wh)
 		p(mp.msg.PutOn.PUTON)
 	end
 end
+
+mp.msg.ThrowAt = {}
+
+function mp:ThrowAt(w, wh)
+	if mp:check_held(w) then
+		return
+	end
+end
+function mp:after_ThrowAt(w, wh)
+end
