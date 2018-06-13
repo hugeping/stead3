@@ -716,6 +716,7 @@ function mrd:obj(w, n, nn)
 			break
 		end
 	end
+	if not d[n] then n = 1  end
 	w = d[n].word
 	hint2 = d[n].hint
 	return ob, w, hint .. ',' .. hint2
