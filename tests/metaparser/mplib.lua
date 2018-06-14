@@ -685,7 +685,13 @@ function mp:check_held(t)
 	mp.msg.NOTINV(t)
 	return true
 end
-
+function mp:check_worn(w)
+	if w:has'worn' then
+		p (mp.msg.Drop.WORN)
+		return true
+	end
+	return false
+end
 mp.msg.Lock = {}
 function mp:Lock(w, t)
 	if mp:check_held(t) then
@@ -832,6 +838,9 @@ function mp:Drop(w)
 	if mp:check_held(w) then
 		return
 	end
+	if mp:check_worn(w) then
+		return
+	end
 	if w == std.me() then
 		p (mp.msg.Drop.SELF)
 		return
@@ -915,6 +924,9 @@ function mp:PutOn(w, wh)
 	if mp:check_live(wh) then
 		return
 	end
+	if mp:check_worn(w) then
+		return
+	end
 	local n = mp:trace(wh, function(v)
 		if v == w then return true end
 	end)
@@ -942,6 +954,9 @@ function mp:ThrowAt(w, wh)
 	if mp:check_held(w) then
 		return
 	end
+	if mp:check_worn(w) then
+		return
+	end
 	if not wh:hint'live' then
 		if wh:has'container' then
 			mp:xaction("Insert", w, wh)
@@ -955,5 +970,46 @@ end
 function mp:after_ThrowAt(w, wh)
 	if not self.reaction then
 		p(mp.msg.ThrowAt.THROW)
+	end
+end
+
+mp.msg.Wear = {}
+
+function mp:Wear(w)
+	if mp:check_held(w) then
+		return
+	end
+	if not w:has'clothes' then
+		p (mp.msg.Wear.NOTCLOTHES)
+		return
+	end
+	if w:has'worn' then
+		p (mp.msg.Wear.WORN)
+		return
+	end
+	w:attr'worn'
+	return false
+end
+
+function mp:after_Wear(w)
+	if not self.reaction then
+		p (mp.msg.Wear.WEAR)
+	end
+end
+
+mp.msg.Disrobe = {}
+
+function mp:Disrobe(w)
+	if not w:has'worn' then
+		p (mp.msg.Disrobe.NOTWORN)
+		return
+	end
+	w:attr'~worn'
+	return false
+end
+
+function mp:after_Disrobe(w)
+	if not self.reaction then
+		p (mp.msg.Disrobe.DISROBE)
 	end
 end

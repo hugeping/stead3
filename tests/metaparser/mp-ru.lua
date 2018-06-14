@@ -167,7 +167,7 @@ mp.msg.Remove.WHERE = "{#First} не находится {#if_has/second,supporte
 mp.msg.Remove.REMOVE = "{#First} {#if_has/second,supporter,поднят,извлечён из} {#second/рд}."
 
 mp.msg.Drop.SELF = "У {#me/рд} не хватит ловкости."
-
+mp.msg.Drop.WORN = "{#First/вн} сначала нужно снять."
 --"поместить"
 mp.msg.Insert.INSERT = "{#Me} {#word/поместить,прш,#me} {#first/вн} в {#second/вн}."
 mp.msg.Insert.CLOSED = "{#Second} {#word/закрыт,#second}."
@@ -184,6 +184,15 @@ mp.msg.Drop.DROP = "{#First} {#word/брошен,#first}."
 mp.msg.ThrowAt.NOTLIFE = "Бросать {#first/вн} в {#second/вн} бесполезно."
 mp.msg.ThrowAt.THROW = "У {#me/рд} не хватает решимости бросить {#first/вн} в {#second/вн}."
 
+
+mp.msg.Wear.NOTCLOTHES = "Надеть {#first/вн} невозможно."
+mp.msg.Wear.WORN = "{#First} уже на {#me/дт}."
+--"надевать"
+mp.msg.Wear.WEAR = "{#Me} {#word/надевать,#me,нст} {#first/вн}."
+
+mp.msg.Disrobe.NOTWORN = "{#First} не на {#me/дт}."
+--"снимать"
+mp.msg.Disrobe.DISROBE = "{#Me} {#word/снимать,#me,нст} {#first/вн}."
 
 mp.msg.AND = "и"
 
@@ -367,6 +376,18 @@ Verb {
 	"~ {noun}/вн {noun}/дт : ThrowAt",
 	"~ {noun}/дт {noun}/вн : ThrowAt reverse",
 
+}
+
+Verb {
+	"#Wear",
+	"наде/ть,оде/ть,облачи/ться",
+	"{noun}/вн,held : Wear",
+}
+
+Verb {
+	"#Disrobe",
+	"снять,сним/ать",
+	"{noun}/вн,worn : Disrobe",
 }
 -- Dialog
 std.phr.default_Event = "Exam"

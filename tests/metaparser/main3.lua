@@ -105,7 +105,11 @@ room {
 --	before_Enter = function(s, w) p ([[Попытка идти: ]],w:dir()) end;
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
-}: with { 'стол', 'дверь' }
+}: with { 'стол', 'дверь', 'кепка' }
+
+obj {
+	nam = -"кепка";
+}:attr 'clothes'
 
 function init()
 --	me().room_where = _'аквариум'
