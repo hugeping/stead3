@@ -103,6 +103,10 @@ std.obj.inside_dsc = function(s)
 	p (mp.msg.INSIDE_SCENE);
 end
 
+function mp:thedark()
+	return not mp:offerslight()
+end
+
 function std.obj:scene()
 	local s = self
 	local title, dsc
@@ -1054,4 +1058,16 @@ end
 
 function mp:after_SwitchOff(w)
 	p (mp.msg.SwitchOff.SWITCHOFF)
+end
+
+mp.msg.Search = {}
+
+function mp:Search(w)
+	mp:xaction('Exam', w)
+	return false
+end
+
+mp.msg.LookUnder = {}
+function mp:after_LookUnder(w)
+	p (mp.msg.LookUnder.NOTHING)
 end
