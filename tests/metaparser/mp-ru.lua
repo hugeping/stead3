@@ -17,6 +17,10 @@ _'@compass'.word = function()
 	end
 	return up
 end
+_'@darkness'.word = -"тьма,темнота,темень"
+_'@darkness'.before_Any = "Полная, кромешная тьма."
+_'@darkness':attr 'persist'
+
 _'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 

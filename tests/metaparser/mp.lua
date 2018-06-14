@@ -387,6 +387,10 @@ function mp:objects(wh, oo, recurs)
 	end)
 end
 
+local darkness = std.obj {
+	nam = '@darkness';
+}
+
 function mp:nouns()
 	if type(std.here().nouns) == 'function' then
 		return std.here():nouns()
@@ -397,6 +401,9 @@ function mp:nouns()
 	self:objects(self.persistent, oo)
 	table.insert(oo, std.me())
 	table.insert(oo, std.here())
+	if not self:offerslight(std.me():where()) then
+		table.insert(oo, darkness)
+	end
 	return oo
 end
 
