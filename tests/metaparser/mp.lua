@@ -750,6 +750,7 @@ function mp:compl_filter(v)
 		container = false;
 		inside = false;
 		enterable = false;
+		live = false,
 	}
 	for _, h in ipairs(str_split(v.morph, ",")) do
 		if attrs[h] ~= nil then attrs[h] = h end
@@ -757,6 +758,7 @@ function mp:compl_filter(v)
 	for _, a in ipairs { 'container', 'enterable' } do
 		if attrs[a] and not v.ob:has(a) then return false end
 	end
+	if attrs.live and not v.ob:hint'live' then return false end
 	if attrs.inside and not v.ob:has'container' and not v.ob:has'supporter' then return false end
 	if not attrs.held and not attrs.scene then return true end
 	if attrs.held and have(v.ob) then return true end

@@ -240,6 +240,18 @@ mp.msg.Turn.STATIC = "{#First/вн} трудно сдвинуть с места.
 mp.msg.Turn.SCENERY = "{#First/вн} двигать невозможно."
 mp.msg.Turn.PUSH = "Ничего не произошло."
 
+mp.msg.Wait.WAIT = "Проходит немного времени."
+
+mp.msg.Touch.LIVE = "Не стоит давать волю рукам."
+mp.msg.Touch.TOUCH = "Никаких необычных ощущений нет."
+mp.msg.Touch.MYSELF = "{#Me} на месте."
+
+mp.msg.Rub.RUB = "Тереть {#first/вн} бессмысленно."
+mp.msg.Sing.SING = "С таким слухом и голосом как у {#me/рд} этого лучше не делать."
+
+mp.msg.Give.MYSELF = "{#First} и так у {#me/рд} есть."
+mp.msg.Give.GIVE = "{#Second/вн} это не заинтересовало."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -488,6 +500,40 @@ Verb {
 	"#Turn",
 	"враща/ть,поверн/уть,верт/есть,поверт/еть",
 	"{noun}/вн : Turn"
+}
+
+Verb {
+	"#Wait",
+	"ждать,жди,жду,подожд/ать,ожид/ать",
+	"Wait"
+}
+
+Verb {
+	"#Rub",
+	"тереть,потр/и,потереть,тру,три",
+	"{noun}/вн : Rub"
+}
+
+Verb {
+	"#Sing",
+	"петь,спеть,спою,спой/,пой",
+	"Sing"
+}
+
+Verb {
+	"#Touch",
+	"трога/ть,потрог/ать,трон/уть,косну/ться,касать/ся,прикосн/уться,щупа/ть,пощупа/ть",
+	"{noun}/вн : Touch",
+	"~ до {noun}/рд : Touch",
+	"~ к {noun}/дт : Touch",
+	"~ {noun}/рд : Touch",
+}
+
+Verb {
+	"#Give",
+	"дать,отда/ть,предло/жить,предла/гать,дам,даю,дадим",
+	"{noun}/вн,held {noun}/дт,live : Give",
+	"~ {noun}/дт,live {noun}/вн,held : Give reverse",
 }
 -- Dialog
 std.phr.default_Event = "Exam"

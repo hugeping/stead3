@@ -1181,3 +1181,51 @@ end
 function mp:after_Turn(w)
 	p (mp.msg.Turn.Turn)
 end
+
+mp.msg.Wait = {}
+function mp:after_Wait()
+	p (mp.msg.Wait.WAIT)
+end
+
+mp.msg.Rub = {}
+
+function mp:Rub(w)
+	p (mp.msg.Rub.RUB)
+end
+
+mp.msg.Sing = {}
+
+function mp:Sing(w)
+	p (mp.msg.Sing.SING)
+end
+
+mp.msg.Touch = {}
+
+function mp:Touch(w)
+	if w == std.me() then
+		p (mp.msg.Touch.MYSELF)
+		return
+	end
+	if w:hint 'live' then
+		p (mp.msg.Touch.LIVE)
+		return
+	end
+	return false
+end
+
+function mp:after_Touch(w)
+	p (mp.msg.Touch.TOUCH)
+end
+
+mp.msg.Give = {}
+
+function mp:Give(w, wh)
+	if mp:check_held(w) then
+		return
+	end
+	if wh == std.me() then
+		p (mp.msg.Give.MYSELF)
+		return
+	end
+	p (mp.msg.Give.GIVE)
+end
