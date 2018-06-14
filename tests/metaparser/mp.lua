@@ -1266,7 +1266,7 @@ function mp:events_call(events, oo, t)
 			if o == 'obj' then
 				table.insert(e.args, 1, ob)
 			end
-			if v and t ~= 'after_' then return v end
+			if v and t ~= 'post_' then return v end
 		end
 	end
 	return false
@@ -1279,9 +1279,12 @@ function mp:__action(events)
 	r = self:events_call(events, { parser, game, std.here(), 'obj' }, 'before')
 	if not r then
 		r = self:events_call(events, { 'obj', std.here(), game, parser })
+		if not r then
+			r = self:events_call(events, { 'obj', std.here(), game, parser }, 'after')
+		end
 	end
 	if not self.redirect then
-		self:events_call(events, { 'obj', std.here(), game, parser }, 'after')
+		self:events_call(events, { 'obj', std.here(), game, parser }, 'post')
 	end
 end
 

@@ -465,44 +465,47 @@ function mp:before_Any(ev)
 	return false
 end
 
+function mp:Look()
+	std.me():need_scene(true)
+	return false
+end
+
+function mp:after_Look()
+end
+
 function mp:Exam(w)
-	if not w then
-		std.me():need_scene(true)
-	end
 	return false
 end
 
 function mp:after_Exam(w)
-	if not self.reaction and w then
-		local r, v = std.call(w, 'dsc')
-		if v then
-			p(r)
-			return false
-		end
-		if w:has 'container' and (w:has'transparent' or w:has'open') then
-			self:content(w, mp.msg.Exam.IN)
-		elseif w:has 'supporter' then
-			self:content(w, mp.msg.Exam.ON)
-		else
-			if w:has'openable' then
-				if w:has 'open' then
-					local r = std.call(w, 'when_open')
-					p (r or mp.msg.Exam.OPENED);
-				else
-					local r = std.call(w, 'when_closed')
-					p (r or mp.msg.Exam.CLOSED);
-				end
-				return
-			end
-			if w:has'switchable' then
-				p (mp.msg.Exam.SWITCHSTATE)
-				return
-			end
-			if w == std.here() then
-				std.me():need_scene(true)
+	local r, v = std.call(w, 'dsc')
+	if v then
+		p(r)
+		return false
+	end
+	if w:has 'container' and (w:has'transparent' or w:has'open') then
+		self:content(w, mp.msg.Exam.IN)
+	elseif w:has 'supporter' then
+		self:content(w, mp.msg.Exam.ON)
+	else
+		if w:has'openable' then
+			if w:has 'open' then
+				local r = std.call(w, 'when_open')
+				p (r or mp.msg.Exam.OPENED);
 			else
-				p (mp.msg.Exam.DEFAULT);
+				local r = std.call(w, 'when_closed')
+				p (r or mp.msg.Exam.CLOSED);
 			end
+			return
+		end
+		if w:has'switchable' then
+			p (mp.msg.Exam.SWITCHSTATE)
+			return
+		end
+		if w == std.here() then
+			std.me():need_scene(true)
+		else
+			p (mp.msg.Exam.DEFAULT);
 		end
 	end
 end
@@ -541,9 +544,7 @@ function mp:Enter(w)
 end
 
 function mp:after_Enter(w)
-	if not self.reaction then
-		p (mp.msg.Enter.ENTERED)
-	end
+	p (mp.msg.Enter.ENTERED)
 end
 
 mp.msg.Walk = {}
@@ -567,9 +568,7 @@ function mp:Walk(w)
 end
 
 function mp:after_Walk(w)
-	if not self.reaction then
-		p (mp.msg.Walk.WALK)
-	end
+	p (mp.msg.Walk.WALK)
 end
 
 mp.msg.Exit = {}
@@ -602,36 +601,34 @@ function mp:Exit(w)
 end
 
 function mp:after_Exit(w)
-	if w and not self.reaction then
+	if w then
 		p (mp.msg.Exit.EXITED)
 	end
 end
 
 mp.msg.Inv = {}
 function mp:after_Inv()
-	if not self.reaction then
-		local oo = {}
-		self:objects(std.me(), oo, false)
-		if #oo == 0 then
-			p(mp.msg.Inv.NOTHING)
-			return
-		end
-		p(mp.msg.Inv.INV)
-		for _, v in ipairs(oo) do
-			pr(v:noun())
-			if v:has'worn' then
-				mp.msg.WORN(v)
-			elseif v:has'openable' and v:has'open' then
-				mp.msg.OPEN(v)
-			end
-			if _ == #oo - 1 then
-				pr(" ",mp.msg.AND, " ")
-			elseif _ ~= #oo then
-				pr(', ')
-			end
-		end
-		pr(".")
+	local oo = {}
+	self:objects(std.me(), oo, false)
+	if #oo == 0 then
+		p(mp.msg.Inv.NOTHING)
+		return
 	end
+	p(mp.msg.Inv.INV)
+	for _, v in ipairs(oo) do
+		pr(v:noun())
+		if v:has'worn' then
+			mp.msg.WORN(v)
+		elseif v:has'openable' and v:has'open' then
+			mp.msg.OPEN(v)
+		end
+		if _ == #oo - 1 then
+			pr(" ",mp.msg.AND, " ")
+		elseif _ ~= #oo then
+			pr(', ')
+		end
+	end
+	pr(".")
 end
 
 mp.msg.Open = {}
@@ -659,11 +656,9 @@ function mp:Open(w)
 end
 
 function mp:after_Open(w)
-	if not self.reaction then
-		p(mp.msg.Open.OPEN)
-		if w:has'container' then
-			self:content(w, mp.msg.Exam.IN)
-		end
+	p(mp.msg.Open.OPEN)
+	if w:has'container' then
+		self:content(w, mp.msg.Exam.IN)
 	end
 end
 
@@ -684,9 +679,7 @@ function mp:Close(w)
 end
 
 function mp:after_Close(w)
-	if not self.reaction then
-		p(mp.msg.Close.CLOSE)
-	end
+	p(mp.msg.Close.CLOSE)
 end
 function mp:check_live(w)
 	if w:hint'live' then
@@ -746,9 +739,7 @@ function mp:Lock(w, t)
 end
 
 function mp:after_Lock(w, t)
-	if not self.reaction then
-		p(mp.msg.Lock.LOCK)
-	end
+	p(mp.msg.Lock.LOCK)
 end
 
 mp.msg.Unlock = {}
@@ -775,9 +766,7 @@ function mp:Unlock(w, t)
 end
 
 function mp:after_Unlock(w, t)
-	if not self.reaction then
-		p(mp.msg.Unlock.UNLOCK)
-	end
+	p(mp.msg.Unlock.UNLOCK)
 end
 
 function move(w, wh)
@@ -841,9 +830,7 @@ function mp:Take(w, ww)
 end
 
 function mp:after_Take(w)
-	if not self.reaction then
-		p (mp.msg.Take.TAKE)
-	end
+	p (mp.msg.Take.TAKE)
 end
 mp.msg.Remove = {}
 function mp:Remove(w, wh)
@@ -855,9 +842,7 @@ function mp:Remove(w, wh)
 end
 
 function mp:after_Remove(w, wh)
-	if not self.reaction then
-		p (mp.msg.Remove.REMOVE)
-	end
+	p (mp.msg.Remove.REMOVE)
 end
 
 mp.msg.Drop = {}
@@ -877,9 +862,7 @@ function mp:Drop(w)
 end
 
 function mp:after_Drop(w)
-	if not self.reaction then
-		p (mp.msg.Drop.DROP)
-	end
+	p (mp.msg.Drop.DROP)
 end
 
 mp.msg.Insert = {}
@@ -929,9 +912,7 @@ function mp:Insert(w, wh)
 end
 
 function mp:after_Insert(w, wh)
-	if not self.reaction then
-		p(mp.msg.Insert.INSERT)
-	end
+	p(mp.msg.Insert.INSERT)
 end
 
 mp.msg.PutOn = {}
@@ -974,9 +955,7 @@ function mp:PutOn(w, wh)
 end
 
 function mp:after_PutOn(w, wh)
-	if not self.reaction then
-		p(mp.msg.PutOn.PUTON)
-	end
+	p(mp.msg.PutOn.PUTON)
 end
 
 mp.msg.ThrowAt = {}
@@ -999,9 +978,7 @@ function mp:ThrowAt(w, wh)
 	return false
 end
 function mp:after_ThrowAt(w, wh)
-	if not self.reaction then
-		p(mp.msg.ThrowAt.THROW)
-	end
+	p(mp.msg.ThrowAt.THROW)
 end
 
 mp.msg.Wear = {}
@@ -1023,9 +1000,7 @@ function mp:Wear(w)
 end
 
 function mp:after_Wear(w)
-	if not self.reaction then
-		p (mp.msg.Wear.WEAR)
-	end
+	p (mp.msg.Wear.WEAR)
 end
 
 mp.msg.Disrobe = {}
@@ -1040,9 +1015,7 @@ function mp:Disrobe(w)
 end
 
 function mp:after_Disrobe(w)
-	if not self.reaction then
-		p (mp.msg.Disrobe.DISROBE)
-	end
+	p (mp.msg.Disrobe.DISROBE)
 end
 
 mp.msg.SwitchOn = {}
@@ -1061,9 +1034,7 @@ function mp:SwitchOn(w)
 end
 
 function mp:after_SwitchOn(w)
-	if not self.reaction then
-		p (mp.msg.SwitchOn.SWITCHON)
-	end
+	p (mp.msg.SwitchOn.SWITCHON)
 end
 
 mp.msg.SwitchOff = {}
@@ -1082,7 +1053,5 @@ function mp:SwitchOff(w)
 end
 
 function mp:after_SwitchOff(w)
-	if not self.reaction then
-		p (mp.msg.SwitchOff.SWITCHOFF)
-	end
+	p (mp.msg.SwitchOff.SWITCHOFF)
 end
