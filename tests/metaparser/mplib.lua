@@ -198,7 +198,12 @@ function std.obj:access()
 		local r, v = std.call(self, 'found_in')
 		return v
 	end
-
+	local wh = std.me():where()
+	if std.is_obj(wh.scope, 'list') then
+		if wh.scope:lookup(self) then
+			return true
+		end
+	end
 	mp:trace(std.me(), function(v)
 		if v:has 'concealed' then
 			return nil, false
@@ -255,6 +260,14 @@ function std.obj:visible()
 		end
 		local r, v = std.call(self, 'found_in')
 		return v
+	end
+
+	local wh = std.me():where()
+
+	if std.is_obj(wh.scope, 'list') then
+		if wh.scope:lookup(self) then
+			return true
+		end
 	end
 
 	mp:trace(std.me(), function(v)

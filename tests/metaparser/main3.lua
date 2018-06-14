@@ -89,6 +89,7 @@ obj {
 	nam = 'аквариум',
 	title = [[В аквариуме]];
 	obj = { 'рыбка' },
+	scope = std.list { 'стол' };
 } : attr 'container,transparent,enterable,open'
 
 obj {
