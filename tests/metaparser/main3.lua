@@ -71,9 +71,9 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"ты/мр,2л"
+--pl.word = -"ты/мр,2л"
 --/од,мр,1л";
---pl.word = -"вы";
+pl.word = -"я/мр";
 
 pl:dict {
 --	["я/вн"] = "себя";
@@ -97,6 +97,13 @@ obj {
 	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
 } : attr "supporter"
 
+obj {
+	-"выключатель|свет";
+	nam = 'выключатель';
+	after_SwitchOn = function(s) here():attr'light' return false end;
+	after_SwitchOff = function(s) here():attr'~light' return false end;
+} : attr 'light,switchable,scenery';
+
 room {
 	title = -"комната";
 	nam = 'main';
@@ -105,7 +112,7 @@ room {
 --	before_Enter = function(s, w) p ([[Попытка идти: ]],w:dir()) end;
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
-}: with { 'стол', 'дверь', 'кепка' }
+}: with { 'стол', 'дверь', 'кепка','выключатель'} : attr '~light'
 
 obj {
 	nam = -"кепка";

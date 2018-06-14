@@ -1027,3 +1027,45 @@ function mp:after_Disrobe(w)
 		p (mp.msg.Disrobe.DISROBE)
 	end
 end
+
+mp.msg.SwitchOn = {}
+
+function mp:SwitchOn(w)
+	if not w:has'switchable' then
+		p (mp.msg.SwitchOn.NONSWITCHABLE)
+		return
+	end
+	if w:has'on' then
+		p (mp.msg.SwitchOn.ALREADY)
+		return
+	end
+	w:attr'on'
+	return false
+end
+
+function mp:after_SwitchOn(w)
+	if not self.reaction then
+		p (mp.msg.SwitchOn.SWITCHON)
+	end
+end
+
+mp.msg.SwitchOff = {}
+
+function mp:SwitchOff(w)
+	if not w:has'switchable' then
+		p (mp.msg.SwitchOff.NONSWITCHABLE)
+		return
+	end
+	if not w:has'on' then
+		p (mp.msg.SwitchOn.ALREADY)
+		return
+	end
+	w:attr'~on'
+	return false
+end
+
+function mp:after_SwitchOff(w)
+	if not self.reaction then
+		p (mp.msg.SwitchOff.SWITCHOFF)
+	end
+end

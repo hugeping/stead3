@@ -59,11 +59,13 @@ mp.msg.UNKNOWN_WORD = "Слово не распознано:"
 mp.msg.HINT_WORDS = "Возможно, вы имели в виду"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
+mp.msg.AND = "и"
 mp.msg.MULTIPLE = "Тут есть"
 mp.msg.LIVE_ACTION = "{#Firstit/дт} это не понравится."
 mp.msg.NOTINV = function(t)
 	p (lang.cap(t:noun'вн') .. " сначала нужно взять.")
 end
+
 mp.msg.EXITBEFORE = "Возможно, {#me/дт} нужно сначала {#if_has/where,supporter,слезть,вылезти из} {#where/рд}."
 
 mp.default_Event = "Exam"
@@ -194,8 +196,17 @@ mp.msg.Disrobe.NOTWORN = "{#First} не на {#me/дт}."
 --"снимать"
 mp.msg.Disrobe.DISROBE = "{#Me} {#word/снимать,#me,нст} {#first/вн}."
 
-mp.msg.AND = "и"
+mp.msg.SwitchOn.NONSWITCHABLE = "{#First/вн} невозможно включить."
+--"включён"
+mp.msg.SwitchOn.ALREADY = "{#First} уже {#word/включён,#first}."
+--"включать"
+mp.msg.SwitchOn.SWITCHON = "{#Me} {#word/включать,#me,нст} {#first/вн}."
 
+mp.msg.SwitchOff.NONSWITCHABLE = "{#First/вн} невозможно выключить."
+--"выключён"
+mp.msg.SwitchOff.ALREADY = "{#First} уже {#word/выключён,#first}."
+--"выключать"
+mp.msg.SwitchOff.SWITCHOFF = "{#Me} {#word/выключать,#me,нст} {#first/вн}."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -209,7 +220,7 @@ mp.hint.third = '3л'
 mp.keyboard_space = '<пробел>'
 mp.keyboard_backspace = '<удалить>'
 
-mp.msg.verbs.take = -"взять,#me,прш"
+mp.msg.verbs.take = -"брать,#me,нст"
 
 local function dict(t, hint)
 	local g = std.split(hint, ",")
@@ -389,6 +400,19 @@ Verb {
 	"снять,сним/ать",
 	"{noun}/вн,worn : Disrobe",
 }
+
+Verb {
+	"#SwitchOn",
+	"включ/ить,вруб/ить,активи/ровать",
+	"{noun}/вн : SwitchOn",
+}
+
+Verb {
+	"#SwitchOff",
+	"выключ/ить,выруб/ить,деактиви/ровать",
+	"{noun}/вн : SwitchOff",
+}
+
 -- Dialog
 std.phr.default_Event = "Exam"
 
