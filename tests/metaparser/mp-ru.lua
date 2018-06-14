@@ -86,7 +86,9 @@ mp.msg.ACCESS2 = "{#Second} отсюда не{#word/доступен,#second}."
 
 mp.msg.Look.HEREIS = "Здесь есть"
 mp.msg.Look.HEREARE = "Здесь есть"
-
+--"включён"
+--"выключен"
+mp.msg.Exam.SWITCHSTATE = "{#First} сейчас {#if_has/first,on,{#word/включён,#first},{#word/выключен,#first}}."
 mp.msg.Exam.NOTHING = "ничего нет."
 mp.msg.Exam.IS = "находится"
 mp.msg.Exam.ARE = "находятся"

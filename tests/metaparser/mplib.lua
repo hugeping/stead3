@@ -230,7 +230,10 @@ end
 
 function mp:offerslight(what)
 	local w = std.me()
-	if w:has'light' or what:has'light' or std.me():lookup(what) then
+	if w:has'light' then
+		return true
+	end
+	if what and (what:has'light' or std.me():lookup(what)) then
 		return true
 	end
 	local l = mp:trace(w, function(v)
@@ -471,6 +474,11 @@ end
 
 function mp:after_Exam(w)
 	if not self.reaction and w then
+		local r, v = std.call(w, 'dsc')
+		if v then
+			p(r)
+			return false
+		end
 		if w:has 'container' and (w:has'transparent' or w:has'open') then
 			self:content(w, mp.msg.Exam.IN)
 		elseif w:has 'supporter' then
@@ -484,6 +492,10 @@ function mp:after_Exam(w)
 					local r = std.call(w, 'when_closed')
 					p (r or mp.msg.Exam.CLOSED);
 				end
+				return
+			end
+			if w:has'switchable' then
+				p (mp.msg.Exam.SWITCHSTATE)
 				return
 			end
 			if w == std.here() then
