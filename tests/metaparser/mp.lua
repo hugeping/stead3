@@ -1325,18 +1325,7 @@ function mp:action()
 	-- parser:after_Take || after_Def
 	-- parser:after_Any
 end
-
-function mp:parse(inp)
-	inp = std.strip(inp)
-	pn(fmt.b(self.prompt .. inp))
-	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
-	local r, v = self:input(self:norm(inp))
-	if not r then
-		if v then
-			self:err(v)
-		end
-		return
-	end
+function mp:correct(inp)
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
@@ -1349,6 +1338,20 @@ function mp:parse(inp)
 	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
+end
+
+function mp:parse(inp)
+	inp = std.strip(inp)
+	pn(fmt.b(self.prompt .. inp))
+	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
+	local r, v = self:input(self:norm(inp))
+	if not r then
+		if v then
+			self:err(v)
+		end
+		return
+	end
+	self:correct(inp)
 	local t = std.pget()
 	std.pclr()
 	-- here we do action

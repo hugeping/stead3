@@ -127,6 +127,11 @@ std.obj.from = std.room.from
 function std.player:walk(w, doexit, doenter, dofrom)
 	w = std.object(w)
 	if std.is_obj(w, 'room') then
+		if w == std.here() then
+			self.__room_where = false
+			self:need_scene(true)
+			return nil, true
+		end
 		local r, v = owalk(self, w, doexit, doenter, dofrom)
 		self.__room_where = false
 		return r, v
@@ -227,7 +232,7 @@ function mp:offerslight(what)
 		if v:has 'light' then
 			return true
 		end
-		if not v:has 'transparent' and not v:has 'open' then
+		if not v:has 'transparent' and not v:has 'open' and not v:has 'supporter' then
 			return nil, false
 		end
 	end)
@@ -351,7 +356,7 @@ obj {
 		end
 		p (mp.msg.COMPASS_EXAM(d, std.object(r)))
 	end;
-	before_Enter = function(s)
+	before_Walk = function(s)
 		local d = s.dirs[s:multi_alias()]
 		local r = std.call(std.here(), d)
 		if not r then
@@ -363,6 +368,9 @@ obj {
 		else
 			mp:xaction("Enter", std.object(r))
 		end
+	end;
+	before_Enter = function(s, ...)
+		return s:before_Walk(...)
 	end;
 	dir = function(self)
 		return self.dirs[self:multi_alias()]
@@ -419,14 +427,23 @@ end
 
 std.room:attr 'enterable,light'
 
-function mp:before_Any()
+function mp:before_Any(ev)
+	if ev == 'Exam' then
+		return false
+	end
 	if self.first and not self.first:access() and not self.first:type'room' then
 		p (self.msg.ACCESS1 or "{#First} is not accessible.")
+		if std.here() ~= std.me():where() then
+			p (mp.msg.EXITBEFORE)
+		end
 		return
 	end
 
 	if self.second and not self.second:access() and not self.first:type'room' then
 		p (self.msg.ACCESS2 or "{#Second} is not accessible.")
+		if std.here() ~= std.me():where() then
+			p (mp.msg.EXITBEFORE)
+		end
 		return
 	end
 	return false
@@ -501,6 +518,32 @@ end
 function mp:after_Enter(w)
 	if not self.reaction then
 		p (mp.msg.Enter.ENTERED)
+	end
+end
+
+mp.msg.Walk = {}
+
+function mp:Walk(w)
+	if w == std.me():where() then
+		p (mp.msg.Walk.ALREADY)
+		return
+	end
+
+	if seen(w, me()) then
+		p (mp.msg.Walk.INV)
+		return
+	end
+
+--	if std.me():where() ~= std.here() then
+--		p (mp.msg.Enter.EXITBEFORE)
+--		return
+--	end
+	return false
+end
+
+function mp:after_Walk(w)
+	if not self.reaction then
+		p (mp.msg.Walk.WALK)
 	end
 end
 

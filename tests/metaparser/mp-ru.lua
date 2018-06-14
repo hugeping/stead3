@@ -60,6 +60,7 @@ mp.msg.LIVE_ACTION = "{#Firstit/дт} это не понравится."
 mp.msg.NOTINV = function(t)
 	p (lang.cap(t:noun'вн') .. " сначала нужно взять.")
 end
+mp.msg.EXITBEFORE = "Возможно, {#me/дт} нужно сначала {#if_has/where,supporter,слезть,вылезти из} {#where/рд}."
 
 mp.default_Event = "Exam"
 mp.default_Verb = "осмотреть"
@@ -96,6 +97,9 @@ mp.msg.Enter.ENTERED = "{#Me} {#word/залезть,прш,#me} {#if_has/first,s
 mp.msg.Enter.DOOR_NOWHERE = "{#First} никуда не ведёт."
 --"закрыт"
 mp.msg.Enter.DOOR_CLOSED = "{#First} {#word/закрыт,#first}."
+
+mp.msg.Walk.ALREADY = mp.msg.Enter.ALREADY
+mp.msg.Walk.WALK = "Но {#first} и так находится здесь."
 
 -- mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
 
@@ -299,10 +303,10 @@ end
 
 
 Verb { "#Enter",
-	"идти,иду,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,лез/ть,влез/ть",
+	"идти,иду,подой/ти,иди,войти,войд/и,зайти,зайд/и,залез/ть,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,лез/ть,влез/ть",
 	"на|в {noun}/вн,scene,enterable : Enter",
-	"к {noun}/дт,scene,enterable : Enter",
-	"{noun_obj}/@compass : Enter" }
+	"к {noun}/дт,scene : Walk",
+	"{noun_obj}/@compass : Walk" }
 
 Verb { "#Exit",
 	"выйти,выйд/и,уйти,уйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
