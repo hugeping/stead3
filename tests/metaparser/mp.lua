@@ -1124,6 +1124,10 @@ function mp:err(err)
 			else
 				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
 			end
+			if mp:thedark() and need_noun then
+				p (self.msg.UNKNOWN_THEDARK)
+				return
+			end
 		elseif err == "UNKNOWN_WORD" then
 			p (self.msg.UNKNOWN_WORD or "Unknown noun.")
 		else

@@ -26,6 +26,7 @@ _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
 mp.door.word = -"дверь";
 mp.msg.WHEN_DARK = "Кромешная тьма."
+mp.msg.UNKNOWN_THEDARK = "Возможно, это потому что в темноте ничего не видно?"
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
 mp.msg.COMPASS_EXAM_NO = "В этом направлении не видно ничего примечательного."
 --"находиться"
