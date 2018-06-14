@@ -251,6 +251,7 @@ mp.msg.Sing.SING = "С таким слухом и голосом как у {#me/
 
 mp.msg.Give.MYSELF = "{#First} и так у {#me/рд} есть."
 mp.msg.Give.GIVE = "{#Second/вн} это не заинтересовало."
+mp.msg.Show.SHOW = "{#Second/вн} это не впечатлило."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -534,6 +535,13 @@ Verb {
 	"дать,отда/ть,предло/жить,предла/гать,дам,даю,дадим",
 	"{noun}/вн,held {noun}/дт,live : Give",
 	"~ {noun}/дт,live {noun}/вн,held : Give reverse",
+}
+
+Verb {
+	"#Show",
+	"показ/ать,покаж/и",
+	"{noun}/вн,held {noun}/дт,live : Show",
+	"~ {noun}/дт,live {noun}/вн,held : Show reverse",
 }
 -- Dialog
 std.phr.default_Event = "Exam"

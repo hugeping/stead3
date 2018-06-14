@@ -1229,3 +1229,16 @@ function mp:Give(w, wh)
 	end
 	p (mp.msg.Give.GIVE)
 end
+
+mp.msg.Show = {}
+
+function mp:Show(w, wh)
+	if mp:check_held(w) then
+		return
+	end
+	if wh == std.me() then
+		mp:xaction("Exam", w)
+		return
+	end
+	p (mp.msg.Show.SHOW)
+end
