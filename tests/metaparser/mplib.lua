@@ -377,6 +377,11 @@ obj {
 		p (mp.msg.COMPASS_EXAM(d, std.object(r)))
 	end;
 	before_Walk = function(s)
+		if not std.me():where():type'room' then
+			p (mp.msg.Enter.EXITBEFORE)
+			return
+		end
+
 		local d = s.dirs[s:multi_alias()]
 		local r = std.call(std.here(), d)
 		if not r then

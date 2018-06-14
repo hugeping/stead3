@@ -120,7 +120,7 @@ mp.msg.Enter.DOOR_CLOSED = "{#First} {#word/закрыт,#first}."
 mp.msg.Walk.ALREADY = mp.msg.Enter.ALREADY
 mp.msg.Walk.WALK = "Но {#first} и так находится здесь."
 
--- mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
+mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 mp.msg.Exit.NOWHERE = "Но {#me/дт} некуда выходить."
