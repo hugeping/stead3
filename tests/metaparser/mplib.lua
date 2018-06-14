@@ -701,6 +701,7 @@ function mp:check_held(t)
 	if have(t) or std.me() == t then
 		return false
 	end
+	mp.msg.TAKE_BEFORE(t)
 	mp:subaction('Take', t)
 	if not have(t) then
 --		mp.msg.NOTINV(t)
@@ -711,6 +712,7 @@ end
 
 function mp:check_worn(w)
 	if w:has'worn' then
+		mp.msg.DISROBE_BEFORE(w)
 		mp:subaction('Disrobe', w)
 		if w:has'worn' then
 --			p (mp.msg.Drop.WORN)
@@ -1240,4 +1242,17 @@ function mp:Show(w, wh)
 		return
 	end
 	p (mp.msg.Show.SHOW)
+end
+
+mp.msg.Burn = {}
+
+function mp:Burn(w, wh)
+	if wh and mp:check_held(wh) then
+		return
+	end
+	if wh then
+		p (mp.msg.Burn.BURN2)
+	else
+		p (mp.msg.Burn.BURN)
+	end
 end

@@ -29,6 +29,13 @@ mp.msg.WHEN_DARK = "Кромешная тьма."
 mp.msg.UNKNOWN_THEDARK = "Возможно, это потому что в темноте ничего не видно?"
 mp.msg.COMPASS_NOWAY = "Этот путь недоступен."
 mp.msg.COMPASS_EXAM_NO = "В этом направлении не видно ничего примечательного."
+mp.msg.TAKE_BEFORE = function(w)
+	pn (iface:em("(сначала взяв "..w:noun'вн'..")"))
+end
+mp.msg.DISROBE_BEFORE = function(w)
+	pn (iface:em("(сначала сняв "..w:noun'вн'..")"))
+end
+
 --"находиться"
 mp.msg.SCENE = "{#Me} {#word/находиться,#me,нст} {#if_has/here,supporter,на,в} {#here/пр,2}.";
 mp.msg.INSIDE_SCENE = "{#Me} {#word/находиться,#me,нст} {#if_has/where,supporter,на,в} {#where/пр,2}.";
@@ -252,6 +259,9 @@ mp.msg.Sing.SING = "С таким слухом и голосом как у {#me/
 mp.msg.Give.MYSELF = "{#First} и так у {#me/рд} есть."
 mp.msg.Give.GIVE = "{#Second/вн} это не заинтересовало."
 mp.msg.Show.SHOW = "{#Second/вн} это не впечатлило."
+
+mp.msg.Burn.BURN = "Поджигать {#first/вн} бессмысленно."
+mp.msg.Burn.BURN2 = "Поджигать {#first/вн} {#second/тв} бессмысленно."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -542,6 +552,14 @@ Verb {
 	"показ/ать,покаж/и",
 	"{noun}/вн,held {noun}/дт,live : Show",
 	"~ {noun}/дт,live {noun}/вн,held : Show reverse",
+}
+
+Verb {
+	"#Burn",
+	"жечь,жг/и,поджечь,подожги/,поджиг/ай,зажг/и,зажиг/ай,зажечь",
+	"{noun}/вн : Burn",
+	"{noun}/вн {noun}/тв,held : Burn",
+	"~ {noun}/тв,held {noun}/вн reverse",
 }
 -- Dialog
 std.phr.default_Event = "Exam"
