@@ -190,6 +190,7 @@ mp.msg.Insert.NOTCONTAINER = "{#Second} не {#if_hint/second,plural,могут,
 mp.msg.Insert.WHERE = "Нельзя поместить {#first/вн} внутрь себя."
 mp.msg.Insert.ALREADY = "Но {#first} уже и так {#word/находиться,#first} там."
 mp.msg.PutOn.NOTSUPPORTER = "Класть что-либо на {#second} бессмыслено."
+--"класть"
 mp.msg.PutOn.PUTON = "{#Me} {#word/класть,нст,#me} {#first/вн} на {#second/вн}."
 mp.msg.PutOn.WHERE = "Нельзя поместить {#first/вн} на себя."
 
@@ -226,6 +227,18 @@ mp.msg.Eat.NOTEDIBLE = "{#First} не {#word/годится,#first} в пищу.
 --"съедать"
 mp.msg.Eat.EAT = "{#Me} {#word/съедать,нст,#me} {#first/вн}."
 mp.msg.Drink.IMPOSSIBLE = "Выпить {#first/вн} невозможно."
+
+mp.msg.Push.STATIC = "{#First/вн} трудно сдвинуть с места."
+mp.msg.Push.SCENERY = "{#First/вн} двигать невозможно."
+mp.msg.Push.PUSH = "Ничего не произошло."
+
+mp.msg.Pull.STATIC = "{#First/вн} трудно сдвинуть с места."
+mp.msg.Pull.SCENERY = "{#First/вн} двигать невозможно."
+mp.msg.Pull.PUSH = "Ничего не произошло."
+
+mp.msg.Turn.STATIC = "{#First/вн} трудно сдвинуть с места."
+mp.msg.Turn.SCENERY = "{#First/вн} двигать невозможно."
+mp.msg.Turn.PUSH = "Ничего не произошло."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -455,6 +468,27 @@ Verb {
 	"{noun}/вн,held : Drink",
 }
 
+Verb {
+	"#Push",
+	"толк/ать,пих/ать,нажим/ать,нажм/и,нажать,двига/ть,задви/нуть,запих/нуть,затолк/ать",
+	"?на {noun}/вн : Push",
+	"~ {noun}/вн на|в|во {noun}/вн : Transfer",
+	"~ на|в|во {noun}/вн {noun}/вн : Transfer revers",
+}
+
+Verb {
+	"#Pull",
+	"тян/уть,тащ/ить,тягать,волоч/ь,волок/ти,дёрн/уть,дёрг/ать,потян/уть,потащ/ить,поволо/чь",
+	"?за {noun}/вн : Pull",
+	"~ {noun}/вн на|в|во {noun}/вн : Transfer",
+	"~ на|в|во {noun}/вн {noun}/вн : Transfer reverse",
+}
+
+Verb {
+	"#Turn",
+	"враща/ть,поверн/уть,верт/есть,поверт/еть",
+	"{noun}/вн : Turn"
+}
 -- Dialog
 std.phr.default_Event = "Exam"
 

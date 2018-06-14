@@ -699,7 +699,7 @@ function mp:check_held(t)
 	end
 	mp:subaction('Take', t)
 	if not have(t) then
-		mp.msg.NOTINV(t)
+--		mp.msg.NOTINV(t)
 		return true
 	end
 	return false
@@ -709,7 +709,7 @@ function mp:check_worn(w)
 	if w:has'worn' then
 		mp:subaction('Disrobe', w)
 		if w:has'worn' then
-			p (mp.msg.Drop.WORN)
+--			p (mp.msg.Drop.WORN)
 			return true
 		end
 	end
@@ -1097,4 +1097,82 @@ mp.msg.Drink = {}
 
 function mp:Drink(w)
 	p (mp.msg.Drink.IMPOSSIBLE)
+end
+
+mp.msg.Transfer = {}
+
+function mp:Transfer(w, ww)
+	if ww:has 'supporter' then
+		mp:xaction('PutOn', w, ww)
+		return
+	end
+	mp:xaction('Insert', w, ww)
+end
+
+mp.msg.Push = {}
+
+function mp:Push(w)
+	if w:has 'switchable' then
+		if w:has'on' then
+			mp:xaction('SwitchOff', w)
+		else
+			mp:xaction('SwitchOn', w)
+		end
+		return
+	end
+	if w:has 'static' then
+		p (mp.msg.Push.STATIC)
+		return
+	end
+	if w:has 'scenery' then
+		p (mp.msg.Push.SCENERY)
+		return
+	end
+	if mp:check_live(w) then
+		return
+	end
+end
+
+function mp:after_Push(w)
+	p (mp.msg.Push.PUSH)
+end
+
+mp.msg.Pull = {}
+
+function mp:Pull(w)
+	if w:has 'static' then
+		p (mp.msg.Pull.STATIC)
+		return
+	end
+	if w:has 'scenery' then
+		p (mp.msg.Pull.SCENERY)
+		return
+	end
+	if mp:check_live(w) then
+		return
+	end
+end
+
+function mp:after_Pull(w)
+	p (mp.msg.Pull.PULL)
+end
+
+mp.msg.Turn = {}
+
+function mp:Turn(w)
+	if w:has 'static' then
+		p (mp.msg.Turn.STATIC)
+		return
+	end
+	if w:has 'scenery' then
+		p (mp.msg.Turn.SCENERY)
+		return
+	end
+	if mp:check_live(w) then
+		return
+	end
+end
+
+function mp:after_Turn(w)
+	p (mp.msg.Turn.Turn)
 end

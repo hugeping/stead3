@@ -531,7 +531,7 @@ function mp:verb(t, w)
 		std.err("Wrong 2-arg to mp:verb()", 2)
 	end
 	if not w.__Verbs then
-		w.__Verbs = {}
+		std.rawset(w, '__Verbs', {})
 	end
 	local verb = {}
 	local n = 1
