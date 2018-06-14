@@ -1071,3 +1071,24 @@ mp.msg.LookUnder = {}
 function mp:after_LookUnder(w)
 	p (mp.msg.LookUnder.NOTHING)
 end
+
+mp.msg.Eat = {}
+
+function mp:Eat(w)
+	if not w:has'edible' then
+		p (mp.msg.Eat.NOTEDIBLE)
+		return
+	end
+	if mp:check_held(w) then
+		return
+	end
+	if mp:check_worn(w) then
+		return
+	end
+	remove(w)
+	return false
+end
+
+function mp:after_Eat(w)
+	p (mp.msg.Eat.EAT)
+end

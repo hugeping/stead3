@@ -221,6 +221,11 @@ mp.msg.SwitchOff.ALREADY = "{#First} уже {#word/выключён,#first}."
 --"выключать"
 mp.msg.SwitchOff.SWITCHOFF = "{#Me} {#word/выключать,#me,нст} {#first/вн}."
 
+--"годится"
+mp.msg.Eat.NOTEDIBLE = "{#First} не {#word/годится,#first} в пищу."
+--"съедать"
+mp.msg.Eat.EAT = "{#Me} {#word/съедать,нст,#me} {#first/вн}."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -435,6 +440,18 @@ Verb {
 	"#SwitchOff",
 	"выключ/ить,выруб/ить,деактиви/ровать",
 	"{noun}/вн : SwitchOff",
+}
+
+Verb {
+	"#Eat",
+	"есть,съе/сть,куша/ть,скуша/ть,сожр/ать,жри,жрать,ешь",
+	"{noun}/вн,held : Eat",
+}
+
+Verb {
+	"#Drink",
+	"пить,выпить,выпей,выпью,пью",
+	"{noun}/вн,held : Drink",
 }
 
 -- Dialog
