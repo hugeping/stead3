@@ -31,7 +31,6 @@ visited. The player character has visited this location.
 workflag. This object has been temporarily selected by the Inform library for some reason.
 worn. The player character is currently wearing this object.
 ]]--
-
 mp.door = std.class({
 	before_Enter = function(s)
 		if not s:has 'open' then
@@ -691,7 +690,7 @@ function mp:after_Close(w)
 	p(mp.msg.Close.CLOSE)
 end
 function mp:check_live(w)
-	if w:hint'live' then
+	if self:animate(w) then
 		p(mp.msg.LIVE_ACTION)
 		return true
 	end
@@ -816,7 +815,7 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.WHERE)
 		return
 	end
-	if w:hint'live' then
+	if mp:animate(w) then
 		p (mp.msg.Take.LIFE)
 		return
 	end
@@ -976,7 +975,7 @@ function mp:ThrowAt(w, wh)
 	if mp:check_worn(w) then
 		return
 	end
-	if not wh:hint'live' then
+	if not self:animate(wh) then
 		if wh:has'container' then
 			mp:xaction("Insert", w, wh)
 			return
@@ -1206,7 +1205,7 @@ function mp:Touch(w)
 		p (mp.msg.Touch.MYSELF)
 		return
 	end
-	if w:hint 'live' then
+	if self:animate(w) then
 		p (mp.msg.Touch.LIVE)
 		return
 	end
