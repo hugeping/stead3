@@ -65,7 +65,16 @@ mp.msg.LIVE_ACTION = "{#Firstit/дт} это не понравится."
 mp.msg.NOTINV = function(t)
 	p (lang.cap(t:noun'вн') .. " сначала нужно взять.")
 end
-
+--"надет"
+mp.msg.WORN = function(w)
+	local hint = w:gram().hint
+	pr (" (",mp.mrd:word('надет/' .. hint), ")")
+end
+--"открыт"
+mp.msg.OPEN = function(w)
+	local hint = w:gram().hint
+	pr (" (",mp.mrd:word('открыт/' .. hint), ")")
+end
 mp.msg.EXITBEFORE = "Возможно, {#me/дт} нужно сначала {#if_has/where,supporter,слезть,вылезти из} {#where/рд}."
 
 mp.default_Event = "Exam"

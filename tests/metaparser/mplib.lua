@@ -418,12 +418,12 @@ function mp:content(w, msg)
 	oo = ooo
 	p (msg)
 	if #oo == 0 then
-		p (mp.msg.Exam.NOTHING or "nothing.")
+		p (mp.msg.Exam.NOTHING)
 	elseif #oo == 1 then
-		p (mp.msg.Exam.IS or "there is")
+		p (mp.msg.Exam.IS)
 		p(oo[1]:noun(), ".")
 	else
-		p (mp.msg.Exam.ARE or "there are")
+		p (mp.msg.Exam.ARE)
 		for _, v in ipairs(oo) do
 			if _ ~= 1 then
 				if _ == #oo then
@@ -607,6 +607,11 @@ function mp:after_Inv()
 		p(mp.msg.Inv.INV)
 		for _, v in ipairs(oo) do
 			pr(v:noun())
+			if v:has'worn' then
+				mp.msg.WORN(v)
+			elseif v:has'openable' and v:has'open' then
+				mp.msg.OPEN(v)
+			end
 			if _ == #oo - 1 then
 				pr(" ",mp.msg.AND, " ")
 			elseif _ ~= #oo then
