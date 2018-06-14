@@ -678,20 +678,30 @@ function mp:check_live(w)
 	end
 	return false
 end
+
 function mp:check_held(t)
 	if have(t) or std.me() == t then
 		return false
 	end
-	mp.msg.NOTINV(t)
-	return true
-end
-function mp:check_worn(w)
-	if w:has'worn' then
-		p (mp.msg.Drop.WORN)
+	mp:subaction('Take', t)
+	if not have(t) then
+		mp.msg.NOTINV(t)
 		return true
 	end
 	return false
 end
+
+function mp:check_worn(w)
+	if w:has'worn' then
+		mp:subaction('Disrobe', w)
+		if w:has'worn' then
+			p (mp.msg.Drop.WORN)
+			return true
+		end
+	end
+	return false
+end
+
 mp.msg.Lock = {}
 function mp:Lock(w, t)
 	if mp:check_held(t) then
@@ -864,6 +874,10 @@ function mp:Insert(w, wh)
 	end
 	if w == std.me() then
 		mp:xaction('Enter', wh)
+		return
+	end
+	if wh == w:where() then
+		p (mp.msg.Insert.ALREADY)
 		return
 	end
 	if wh == std.me():where() or mp.compass_dir(wh, 'd_to') then

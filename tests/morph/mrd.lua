@@ -432,7 +432,6 @@ end
 
 function mrd:gram_eq(a, b)
 	if not a or not b then return true end
-
 	if a == 'ИНФИНИТИВ' or b == 'ИНФИНИТИВ' then
 		return b == a or b == 'Г' or a == 'Г'
 	end
@@ -483,7 +482,7 @@ function mrd:lookup(w, g)
 				if t ~= f.an.t then sc = sc - 1 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'ПОДХОЖУ' or tt == 'ПОДХОДИТЬ' or tt == 'ПОДХОДИШЬ' then
+				if tt == 'ЗАКРЫЛ' or tt == 'ЗАКРЫВАЛ' or tt == 'ПОДХОДИШЬ' then
 				print(tt, v.t, score + sc)
 				print ("looking for:", g['2л'])
 				for _, v in pairs(g) do

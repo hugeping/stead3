@@ -1285,6 +1285,19 @@ function mp:__action(events)
 	end
 end
 
+function mp:subaction(verb, ...)
+	local events = { {ev = verb, args = { ... }}}
+	local first = self.first
+	local second = self.second
+	local first_hint = self.first_hint
+	local second_hint = self.second_hint
+	local r, v = self:__action(events)
+	self.first, self.second = first, second
+	self.first_hint, self.second_hint = first_hint, second_hint
+	self.reaction = false
+	return r, v
+end
+
 function mp:xaction(verb, ...)
 	local events = { {ev = verb, args = { ... }}}
 	local r, v = self:__action(events)
