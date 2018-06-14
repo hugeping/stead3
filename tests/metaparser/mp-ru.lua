@@ -225,6 +225,7 @@ mp.msg.SwitchOff.SWITCHOFF = "{#Me} {#word/выключать,#me,нст} {#firs
 mp.msg.Eat.NOTEDIBLE = "{#First} не {#word/годится,#first} в пищу."
 --"съедать"
 mp.msg.Eat.EAT = "{#Me} {#word/съедать,нст,#me} {#first/вн}."
+mp.msg.Drink.IMPOSSIBLE = "Выпить {#first/вн} невозможно."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'

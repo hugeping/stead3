@@ -1092,3 +1092,9 @@ end
 function mp:after_Eat(w)
 	p (mp.msg.Eat.EAT)
 end
+
+mp.msg.Drink = {}
+
+function mp:Drink(w)
+	p (mp.msg.Drink.IMPOSSIBLE)
+end
