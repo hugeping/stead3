@@ -88,6 +88,15 @@ function mp:room_content(w)
 		end
 		p "."
 	end
+-- expand?
+--[[
+	for _, o in ipairs(oo) do
+		if o:has'supporter' then
+			mp.msg.Look.SUPPORTER(o)
+			self:content(o)
+		end
+	end
+]]--
 end
 
 function std.obj:multi_alias()
@@ -114,7 +123,7 @@ function std.obj:scene()
 		dsc = std.call(s, 'when_dark')
 		dsc = dsc or mp.msg.WHEN_DARK
 	else
-		if not s.type'room' then
+		if not s:type'room' then
 			title = iface:title(std.titleof(s))
 		end
 		dsc = std.call(s, s:type'room' and 'dsc' or 'inside_dsc')
@@ -140,12 +149,15 @@ function std.player:walk(w, doexit, doenter, dofrom)
 		return r, v
 	end
 	if std.is_obj(w) then -- into object
-		w.__from = std.me():where()
-		if dofrom ~= false then
-			self.__room_where = w
+		if dofrom ~= false and std.me():where() ~= w then
+			w.__from = std.me():where()
 		end
-		self:need_scene(true)
-		return nil, true
+		self.__room_where = w
+		if w:inroom() == std.ref(self.room) then
+			self:need_scene(true)
+			return nil, true
+		end
+		return owalk(self, w:inroom(), doexit, doenter, dofrom)
 	end
 	std.err("Can not enter into: "..std.tostr(w), 2)
 end
@@ -384,7 +396,8 @@ obj {
 		local d = s.dirs[s:multi_alias()]
 		local r = std.call(std.here(), d)
 		if not r then
-			p (mp.msg.COMPASS_NOWAY)
+			local r = std.call(std.here(), 'cant_go')
+			p (r or mp.msg.COMPASS_NOWAY)
 			return
 		end
 		if std.object(r):type 'room' then
@@ -450,6 +463,15 @@ function mp:content(w, msg)
 		end
 		p "."
 	end
+-- expand?
+--[[
+	for _, o in ipairs(oo) do
+		if o:has'supporter' then
+			mp.msg.Look.SUPPORTER(o)
+			self:content(o)
+		end
+	end
+]]--
 end
 
 std.room:attr 'enterable,light'
@@ -510,6 +532,12 @@ function mp:after_Exam(w)
 			return
 		end
 		if w:has'switchable' then
+			local r
+			if w:has'on' then
+				r = std.call(w, 'when_on')
+			else
+				r = std.call(w, 'when_off')
+			end
 			p (mp.msg.Exam.SWITCHSTATE)
 			return
 		end
@@ -782,6 +810,11 @@ function mp:after_Unlock(w, t)
 	p(mp.msg.Unlock.UNLOCK)
 end
 
+function mp:inside(w, wh)
+	return mp:trace(w, function(v)
+			 if v == wh then return true end
+	end)
+end
 function move(w, wh)
 	wh = wh or std.here()
 	wh = std.object(wh)
@@ -796,6 +829,10 @@ function move(w, wh)
 		if r then p(r) end
 	else
 		place(w, wh)
+		if mp:inside(std.me(), w) then
+			r, v = w:walk(wh)
+			if r then p(r) end
+		end
 	end
 	w:attr 'moved'
 	r, v = std.call(wh, 'after_Receive', w)

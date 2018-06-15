@@ -94,6 +94,9 @@ mp.msg.ACCESS2 = "{#Second} отсюда не{#word/доступен,#second}."
 
 mp.msg.Look.HEREIS = "Здесь есть"
 mp.msg.Look.HEREARE = "Здесь есть"
+mp.msg.Look.SUPPORTER = function(o)
+	p ("На ",o:noun'пр,2')
+end
 --"включён"
 --"выключен"
 mp.msg.Exam.SWITCHSTATE = "{#First} сейчас {#if_has/first,on,{#word/включён,#first},{#word/выключен,#first}}."
