@@ -269,6 +269,18 @@ mp.msg.WakeOther.NOTLIVE = "Бессмысленно будить {#first/вн}.
 
 mp.msg.PushDir.PUSH = "Передвигать это нет смысла."
 
+mp.msg.Kiss.NOTLIVE = "Странное желание."
+mp.msg.Kiss.KISS = "{#Firstit/дт} это может не понравиться."
+mp.msg.Kiss.MYSELF = "Ну уж нет."
+
+mp.msg.Think.THINK = "Отличная идея!"
+mp.msg.Smell.SMELL = "Никакого необычного запаха нет."
+mp.msg.Smell.SMELL2 = "Пахнет как {#first}."
+
+mp.msg.Listen.LISTEN = "Никаких необычных звуков нет."
+--"прислушаться"
+mp.msg.Listen.LISTEN2 = "{#Me} {#word/прислушаться,#me,прш} к {#first/дт}. Никаких необычных звуков нет."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -577,6 +589,33 @@ Verb {
 	"будить,разбуд/ить,просн/уться,бужу",
 	"{noun}/вн,live : WakeOther",
 	"Wake",
+}
+
+Verb {
+	"#Kiss",
+	"целовать,поцел/овать,чмок/нуть,обним/ать,обнять,целуй",
+	"{noun}/вн,live : Kiss"
+}
+
+Verb {
+	"#Think",
+	"дума/ть,мысл/ить,подум/ать,рассужд/ать",
+	"Think"
+}
+
+Verb {
+	"#Smell",
+	"нюха/ть,понюха/ть,занюх/ать,нюхн/уть,принюх/аться",
+	"Smell",
+	"{noun}/вн : Smell"
+}
+
+Verb {
+	"#Listen",
+	"слуша/ть,послуша/ть,прислушать/ся,слыш/ать,слух/",
+	"Listen",
+	"{noun}/вн : Listen",
+	"~ к {noun}/дт : Listen",
 }
 -- Dialog
 std.phr.default_Event = "Exam"

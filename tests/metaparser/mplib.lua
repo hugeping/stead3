@@ -1303,3 +1303,42 @@ function mp:PushDir(w, wh)
 	end
 	p (mp.msg.PushDir.PUSH)
 end
+
+mp.msg.Kiss = {}
+function mp:Kiss(w)
+	if not mp:animate(w) then
+		p (mp.msg.Kiss.NOTLIVE)
+		return
+	end
+	if mp:runmethods('life', 'Kiss', w) then
+		return false
+	end
+	if w == std.me() then
+		p (mp.msg.Kiss.MYSELF)
+		return
+	end
+	p (mp.msg.Kiss.KISS)
+end
+
+mp.msg.Think = {}
+function mp:Think()
+	p (mp.msg.Think.THINK)
+end
+
+mp.msg.Smell = {}
+function mp:Smell(w)
+	if w then
+		p (mp.msg.Smell.SMELL2)
+		return
+	end
+	p (mp.msg.Smell.SMELL)
+end
+
+mp.msg.Listen = {}
+function mp:Listen(w)
+	if w then
+		p (mp.msg.Listen.LISTEN2)
+		return
+	end
+	p (mp.msg.Listen.LISTEN)
+end
