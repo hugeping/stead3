@@ -402,6 +402,9 @@ obj {
 }:persist():attr'multi,enterable,light'
 
 mp.compass_dir = function(w, dir)
+	if not dir then
+		return w == _'@compass' and w:dir()
+	end
 	return w == _'@compass' and w:dir() == dir
 end
 
@@ -1111,6 +1114,10 @@ end
 mp.msg.Transfer = {}
 
 function mp:Transfer(w, ww)
+	if mp.compass_dir(ww) then
+		mp:xaction('PushDir', w, ww)
+		return
+	end
 	if ww:has 'supporter' then
 		mp:xaction('PutOn', w, ww)
 		return
@@ -1287,4 +1294,12 @@ function mp:WakeOther(w)
 		return false
 	end
 	p (mp.msg.WakeOther.WAKE)
+end
+
+mp.msg.PushDir = {}
+function mp:PushDir(w, wh)
+	if mp:check_live(w) then
+		return
+	end
+	p (mp.msg.PushDir.PUSH)
 end

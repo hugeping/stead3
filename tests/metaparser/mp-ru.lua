@@ -267,6 +267,8 @@ mp.msg.Wake.WAKE = "Это не сон, а явь."
 mp.msg.WakeOther.WAKE = "Будить {#first/вн} не стоит."
 mp.msg.WakeOther.NOTLIVE = "Бессмысленно будить {#first/вн}."
 
+mp.msg.PushDir.PUSH = "Передвигать это нет смысла."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -499,16 +501,20 @@ Verb {
 	"#Push",
 	"толк/ать,пих/ать,нажим/ать,нажм/и,нажать,двига/ть,задви/нуть,запих/нуть,затолк/ать",
 	"?на {noun}/вн : Push",
-	"~ {noun}/вн на|в|во {noun}/вн : Transfer",
-	"~ на|в|во {noun}/вн {noun}/вн : Transfer revers",
+	"{noun}/вн на|в|во {noun}/вн : Transfer",
+	"{noun}/вн {noun_obj}/@compass : Transfer",
+	"~ на|в|во {noun}/вн {noun}/вн : Transfer reverse",
+	"~ {noun_obj}/@compass {noun}/вн : Transfer reverse"
 }
 
 Verb {
 	"#Pull",
 	"тян/уть,тащ/ить,тягать,волоч/ь,волок/ти,дёрн/уть,дёрг/ать,потян/уть,потащ/ить,поволо/чь",
 	"?за {noun}/вн : Pull",
-	"~ {noun}/вн на|в|во {noun}/вн : Transfer",
+	"{noun}/вн на|в|во {noun}/вн : Transfer",
+	"{noun}/вн {noun_obj}/@compass : Transfer",
 	"~ на|в|во {noun}/вн {noun}/вн : Transfer reverse",
+	"~ {noun_obj}/@compass {noun}/вн : Transfer reverse"
 }
 
 Verb {
