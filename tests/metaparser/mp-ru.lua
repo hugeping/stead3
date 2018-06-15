@@ -692,9 +692,9 @@ Verb {
 Verb {
 	"#Consult",
 	"чита/ть,прочита/ть,почита/й,проч/есть",
---	"в|во {noun}/пр,2 о|об|обо|про * : Consult",
-	"о|об|обо|про * в|во {noun}/пр,2 : Consult reverse",
---	"~ {noun}/вн : Exam",
+	"в|во {noun}/пр,2 о|об|обо|про * : Consult",
+	"~ о|об|обо|про * в|во {noun}/пр,2 : Consult reverse",
+	"~ {noun}/вн : Exam",
 }
 
 -- Dialog

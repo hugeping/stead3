@@ -985,9 +985,7 @@ function mp:match(verb, w, compl)
 
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' then
-				found = #a > 0 or self.inp:find(" $")
-				vargs = found
-				break
+				vargs = true -- found
 			end
 
 			local pat = self:pattern(v) -- pat -- possible words
@@ -997,6 +995,7 @@ function mp:match(verb, w, compl)
 			local required
 			found = false
 			for _, pp in ipairs(pat) do -- single argument
+				if v == '*' then break end
 				if not pp.optional then
 					required = true
 					all_optional = false
@@ -1020,6 +1019,14 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
+				if vargs then
+					for i = 1, best - 1 do
+						table.insert(match.vargs, a[i])
+						table.insert(match, a[i])
+					end
+					rlev = rlev + 1
+					vargs = false
+				end
 				if false then
 					a = tab_exclude(a, best, best + best_len - 1)
 				else
@@ -1029,6 +1036,16 @@ function mp:match(verb, w, compl)
 				table.insert(match, word)
 				table.insert(match.args, found)
 				rlev = rlev + 1
+			elseif vargs then
+				if lev == #d.pat then -- last?
+					while #a > 0 do
+						table.insert(match.vargs, a[1])
+						table.insert(match, a[1])
+						table.remove(a, 1)
+					end
+					found = true
+					break
+				end
 			elseif required then
 				for i = 1, best - 1 do
 					table.insert(unknown, { word = a[i], lev = rlev })
@@ -1060,11 +1077,7 @@ function mp:match(verb, w, compl)
 			match.extra = (#a ~= 0)
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
-			if vargs then
-				for _, v in ipairs(a) do
-					table.insert(match.vargs, v)
-				end
-			else
+			if #match.vargs == 0 and not vargs then
 				match.vargs = false
 			end
 		end
@@ -1383,10 +1396,10 @@ function mp:correct(inp)
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
-	for _, v in ipairs(self.vargs and self.vargs or {}) do
-		if rinp ~= '' then rinp = rinp .. ' ' end
-		rinp = rinp .. v
-	end
+--	for _, v in ipairs(self.vargs and self.vargs or {}) do
+--		if rinp ~= '' then rinp = rinp .. ' ' end
+--		rinp = rinp .. v
+--	end
 	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
@@ -1617,6 +1630,7 @@ function(cmd)
 		end
 		if cmd[3] == '<space>' then
 			mp:inp_insert(' ')
+			mp:compl_fill(mp:compl(mp.inp))
 			return true, false
 		end
 		if cmd[3] == '<backspace>' then
