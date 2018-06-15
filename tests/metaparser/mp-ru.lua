@@ -196,7 +196,7 @@ mp.msg.Insert.CLOSED = "{#Second} {#word/закрыт,#second}."
 mp.msg.Insert.NOTCONTAINER = "{#Second} не {#if_hint/second,plural,могут,может} что-либо содержать."
 mp.msg.Insert.WHERE = "Нельзя поместить {#first/вн} внутрь себя."
 mp.msg.Insert.ALREADY = "Но {#first} уже и так {#word/находиться,#first} там."
-mp.msg.PutOn.NOTSUPPORTER = "Класть что-либо на {#second} бессмыслено."
+mp.msg.PutOn.NOTSUPPORTER = "Класть что-либо на {#second} бессмысленно."
 --"класть"
 mp.msg.PutOn.PUTON = "{#Me} {#word/класть,нст,#me} {#first/вн} на {#second/вн}."
 mp.msg.PutOn.WHERE = "Нельзя поместить {#first/вн} на себя."
@@ -245,7 +245,7 @@ mp.msg.Pull.PUSH = "Ничего не произошло."
 
 mp.msg.Turn.STATIC = "{#First/вн} трудно сдвинуть с места."
 mp.msg.Turn.SCENERY = "{#First/вн} двигать невозможно."
-mp.msg.Turn.PUSH = "Ничего не произошло."
+mp.msg.Turn.TURN = "Ничего не произошло."
 
 mp.msg.Wait.WAIT = "Проходит немного времени."
 
@@ -280,6 +280,19 @@ mp.msg.Smell.SMELL2 = "Пахнет как {#first}."
 mp.msg.Listen.LISTEN = "Никаких необычных звуков нет."
 --"прислушаться"
 mp.msg.Listen.LISTEN2 = "{#Me} {#word/прислушаться,#me,прш} к {#first/дт}. Никаких необычных звуков нет."
+
+--"выкопать"
+mp.msg.Dig.DIG = "{#Me} ничего не {#word/выкопать,#me,прш}."
+mp.msg.Dig.DIG2 = "Копать {#first/вн} бессмысленно."
+mp.msg.Dig.DIG3 = "Копать {#first/вн} {#second/тв} бессмысленно."
+
+mp.msg.Cut.CUT = "Резать {#first/вн} бессмысленно."
+mp.msg.Cut.CUT2 = "Резать {#first/вн} {#second/тв} бессмысленно."
+
+mp.msg.Tie.TIE = "Привязывать {#first/вн} бессмысленно."
+mp.msg.Tie.TIE2 = "Привязывать {#first/вн} к {#second/дт} бессмысленно."
+
+mp.msg.Blow.BLOW = "Дуть на/в {#first/вн} бессмысленно."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -617,6 +630,41 @@ Verb {
 	"{noun}/вн : Listen",
 	"~ к {noun}/дт : Listen",
 }
+
+Verb {
+	"#Dig",
+	"копа/ть,выкопа/ть,выры/ть,рыть,рой,вырой",
+	"Dig",
+	"{noun}/вн,scene : Dig",
+	"{noun}/вн,scene {noun}/тв,held : Dig",
+	"~ {noun}/тв,held {noun}/вн,scene : Dig reverse",
+}
+
+Verb {
+	"#Cut",
+	"рез/ать,реж/ь,разрез/ать,разреж/ь,рвать,порв/ать,рви/",
+	"{noun}/вн : Cut",
+	"{noun}/вн {noun}/тв,held: Cut",
+	"~ {noun}/тв,held {noun}/вн: Cut reverse"
+}
+
+Verb {
+	"#Tie",
+	"привяз/ать,привяж/и,связ/ать,свяж/и",
+	"{noun}/вн : Tie",
+	"{noun}/вн к {noun}/дт : Tie",
+	"~ {noun}/вн с|со {noun}/тв : Tie",
+	"~ к {noun}/дт {noun}/вн : Tie reverse",
+	"~ с|со {noun}/тв {noun}/вн : Tie reverse",
+}
+
+Verb {
+	"#Blow",
+	"дуть,дуй/,дун/ь,задут/ь,задун/ь,задую,задуй/",
+	"в|во|на {noun}/вн : Blow",
+	"~ {noun}/вн : Blow", -- задуть
+}
+
 -- Dialog
 std.phr.default_Event = "Exam"
 

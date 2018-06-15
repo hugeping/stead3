@@ -991,9 +991,6 @@ function mp:ThrowAt(w, wh)
 	if mp:runmethods('life', 'ThrowAt', wh, w) then
 		return false
 	end
-	return false
-end
-function mp:after_ThrowAt(w, wh)
 	p(mp.msg.ThrowAt.THROW)
 end
 
@@ -1076,11 +1073,10 @@ mp.msg.Search = {}
 
 function mp:Search(w)
 	mp:xaction('Exam', w)
-	return false
 end
 
 mp.msg.LookUnder = {}
-function mp:after_LookUnder(w)
+function mp:LookUnder(w)
 	p (mp.msg.LookUnder.NOTHING)
 end
 
@@ -1107,7 +1103,7 @@ end
 
 mp.msg.Drink = {}
 
-function mp:Drink(w)
+function mp:after_Drink(w)
 	p (mp.msg.Drink.IMPOSSIBLE)
 end
 
@@ -1147,9 +1143,6 @@ function mp:Push(w)
 	if mp:check_live(w) then
 		return
 	end
-end
-
-function mp:after_Push(w)
 	p (mp.msg.Push.PUSH)
 end
 
@@ -1167,9 +1160,6 @@ function mp:Pull(w)
 	if mp:check_live(w) then
 		return
 	end
-end
-
-function mp:after_Pull(w)
 	p (mp.msg.Pull.PULL)
 end
 
@@ -1187,10 +1177,7 @@ function mp:Turn(w)
 	if mp:check_live(w) then
 		return
 	end
-end
-
-function mp:after_Turn(w)
-	p (mp.msg.Turn.Turn)
+	p (mp.msg.Turn.TURN)
 end
 
 mp.msg.Wait = {}
@@ -1221,10 +1208,6 @@ function mp:Touch(w)
 		p (mp.msg.Touch.LIVE)
 		return
 	end
-	return false
-end
-
-function mp:after_Touch(w)
 	p (mp.msg.Touch.TOUCH)
 end
 
@@ -1341,4 +1324,69 @@ function mp:Listen(w)
 		return
 	end
 	p (mp.msg.Listen.LISTEN)
+end
+
+mp.msg.Dig = {}
+function mp:Dig(w, wh)
+	if w and mp:check_live(w) then
+		return
+	end
+	if wh then
+		if mp:check_held(wh) then
+			return
+		end
+		p (mp.msg.Dig.DIG3)
+		return
+	end
+	if w then
+		p (mp.msg.Dig.DIG2)
+		return
+	end
+	p (mp.msg.Dig.DIG)
+end
+
+mp.msg.Cut = {}
+function mp:Cut(w, wh)
+	if mp:check_live(w) then
+		return
+	end
+	if wh then
+		if mp:check_live(wh) then
+			return
+		end
+		if mp:check_held(wh) then
+			return
+		end
+		p (mp.msg.Cut.CUT2)
+		return
+	end
+	if w then
+		p (mp.msg.Cut.CUT)
+		return
+	end
+end
+
+mp.msg.Tie = {}
+
+function mp:Tie(w, wh)
+	if mp:check_live(w) then
+		return
+	end
+	if wh and mp:check_live(wh) then
+		return
+	end
+	if wh then
+		p (mp.msg.Tie.TIE2)
+		return
+	end
+	p (mp.msg.Tie.TIE)
+end
+
+mp.msg.Blow = {}
+
+function mp:Blow(w)
+	if mp:check_live(w) then
+		return
+	end
+	p (mp.msg.Blow.BLOW)
 end
