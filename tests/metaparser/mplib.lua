@@ -1390,3 +1390,38 @@ function mp:Blow(w)
 	end
 	p (mp.msg.Blow.BLOW)
 end
+
+mp.msg.Attack = {}
+
+function mp:Attack(w)
+	if mp:animate(w) and mp:runmethods('life', 'Attack', w) then
+		return false
+	end
+	if mp:animate(w) then
+		p (mp.msg.Attack.LIFE)
+		return
+	end
+	p (mp.msg.Attack.ATTACK)
+end
+
+mp.msg.Sleep = {}
+
+function mp:Sleep()
+	p (mp.msg.Sleep.SLEEP)
+end
+
+mp.msg.Swim = {}
+
+function mp:Swim()
+	p (mp.msg.Swim.SWIM)
+end
+
+mp.msg.Consult = {}
+
+function mp:Consult(w, a)
+	print(w)
+	print(a)
+	if mp:check_live(w) then
+		return
+	end
+end

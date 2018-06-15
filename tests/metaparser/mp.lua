@@ -950,7 +950,7 @@ function mp:compl_match(words)
 	end
 	for _, v in ipairs(hints) do
 		if #matches > 0 and #matches[1].match > hints.lev then
-			return res
+			return res, false, not not matches[1].match.vargs
 		end
 		local pat = self:pattern(v)
 		for _, p in ipairs(pat) do
