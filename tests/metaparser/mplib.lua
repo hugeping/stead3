@@ -985,6 +985,9 @@ function mp:ThrowAt(w, wh)
 		p(mp.msg.ThrowAt.NOTLIFE)
 		return
 	end
+	if mp:runmethods('life', 'ThrowAt', wh, w) then
+		return false
+	end
 	return false
 end
 function mp:after_ThrowAt(w, wh)
@@ -1228,6 +1231,9 @@ function mp:Give(w, wh)
 		p (mp.msg.Give.MYSELF)
 		return
 	end
+	if mp:runmethods('life', 'Give', wh, w) then
+		return false
+	end
 	p (mp.msg.Give.GIVE)
 end
 
@@ -1240,6 +1246,9 @@ function mp:Show(w, wh)
 	if wh == std.me() then
 		mp:xaction("Exam", w)
 		return
+	end
+	if mp:runmethods('life', 'Show', wh, w) then
+		return false
 	end
 	p (mp.msg.Show.SHOW)
 end
@@ -1255,4 +1264,27 @@ function mp:Burn(w, wh)
 	else
 		p (mp.msg.Burn.BURN)
 	end
+end
+
+mp.msg.Wake = {}
+
+function mp:Wake()
+	p (mp.msg.Wake.WAKE)
+end
+
+mp.msg.WakeOther = {}
+
+function mp:WakeOther(w)
+	if w == std.me() then
+		mp:xaction('Wake')
+		return
+	end
+	if not mp:animate(w) then
+		p (mp.msg.WakeOther.NOTLIVE)
+		return
+	end
+	if mp:runmethods('life', 'WakeOther', w) then
+		return false
+	end
+	p (mp.msg.WakeOther.WAKE)
 end

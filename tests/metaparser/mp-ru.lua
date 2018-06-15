@@ -262,6 +262,10 @@ mp.msg.Show.SHOW = "{#Second/вн} это не впечатлило."
 
 mp.msg.Burn.BURN = "Поджигать {#first/вн} бессмысленно."
 mp.msg.Burn.BURN2 = "Поджигать {#first/вн} {#second/тв} бессмысленно."
+--"поверь"
+mp.msg.Wake.WAKE = "Это не сон, а явь."
+mp.msg.WakeOther.WAKE = "Будить {#first/вн} не стоит."
+mp.msg.WakeOther.NOTLIVE = "Бессмысленно будить {#first/вн}."
 
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
@@ -560,6 +564,13 @@ Verb {
 	"{noun}/вн : Burn",
 	"{noun}/вн {noun}/тв,held : Burn",
 	"~ {noun}/тв,held {noun}/вн reverse",
+}
+
+Verb {
+	"#Wake",
+	"будить,разбуд/ить,просн/уться,бужу",
+	"{noun}/вн,live : WakeOther",
+	"Wake",
 }
 -- Dialog
 std.phr.default_Event = "Exam"

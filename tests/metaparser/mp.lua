@@ -1298,15 +1298,34 @@ function mp:__action(events)
 	end
 end
 
+function mp:save_ctx()
+	return {
+		first = self.first,
+		second = self.second,
+		first_hint = self.first_hint,
+		second_hint = self.second_hint,
+	}
+end
+
+function mp:restore_ctx(ctx)
+	self.first, self.second = ctx.first, ctx.second
+	self.first_hint, self.second_hint = ctx.first_hint, ctx.second_hint
+end
+
+function mp:runmethods(t, verb, ...)
+	local events = { {ev = verb, args = { ... }}}
+	local ctx = self:save_ctx()
+	local r, v = self:events_call(events, { 'obj' }, t)
+	self:restore_ctx(ctx)
+	self.reaction = false
+	return r, v
+end
+
 function mp:subaction(verb, ...)
 	local events = { {ev = verb, args = { ... }}}
-	local first = self.first
-	local second = self.second
-	local first_hint = self.first_hint
-	local second_hint = self.second_hint
+	local ctx = self:save_ctx()
 	local r, v = self:__action(events)
-	self.first, self.second = first, second
-	self.first_hint, self.second_hint = first_hint, second_hint
+	self:restore_ctx(ctx)
 	self.reaction = false
 	return r, v
 end
