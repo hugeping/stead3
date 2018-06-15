@@ -1419,9 +1419,5 @@ end
 mp.msg.Consult = {}
 
 function mp:Consult(w, a)
-	print(w)
-	print(a)
-	if mp:check_live(w) then
-		return
-	end
+	p (mp.msg.Consult.CONSULT)
 end

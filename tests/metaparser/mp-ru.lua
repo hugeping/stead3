@@ -300,6 +300,9 @@ mp.msg.Attack.ATTACK = "Сила есть -- ума не надо?"
 mp.msg.Sleep.SLEEP = "{#Me} не {#word/хотеть,#me,нст} спать."
 mp.msg.Swim.SWIM = "Для этого здесь недостаточно воды."
 
+--"находить"
+mp.msg.Consult.CONSULT = "{#Me} не {#word/находить,#me,нст} ничего подходящего."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -436,6 +439,9 @@ Verb { "#Examine",
        "~ под {noun}/тв : LookUnder",
        "~ под {noun}/вн : LookUnder",
        "~ в|во|на {noun}/пр,2 : Search",
+       "~ внутри {noun}/рд : Search",
+       "~ в|во {noun}/пр,2 о|об|обо|про * : Consult",
+       "~ о|об|обо|про * в|во {noun}/пр,2 : Consult reverse",
 }
 
 Verb { "#Search",
@@ -443,6 +449,8 @@ Verb { "#Search",
        "{noun}/вн : Search",
        "в|во|на {noun}/пр,2 : Search",
        "под {noun}/тв : LookUnder",
+       "~ в|во {noun}/пр,2 * : Consult",
+       "~ * в|во {noun}/пр,2 : Consult reverse",
 }
 
 Verb { "#Open",

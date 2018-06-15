@@ -984,7 +984,7 @@ function mp:match(verb, w, compl)
 		local rlev = 1
 
 		for lev, v in ipairs(d.pat) do -- pattern arguments
-			if v == '*' then
+			if v == '*' or v == '~*' then
 				vargs = true -- found
 			end
 
