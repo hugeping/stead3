@@ -130,7 +130,9 @@ room {
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
 }: with { 'стол', 'дверь', 'кепка','выключатель'} : attr '~light'
-
+room {
+	nam = 'main3';
+}
 obj {
 	nam = -"кепка";
 }:attr 'clothes'

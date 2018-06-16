@@ -862,7 +862,7 @@ function move(w, wh)
 	else
 		place(w, wh)
 		if mp:inside(std.me(), w) then
-			r, v = w:walk(wh)
+			r, v = std.me():walk(w)
 			if r then p(r) end
 		end
 	end
