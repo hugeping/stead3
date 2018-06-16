@@ -1485,5 +1485,16 @@ end
 
 mp.msg.Wave = {}
 function mp:Wave(w)
+	if mp:check_held(w) then
+		return
+	end
 	p (mp.msg.Wave.WAVE)
+end
+
+function mp:Climb(w)
+	mp:xaction('Enter', w)
+end
+
+function mp:GetOff(w)
+	mp:xaction('Exit', w)
 end
