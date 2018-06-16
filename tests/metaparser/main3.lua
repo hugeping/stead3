@@ -95,7 +95,8 @@ obj {
 obj {
 	nam = -"стол";
 	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
-} : attr "supporter,enterable"
+	before_Exam = function(s) s:open(); return false; end;
+} : attr "supporter,enterable":close()
 
 obj {
 	-"выключатель|свет";

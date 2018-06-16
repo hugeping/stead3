@@ -465,7 +465,7 @@ function mp:content(w)
 	end
 -- expand?
 	for _, o in ipairs(oo) do
-		if (o:has'supporter' or o:has'transparent') then
+		if (o:has'supporter' or o:has'transparent') and not o:closed() then
 			self:content(o)
 		end
 	end
@@ -1454,4 +1454,19 @@ mp.msg.Consult = {}
 
 function mp:Consult(w, a)
 	p (mp.msg.Consult.CONSULT)
+end
+
+mp.msg.Fill = {}
+function mp:Fill(w)
+	p (mp.msg.Fill.FILL)
+end
+
+mp.msg.Jump = {}
+function mp:Jump()
+	p (mp.msg.Jump.JUMP)
+end
+
+mp.msg.JumpOver = {}
+function mp:JumpOver(w)
+	p (mp.msg.JumpOver.JUMPOVER)
 end

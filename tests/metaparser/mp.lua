@@ -381,7 +381,7 @@ function mp:objects(wh, oo, recurs)
 		if v:visible() then
 			table.insert(oo, v)
 		end
-		if recurs == false then
+		if recurs == false or v:closed() then
 			return nil, false
 		end
 	end)

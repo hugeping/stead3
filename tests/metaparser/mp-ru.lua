@@ -302,6 +302,10 @@ mp.msg.Attack.ATTACK = "Сила есть -- ума не надо?"
 --"хотеть"
 mp.msg.Sleep.SLEEP = "{#Me} не {#word/хотеть,#me,нст} спать."
 mp.msg.Swim.SWIM = "Для этого здесь недостаточно воды."
+mp.msg.Fill.FILL = "Наполнять {#first/вн} бессмысленно."
+--"подпрыгивать"
+mp.msg.Jump.JUMP = "{#Me} глупо {#word/подпрыгивать,#me,нст}."
+mp.msg.JumpOver.JUMPOVER = "Прыгать через {#first/вн} бессмысленно."
 
 --"находить"
 mp.msg.Consult.CONSULT = "{#Me} не {#word/находить,#me,нст} ничего подходящего."
@@ -708,6 +712,20 @@ Verb {
 	"~ {noun}/вн : Exam",
 }
 
+Verb {
+	"#Fill",
+	"наполн/ить,нали/ть",
+	"?в {noun}/вн : Fill",
+	"~ внутрь {noun}/рд : Fill"
+}
+
+Verb {
+	"#Jump",
+	"прыг/ать,скак/ать,перепрыг/нуть,переска/чить,попрыг/ать",
+	"Jump",
+	"через {noun}/вн,scene : JumpOver",
+	"~ {noun}/вн,scene : JumpOver",
+}
 -- Dialog
 std.phr.default_Event = "Exam"
 
