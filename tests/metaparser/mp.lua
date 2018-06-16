@@ -344,7 +344,7 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 	end
 	local pre, post = mp:inp_split()
 	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
-	if not mp.autohelp then
+	if not mp.autohelp and not std.here().forcehelp then
 		return ret
 	end
 	delim = delim or ' | '
@@ -592,9 +592,18 @@ function mp:verb(t, w, extend)
 	table.insert(w.__Verbs, verb)
 	return verb
 end
-
+function mp:verbs_filter(tag)
+	return true
+end
 function mp:verbs()
-	return std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
+	local ret = {}
+	local w = std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
+	for _, v in ipairs(w) do
+		if not v.tag or  self:verbs_filter(v.tag) then
+			table.insert(ret, v)
+		end
+	end
+	return ret
 end
 
 local function word_search(t, w, lev)
@@ -1560,8 +1569,8 @@ function mp:input(str)
 	self.unknown = unknown
 	self.multi = multi
 
-	if self.default_Verb and str == "" then
-		str = self.default_Verb
+	if (self.default_Verb or std.here().default_Verb) and str == "" then
+		str = std.here().default_Verb or self.default_Verb
 	end
 
 	local w = str_split(str, inp_split)

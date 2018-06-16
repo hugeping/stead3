@@ -77,7 +77,7 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"ты/мр,2л"
+--pl.word = -"ты/мр,2л"
 --/од,мр,1л";
 --pl.word = -"я/мр";
 
@@ -100,6 +100,8 @@ obj {
 
 obj {
 	nam = -"стол";
+	dsc = "В центре комнаты стоит стол.";
+	description = function(s) p "Старый стол."; content(s) end;
 	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
 	before_Exam = function(s) s:open(); return false; end;
 } : attr "supporter,enterable":close()
@@ -110,12 +112,20 @@ obj {
 	after_SwitchOn = function(s) here():attr'light' return false end;
 	after_SwitchOff = function(s) here():attr'~light' return false end;
 } : attr 'light,switchable,scenery';
-
+parser.cutscene {
+	nam = 'test';
+	text = {
+		[[Привет мир! Это пример катсцен. Текста, который можно читать.]];
+		[[Проверка катсцен1]];
+		[[Вот так]];
+	};
+}
 room {
 	title = -"комната";
 	nam = 'main';
 	n_to = 'дверь';
 	e_to = 'main2';
+	s_to = 'test';
 --	before_Enter = function(s, w) p ([[Попытка идти: ]],w:dir()) end;
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;

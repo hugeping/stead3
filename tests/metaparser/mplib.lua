@@ -54,6 +54,32 @@ local function pnoun(noun, ...)
 	p(...)
 	mp:restore_ctx(ctx)
 end
+
+mp.cutscene =
+std.class({
+	enter = function(s)
+		s.__num = 1
+	end;
+	title = false;
+	nouns = function() return {} end;
+	dsc = function(s)
+		p (s.text[s.__num])
+	end;
+	Next = function(s)
+		s.__num = s.__num + 1
+		if s.__num > #s.text then
+			local r = std.call(s, 'next_to')
+			if r then
+				walk(r)
+			else
+				walkback()
+			end
+			return
+		end
+		p (s.text[s.__num])
+	end;
+}, std.room)
+
 -- player
 mp.msg.Look = {}
 

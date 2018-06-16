@@ -785,5 +785,12 @@ end
 std.phr.default_Event = "Exam"
 
 Verb ({"~ сказать", "{select} : Exam" }, std.dlg)
-
+Verb ({"дальше", "Next" }, mp.cutscene)
+mp.cutscene.default_Verb = "дальше"
 parser = mp
+
+cutscene = mp.cutscene
+function content(...)
+	return mp:content(...)
+end
+std.player.word = -"ты/мр,2л"

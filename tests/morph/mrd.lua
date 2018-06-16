@@ -689,7 +689,7 @@ function mrd:obj(w, n, nn)
 	end
 	local d = str_split(disp, '|')
 	if #d == 0 then
-		std.err("Wrong object display: ", w)
+		std.err("Wrong object display: ".. (disp or 'nil'), 2)
 	end
 	-- normalize
 	local nd = {}
