@@ -7,7 +7,7 @@ local utf = mp.utf
 
 _'@compass'.word = function()
 	local dir = -"север,с|восток,в|запад,з|юг,ю"
-	local up = -"наверх,вверх,верх|вниз,низ"
+	local up = -"наверх,вверх,верх|вниз,низ|наружу"
 	local inp, pre = mp:compl_ctx()
 	if pre == '' then
 		return dir .. '|'.. up
@@ -21,7 +21,7 @@ _'@darkness'.word = -"тьма,темнота,темень"
 _'@darkness'.before_Any = "Полная, кромешная тьма."
 _'@darkness':attr 'persist'
 
-_'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to' };
+_'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to','out_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
 mp.door.word = -"дверь";
@@ -63,7 +63,7 @@ mp.msg.UNKNOWN_VERB = "Непонятный глагол"
 mp.msg.UNKNOWN_VERB_HINT = "Возможно, вы имели в виду"
 mp.msg.INCOMPLETE = "Нужно дополнить предложение."
 mp.msg.UNKNOWN_OBJ = "Такого предмета тут нет"
-mp.msg.UNKNOWN_WORD = "Слово не распознано:"
+mp.msg.UNKNOWN_WORD = "Слово не распознано"
 mp.msg.HINT_WORDS = "Возможно, вы имели в виду"
 mp.msg.HINT_OR = "или"
 mp.msg.HINT_AND = "и"
@@ -310,6 +310,10 @@ mp.msg.JumpOver.JUMPOVER = "Прыгать через {#first/вн} бессмы
 --"находить"
 mp.msg.Consult.CONSULT = "{#Me} не {#word/находить,#me,нст} ничего подходящего."
 
+--"помахать"
+mp.msg.WaveHands.WAVE = "{#Me} глупо {#word/помахать,прш,#me} руками."
+mp.msg.Wave.WAVE = "{#Me} глупо {#word/помахать,прш,#me} {#first/тв}."
+
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -437,7 +441,7 @@ Verb { "#Enter",
 Verb { "#Exit",
 	"выйти,выйд/и,уйти,уйд/и,вылез/ти,выхо/ди,обратно,назад,выбраться,выберись,выберусь,выбираться,слез/ть",
 	"из|с|со {noun}/рд,scene : Exit",
-	"Exit" }
+	"?наружу : Exit" }
 
 Verb { "#Examine",
        "осм/отреть,смотр/еть,рассмотр/еть,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
@@ -725,6 +729,14 @@ Verb {
 	"Jump",
 	"через {noun}/вн,scene : JumpOver",
 	"~ {noun}/вн,scene : JumpOver",
+}
+
+Verb {
+	"#Wave",
+	"мах/ать,помах/ать,помаш/и",
+	"WaveHands",
+	"~ руками : WaveHands",
+	"{noun}/тв,held : Wave"
 }
 -- Dialog
 std.phr.default_Event = "Exam"

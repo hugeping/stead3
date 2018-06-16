@@ -231,7 +231,7 @@ local function word_fn(l, self, dict)
 		table.insert(words_list, { t = w[1], flex = nflex, pref = npref, an = an_name })
 	end
 	self.words_nr = self.words_nr + num
-	std.busy(true)
+	if std then std.busy(true) end
 	return
 end
 
@@ -266,7 +266,7 @@ function mrd:load(path, dict)
 	local crc = f:read("*line")
 	if crc then crc = tonumber(crc) end
 	f:close()
-	std.busy(false)
+	if std then std.busy(false) end
 	return true, crc
 end
 
@@ -480,9 +480,9 @@ function mrd:lookup(w, g)
 					break
 				end
 				if t ~= f.an.t then sc = sc - 1 end -- todo
-if false then
+if false or false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'ПОВЕРЬ' or tt == 'ПОВЕРИЛ' or tt == 'ПОДХОДИШЬ' then
+				if tt == 'МАХАЮ' or tt == 'МАШУ' or tt == 'ПОДХОДИШЬ' then
 				print(tt, v.t, score + sc)
 				print ("looking for:", g['2л'])
 				for _, v in pairs(g) do
@@ -560,7 +560,7 @@ function mrd:word(w)
 			return ww or w
 		end)
 	if not found then
-		if DEBUG and not std.tonum(w) and not missed_words[w] then
+		if DEBUG and not tonumber(w) and not missed_words[w] then
 			missed_words[w] = true
 			msg("Can not find word: "..w)
 		end
@@ -793,7 +793,7 @@ function mrd:create(fname, crc)
 		dprint("Using dict.mrd")
 	end
 end
-
+if std then
 std.obj.noun = function(self, ...)
 	return mrd:noun(self, ...)
 end
@@ -834,7 +834,7 @@ std.obj.new = function(self, v)
 	end
 	return onew(self, v)
 end
-
+end
 local mt = getmetatable("")
 function mt.__unm(v)
 	return v

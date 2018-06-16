@@ -736,6 +736,9 @@ function mp:compl_verb(words)
 end
 
 function mp:animate(w)
+	if w:has'animate' == false then
+		return false
+	end
 	return w:has'animate' or w:hint'live'
 end
 
@@ -1139,22 +1142,22 @@ function mp:err(err)
 				unk = unk .. v
 			end
 			if need_noun then
-				p (self.msg.UNKNOWN_OBJ or "Do not see it here ", " (",unk, ").")
+				p (self.msg.UNKNOW1N_OBJ, iface:em(" (" .. unk .. ")."))
 			else
-				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
+				p (self.msg.UNKNOWN_WORD, iface:em(" ("..unk..")."))
 			end
 			if mp:thedark() and need_noun then
 				p (self.msg.UNKNOWN_THEDARK)
 				return
 			end
 		elseif err == "UNKNOWN_WORD" then
-			p (self.msg.UNKNOWN_WORD or "Unknown noun.")
+			p (self.msg.UNKNOWN_WORD)
 		else
-			p (self.msg.INCOMPLETE or "Incomplete sentence.")
+			p (self.msg.INCOMPLETE)
 		end
 
 		if #self.hints > 0 then
-			p (self.msg.HINT_WORDS or "Possible words:", " ")
+			p (self.msg.HINT_WORDS, " ")
 		end
 		local first = true
 		local noun = false
@@ -1176,12 +1179,12 @@ function mp:err(err)
 				for k, vv in ipairs(pat) do
 					if not first then
 						if k == #pat and kk == #self.hints then
-							pr (" ", mp.msg.HINT_OR or "or", " ", vv.word)
+							pr (" ", mp.msg.HINT_OR or "or", " ", iface:em(vv.word))
 						else
-							pr (", ", vv.word)
+							pr (", ", iface:em(vv.word))
 						end
 					else
-						pr (" ", vv.word)
+						pr (" ", iface:em(vv.word))
 					end
 					first = false
 				end

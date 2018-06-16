@@ -350,12 +350,15 @@ obj {
 		p (mp.msg.COMPASS_EXAM(d, std.object(r)))
 	end;
 	before_Walk = function(s)
+		local d = s.dirs[s:multi_alias()]
+		if d == 'out_to' then
+			mp:xaction("Exit", std.me():where())
+			return
+		end
 		if not std.me():where():type'room' then
 			p (mp.msg.Enter.EXITBEFORE)
 			return
 		end
-
-		local d = s.dirs[s:multi_alias()]
 		local r = std.call(std.here(), d)
 		if not r then
 			local r = std.call(std.here(), 'cant_go')
@@ -428,7 +431,7 @@ function mp:content(w)
 			end
 			p (mp.msg.Exam.NOTHING)
 		end
-	elseif #oo == 1 then
+	elseif #oo == 1 and not oo[1]:hint 'plural' then
 		if std.me():where() == w then
 			p (mp.msg.Look.HEREIS)
 		else
@@ -508,7 +511,10 @@ function mp:Exam(w)
 end
 
 function mp:after_Exam(w)
-	local r, v = std.call(w, 'dsc')
+	local r, v = std.call(w, 'description')
+	if not v then
+		r, v = std.call(w, 'dsc')
+	end
 	if v then
 		p(r)
 		return false
@@ -632,7 +638,8 @@ function mp:Exit(w)
 		p (mp.msg.Exit.NOWHERE)
 		return
 	end
-	walkback()
+	local r = std.call(w, 'out_to')
+	walkback(r)
 	return false
 end
 
@@ -1469,4 +1476,14 @@ end
 mp.msg.JumpOver = {}
 function mp:JumpOver(w)
 	p (mp.msg.JumpOver.JUMPOVER)
+end
+
+mp.msg.WaveHands = {}
+function mp:WaveHands()
+	p (mp.msg.WaveHands.WAVE)
+end
+
+mp.msg.Wave = {}
+function mp:Wave(w)
+	p (mp.msg.Wave.WAVE)
 end

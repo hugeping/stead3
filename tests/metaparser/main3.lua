@@ -42,6 +42,12 @@ obj {
 obj {
 	-"стрела";
 	nam = 'стрела1';
+	obj = {
+		obj {
+			-"оперение";
+			nam = '#оперение';
+		}
+	}
 }
 
 obj {
@@ -71,9 +77,9 @@ function parser.token.topic(w)
 	return "пароль"
 end
 
---pl.word = -"ты/мр,2л"
+pl.word = -"ты/мр,2л"
 --/од,мр,1л";
-pl.word = -"я/мр";
+--pl.word = -"я/мр";
 
 pl:dict {
 --	["я/вн"] = "себя";
@@ -82,7 +88,7 @@ pl:dict {
 obj {
 	-"рыбка,рыба";
 	nam = 'рыбка';
-}
+}:attr'~animate'
 
 obj {
 	-"аквариум",
