@@ -410,10 +410,12 @@ function mp:content(w)
 		p(dsc)
 	end
 	self:objects(w, oo, false)
+	local something
 	for _, v in ipairs(oo) do
 		local r = std.call(v, 'dsc')
 		if r and not v:has'scenery' then
 			p(r)
+			something = true
 		elseif not v:has'scenery' then
 			table.insert(ooo, v)
 		end
@@ -423,7 +425,7 @@ function mp:content(w)
 	end
 	oo = ooo
 	if #oo == 0 then
-		if mp.first == w then
+		if mp.first == w and not something then
 			if w:has 'supporter' then
 				pnoun (w, mp.msg.Exam.ON)
 			else
