@@ -450,7 +450,7 @@ Verb { "#Exit",
 	"из|с|со {noun}/рд,scene : Exit",
 	"?наружу : Exit" }
 
-Verb { "#Examine",
+Verb { "#Exam",
        "осм/отреть,смотр/еть,рассмотр/еть,посмотр/еть,гляд/еть,разгляд/еть,погляд/еть",
        "?на {noun}/вн : Exam",
        "?всё : Look",
@@ -773,6 +773,7 @@ Verb {
 	"с|со {noun}/тв,live : Talk"
 
 }
+
 if DEBUG then
 	Verb {
 		"#Word",

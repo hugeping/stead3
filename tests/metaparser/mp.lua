@@ -522,7 +522,18 @@ function mp:pattern(t, delim)
 	return words
 end
 
-function mp:verb(t, w)
+function mp:verb_remove(tag, w)
+	w = w or game
+	for k, v in ipairs(w.__Verbs or {}) do
+		if v.tag == tag then
+			table.remove(w.__Verbs, k)
+			return v
+		end
+	end
+end
+
+function mp:verb(t, w, extend)
+	local rem
 	w = w or game
 	if type(t) ~= 'table' then
 		std.err("Wrong 1-arg to mp:verb()", 2)
@@ -537,17 +548,26 @@ function mp:verb(t, w)
 	local n = 1
 	if std.is_tag(t[1]) then
 		verb.tag = t[1]
+		rem = self:verb_remove(verb.tag, w)
 		n = 2
 	end
-	if type(t[n]) ~= 'string' then
-		std.err("Wrong verb pattern in mp:verb()", 2)
+	if extend and (not rem or not verb.tag) then
+		std.err("Extending non existing verb "..verb.tag or '#Undefined', 2)
 	end
-	verb.verb = self:pattern(t[n], ",")
-	n = n + 1
+	if extend then
+		verb.verb = rem.verb
+		verb.dsc = rem.dsc
+	else
+		if type(t[n]) ~= 'string' then
+			std.err("Wrong verb pattern in mp:verb()", 2)
+		end
+		verb.verb = self:pattern(t[n], ",")
+		n = n + 1
+		verb.dsc = {}
+	end
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb descriptor mp:verb()", 2)
 	end
-	verb.dsc = {}
 	while type(t[n]) == 'string' do
 		local dsc = str_split(t[n], ":")
 		local pat
@@ -1624,6 +1644,15 @@ end
 function Verb(t, w)
 	return mp:verb(t, w)
 end
+
+function VerbExtend(t, w)
+	return mp:verb(t, w or false, true)
+end
+
+function VerbRemove(t, w)
+	return mp:verb_remove(t, w)
+end
+
 std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
