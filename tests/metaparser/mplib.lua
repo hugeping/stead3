@@ -438,7 +438,13 @@ function mp:content(w)
 	self:objects(w, oo, false)
 	local something
 	for _, v in ipairs(oo) do
-		local r = std.call(v, 'dsc')
+		local r
+		if not v:has 'moved' then
+			r = std.call(v, 'init_dsc')
+		end
+		if not r then
+			r = std.call(v, 'dsc')
+		end
 		if r and not v:has'scenery' then
 			p(r)
 			something = true
