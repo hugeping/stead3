@@ -1503,3 +1503,21 @@ mp.msg.Buy = {}
 function mp:Buy(w)
 	p (mp.msg.Buy.BUY)
 end
+
+mp.msg.Talk = {}
+function mp:Talk(w)
+	local r = std.call(w, 'talk_to')
+	if r then
+		walkin(r)
+		return
+	end
+	if w == std.me() then
+		p (mp.msg.Talk.SELF)
+		return
+	end
+	if not mp:animate(w) then
+		p (mp.msg.Talk.NOTLIVE)
+		return
+	end
+	p (mp.msg.Talk.LIVE)
+end
