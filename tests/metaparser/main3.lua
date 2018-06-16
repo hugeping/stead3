@@ -95,7 +95,7 @@ obj {
 obj {
 	nam = -"стол";
 	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
-} : attr "supporter"
+} : attr "supporter,enterable"
 
 obj {
 	-"выключатель|свет";

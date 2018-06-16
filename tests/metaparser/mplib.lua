@@ -47,57 +47,15 @@ mp.door = std.class({
 		if not move(std.me(), r) then return true end
 	end;
 }, std.obj):attr 'enterable,openable,door'
-
+local function pnoun(noun, ...)
+	local ctx = mp:save_ctx()
+	mp.first = noun
+	mp.first_hint = noun:gram().hint
+	p(...)
+	mp:restore_ctx(ctx)
+end
 -- player
 mp.msg.Look = {}
-function mp:room_content(w)
-	if w:type 'dlg' then
-		return
-	end
-	local oo = {}
-	local ooo = {}
-	self:objects(w, oo, false)
-	for _, v in ipairs(oo) do
-		local r = std.call(v, 'dsc')
-		if not r and not v:has'scenery' then
-			table.insert(ooo, v)
-		else
-			p(r)
-		end
-	end
-	if #ooo > 0 then
-		p(std.scene_delim)
-	end
-	oo = ooo
-	if #oo == 0 then
-		return
-	elseif #oo == 1 then
-		p (mp.msg.Look.HEREIS or "Here is")
-		p(oo[1]:noun(), ".")
-	else
-		p (mp.msg.Look.HEREARE or "Here there are")
-		for _, v in ipairs(oo) do
-			if _ ~= 1 then
-				if _ == #oo then
-					p (" ", mp.msg.AND or "and")
-				else
-					p ","
-				end
-			end
-			pr (v:noun())
-		end
-		p "."
-	end
--- expand?
---[[
-	for _, o in ipairs(oo) do
-		if o:has'supporter' then
-			mp.msg.Look.SUPPORTER(o)
-			self:content(o)
-		end
-	end
-]]--
-end
 
 function std.obj:multi_alias()
 	return self.__word_alias
@@ -117,19 +75,11 @@ end
 
 function std.obj:scene()
 	local s = self
-	local title, dsc
-	if not mp:offerslight(s) then
-		title = iface:title(std.titleof(s))
-		dsc = std.call(s, 'when_dark')
-		dsc = dsc or mp.msg.WHEN_DARK
-	else
-		if not s:type'room' then
-			title = iface:title(std.titleof(s))
-		end
-		dsc = std.call(s, s:type'room' and 'dsc' or 'inside_dsc')
-	end
-	return std.par(std.scene_delim, title or false, dsc or false)
+	local title = iface:title(std.titleof(mp:visible_scope(s)))
+
+	return title
 end
+
 std.room.scene = std.obj.scene
 
 local owalk = std.player.walk
@@ -177,12 +127,24 @@ std.player.where = function(s, where)
 end
 
 std.room.display = function(s)
-	local c = std.call(mp, 'room_content', s)
+	local c = std.call(mp, 'content', s)
 	return c
+end
+function mp:visible_scope(s)
+	local h = s
+	if s:has 'transparent' or s:has 'supporter' then
+		mp:trace(s, function(v)
+				 h = v
+				 if not v:has'transparent' and not v:has'supporter' then
+					 return nil, false
+				 end
+		end)
+	end
+	return h
 end
 
 std.obj.display = function(s)
-	local c = std.call(mp, 'room_content', s)
+	local c = std.call(mp, 'content', mp:visible_scope(s))
 	return c
 end
 
@@ -293,7 +255,7 @@ function std.obj:visible()
 			return nil, false
 		end
 		table.insert(plw, v)
-		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
+		if v:has 'container' and not v:has 'transparent' then
 			return nil, false
 		end
 	end)
@@ -306,7 +268,7 @@ function std.obj:visible()
 				return true
 			end
 		end
-		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
+		if v:has 'container' and not v:has 'transparent' then
 			return nil, false
 		end
 	end)
@@ -427,30 +389,68 @@ local function if_has(w, a, t, f)
 end
 
 mp.msg.Exam = {}
-function mp:content(w, msg)
+function mp:content(w)
+	if w:type 'dlg' then
+		return
+	end
 	local oo = {}
 	local ooo = {}
+	if w == std.me():where() then
+		pn()
+		local dsc
+		if not mp:offerslight(w) then
+			dsc = std.call(w, 'when_dark')
+			dsc = dsc or mp.msg.WHEN_DARK
+		else
+			dsc = std.call(w, w:type'room' and 'dsc' or 'inside_dsc')
+		end
+		p(dsc)
+	end
 	self:objects(w, oo, false)
 	for _, v in ipairs(oo) do
 		local r = std.call(v, 'dsc')
 		if r and not v:has'scenery' then
 			p(r)
-		else
+		elseif not v:has'scenery' then
 			table.insert(ooo, v)
 		end
 	end
-	if #ooo == 0 and #oo > 0 then
-		return
+	if #ooo > 0 then
+		p(std.scene_delim)
 	end
 	oo = ooo
-	p (msg)
 	if #oo == 0 then
-		p (mp.msg.Exam.NOTHING)
+		if mp.first == w then
+			if w:has 'supporter' then
+				pnoun (w, mp.msg.Exam.ON)
+			else
+				pnoun (w, mp.msg.Exam.IN)
+			end
+			p (mp.msg.Exam.NOTHING)
+		end
 	elseif #oo == 1 then
-		p (mp.msg.Exam.IS)
+		if std.me():where() == w then
+			p (mp.msg.Look.HEREIS)
+		else
+			if w:has 'supporter' then
+				pnoun (w, mp.msg.Exam.ON)
+			else
+				pnoun (w, mp.msg.Exam.IN)
+			end
+			p (mp.msg.Exam.IS)
+		end
 		p(oo[1]:noun(), ".")
 	else
-		p (mp.msg.Exam.ARE)
+		if std.me():where() == w then
+			p (mp.msg.Look.HEREARE)
+		else
+			if w:has 'supporter' then
+				pnoun (w, mp.msg.Exam.ON)
+			else
+				pnoun (w, mp.msg.Exam.IN)
+			end
+			p (mp.msg.Exam.ARE)
+		end
 		for _, v in ipairs(oo) do
 			if _ ~= 1 then
 				if _ == #oo then
@@ -464,14 +464,11 @@ function mp:content(w, msg)
 		p "."
 	end
 -- expand?
---[[
 	for _, o in ipairs(oo) do
-		if o:has'supporter' then
-			mp.msg.Look.SUPPORTER(o)
+		if (o:has'supporter' or o:has'transparent') then
 			self:content(o)
 		end
 	end
-]]--
 end
 
 std.room:attr 'enterable,light'
@@ -517,9 +514,9 @@ function mp:after_Exam(w)
 		return false
 	end
 	if w:has 'container' and (w:has'transparent' or w:has'open') then
-		self:content(w, mp.msg.Exam.IN)
+		self:content(w)
 	elseif w:has 'supporter' then
-		self:content(w, mp.msg.Exam.ON)
+		self:content(w)
 	else
 		if w:has'openable' then
 			if w:has 'open' then
@@ -697,7 +694,7 @@ end
 function mp:after_Open(w)
 	p(mp.msg.Open.OPEN)
 	if w:has'container' then
-		self:content(w, mp.msg.Exam.IN)
+		self:content(w)
 	end
 end
 
