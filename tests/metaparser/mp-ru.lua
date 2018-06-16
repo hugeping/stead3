@@ -314,6 +314,8 @@ mp.msg.Consult.CONSULT = "{#Me} не {#word/находить,#me,нст} нич�
 mp.msg.WaveHands.WAVE = "{#Me} глупо {#word/помахать,прш,#me} руками."
 mp.msg.Wave.WAVE = "{#Me} глупо {#word/помахать,прш,#me} {#first/тв}."
 
+--"продаваться"
+mp.msg.Buy.BUY = "{#First} не {#word/продаваться,нст,#first}."
 mp.hint.live = 'од'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
@@ -754,6 +756,19 @@ Verb {
 	"с {noun}/рд,scene : GetOff",
 }
 
+Verb {
+	"#Buy",
+	"купи/ть,покупать",
+	"{noun}/вн,scene : Buy"
+}
+
+if DEBUG then
+	Verb {
+		"#Word",
+		"!слово",
+		"* : MetaWord"
+	}
+end
 -- Dialog
 std.phr.default_Event = "Exam"
 

@@ -1498,3 +1498,8 @@ end
 function mp:GetOff(w)
 	mp:xaction('Exit', w)
 end
+
+mp.msg.Buy = {}
+function mp:Buy(w)
+	p (mp.msg.Buy.BUY)
+end
