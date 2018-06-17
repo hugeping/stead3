@@ -1183,7 +1183,7 @@ function mp:err(err)
 				unk = unk .. v
 			end
 			if need_noun then
-				p (self.msg.UNKNOW1N_OBJ, iface:em(" (" .. unk .. ")."))
+				p (self.msg.UNKNOWN_OBJ, iface:em(" (" .. unk .. ")."))
 			else
 				p (self.msg.UNKNOWN_WORD, iface:em(" ("..unk..")."))
 			end
