@@ -1457,50 +1457,14 @@ function mp:action()
 	local events = get_events(self, ev)
 	local r
 	self:__action(events)
-
-	-- parser:before_Any
-	-- parser:before_Take || before_Def
-	-- game:before_Any
-	-- game:before_Take || before_Def
-	-- me():before_Any
-	-- me():before_Take || before_Def
-	-- here():before_Any
-	-- here():before_Take || before_Def
-	-- ob():before_Any
-	-- ob():before_Take || before_Def
-
-	-- game:Any
-	-- game:Take || Def
-	-- me():Any
-	-- me():Take || Def
-	-- here():Any
-	-- here():Take || Def
-	-- ob():Any
-	-- ob():Take || Def
-	-- parser:Any
-	-- parser:Take || Def
-
-	-- ob():after_Take || after_Def
-	-- ob():after_Any
-	-- here():after_Take || after_Def
-	-- here():after_Any
-	-- me():after_Take || after_Def
-	-- me():after_Any
-	-- game:after_Take || after_Def
-	-- game:after_Any
-	-- parser:after_Take || after_Def
-	-- parser:after_Any
 end
+
 function mp:correct(inp)
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
---	for _, v in ipairs(self.vargs and self.vargs or {}) do
---		if rinp ~= '' then rinp = rinp .. ' ' end
---		rinp = rinp .. v
---	end
 	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
 	end
@@ -1716,8 +1680,6 @@ function mp:input(str)
 	self.vargs = self.parsed.vargs or {}
 	return true
 end
-
--- Verb { "#give", "отдать,дать", "{$inv/вн} ?для {$obj/вн} : give %2 %3|receive %3 %2"}
 
 function Verb(t, w)
 	return mp:verb(t, w)
