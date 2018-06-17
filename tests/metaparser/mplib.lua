@@ -1669,3 +1669,11 @@ function mp:TranscriptOn()
 		self.lognum = self.lognum + 1
 	end
 end
+
+function mp:Save()
+	instead.menu 'save'
+end
+
+function mp:Load()
+	instead.menu 'load'
+end

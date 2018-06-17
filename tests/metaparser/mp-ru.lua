@@ -853,11 +853,21 @@ if DEBUG then
 	}
 end
 Verb {
-	"транскрипт",
+	"~транскрипт",
 	"да : TranscriptOn",
 	"нет : TranscriptOff",
 	"Transcript",
 }
+
+Verb {
+	"~сохрани/ть",
+	"Save"
+}
+Verb {
+	"~загрузи/ть",
+	"Load"
+}
+
 -- Dialog
 std.phr.default_Event = "Exam"
 
