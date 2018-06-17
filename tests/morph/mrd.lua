@@ -474,21 +474,21 @@ function mrd:lookup(w, g)
 		local score = self:score(v.an, g)
 		local t = v.an.t
 		for _, f in ipairs(flex) do
-			if self:gram_eq(v.an.t, f.an.t) then --and self:gram_compat(f.an, gram2an(g)) then
+			if self:gram_eq(v.an.t, f.an.t) and self:gram_compat(f.an, gram2an(g)) then
 				local sc = self:score(f.an, g)
 				if sc < 0 then
 					break
 				end
 				if t ~= f.an.t then sc = sc - 1 end -- todo
-if false or false then
+if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'МАХАЮ' or tt == 'МАШУ' or tt == 'ПОДХОДИШЬ' then
+				if tt == 'ДЛИННАЯ' or tt == 'ДЛИННЫЙ' or tt == 'ПОДХОДИШЬ' then
 				print(tt, v.t, score + sc)
-				print ("looking for:", g['2л'])
+				print ("looking for:")
 				for _, v in pairs(g) do
 					print(_, v)
 				end
-				print ("looking got:", score, sc, f.an['3л'])
+				print ("looking got:", score, sc)
 				for _, v in pairs(f.an) do
 					print(_, v)
 				end
@@ -808,7 +808,13 @@ std.obj.gram = function(self, ...)
 	local _, gram = mrd:word(w .. '/'..hint)
 	local thint = ''
 	hint = str_split(hint, ",")
-	local g = gram and gram[1] or {}
+	local g = gram and gram[1]
+	for _, v in ipairs(gram or {}) do
+		if v.t == 'С' then
+			g = v
+			break
+		end
+	end
 	for _, v in ipairs(hint) do
 		g[v] = true
 	end

@@ -1036,14 +1036,7 @@ function mp:match(verb, w, compl)
 					word = pp.word
 				end
 				local k, len = word_search(a, pp.word)
-				if found and self:eq(found.word, pp.word) and
-					(found.ob:noun(found.alias) ~= pp.ob:noun(pp.alias)) and
-					found.ob and pp.ob then -- few ob candidates
-					table.insert(multi, { word = found.ob:noun(found.alias), lev = rlev })
-					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
-					found = false
-					break
-				elseif k and (k < best or len > best_len) then
+				if k and (k < best or len > best_len) then
 					best = k
 					word = pp.word
 					found = pp
@@ -1051,6 +1044,25 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
+				if found.ob then
+					local same
+					for _, pp in ipairs(pat) do
+						if pp.ob and self:eq(found.word, pp.word) then
+							if not found.multi then
+								found.multi = {}
+							end
+							table.insert(found.multi, pp.ob)
+							if found.ob:noun(found.alias) ~= pp.ob:noun(pp.alias) then
+								table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
+							end
+						end
+					end
+					if #multi > 0 then
+						table.insert(multi, 1, { word = found.ob:noun(found.alias), lev = rlev })
+						found = false
+						break
+					end
+				end
 				if vargs then
 					for i = 1, best - 1 do
 						table.insert(match.vargs, a[i])
@@ -1224,9 +1236,13 @@ function mp:err(err)
 			p "?"
 		end
 	elseif err == "MULTIPLE" then
-		pr (self.msg.MULTIPLE or "There are", " ", self.multi[1])
+		pr (self.msg.MULTIPLE, " ", self.multi[1])
 		for k = 2, #self.multi do
-			pr (" ", mp.msg.HINT_AND or "and", " ", self.multi[k])
+			if k ~= #self.multi - 1 then
+				pr (" ", mp.msg.HINT_AND, " ", self.multi[k])
+			else
+				pr (", ", self.multi[k])
+			end
 		end
 		pr "."
 	end
@@ -1235,6 +1251,7 @@ end
 local function get_events(self, ev)
 	local events = {}
 	self.aliases = {}
+	self.multi = {}
 	for _, v in ipairs(ev) do
 		local ea = str_split(v)
 		local e = ea[1]
@@ -1248,12 +1265,26 @@ local function get_events(self, ev)
 		end
 		for _, vv in ipairs(self.args) do
 			if vv and std.is_obj(vv.ob) then
-				if reverse then
-					table.insert(args, 1, vv.ob)
-				else
-					table.insert(args, vv.ob)
+				local attrs = {}
+				for _, h in ipairs(str_split(vv.morph, ",")) do
+					attrs[h] = true
 				end
-				self.aliases[vv.ob] = vv.alias
+				local ob = vv.ob
+				for _, h in ipairs(vv.multi) do
+					if attrs.held and not have(vv.ob) and have(h) then
+						ob = h
+						break
+					elseif attrs.scene and have(vv.ob) and not have(h) then
+						ob = h
+						break
+					end
+				end
+				if reverse then
+					table.insert(args, 1, ob)
+				else
+					table.insert(args, ob)
+				end
+				self.aliases[ob] = vv.alias
 			end
 		end
 		if self.vargs then

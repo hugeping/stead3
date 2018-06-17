@@ -40,7 +40,7 @@ obj {
 }: attr 'edible'
 
 obj {
-	-"стрела";
+	-"короткая стрела,стрела/жр";
 	nam = 'стрела1';
 	init_dsc = [[Я увидел стрелу на столе!]];
 	obj = {
@@ -52,8 +52,18 @@ obj {
 }
 
 obj {
-	-"стрела";
+	-"длинная стрела,стрела/жр";
 	nam = 'стрела2';
+}
+
+obj {
+	-"стрела";
+	nam = 'стрела3';
+}
+
+obj {
+	-"стрела";
+	nam = 'стрела4';
 }
 
 obj {
@@ -103,7 +113,7 @@ obj {
 	nam = -"стол";
 	dsc = "В центре комнаты стоит стол.";
 	description = function(s) p "Старый стол."; content(s) end;
-	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
+	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2', 'стрела3'};
 	before_Exam = function(s) s:open(); return false; end;
 } : attr "supporter,enterable":close()
 
@@ -144,7 +154,10 @@ function init()
 end
 
 function start()
---	print(_'яблоко':noun('тв,мн')) -- даст яблокам
+--	print(_'стрела2':noun('им')) -- даст яблокам
+--	print(_'стрела2':gram().hint) -- даст яблокам
+	print(_'стрела3':gram().hint) -- даст яблокам
+--	os.exit(1)
 --	print(pl:Noun('тв')) -- даст мной
 --	print(parser.mrd:noun(-"взять/прш,од,1л"))
 --	print(parser.mrd:noun(-"нужен/жр"))
