@@ -1163,12 +1163,13 @@ function mp:err(err)
 		local verbs = self:lookup_verb(self.words, true)
 		local hint = false
 		if verbs and #verbs > 0 then
-			local verb = verbs[1]
-			local fixed = verb.verb[verb.word_nr]
-			if verb.lev < self.lev_thresh then
-				hint = true
-				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", iface:em(self.words[verb.verb_nr]), ".")
-				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
+			for _, verb in ipairs(verbs) do
+				local fixed = verb.verb[verb.word_nr]
+				if verb.lev < self.lev_thresh and verb.word_nr == 1 then
+					hint = true
+					p (self.msg.UNKNOWN_VERB, " ", iface:em(self.words[verb.verb_nr]), ".")
+					pn(self.msg.UNKNOWN_VERB_HINT, " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
+				end
 			end
 		end
 		if not hint then
