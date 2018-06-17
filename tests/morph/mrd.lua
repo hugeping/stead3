@@ -705,7 +705,7 @@ function mrd:obj(w, n, nn)
 		n = nn
 	end
 	if type(w) ~= 'string' then
-		w = std.object(w)
+--		w = std.object(w)
 		ob = w
 		disp, raw = self.dispof(w)
 	else
@@ -755,6 +755,15 @@ local function noun_append(rc, tab, w)
 	return rc
 end
 
+function mrd:noun_hint(ob)
+	local g = ob and ob:gram() or {}
+	local hint = ''
+	for _, v in ipairs { mp.hint.male, mp.hint.female, mp.hint.neuter, mp.hint.plural, mp.hint.live } do
+		if g[v] then hint = hint ..','..v end
+	end
+	return hint
+end
+
 function mrd:noun(w, n, nn)
 	local hint, ob, found
 	local rc = ''
@@ -765,24 +774,25 @@ function mrd:noun(w, n, nn)
 	else
 		tab = {}
 	end
+	local hint2 = self:noun_hint(ob)
 	for _, v in ipairs(w) do
 		found = false
 		if ob and type(ob.__dict) == 'table' then
-			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
+			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint .. hint2)
 			if ww then
 				found = true
 				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found and type(game.__dict) == 'table' then
-			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint)
+			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint .. hint2)
 			if ww then
 				found = true
 				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found then
-			local m = self:word(v.word .. '/'.. v.hint)
+			local m = self:word(v.word .. '/'.. v.hint .. hint2)
 			rc = noun_append(rc, tab, m)
 		end
 	end
