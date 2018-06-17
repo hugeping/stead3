@@ -693,7 +693,10 @@ function mp:after_Inv()
 	end
 	p(mp.msg.Inv.INV)
 	for _, v in ipairs(oo) do
-		pr(v:noun())
+		local r, rc = std.call(v, 'inv')
+		if not rc then
+			pr(v:noun())
+		end
 		if v:has'worn' then
 			mp.msg.WORN(v)
 		elseif v:has'openable' and v:has'open' then
