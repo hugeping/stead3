@@ -1165,7 +1165,7 @@ function mp:err(err)
 		if verbs and #verbs > 0 then
 			for _, verb in ipairs(verbs) do
 				local fixed = verb.verb[verb.word_nr]
-				if verb.lev < self.lev_thresh and verb.word_nr == 1 then
+				if verb.lev < self.lev_thresh and verb.verb_nr == 1 then
 					hint = true
 					p (self.msg.UNKNOWN_VERB, " ", iface:em(self.words[verb.verb_nr]), ".")
 					pn(self.msg.UNKNOWN_VERB_HINT, " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
