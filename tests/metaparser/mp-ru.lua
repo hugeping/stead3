@@ -847,9 +847,14 @@ Verb {
 
 if DEBUG then
 	Verb {
-		"#Word",
-		"!слово",
+		"#MetaWord",
+		"~_слово",
 		"* : MetaWord"
+	}
+	Verb {
+		"#MetaNoun",
+		"~_сущ/ествительное",
+		"* : MetaNoun"
 	}
 end
 Verb {
@@ -861,11 +866,11 @@ Verb {
 
 Verb {
 	"~сохрани/ть",
-	"Save"
+	"MetaSave"
 }
 Verb {
 	"~загрузи/ть",
-	"Load"
+	"MetaLoad"
 }
 
 -- Dialog

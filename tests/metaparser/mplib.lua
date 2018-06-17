@@ -1670,10 +1670,54 @@ function mp:TranscriptOn()
 	end
 end
 
-function mp:Save()
+function mp:MetaSave()
 	instead.menu 'save'
 end
 
-function mp:Load()
+function mp:MetaLoad()
 	instead.menu 'load'
+end
+
+function mp:MetaWord(w)
+	local w, g = self.mrd:word(w)
+	pn(w)
+	for _, v in ipairs(g) do
+		for k, vv in pairs(v) do
+			pn(k, " = ", vv)
+		end
+	end
+end
+
+local function getobj(w)
+	if std.is_tag(w) then
+		return std.here():lookup(w) or std.me():lookup(w)
+	end
+	return std.ref(w)
+end
+
+function mp:MetaNoun(w)
+	local varg = self.vargs
+	local o = getobj(varg[1])
+	if not o then
+		p ("Wrong object: ", varg[1])
+		return
+	end
+	local t = {}
+	local w
+	if #varg == 2 then
+		w = o:noun(varg[2], t)
+	else
+		w = o:noun(t)
+	end
+	pn "== Words:"
+	for _, v in ipairs(w or {}) do
+		pn(v)
+	end
+	pn "== Grams:"
+	for _, v in ipairs(t or {}) do
+		for kk, vv in pairs(v) do
+			pn(kk, " = ", vv)
+		end
+	end
+
 end

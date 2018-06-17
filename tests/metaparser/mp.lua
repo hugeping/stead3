@@ -1050,6 +1050,7 @@ function mp:match(verb, w, compl)
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' or v == '~*' then
 				vargs = true -- found
+				v = '*'
 			end
 
 			local pat = self:pattern(v) -- pat -- possible words
