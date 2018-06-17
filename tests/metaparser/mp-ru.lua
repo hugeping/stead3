@@ -852,6 +852,12 @@ if DEBUG then
 		"* : MetaWord"
 	}
 end
+Verb {
+	"транскрипт",
+	"да : TranscriptOn",
+	"нет : TranscriptOff",
+	"Transcript",
+}
 -- Dialog
 std.phr.default_Event = "Exam"
 

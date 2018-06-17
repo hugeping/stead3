@@ -1641,3 +1641,31 @@ end
 function mp:No()
 	p (mp.msg.Yes.YES)
 end
+
+function mp:Transcript()
+	if self.logfile then
+		p("Log file: ", self.logfile)
+	else
+		self:TranscriptOn()
+	end
+end
+
+function mp:TranscriptOff()
+	self.logfile = false
+	self.lognum = self.lognum + 1
+	p("Logging is stopped.")
+end
+
+function mp:TranscriptOn()
+	while true do
+		local logfile = string.format("%s/log%03d.txt", instead.gamepath(), self.lognum)
+		local f = io.open(logfile, "rb")
+		if not f then
+			self.logfile = logfile
+			p ("Logging is enabled: ", logfile)
+			return
+		end
+		f:close()
+		self.lognum = self.lognum + 1
+	end
+end

@@ -155,6 +155,8 @@ mp = std.obj {
 	autohelp = false;
 	compl_thresh = 0;
 	{
+		logfile = false;
+		lognum = 0;
 		inp = '';
 		cur = 1;
 		utf = {
@@ -1469,7 +1471,16 @@ function mp:correct(inp)
 		pn(fmt.em("("..rinp..")"))
 	end
 end
-
+function mp:log(t)
+	if mp.logfile then
+		t = std.fmt(t)
+		print(t)
+		local f = io.open(mp.logfile, "a+b")
+		if not f then return end
+		f:write((t or '').."\n")
+		f:close()
+	end
+end
 function mp:parse(inp)
 	inp = std.strip(inp)
 	pn(fmt.b(self.prompt .. inp))
@@ -1509,6 +1520,7 @@ std.world.display = function(s, state)
 	l = std.par(std.scene_delim, reaction or false,
 		    av or false, l or false,
 		    pv or false) or ''
+	mp:log(l)
 	mp.text = mp.text ..  l .. '^^' .. fmt.anchor()
 	return mp.text
 end
