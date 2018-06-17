@@ -345,6 +345,7 @@ mp.msg.Answer.LIVE = "{#First} не {#word/ответить,прш,#first}."
 mp.msg.Answer.EMPTY = "{#Me} не {#word/придумать,#me,прш} что ответить."
 mp.msg.Answer.SELF = "Хороший ответ."
 
+mp.msg.Yes.YES = "Вопрос был риторическим."
 --"продаваться"
 mp.msg.Buy.BUY = "{#First} не {#word/продаваться,нст,#first}."
 mp.hint.live = 'од'
@@ -830,6 +831,18 @@ Verb {
 	"ответ/ить,отвеч/ать",
 	"{noun}/дт,live * : Answer",
 	"~ * {noun}/дт,live : Answer reverse",
+}
+
+Verb {
+	"#Yes",
+	"да",
+	"Yes",
+}
+
+Verb {
+	"#No",
+	"нет",
+	"No",
 }
 
 if DEBUG then

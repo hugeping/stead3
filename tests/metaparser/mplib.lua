@@ -1631,3 +1631,13 @@ function mp:Answer(w, t)
 	end
 	p (mp.msg.Answer.LIVE)
 end
+
+mp.msg.Yes = {}
+
+function mp:Yes()
+	p (mp.msg.Yes.YES)
+end
+
+function mp:No()
+	p (mp.msg.Yes.YES)
+end
