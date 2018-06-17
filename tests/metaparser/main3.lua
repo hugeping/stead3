@@ -82,8 +82,6 @@ parser.debug.trace_action = true
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
 --}
 
-Verb { 'сказ/ать', "{noun}/дт * : Talk" }
-
 function parser.token.topic(w)
 	return "пароль"
 end

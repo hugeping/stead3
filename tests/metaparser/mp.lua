@@ -524,14 +524,21 @@ function mp:pattern(t, delim)
 	return words
 end
 
-function mp:verb_remove(tag, w)
+function mp:verb_find(tag, w)
 	w = w or game
 	for k, v in ipairs(w.__Verbs or {}) do
 		if v.tag == tag then
-			table.remove(w.__Verbs, k)
-			return v
+			return v, k
 		end
 	end
+end
+
+function mp:verb_remove(tag, w)
+	local v, k = self:verb_find(tag, w)
+	if v then
+		table.remove(w or game, k)
+	end
+	return v
 end
 
 function mp:verb(t, w, extend)
@@ -591,21 +598,15 @@ function mp:verb(t, w, extend)
 		end
 		n = n + 1
 	end
+	verb.hint = t.hint
 	table.insert(w.__Verbs, verb)
 	return verb
 end
-function mp:verbs_filter(tag)
-	return true
-end
+
 function mp:verbs()
 	local ret = {}
 	local w = std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
-	for _, v in ipairs(w) do
-		if not v.tag or  self:verbs_filter(v.tag) then
-			table.insert(ret, v)
-		end
-	end
-	return ret
+	return w
 end
 
 local function word_search(t, w, lev)
@@ -753,14 +754,41 @@ end
 function mp:startswith(w, v)
 	return (self:norm(w)):find(self:norm(v), 1, true) == 1
 end
-
+function mp:hint_verbs(v)
+	if not v.tag then return true end
+	if type(v.hint) == 'function' then
+		return v:hint()
+	end
+	local r = true
+	if game.hint_verbs then
+		r = false
+		for _, vv in ipairs(game.hint_verbs) do
+			if v.tag == vv then
+				r = true
+				break
+			end
+		end
+	end
+	if r then return r end
+	if std.here().hint_verbs then
+		for _, vv in ipairs(game.hint_verbs) do
+			if v.tag == vv then
+				r = true
+				break
+			end
+		end
+	end
+	return r
+end
 function mp:compl_verb(words)
 	local dups = {}
 	local poss = {}
 	for _, v in ipairs(self:verbs()) do
-		for _, vv in ipairs(v.verb) do
-			local verb = vv.word .. (vv.morph or "")
-			table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden })
+		if self:hint_verbs(v) then
+			for _, vv in ipairs(v.verb) do
+				local verb = vv.word .. (vv.morph or "")
+				table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden })
+			end
 		end
 	end
 	return poss
@@ -1703,6 +1731,10 @@ function VerbRemove(t, w)
 	return mp:verb_remove(t, w)
 end
 
+function VerbHint(t, fn, w)
+	local v = mp:verb_find(t, w)
+	if v then v.hint = fn end
+end
 std.rawset(_G, 'mp', mp)
 std.mod_cmd(
 function(cmd)
