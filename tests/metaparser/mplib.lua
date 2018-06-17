@@ -1573,6 +1573,9 @@ function mp:Tell(w, t)
 		p (mp.msg.Tell.NOTLIVE)
 		return
 	end
+	if mp:runmethods('life', 'Tell', w, t) then
+		return false
+	end
 	p (mp.msg.Tell.LIVE)
 end
 
@@ -1590,5 +1593,41 @@ function mp:Ask(w, t)
 		p (mp.msg.Ask.NOTLIVE)
 		return
 	end
+	if mp:runmethods('life', 'Ask', w, t) then
+		return false
+	end
 	p (mp.msg.Ask.LIVE)
+end
+
+function mp:AskFor(w, t)
+	if w == std.me() then
+		mp:xaction('Inv')
+		return
+	end
+	mp:xaction('Ask', w, t)
+end
+
+function mp:AskTo(w, t)
+	mp:xaction('Ask', w, t)
+end
+
+mp.msg.Answer = {}
+
+function mp:Answer(w, t)
+	if #self.vargs == 0 then
+		p (mp.msg.Answer.EMPTY)
+		return
+	end
+	if w == std.me() then
+		p (mp.msg.Answer.SELF)
+		return
+	end
+	if not mp:animate(w) then
+		p (mp.msg.Answer.NOTLIVE)
+		return
+	end
+	if mp:runmethods('life', 'Answer', w, t) then
+		return false
+	end
+	p (mp.msg.Answer.LIVE)
 end

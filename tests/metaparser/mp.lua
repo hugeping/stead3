@@ -1685,7 +1685,7 @@ function mp:input(str)
 	end
 	self.parsed = matches[1].match
 	self.args = self.parsed.args
-	self.vargs = self.parsed.vargs
+	self.vargs = self.parsed.vargs or {}
 	return true
 end
 

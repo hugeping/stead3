@@ -337,6 +337,14 @@ mp.msg.Ask.LIVE = "{#First} не {#word/ответить,прш,#first}."
 mp.msg.Ask.EMPTY = "{#Me} не {#word/придумать,#me,прш} что спросить."
 mp.msg.Ask.SELF = "Хороший вопрос."
 
+--"отвечать"
+mp.msg.Answer.NOTLIVE = "Ответа не последовало."
+--"ответить"
+mp.msg.Answer.LIVE = "{#First} не {#word/ответить,прш,#first}."
+--"придумать"
+mp.msg.Answer.EMPTY = "{#Me} не {#word/придумать,#me,прш} что ответить."
+mp.msg.Answer.SELF = "Хороший ответ."
+
 --"продаваться"
 mp.msg.Buy.BUY = "{#First} не {#word/продаваться,нст,#first}."
 mp.hint.live = 'од'
@@ -797,8 +805,9 @@ Verb {
 Verb {
 	"#Tell",
 	"сказать,сообщ/ить,рассказать,расскаж/ите",
-	"{noun}/дт,live * : Tell",
+	"{noun}/дт,live о|об|обо|про * : Tell",
 	"~ * {noun}/дт,live : Tell reverse",
+	"~ {noun}/дт * : AskTo",
 }
 
 Verb {
@@ -806,6 +815,21 @@ Verb {
 	"спросит/ь,расспросит/ь",
 	"?у {noun}/вн,live о|об|обо|про * : Ask",
 	"~ о|об|обо|про * ?у {noun}/вн,live : Ask reverse",
+}
+
+Verb {
+	"#AskFor",
+	"попроси/ть,выпроси/ть,уговори/ть,проси/ть,попрош/у,выпрош/у",
+	"у {noun}/вн,live * : AskFor",
+	"~ * у {noun}/вн,live : AskFor reverse",
+	"~ {noun}/вн,live * : AskTo",
+}
+
+Verb {
+	"#Answer",
+	"ответ/ить,отвеч/ать",
+	"{noun}/дт,live * : Answer",
+	"~ * {noun}/дт,live : Answer reverse",
 }
 
 if DEBUG then
