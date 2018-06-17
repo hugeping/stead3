@@ -281,7 +281,7 @@ function std.obj:visible()
 			return nil, false
 		end
 		table.insert(plw, v)
-		if v:has 'container' and not v:has 'transparent' then
+		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
 			return nil, false
 		end
 	end)
@@ -294,7 +294,7 @@ function std.obj:visible()
 				return true
 			end
 		end
-		if v:has 'container' and not v:has 'transparent' then
+		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
 			return nil, false
 		end
 	end)
@@ -976,6 +976,9 @@ function mp:Insert(w, wh)
 		return
 	end
 	if mp:check_held(w) then
+		return
+	end
+	if mp:check_worn(w) then
 		return
 	end
 	if mp:check_live(wh) then

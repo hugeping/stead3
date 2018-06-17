@@ -141,6 +141,8 @@ function input:key(press, key)
 		if mp:key(key) then
 			if mp.autohelp then
 				mp:compl_fill(mp:compl(mp.inp))
+			else
+				mp:compl(mp.inp)
 			end
 			return '@mp_key '..tostring(key)
 		end
