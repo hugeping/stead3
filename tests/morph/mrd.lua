@@ -461,7 +461,31 @@ local function gram2an(g)
 	return a
 end
 
+local cache = {
+	hash = {};
+	list = {};
+}
 function mrd:lookup(w, g)
+	local key  = ""
+	for _, v in ipairs(g or {}) do
+		key = key ..','.. v
+	end
+	key = w .. '/'..key
+	local cc = cache.hash[key]
+	if cc then
+		return cc.w, cc.g
+	end
+	w, g = self:__lookup(w, g)
+	cache.hash[key] = { w = w, g = g }
+	table.insert(cache.list, 1, key)
+	if #cache.list > 512 then
+		key = cache.list[#cache.list]
+		cache.hash[key] = nil
+		table.remove(cache.list, #cache.list)
+	end
+	return w, g
+end
+function mrd:__lookup(w, g)
 	local cap, upper = self.lang.is_cap(w)
 	local t = self.lang.upper(self.lang.norm(w))
 	w = self.words[t]
@@ -808,7 +832,7 @@ std.obj.gram = function(self, ...)
 	local _, gram = mrd:word(w .. '/'..hint)
 	local thint = ''
 	hint = str_split(hint, ",")
-	local g = gram and gram[1]
+	local g = gram and gram[1] or {}
 	for _, v in ipairs(gram or {}) do
 		if v.t == 'С' then
 			g = v

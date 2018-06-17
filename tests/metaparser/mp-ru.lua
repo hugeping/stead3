@@ -528,6 +528,8 @@ Verb {
 	"#Disrobe",
 	"снять,сним/ать",
 	"{noun}/вн,worn : Disrobe",
+	"~ {noun}/вн с|со {noun}/рд : Remove",
+	"~ с|со {noun}/рд {noun}/вн : Remove reverse"
 }
 
 Verb {

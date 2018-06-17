@@ -139,7 +139,9 @@ function input:key(press, key)
 
 	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
-			mp:compl_fill(mp:compl(mp.inp))
+			if mp.autohelp then
+				mp:compl_fill(mp:compl(mp.inp))
+			end
 			return '@mp_key '..tostring(key)
 		end
 	end
