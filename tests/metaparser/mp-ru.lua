@@ -315,10 +315,28 @@ mp.msg.WaveHands.WAVE = "{#Me} глупо {#word/помахать,прш,#me} р
 mp.msg.Wave.WAVE = "{#Me} глупо {#word/помахать,прш,#me} {#first/тв}."
 
 mp.msg.Talk.SELF = "Беседы не получилось."
---"безмолвен"
-mp.msg.Talk.NOTLIVE = "{#First} {#word/безмолвен,#first}."
+--"уметь"
+mp.msg.Talk.NOTLIVE = "{#First} не {#word/уметь,#first,нст} разговаривать."
 --"отреагировать"
 mp.msg.Talk.LIVE = "{#First} никак не {#word/отреагировать,#first}."
+
+mp.msg.Tell.SELF = "Беседы не получилось."
+
+--"безмолвен"
+mp.msg.Tell.NOTLIVE = "{#First} {#word/безмолвен,#first}."
+--"отреагировать"
+mp.msg.Tell.LIVE = "{#First} никак не {#word/отреагировать,#first}."
+--"нашёл"
+mp.msg.Tell.EMPTY = "{#Me} не {#word/нашёл,#me,прш} что сказать."
+
+--"отвечать"
+mp.msg.Ask.NOTLIVE = "Ответа не последовало."
+--"ответить"
+mp.msg.Ask.LIVE = "{#First} не {#word/ответить,прш,#first}."
+--"придумать"
+mp.msg.Ask.EMPTY = "{#Me} не {#word/придумать,#me,прш} что спросить."
+mp.msg.Ask.SELF = "Хороший вопрос."
+
 --"продаваться"
 mp.msg.Buy.BUY = "{#First} не {#word/продаваться,нст,#first}."
 mp.hint.live = 'од'
@@ -774,6 +792,20 @@ Verb {
 	"говор/ить,поговор/ить,бесед/овать,побесед/овать,разговарива/ть",
 	"с|со {noun}/тв,live : Talk"
 
+}
+
+Verb {
+	"#Tell",
+	"сказать,сообщ/ить,рассказать,расскаж/ите",
+	"{noun}/дт,live * : Tell",
+	"~ * {noun}/дт,live : Tell reverse",
+}
+
+Verb {
+	"#Ask",
+	"спросит/ь,расспросит/ь",
+	"?у {noun}/вн,live о|об|обо|про * : Ask",
+	"~ о|об|обо|про * ?у {noun}/вн,live : Ask reverse",
 }
 
 if DEBUG then

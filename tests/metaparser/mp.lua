@@ -1152,6 +1152,13 @@ if false then
 		end
 	end
 end
+	if #hints > 0 and #unknown > 0 then
+		if hints[1].lev > unknown[1].lev then
+			unknown = {}
+		elseif hints[1].lev < unknown[1].lev then
+			hints = {}
+		end
+	end
 	hints = lev_sort(hints)
 	unknown = lev_sort(unknown)
 	multi = lev_sort(multi)

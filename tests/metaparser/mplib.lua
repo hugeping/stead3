@@ -1558,3 +1558,37 @@ function mp:Talk(w)
 	end
 	p (mp.msg.Talk.LIVE)
 end
+
+mp.msg.Tell = {}
+function mp:Tell(w, t)
+	if #self.vargs == 0 then
+		p (mp.msg.Tell.EMPTY)
+		return
+	end
+	if w == std.me() then
+		p (mp.msg.Tell.SELF)
+		return
+	end
+	if not mp:animate(w) then
+		p (mp.msg.Tell.NOTLIVE)
+		return
+	end
+	p (mp.msg.Tell.LIVE)
+end
+
+mp.msg.Ask = {}
+function mp:Ask(w, t)
+	if #self.vargs == 0 then
+		p (mp.msg.Ask.EMPTY)
+		return
+	end
+	if w == std.me() then
+		p (mp.msg.Ask.SELF)
+		return
+	end
+	if not mp:animate(w) then
+		p (mp.msg.Ask.NOTLIVE)
+		return
+	end
+	p (mp.msg.Ask.LIVE)
+end
