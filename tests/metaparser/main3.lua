@@ -112,7 +112,7 @@ obj {
 	dsc = "В центре комнаты стоит стол.";
 	description = function(s) p "Старый стол."; content(s) end;
 	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
-	before_Exam = function(s) s:open(); return false; end;
+	["before_Exam,Take"] = function(s) s:open(); return false; end;
 } : attr "supporter,enterable":close()
 
 obj {

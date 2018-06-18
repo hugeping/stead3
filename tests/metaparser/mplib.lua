@@ -1727,8 +1727,24 @@ end
 
 local __oini = std.obj.__ini
 std.obj.__ini = function(s, ...)
+	if s.__mp_ini then
+		return __oini(s, ...)
+	end
 	if type(s.scope) == 'table' and not std.is_obj('list', s.scope) then
 		s.scope = std.list (s.scope)
 	end
+	for k, f in pairs(s.__ro) do -- "before_Take,Drop..."
+		if type(f) == 'function' and k:find("[a-zA-Z]+,") then
+			local ss, ee = k:find("^[a-z]+_")
+			local pref = ''
+			local str = k
+			if ss then pref = k:sub(1, ee); str = k:sub(ee + 1) end
+			local m = std.split(str, ",")
+			for _, v in ipairs(m) do
+				s.__ro[pref .. v] = f
+			end
+		end
+	end
+	std.rawset(s, "__mp_ini", true)
 	return __oini(s, ...)
 end
