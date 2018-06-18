@@ -157,6 +157,7 @@ mp = std.obj {
 	autohelp = false;
 	compl_thresh = 0;
 	{
+		scope = std.list {};
 		logfile = false;
 		lognum = 0;
 		inp = '';
@@ -382,10 +383,18 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 end)
 
 function mp:objects(wh, oo, recurs)
+	local scope = self.scope
 	wh:for_each(function(v)
 		if v:disabled() then return nil, false end
-		if v:visible() then
+		if scope:lookup(v) or v:visible() then
 			table.insert(oo, v)
+			if v.scope then
+				if std.is_obj(v.scope, 'list') then
+					scope:cat(v.scope)
+				elseif type(v.scope) == 'function' then
+					v:scope(scope)
+				end
+			end
 		end
 		if recurs == false or v:closed() then
 			return nil, false
@@ -398,6 +407,7 @@ local darkness = std.obj {
 }
 
 function mp:nouns()
+	self.scope:zap()
 	if type(std.here().nouns) == 'function' then
 		return std.here():nouns()
 	end
@@ -412,6 +422,13 @@ function mp:nouns()
 	if not self:offerslight(std.me():where()) then
 		table.insert(oo, darkness)
 	end
+	local dups = {}
+	self.scope:for_each(function(v)
+		if not dups[v] then
+			table.insert(oo, v)
+			dups[v] = true
+		end
+	end)
 	return oo
 end
 
