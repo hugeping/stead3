@@ -103,6 +103,7 @@ room {
 	nam = 'happyend';
 	title = "Конец";
 	dsc = [[Поздравляем! Вы прошли игру.]];
+	noparser = true;
 }
 
 function init()

@@ -345,6 +345,9 @@ local function str_split(str, delim)
 end
 
 instead.get_inv = std.cacheable('inv', function(horiz)
+	if std.here().noparser then
+		return
+	end
 	local delim = instead.hinv_delim
 	if not horiz then
 		delim = instead.inv_delim
@@ -1277,7 +1280,7 @@ function mp:err(err)
 						pr ("noun")
 					end
 				end
-			else
+			else -- if not need_noun then
 				local pat = self:pattern(v)
 				for k, vv in ipairs(pat) do
 					if not first then
