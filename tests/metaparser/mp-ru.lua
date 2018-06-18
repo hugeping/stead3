@@ -858,6 +858,7 @@ if DEBUG then
 	}
 end
 Verb {
+	"#MetaTranscript",
 	"~транскрипт",
 	"да : TranscriptOn",
 	"нет : TranscriptOff",
@@ -865,14 +866,20 @@ Verb {
 }
 
 Verb {
+	"#MetaSave",
 	"~сохрани/ть",
 	"MetaSave"
 }
 Verb {
+	"#MetaLoad",
 	"~загрузи/ть",
 	"MetaLoad"
 }
-
+Verb {
+	"#MetaHelp",
+	"~помощь,помогите",
+	"MetaHelp",
+}
 -- Dialog
 std.phr.default_Event = "Exam"
 
