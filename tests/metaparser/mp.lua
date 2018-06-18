@@ -406,7 +406,9 @@ function mp:nouns()
 	self:objects(std.me(), oo)
 	self:objects(self.persistent, oo)
 	table.insert(oo, std.me())
-	table.insert(oo, std.here())
+	if std.here().word then
+		table.insert(oo, std.here())
+	end
 	if not self:offerslight(std.me():where()) then
 		table.insert(oo, darkness)
 	end
@@ -1507,6 +1509,9 @@ end
 
 std.world.display = function(s, state)
 	local l, av, pv
+	if mp.text == '' and game:time() == 1 then
+		mp.text = game.dsc .. '^'
+	end
 	if player_moved() then mp.text = '' end
 	mp:trim()
 	local reaction = s:reaction() or nil

@@ -174,7 +174,6 @@ local function cap(str)
 end
 
 local lang
-
 local function norm(str)
 	if type(str) ~= 'string' then
 		return str

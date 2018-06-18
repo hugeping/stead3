@@ -6,8 +6,8 @@ local mp = _'@metaparser'
 local utf = mp.utf
 
 _'@compass'.word = function()
-	local dir = -"север,с|восток,в|запад,з|юг,ю"
-	local up = -"наверх,вверх,верх|вниз,низ|наружу"
+	local dir = -"север,с|северо-восток,св|восток,в|юго-восток,юв|юг,ю|юго-запад,юз|запад,з|северо-запад,сз"
+	local up = -"наверх,вверх,верх|вниз,низ|наружу,выход|внутрь,вход"
 	local inp, pre = mp:compl_ctx()
 	if pre == '' then
 		return dir .. '|'.. up
@@ -21,7 +21,7 @@ _'@darkness'.word = -"тьма,темнота,темень"
 _'@darkness'.before_Any = "Полная, кромешная тьма."
 _'@darkness':attr 'persist'
 
-_'@compass'.dirs = { 'n_to', 'e_to', 'w_to', 's_to', 'u_to', 'd_to','out_to' };
+_'@compass'.dirs = { 'n_to', 'ne_to', 'e_to', 'se_to', 's_to', 'sw_to', 'w_to', 'nw_to', 'u_to', 'd_to','out_to','in_to' };
 _'@compass'.before_Default = 'Попробуйте глагол "идти".'
 
 mp.door.word = -"дверь";
@@ -468,7 +468,7 @@ end
 
 Verb { "#Enter",
 	"идти,иду,подой/ти,иди,войти,войд/и,зайти,зайд/и,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг",
-	"на|в {noun}/вн,scene,enterable : Enter",
+	"на|в|во {noun}/вн,scene,enterable : Enter",
 	"к {noun}/дт,scene : Walk",
 	"{noun_obj}/@compass : Walk" }
 

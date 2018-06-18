@@ -377,18 +377,22 @@ obj {
 	end;
 	before_Walk = function(s)
 		local d = s.dirs[s:multi_alias()]
-		if d == 'out_to' then
-			mp:xaction("Exit", std.me():where())
-			return
-		end
+--		if d == 'out_to' then
+--			mp:xaction("Exit", std.me():where())
+--			return
+--		end
 		if not std.me():where():type'room' then
 			p (mp.msg.Enter.EXITBEFORE)
 			return
 		end
-		local r = std.call(std.here(), d)
-		if not r then
-			local r = std.call(std.here(), 'cant_go')
+		local r, v = std.call(std.here(), d)
+		if not v then
+			local r = std.call(std.here(), 'cant_go', s)
 			p (r or mp.msg.COMPASS_NOWAY)
+			return
+		end
+		if type(std.here()[d]) == 'function' then
+			pr(r)
 			return
 		end
 		if std.object(r):type 'room' then
@@ -428,7 +432,7 @@ function mp:content(w)
 		pn()
 		local dsc
 		if not mp:offerslight(w) then
-			dsc = std.call(w, 'when_dark')
+			dsc = std.call(w, 'dark_dsc')
 			dsc = dsc or mp.msg.WHEN_DARK
 		else
 			dsc = std.call(w, w:type'room' and 'dsc' or 'inside_dsc')
@@ -509,6 +513,16 @@ function mp:content(w)
 end
 
 std.room:attr 'enterable,light'
+
+function mp:post_Any()
+	local oo = mp:nouns()
+	for _, v in ipairs(oo) do
+		if v.each_turn ~= nil then
+			local r, v = std.call(v, 'each_turn')
+			if r then pr(r) end
+		end
+	end
+end
 
 function mp:before_Any(ev)
 	if ev == 'Exam' then
@@ -672,8 +686,8 @@ function mp:Exit(w)
 		p (mp.msg.Exit.NOWHERE)
 		return
 	end
-	local r = std.call(w, 'out_to')
-	walkback(r)
+--	local r = std.call(w, 'out_to')
+	walkback()
 	return false
 end
 
@@ -852,9 +866,14 @@ function mp:after_Unlock(w, t)
 end
 
 function mp:inside(w, wh)
+	wh = std.object(wh)
+	w = std.object(w)
 	return mp:trace(w, function(v)
 			 if v == wh then return true end
 	end)
+end
+std.obj.inside = function(s, wh)
+	return mp:inside(s, wh)
 end
 function move(w, wh)
 	wh = wh or std.here()

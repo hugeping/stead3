@@ -586,7 +586,7 @@ function mrd:word(w)
 	if not found then
 		if DEBUG and not tonumber(w) and not missed_words[w] then
 			missed_words[w] = true
-			msg("Can not find word: "..w)
+			msg("Can not find word: '"..w.."'")
 		end
 	end
 	return w, grams
@@ -755,8 +755,8 @@ local function noun_append(rc, tab, w)
 	return rc
 end
 
-function mrd:noun_hint(ob)
-	local g = ob and ob:gram() or {}
+function mrd:noun_hint(ob, ...)
+	local g = ob and ob:gram(...) or {}
 	local hint = ''
 	for _, v in ipairs { mp.hint.male, mp.hint.female, mp.hint.neuter, mp.hint.plural, mp.hint.live } do
 		if g[v] then hint = hint ..','..v end
@@ -770,12 +770,12 @@ function mrd:noun(w, n, nn)
 	local tab = false
 	ob, w, hint = self:obj(w, n, nn)
 	if type(w) ~= 'table' then
-		w = {{ word = w, hint = hint }}
+		w = {{ word = w, hint = hint, alias = n }}
 	else
 		tab = {}
 	end
-	local hint2 = self:noun_hint(ob)
 	for _, v in ipairs(w) do
+		local hint2 = self:noun_hint(ob, v.alias)
 		found = false
 		if ob and type(ob.__dict) == 'table' then
 			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint .. hint2)
