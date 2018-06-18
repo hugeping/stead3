@@ -12,7 +12,7 @@ _'@compass'.word = function()
 	if pre == '' then
 		return dir .. '|'.. up
 	end
-	if pre == "на " then
+	if pre == 'на ' or inp:find("на[ ]*$") then
 		return dir
 	end
 	return up

@@ -109,3 +109,5 @@ function init()
 	pl.word = -"ты/жр,2л"
 	pl.room = 'before_cottage'
 end
+
+game.hint_verbs = { "#Exam", "#Enter", "#Take", "#Drop" }
