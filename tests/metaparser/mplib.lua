@@ -1724,3 +1724,11 @@ function mp:MetaNoun(w)
 	end
 
 end
+
+local __oini = std.obj.__ini
+std.obj.__ini = function(s, ...)
+	if type(s.scope) == 'table' and not std.is_obj('list', s.scope) then
+		s.scope = std.list (s.scope)
+	end
+	return __oini(s, ...)
+end
