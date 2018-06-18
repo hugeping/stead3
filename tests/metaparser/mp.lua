@@ -1330,7 +1330,7 @@ local function get_events(self, ev)
 				self.aliases[ob] = vv.alias
 			end
 		end
-		if self.vargs then
+		if self.vargs and #self.vargs > 0 then
 			local varg = ''
 			for _, vv in ipairs(self.vargs) do
 				if varg ~= '' then varg = varg .. ' ' end
