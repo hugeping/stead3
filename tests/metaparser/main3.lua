@@ -104,11 +104,8 @@ room {
 	title = "Конец";
 	dsc = [[Поздравляем! Вы прошли игру.]];
 }
-pl.word = -"ты/жр,2л"
-pl.room = 'before_cottage'
 
-function start()
-	for _, v in pairs((_'branch':gram(2))) do
-		print(_, v)
-	end
+function init()
+	pl.word = -"ты/жр,2л"
+	pl.room = 'before_cottage'
 end
