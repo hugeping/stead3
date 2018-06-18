@@ -418,7 +418,7 @@ end
 
 function mp:err_noun(noun)
 	local hint = std.split(noun, "/")
-	p "существительное в"
+	p "{$fmt em|существительное в"
 	if #hint == 2 then
 		local h = hints(hint[2])
 		local acc = 'именительном'
@@ -439,6 +439,7 @@ function mp:err_noun(noun)
 	else
 		pr "именительном падеже"
 	end
+	pr "}"
 end
 
 function mp.shortcut.vo(hint)
