@@ -16,6 +16,8 @@ game.dsc = [[^Пример простой игры на Inform
 require "mp-ru"
 require "fmt"
 
+const 'MAX_SCORE' (3)
+
 global 'score' (0)
 
 Prop = Class {
@@ -421,7 +423,7 @@ room {
 	noparser = true;
 	dsc = function(s)
 		pn "Вы испортили любимую народную легенду.";
-		p ("Ваш счет: ", score)
+		p ("Ваш счет: ", score, " из ", MAX_SCORE)
 	end;
 }
 room {
@@ -430,7 +432,7 @@ room {
 	noparser = true;
 	dsc = function(s)
 		pn [[Поздравляю, вы прошли игру!]]
-		p ("Ваш счет: ", score)
+		p ("Ваш счет: ", score, " из ", MAX_SCORE)
 	end;
 }
 
