@@ -1816,6 +1816,8 @@ std.obj.__ini = function(s, ...)
 			v.obj:add(s)
 		end
 		std.rawset(s, 'found_in', nil)
+	elseif type(s.found_in) == 'function' then
+		s:persist()
 	end
 	if type(s.scope) == 'table' and not std.is_obj('list', s.scope) then
 		s.scope = std.list (s.scope)

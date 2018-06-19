@@ -87,7 +87,8 @@ Prop {
 Prop {
 	-"жители|люди|народ|толпа";
 	description = "Горный народ, такой же, как и ты.";
-}: persist(); -- everywhere
+	found_in = function() return true; end;
+}
 
 room {
 	-"улица";
@@ -100,7 +101,7 @@ room {
 }
 
 Furniture {
-	-"фруктово-овощная лавка,лавка|прилавок,стол";
+	-"овощная лавка|лавка|прилавок,стол";
 	found_in = { 'below_square' };
 	nam = 'stall';
 	description = "Это всего лишь маленький стол с большой кучей картошки, кучкой морковки и репы, и парой яблок.";
@@ -114,7 +115,7 @@ Prop {
 }
 
 Prop {
-	-"фрукты и овощи|фрукты|овощи|морковь,морковка,репа,репка";
+	-"фрукты/~од|овощи|морковь,морковка,репа,репка";
 	found_in = { 'below_square' };
 	description = "Отличные местные овощи.";
 }
@@ -368,7 +369,10 @@ NPC {
 		end
                 return false
 	end;
-}:attr 'transparent,scenery':persist()
+	found_in = function()
+		return true
+	end;
+}:attr 'transparent,scenery'
 
 obj {
 	-"яблоко,яблочко";
