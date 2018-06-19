@@ -842,12 +842,13 @@ function mp:compl_filter(v)
 		container = false;
 		inside = false;
 		enterable = false;
+		supporter = false;
 		live = false,
 	}
 	for _, h in ipairs(str_split(v.morph, ",")) do
 		if attrs[h] ~= nil then attrs[h] = h end
 	end
-	for _, a in ipairs { 'container', 'enterable' } do
+	for _, a in ipairs { 'container', 'enterable', 'supporter' } do
 		if attrs[a] and not v.ob:has(a) then return false end
 	end
 	if attrs.live and not self:animate(v.ob) then return false end
@@ -1366,7 +1367,7 @@ local function get_events(self, ev)
 end
 
 function mp:call(ob, ev, ...)
-	self.event = ev
+--	self.event = ev
 	for _, v in ipairs({ob, ...}) do
 		if self.aliases[v] then
 			std.rawset(v, '__word_alias', self.aliases[v])
@@ -1388,6 +1389,7 @@ function mp:events_call(events, oo, t)
 	if not t then t = '' else t = t .. '_' end
 	for _, o in ipairs(oo) do
 		for _, e in ipairs(events) do
+			self.event = e.ev
 			local ename = t .. e.ev
 			local eany = t .. 'Any'
 			local edef = t .. 'Default'
@@ -1445,12 +1447,15 @@ function mp:save_ctx()
 		second = self.second,
 		first_hint = self.first_hint,
 		second_hint = self.second_hint,
+		event = self.event;
+
 	}
 end
 
 function mp:restore_ctx(ctx)
 	self.first, self.second = ctx.first, ctx.second
 	self.first_hint, self.second_hint = ctx.first_hint, ctx.second_hint
+	self.event = ctx.event
 end
 
 function mp:runmethods(t, verb, ...)
@@ -1773,7 +1778,7 @@ function(cmd)
 end)
 
 std.mod_start(
-function()
+function(load)
 	mrd:gramtab("morph/rgramtab.tab")
 	local _, crc = mrd:load("dict.mrd")
 	mrd:create("dict.mrd", crc) -- create or update

@@ -7,7 +7,7 @@ local utf = mp.utf
 
 _'@compass'.word = function()
 	local dir = -"север,с|северо-восток,св|восток,в|юго-восток,юв|юг,ю|юго-запад,юз|запад,з|северо-запад,сз"
-	local up = -"наверх,вверх,верх|вниз,низ|наружу,выход|внутрь,вход"
+	local up = -"наверх,вверх,верх|вниз,низ|наружу,выход,назад|внутрь,вход"
 	local inp, pre = mp:compl_ctx()
 	if pre == '' then
 		return dir .. '|'.. up
@@ -466,8 +466,15 @@ function mp.shortcut.so(hint)
 --	return "со ".. hint
 end
 
+function mp:before_Enter(w)
+	if w ^ '@compass' then
+		mp:xaction("Walk", w)
+		return
+	end
+	return false
+end
 
-Verb { "#Enter",
+Verb { "#Walk",
 	"идти,иду,подой/ти,иди,войти,войд/и,зайти,зайд/и,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг",
 	"на|в|во {noun}/вн,scene,enterable : Enter",
 	"к {noun}/дт,scene : Walk",
@@ -528,8 +535,8 @@ Verb { "#Drop",
        "полож/ить,класть,клади/,вставь/,помест/ить,сун/уть,засун/уть,воткн/уть,втык/ать,встав/ить,влож/ить",
        "{noun}/вн,held : Drop",
        "{noun}/вн,held в|во {noun}/вн,inside : Insert",
-       "~ {noun}/вн внутрь {noun}/рд : Insert",
-       "~ {noun}/вн на {noun}/вн : PutOn",
+       "~ {noun}/вн,held внутрь {noun}/рд : Insert",
+       "{noun}/вн,held на {noun}/вн : PutOn",
        "~ в|во {noun}/вн {noun}/вн : Insert reverse",
        "~ внутрь {noun}/рд {noun}/вн : Insert reverse",
        "~ на {noun}/вн {noun}/вн : PutOn reverse",

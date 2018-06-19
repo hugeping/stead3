@@ -361,21 +361,26 @@ obj {
 --	visible = function() return true end;
 	before_Exam = function(s)
 		local d = s.dirs[s:multi_alias()]
-		local r = std.call(std.here(), d)
-		if not r or std.object(r):type 'room' then
-			p (mp.msg.COMPASS_EXAM_NO)
+		local r, v = std.call(std.here(), d)
+		if type(std.here()[d]) ~= 'function' then
+			if not r or std.object(r):type 'room' then
+				p (mp.msg.COMPASS_EXAM_NO)
+				return
+			end
+			p (mp.msg.COMPASS_EXAM(d, std.object(r)))
 			return
 		end
-		p (mp.msg.COMPASS_EXAM(d, std.object(r)))
+		pr(r)
+		return v
 	end;
 	before_Walk = function(s)
 		local d = s.dirs[s:multi_alias()]
---		if d == 'out_to' then
---			mp:xaction("Exit", std.me():where())
---			return
---		end
 		if not std.me():where():type'room' then
 			p (mp.msg.Enter.EXITBEFORE)
+			return
+		end
+		if std.here()[d] == nil and d == 'out_to' then
+			mp:xaction("Exit")
 			return
 		end
 		local r, v = std.call(std.here(), d)
@@ -386,7 +391,7 @@ obj {
 		end
 		if type(std.here()[d]) == 'function' then
 			pr(r)
-			return
+			return v
 		end
 		if std.object(r):type 'room' then
 			if not move(std.me(), r) then return true end
@@ -1777,4 +1782,9 @@ std.obj.__ini = function(s, ...)
 	end
 	std.rawset(s, "__mp_ini", true)
 	return __oini(s, ...)
+end
+
+function parent(w)
+	w = std.object(w)
+	return w:where()
 end

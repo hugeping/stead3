@@ -759,7 +759,12 @@ function mrd:noun_hint(ob, ...)
 	local g = ob and ob:gram(...) or {}
 	local hint = ''
 	for _, v in ipairs { mp.hint.male, mp.hint.female, mp.hint.neuter, mp.hint.plural, mp.hint.live } do
-		if g[v] then hint = hint ..','..v end
+		if g[v] then
+			hint = hint ..','..v
+		end
+	end
+	if not g[mp.hint.live] then
+		hint = hint .. ',~' .. mp.hint.live
 	end
 	return hint
 end

@@ -112,4 +112,4 @@ function init()
 	pl.description = "Здесь нет зеркала."
 end
 
-game.hint_verbs = { "#Exam", "#Enter", "#Take", "#Drop" }
+game.hint_verbs = { "#Exam", "#Walk", "#Take", "#Drop" }
