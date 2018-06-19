@@ -1448,7 +1448,6 @@ function mp:save_ctx()
 		first_hint = self.first_hint,
 		second_hint = self.second_hint,
 		event = self.event;
-
 	}
 end
 
