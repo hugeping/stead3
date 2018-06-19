@@ -1801,7 +1801,6 @@ local function fn_aliases(wh)
 		wh[k] = v
 	end
 end
-
 std.obj.__ini = function(s, ...)
 	if s.__mp_ini then
 		return __oini(s, ...)

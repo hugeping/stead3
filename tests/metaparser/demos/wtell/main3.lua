@@ -161,7 +161,7 @@ room {
 
 Prop {
 	-"шляпа,шапка|шест,столб";
-	['before_Default,Exam'] = function() p "Издали плохо видно."; end;
+	['before_Default,Exam'] = "Издали плохо видно.";
 	found_in = {'south_square', 'north_square' };
 }
 
