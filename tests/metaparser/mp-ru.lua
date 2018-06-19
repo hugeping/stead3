@@ -107,6 +107,7 @@ mp.msg.Exam.IN = "В {#first/пр,2}"
 mp.msg.Exam.ON = "На {#first/пр,2}"
 --"видеть"
 mp.msg.Exam.DEFAULT = "{#Me} не {#word/видеть,#me,нст} {#vo/{#first/пр}} ничего необычного.";
+mp.msg.Exam.SELF = "{#Me} не {#word/видеть,#me,нст} в себе ничего необычного.";
 
 --"открыт"
 mp.msg.Exam.OPENED = "{#First} {#word/открыт,нст,#first}."

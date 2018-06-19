@@ -402,6 +402,9 @@ function mp:objects(wh, oo, recurs)
 		if recurs == false or v:closed() then
 			return nil, false
 		end
+		if std.is_obj(wh, 'list') then
+			self:objects(v, oo, recurs)
+		end
 	end)
 end
 
@@ -625,7 +628,7 @@ function mp:verb(t, w, extend)
 		n = n + 1
 	end
 	verb.hint = t.hint
-	table.insert(w.__Verbs, verb)
+	table.insert(w.__Verbs, 1, verb)
 	return verb
 end
 
@@ -810,11 +813,10 @@ function mp:compl_verb(words)
 	local dups = {}
 	local poss = {}
 	for _, v in ipairs(self:verbs()) do
-		if self:hint_verbs(v) then
-			for _, vv in ipairs(v.verb) do
-				local verb = vv.word .. (vv.morph or "")
-				table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden })
-			end
+		local filter = not self:hint_verbs(v)
+		for _, vv in ipairs(v.verb) do
+			local verb = vv.word .. (vv.morph or "")
+			table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden or filter})
 		end
 	end
 	return poss

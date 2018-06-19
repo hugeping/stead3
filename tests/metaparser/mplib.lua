@@ -186,6 +186,16 @@ std.player.look = function(s)
 end;
 
 --
+local function check_persist(w)
+	if not w:has 'persist' then
+		return false
+	end
+	if not w.found_in then
+		return true
+	end
+	local r, v = std.call(w, 'found_in')
+	return v
+end
 
 function std.obj:access()
 	local plw = {}
@@ -216,6 +226,9 @@ function std.obj:access()
 	return mp:trace(self, function(v)
 		if v:has 'concealed' then
 			return nil, false
+		end
+		if check_persist(v) then
+			return true
 		end
 		for _, o in ipairs(plw) do
 			if v == o then
@@ -257,12 +270,8 @@ function std.obj:visible()
 		return true
 	end
 
-	if self:has 'persist' then
-		if not self.found_in then
-			return true
-		end
-		local r, v = std.call(self, 'found_in')
-		return v
+	if check_persist(self) then
+		return true
 	end
 
 	if mp.scope:lookup(self) then
@@ -281,6 +290,9 @@ function std.obj:visible()
 	return mp:trace(self, function(v)
 		if v:has 'concealed' then
 			return nil, false
+		end
+		if check_persist(v) then
+			return true
 		end
 		for _, o in ipairs(plw) do
 			if v == o then
@@ -383,13 +395,14 @@ obj {
 			mp:xaction("Exit")
 			return
 		end
+		local isfun = type(std.here()[d]) == 'function'
 		local r, v = std.call(std.here(), d)
 		if not v then
 			local r = std.call(std.here(), 'cant_go', s)
 			p (r or mp.msg.COMPASS_NOWAY)
 			return
 		end
-		if type(std.here()[d]) == 'function' then
+		if isfun then
 			pr(r)
 			return v
 		end
@@ -514,6 +527,7 @@ std.room:attr 'enterable,light'
 
 function mp:post_Any()
 	local oo = mp:nouns()
+	std.here():attr 'visited'
 	for _, v in ipairs(oo) do
 		if v.each_turn ~= nil then
 			local r, v = std.call(v, 'each_turn')
@@ -593,7 +607,11 @@ function mp:after_Exam(w)
 		if w == std.here() then
 			std.me():need_scene(true)
 		else
-			p (mp.msg.Exam.DEFAULT);
+			if w == std.me() then
+				p (mp.msg.Exam.SELF);
+			else
+				p (mp.msg.Exam.DEFAULT);
+			end
 		end
 	end
 end
@@ -1576,6 +1594,9 @@ function mp:Talk(w)
 		p (mp.msg.Talk.NOTLIVE)
 		return
 	end
+	if mp:runmethods('life', 'Talk', w) then
+		return false
+	end
 	p (mp.msg.Talk.LIVE)
 end
 
@@ -1761,25 +1782,45 @@ function mp:MetaHelp()
 ]])
 end
 local __oini = std.obj.__ini
-std.obj.__ini = function(s, ...)
-	if s.__mp_ini then
-		return __oini(s, ...)
-	end
-	if type(s.scope) == 'table' and not std.is_obj('list', s.scope) then
-		s.scope = std.list (s.scope)
-	end
-	for k, f in pairs(s.__ro) do -- "before_Take,Drop..."
-		if type(f) == 'function' and k:find("[a-zA-Z]+,") then
+
+local function fn_aliases(wh)
+	local new = {}
+	for k, f in pairs(wh) do -- "before_Take,Drop..."
+		if (type(f) == 'function' or type(f) == 'string') and k:find("[a-zA-Z]+,") then
 			local ss, ee = k:find("^[a-z]+_")
 			local pref = ''
 			local str = k
 			if ss then pref = k:sub(1, ee); str = k:sub(ee + 1) end
 			local m = std.split(str, ",")
 			for _, v in ipairs(m) do
-				s.__ro[pref .. v] = f
+				new[pref .. v] = f
 			end
 		end
 	end
+	for k, v in pairs(new) do
+		wh[k] = v
+	end
+end
+
+std.obj.__ini = function(s, ...)
+	if s.__mp_ini then
+		return __oini(s, ...)
+	end
+	if type(s.found_in) == 'table' then
+		for _, v in ipairs(s.found_in) do
+			local vv = v
+			v = std.ref(v)
+			if not v then
+				std.err("Wrong object in found_in list of: "..tostring(s).."/"..vv, 2)
+			end
+			v.obj:add(s)
+		end
+		std.rawset(s, 'found_in', nil)
+	end
+	if type(s.scope) == 'table' and not std.is_obj('list', s.scope) then
+		s.scope = std.list (s.scope)
+	end
+	fn_aliases(s.__ro)
 	std.rawset(s, "__mp_ini", true)
 	return __oini(s, ...)
 end
@@ -1787,4 +1828,20 @@ end
 function parent(w)
 	w = std.object(w)
 	return w:where()
+end
+
+function Class(t, w)
+	fn_aliases(t)
+	if not w then
+		return std.class(t, std.obj)
+	end
+	return std.class(t, w)
+end
+
+std.obj.once = function(s)
+	if not s.__once then
+		s.__once = true
+		return true
+	end
+	return false
 end
