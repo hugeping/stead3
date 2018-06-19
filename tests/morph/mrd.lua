@@ -150,7 +150,7 @@ local function gram_filter(v)
 	end
 	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ' or v.an.t == 'Г'
 end
-
+local busy_cnt = 0
 local function word_fn(l, self, dict)
 	local words = self.words
 	local words_list = self.words_list
@@ -231,7 +231,11 @@ local function word_fn(l, self, dict)
 		table.insert(words_list, { t = w[1], flex = nflex, pref = npref, an = an_name })
 	end
 	self.words_nr = self.words_nr + num
-	if std then std.busy(true) end
+	busy_cnt = busy_cnt + 1
+	if busy_cnt > 1000 then
+		if std then std.busy(true) end
+		busy_cnt = 0
+	end
 	return
 end
 
