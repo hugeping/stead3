@@ -1595,6 +1595,9 @@ function mp:key_history_next()
 end
 
 function mp:key_enter()
+	if std.here().noparser then
+		return
+	end
 	if (#self.history == 0 or self.history[1] ~= self.inp) and std.strip(self.inp) ~= '' then
 		table.insert(self.history, 1, self.inp)
 	end
