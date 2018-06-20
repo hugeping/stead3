@@ -156,6 +156,7 @@ mp = std.obj {
 	nam = '@metaparser';
 	autohelp = false;
 	compl_thresh = 0;
+	daemons = std.list {};
 	{
 		scope = std.list {};
 		logfile = false;
@@ -1780,7 +1781,10 @@ function(cmd)
 	end
 	return true, false
 end)
-
+std.mod_init(
+function(load)
+	_'game'.__daemons = std.list {}
+end)
 std.mod_start(
 function(load)
 	mrd:gramtab("morph/rgramtab.tab")

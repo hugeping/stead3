@@ -526,6 +526,17 @@ end
 std.room:attr 'enterable,light'
 
 function mp:post_Any()
+	if std.here().noparser then return end
+	game.__daemons:for_each(function(o)
+		if o:disabled() then
+			return nil, false
+		end
+		local r, v = std.call(o, 'daemon')
+		if r then pr(r) end
+		if o:closed() then
+			return nil, false
+		end
+	end)
 	local oo = mp:nouns()
 	std.here():attr 'visited'
 	for _, v in ipairs(oo) do
@@ -1805,6 +1816,9 @@ std.obj.__ini = function(s, ...)
 	if s.__mp_ini then
 		return __oini(s, ...)
 	end
+	if type(s.found_in) == 'string' then
+		s.found_in = { s.found_in }
+	end
 	if type(s.found_in) == 'table' then
 		for _, v in ipairs(s.found_in) do
 			local vv = v
@@ -1845,4 +1859,20 @@ std.obj.once = function(s)
 		return true
 	end
 	return false
+end
+
+std.obj.daemonStart = function(s)
+	game.__daemons:add(s)
+end
+
+std.obj.daemonStop = function(s)
+	game.__daemons:del(s)
+end
+
+function DaeomonStart(w)
+	std.object(w):daemonStart()
+end
+
+function DaeomonStop(w)
+	std.object(w):daemonStop()
 end

@@ -372,7 +372,7 @@ NPC {
 	found_in = function()
 		return true
 	end;
-}:attr 'transparent,scenery'
+}:attr 'transparent,scenery';
 
 obj {
 	-"яблоко,яблочко";
