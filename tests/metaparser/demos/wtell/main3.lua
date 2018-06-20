@@ -497,4 +497,3 @@ Verb {
 }
 
 game.hint_verbs = { "#Exam", "#Walk", "#Take", "#Drop", "#FireAt", "#Salute", "#Talk" }
-mp.debug.trace_action = true
