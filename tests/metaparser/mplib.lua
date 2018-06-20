@@ -448,7 +448,7 @@ function mp:content(w)
 		else
 			dsc = std.call(w, w:type'room' and 'dsc' or 'inside_dsc')
 		end
-		pn(dsc)
+		p(dsc)
 	end
 	self:objects(w, oo, false)
 	local something
