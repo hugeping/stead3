@@ -158,6 +158,7 @@ mp = std.obj {
 	compl_thresh = 0;
 	daemons = std.list {};
 	{
+		cache = { tokens = {} };
 		scope = std.list {};
 		logfile = false;
 		lognum = 0;
@@ -537,7 +538,12 @@ function mp:pattern(t, delim)
 			if type(self.token[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local tok = self.token[v](w)
+			local key = v .. '/' .. (w.morph or '')
+			local tok = self.cache.tokens[key]
+			if not tok then
+				tok = self.token[v](w)
+				self.cache.tokens[key] = tok
+			end
 			while type(tok) == 'string' do
 				tok = self:pattern(tok)
 			end
@@ -945,6 +951,7 @@ function mp:compl(str)
 	local eol
 	local e = str:find(" $")
 	local vargs
+	collectgarbage("stop")
 	self:compl_ctx_current();
 	poss = self:compl_ctx_poss()
 	if (#poss == 0 and e) or #words == 0 then -- no context
@@ -977,6 +984,7 @@ function mp:compl(str)
 	table.sort(ret, function(a, b)
 			   return a.word < b.word
 	end)
+	collectgarbage("restart")
 	return ret, eol, vargs
 end
 
@@ -1664,6 +1672,7 @@ function mp:lookup_noun(w, lev)
 end
 
 function mp:input(str)
+	self.cache = { tokens = {} };
 	local hints = {}
 	local unknown = {}
 	local multi = {}

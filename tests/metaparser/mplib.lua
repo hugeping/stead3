@@ -760,7 +760,7 @@ function mp:after_Inv()
 	for _, v in ipairs(oo) do
 		local r, rc = std.call(v, 'inv')
 		if not rc then
-			pr(v:noun())
+			pr(v:noun(1))
 		end
 		if v:has'worn' then
 			mp.msg.WORN(v)

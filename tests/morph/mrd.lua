@@ -142,16 +142,17 @@ local function gram_dump(v)
 end
 
 local function gram_filter(v)
-	local tt = { "им", "рд", "дт", "тв", "пр", "вн" }
 	if v.an["им"] then
 		return true
 	end
-	for _, p in ipairs(tt) do
-		if v.an[p] then return false end
+	if v.an["рд"] or v.an["дт"] or v.an["тв"] or v.an["пр"] or v.an["вн"] then
+		return false
 	end
 	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ' or v.an.t == 'Г'
 end
+
 local busy_cnt = 0
+
 local function word_fn(l, self, dict)
 	local words = self.words
 	local words_list = self.words_list
@@ -195,14 +196,13 @@ local function word_fn(l, self, dict)
 	for k, v in ipairs(nflex) do
 		if gram_filter(v) then
 			for _, pref in ipairs(npref or { '' }) do
-				local tt = pref..v.pre .. t .. v.post
+				local tt = v.pre .. t .. v.post
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
 --				if tt == 'ЗАКРЕПЛЕН' then
 --					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
 --				end
-
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do
@@ -263,9 +263,12 @@ function mrd:load(path, dict)
 	self.words_nr = 0
 	self.words = {}
 	self.words_list = {}
+	collectgarbage("stop")
 	if not section(f, word_fn, self, dict) then
+		collectgarbage("restart")
 		return false, "Error in section 4"
 	end
+	collectgarbage("restart")
 	msg("Generated: "..tostring(self.words_nr).." word(s)");
 	local crc = f:read("*line")
 	if crc then crc = tonumber(crc) end
