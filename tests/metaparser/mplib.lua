@@ -545,7 +545,7 @@ function mp:post_Any()
 	if std.here().noparser then return end
 	if game.player:need_scene() then
 		local l = game.player:look() -- objects [and scene]
-		pr(l)
+		p(l, std.scene_delim)
 		game.player:need_scene(false)
 	end
 	game.__daemons:for_each(function(o)
@@ -1879,10 +1879,10 @@ std.obj.daemonStop = function(s)
 	game.__daemons:del(s)
 end
 
-function DaeomonStart(w)
+function DaemonStart(w)
 	std.object(w):daemonStart()
 end
 
-function DaeomonStop(w)
+function DaemonStop(w)
 	std.object(w):daemonStop()
 end

@@ -102,7 +102,7 @@ room {
 
 Furniture {
 	-"овощная лавка|лавка|прилавок,стол";
-	found_in = { 'below_square' };
+	found_in = 'below_square';
 	nam = 'stall';
 	description = "Это всего лишь маленький стол с большой кучей картошки, кучкой морковки и репы, и парой яблок.";
 	before_Search = function(s) mp:xaction("Exam", s) end;
@@ -115,7 +115,7 @@ Prop {
 }
 
 Prop {
-	-"фрукты/~од|овощи|морковь,морковка,репа,репка";
+	-"фрукты/~од|овощи|морковь,морковка|репа,репка";
 	found_in = { 'below_square' };
 	description = "Отличные местные овощи.";
 }

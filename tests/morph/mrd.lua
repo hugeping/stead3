@@ -199,7 +199,6 @@ local function word_fn(l, self, dict)
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
-
 --				if tt == 'ЗАКРЕПЛЕН' then
 --					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
 --				end
@@ -603,6 +602,7 @@ function mrd:file(f, dict)
 	if not ff then
 		return false, e
 	end
+	print("Added file: ", f)
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
 			w = w:gsub('^%-"', ""):gsub('"$', "")

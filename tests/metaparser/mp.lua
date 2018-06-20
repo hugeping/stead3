@@ -1522,7 +1522,9 @@ function mp:log(t)
 end
 function mp:parse(inp)
 	inp = std.strip(inp)
-	pn(fmt.b(self.prompt .. inp))
+	if std.cmd[1] ~= 'look' then
+		pn(fmt.b(self.prompt .. inp))
+	end
 	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
 	local r, v = self:input(self:norm(inp))
 	if not r then
@@ -1532,8 +1534,10 @@ function mp:parse(inp)
 		end
 		return
 	end
-	self:correct(inp)
-	pn()
+	if std.cmd[1] ~= 'look' then
+		self:correct(inp)
+		pn()
+	end
 	local t = std.pget()
 	std.pclr()
 	-- here we do action
@@ -1781,9 +1785,9 @@ function(cmd)
 		end
 		return true, false
 	end
-	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
+	if (cmd[1] == '@mp_key' and cmd[2] == 'enter') or cmd[1] == 'look' then
 --		mp.inp = mp:docompl(mp.inp)
-		return mp:key_enter()
+		return mp:key_enter(cmd[1] == 'look')
 	end
 	if cmd[1] ~= '@mp_key' then
 		return
@@ -1794,14 +1798,14 @@ std.mod_init(
 function(load)
 	_'game'.__daemons = std.list {}
 end)
-std.mod_start(
-function(load)
+
+function mp:init()
 	mrd:gramtab("morph/rgramtab.tab")
 	local _, crc = mrd:load("dict.mrd")
 	mrd:create("dict.mrd", crc) -- create or update
 	mp:compl_reset()
 	mp:compl_fill(mp:compl(""))
-end)
+end
 
 instead.mouse_filter(0)
 

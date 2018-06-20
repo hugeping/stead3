@@ -1,8 +1,14 @@
+local lang = require "morph/lang-ru"
 loadmod "mp"
 loadmod "mplib"
-
-local lang = require "morph/lang-ru"
 local mp = _'@metaparser'
+mp.mrd.lang = lang
+
+std.mod_init(
+function()
+	mp:init()
+end)
+
 local utf = mp.utf
 
 _'@compass'.word = function()
@@ -57,7 +63,6 @@ mp.msg.COMPASS_EXAM = function(dir, ob)
 end
 
 mp.msg.enter = "<ввод>"
-mp.mrd.lang = lang
 mp.msg.EMPTY = 'Простите?'
 mp.msg.UNKNOWN_VERB = "Непонятный глагол"
 mp.msg.UNKNOWN_VERB_HINT = "Возможно, вы имели в виду"
