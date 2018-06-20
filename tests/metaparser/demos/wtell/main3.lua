@@ -172,7 +172,7 @@ NPC {
         ['before_FireAt,Attack'] = "Их намного больше.";
 	before_Talk = "Разговаривать с этими мерзавцами -- ниже твоего достоинства.";
 	found_in = { 'south_square', 'mid_square', 'north_square', 'marketplace' };
-} :attr 'animate'
+} :attr 'animate,scenery'
 
 room {
 	-"центр|площадь";
