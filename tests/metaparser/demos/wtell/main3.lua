@@ -32,7 +32,7 @@ Furniture = Class {
 }: attr 'static,supporter'
 
 Arrow = Class {
-	word = -"стрела";
+	word = -"стрела|стрелы";
 	arrow = true;
 	description = "Все твои стрелы верны и остры.";
 	['before_Drop,Give,ThrowAt'] = "Ты не хочешь расставаться со своими острыми стрелами.";
@@ -310,7 +310,7 @@ obj {
 obj {
 	-"колчан";
 	nam = "quiver";
-	description = "Он сделан из козьей кожи и обычно висит за твоим левым плечом.";
+	description = "Он сделан из козьей кожи и обычно висит за твоим левым плечом. В колчане есть стрелы.";
 	['before_Drop,Give,ThrowAt'] = "Но это ведь подарок твоей жены Хедвиг.";
 }: attr 'container,open,clothing'
 

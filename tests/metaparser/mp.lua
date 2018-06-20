@@ -1803,10 +1803,11 @@ function mp:init()
 	mrd:gramtab("morph/rgramtab.tab")
 	local _, crc = mrd:load("dict.mrd")
 	mrd:create("dict.mrd", crc) -- create or update
+end
+std.mod_start(function()
 	mp:compl_reset()
 	mp:compl_fill(mp:compl(""))
-end
-
+end)
 instead.mouse_filter(0)
 
 function instead.fading()
