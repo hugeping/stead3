@@ -12,6 +12,7 @@ local lang = {
 
 local mrd = {
 	lang = lang;
+	dir = '';
 }
 
 local msg = print
@@ -818,8 +819,8 @@ end
 
 function mrd:create(fname, crc)
 	local dict = {}
-	for f in std.readdir(instead.gamepath()) do
-		if f:find("%.lua$") then
+	for f in std.readdir(instead.gamepath() .. '/'..(self.dir or '')) do
+		if f:find("%.lua$") or f:find("%.LUA$") then
 			mrd:file(f, dict)
 		end
 	end
