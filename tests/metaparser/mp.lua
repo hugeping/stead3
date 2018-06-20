@@ -1074,7 +1074,7 @@ function mp:match(verb, w, compl)
 		end
 		local all_optional = true
 		local rlev = 1
-
+		local need_required = false
 		for lev, v in ipairs(d.pat) do -- pattern arguments
 			if v == '*' or v == '~*' then
 				vargs = true -- found
@@ -1091,6 +1091,7 @@ function mp:match(verb, w, compl)
 				if v == '*' then break end
 				if not pp.optional then
 					required = true
+					need_required = true
 					all_optional = false
 				end
 				if pp.default then
@@ -1105,6 +1106,7 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
+				need_required = false
 				if found.ob then
 					local same
 					for _, pp in ipairs(pat) do
@@ -1148,8 +1150,12 @@ function mp:match(verb, w, compl)
 						table.insert(match, a[1])
 						table.remove(a, 1)
 					end
-					found = true
+					if not need_required then
+						found = true
+					end
 					break
+				else
+					need_required = need_required or required
 				end
 			elseif required then
 				for i = 1, best - 1 do

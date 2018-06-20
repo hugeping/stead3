@@ -165,7 +165,7 @@ Prop {
 	found_in = {'south_square', 'north_square' };
 }
 
-Prop {
+NPC {
 	nam = 'guard';
 	-"солдаты,стражники";
 	description = "Неотёсанные, жестокие люди не из этих мест.";
