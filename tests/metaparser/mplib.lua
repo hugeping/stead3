@@ -543,6 +543,11 @@ std.room:attr 'enterable,light'
 
 function mp:post_Any()
 	if std.here().noparser then return end
+	if game.player:need_scene() then
+		local l = game.player:look() -- objects [and scene]
+		pr(l)
+		game.player:need_scene(false)
+	end
 	game.__daemons:for_each(function(o)
 		if o:disabled() then
 			return nil, false

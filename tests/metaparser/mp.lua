@@ -1527,11 +1527,13 @@ function mp:parse(inp)
 	local r, v = self:input(self:norm(inp))
 	if not r then
 		if v then
+			pn()
 			self:err(v)
 		end
 		return
 	end
 	self:correct(inp)
+	pn()
 	local t = std.pget()
 	std.pclr()
 	-- here we do action
