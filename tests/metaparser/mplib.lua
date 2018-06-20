@@ -545,6 +545,10 @@ function mp:post_Any()
 	if std.here().noparser then return end
 	if game.player:need_scene() then
 		local l = game.player:look() -- objects [and scene]
+		if std.here().gfx ~= nil then
+			local p = std.call(std.here(), 'gfx')
+			pn(fmt.c(fmt.img(p)))
+		end
 		p(l, std.scene_delim)
 		game.player:need_scene(false)
 	end
