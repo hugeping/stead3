@@ -354,7 +354,7 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 		delim = instead.inv_delim
 	end
 	local pre, post = mp:inp_split()
-	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
+	local ret = iface:bold(mp.prompt) .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
 	if not mp.autohelp and not std.here().forcehelp then
 		return ret
 	end
@@ -1703,6 +1703,7 @@ function mp:input(str)
 		else
 			w = self.default_Event or "Exam"
 		end
+		pn()
 		self:xaction(w, ob[1].ob)
 --		verbs = self:lookup_verb(w)
 --		if #verbs == 0 then
