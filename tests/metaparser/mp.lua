@@ -1381,7 +1381,14 @@ function mp:call(ob, ev, ...)
 	local r, v = std.call(ob, ev, ...)
 --	std.cctx().txt = self.reaction
 	self.reaction = self.reaction or v or false
-	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
+	if self.debug.trace_action and v then
+		dprint("mp:call ", ob, ev, ...)
+		p("mp:call ", ob, " ", ev, " ")
+		for _, t in ipairs {...} do
+			pr (tostring(t), " ")
+		end
+		pn()
+	end
 	for _, v in ipairs(self.aliases) do
 		std.rawset(v, '__word_alias', nil)
 	end

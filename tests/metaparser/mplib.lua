@@ -1773,25 +1773,15 @@ function mp:MetaNoun(w)
 	end
 
 end
-function mp:MetaHelp()
-
-	pn("{$fmt b|КАК ИГРАТЬ?}")
-
-	pn([[Вводите ваши действия в виде простых предложений вида: глагол -- существительное. Например:^
-> открыть дверь^
-> отпереть дверь ключом^
-> идти на север^
-> взять кепку^
-^
-Чтобы осмотреть предмет, введите "осмотреть книгу" или просто "книга".^
-^
-Чтобы осмотреть всю сцену, наберите "осмотреть" или нажмите "ввод".^
-^
-Для того чтобы узнать, что вы носите с собой, наберите "инвентарь".^
-^
-Вы можете воспользоваться клавишой "TAB" для автодополнения ввода.
-]])
+function mp:MetaTraceOn()
+	pn "Tracing is on"
+	self.debug.trace_action = true
 end
+function mp:MetaTraceOff()
+	pn "Tracing is off"
+	self.debug.trace_action = false
+end
+
 local __oini = std.obj.__ini
 
 local function fn_aliases(wh)
