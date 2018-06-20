@@ -11,7 +11,8 @@ game:dict {
 parser.door {
 	nam = "дверь";
 	door_to = 'main2';
-	with_key = 'ключ'
+	with_key = 'ключ';
+	when_closed = [[Тут есть запертая дверь.]];
 --	dsc = [[Тут есть дверь.]];
 }:attr 'static,openable,lockable,locked'
 
@@ -76,7 +77,6 @@ obj {
 
 print("attr", _'яблоко2':has 'container')
 -- lifeon 'яблоко'
-parser.debug.trace_action = true
 
 --game: dict {
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';

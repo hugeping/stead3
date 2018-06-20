@@ -448,23 +448,39 @@ function mp:content(w)
 		else
 			dsc = std.call(w, w:type'room' and 'dsc' or 'inside_dsc')
 		end
-		p(dsc)
+		pn(dsc)
 	end
 	self:objects(w, oo, false)
 	local something
 	for _, v in ipairs(oo) do
-		local r
-		if not v:has 'moved' then
-			r = std.call(v, 'init_dsc')
-		end
-		if not r then
-			r = std.call(v, 'dsc')
-		end
-		if r and not v:has'scenery' then
-			p(r)
-			something = true
-		elseif not v:has'scenery' then
-			table.insert(ooo, v)
+		local r, rc
+		if not v:has'scenery' and not v:has'concealed' then
+			if not v:has 'moved' then
+				r, rc = std.call(v, 'init_dsc')
+				if r then p(r); something = true; end
+			end
+			if not rc then
+				r, rc = std.call(v, 'dsc')
+				if r then p(r); something = true; end
+			end
+			if not rc and (v:has'openable') then
+				if v.when_open ~= nil and v:has'open' then
+					r, rc = std.call(v, 'when_open')
+				elseif v.when_closed ~= nil and not v:has'open' then
+					r, rc = std.call(v, 'when_closed')
+				end
+				if r then p(r); something = true; end
+			elseif not rc and (v:has'switchable') then
+				if v.when_on ~= nil and v:has'on' then
+					r, rc = std.call(v, 'when_on')
+				elseif v.when_off ~= nil and not v:has'on' then
+					r, rc = std.call(v, 'when_off')
+				end
+				if r then p(r); something = true; end
+			end
+			if not rc and not v:has'scenery' then
+				table.insert(ooo, v)
+			end
 		end
 	end
 	if #ooo > 0 then
@@ -583,11 +599,10 @@ end
 
 function mp:after_Exam(w)
 	local r, v = std.call(w, 'description')
-	if not v then
-		r, v = std.call(w, 'dsc')
+	if r then
+		p(r)
 	end
 	if v then
-		p(r)
 		return false
 	end
 	if w:has 'container' and (w:has'transparent' or w:has'open') then
@@ -607,12 +622,12 @@ function mp:after_Exam(w)
 		end
 		if w:has'switchable' then
 			local r
-			if w:has'on' then
+			if w:has'on' and w.when_on ~= nil then
 				r = std.call(w, 'when_on')
 			else
 				r = std.call(w, 'when_off')
 			end
-			p (mp.msg.Exam.SWITCHSTATE)
+			p (r or mp.msg.Exam.SWITCHSTATE)
 			return
 		end
 		if w == std.here() then
