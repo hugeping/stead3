@@ -1,4 +1,5 @@
 require "fmt"
+require "theme"
 
 local mrd = require "morph/mrd"
 local inp_split = " :.,!?"
@@ -74,14 +75,29 @@ local function utf_char(b, c)
 	return
 end
 
+local function utf_chars(b)
+	local i = 1
+	local n = 0
+	local s
+	local res = {}
+	while i <= b:len() do
+		s = i
+		i = i + utf_ff(b, i)
+		table.insert(res,  b:sub(s, i - 1))
+	end
+	return res
+end
+
 -- Returns the Levenshtein distance between the two given strings
 -- https://gist.github.com/Badgerati/3261142
 
 local function utf_lev(str1, str2)
 	str1 = str1 or ''
 	str2 = str2 or ''
-	local len1 = utf_len(str1)
-	local len2 = utf_len(str2)
+	local chars1 = utf_chars(str1)
+	local chars2 = utf_chars(str2)
+	local len1 = #chars1
+	local len2 = #chars2
 	local matrix = {}
 	local cost = 0
 
@@ -106,7 +122,7 @@ local function utf_lev(str1, str2)
         -- actual Levenshtein algorithm
 	for i = 1, len1, 1 do
 		for j = 1, len2, 1 do
-			if (utf_char(str1, i) == utf_char(str2, j)) then
+			if (chars1[i] == chars2[j]) then
 				cost = 0
 			else
 				cost = 1
@@ -141,7 +157,7 @@ function input:key(press, key)
 		if mp:key(key) then
 			if mp.autohelp then
 				mp:compl_fill(mp:compl(mp.inp))
-			else
+			elseif mp.autocompl then
 				mp:compl(mp.inp)
 			end
 			return '@mp_key '..tostring(key)
@@ -155,6 +171,7 @@ end
 mp = std.obj {
 	nam = '@metaparser';
 	autohelp = false;
+	autocompl = true;
 	compl_thresh = 0;
 	daemons = std.list {};
 	{
@@ -173,7 +190,7 @@ mp = std.obj {
 		lev_thresh = 3;
 		history = {};
 		persistent = std.list {};
-		winsize = 32 * 1024;
+		winsize = 16 * 1024;
 		history_len = 100;
 		history_pos = 0;
 		cursor = fmt.b("|");
@@ -488,8 +505,21 @@ function mp.token.select(w)
 	return mp.token.noun(w)
 end
 
+local norm_cache = { hash = {}, list = {}}
+
 function mp:norm(t)
+	local key = t
+	local cc = norm_cache.hash[t]
+	if cc then return cc end
 	t = mrd.lang.lower(mrd.lang.norm(t)):gsub("[ \t]+", " ")
+	table.insert(norm_cache.list, 1, t)
+	norm_cache.hash[key] = t
+	local len = #norm_cache.list
+	if len > 512 then
+		cc = norm_cache.list[len]
+		table.remove(norm_cache.list, len)
+		norm_cache.hash[cc] = nil
+	end
 	return t
 end
 
@@ -506,6 +536,7 @@ end
 
 function mp:pattern(t, delim)
 	local words = {}
+
 	local pat = str_split(self:norm(t), delim or "|")
 	for _, v in ipairs(pat) do
 		local w = { }
@@ -673,7 +704,7 @@ end
 function mp:lookup_short(words, w)
 	local ret = { }
 	for _,v in ipairs(words) do
-		if self:startswith(v, w) then
+		if self:__startswith(v, w) then
 			table.insert(ret, { i = _, w = v, pos = #ret })
 		end
 	end
@@ -765,9 +796,11 @@ function mp:docompl(str, maxw)
 				maxw = v.word
 			else
 				local maxw2 = ''
-				for k = 1, utf_len(maxw) do
-					if utf_char(maxw, k) == utf_char(v.word, k) then
-						maxw2 = maxw2 .. utf_char(maxw, k)
+				local utf_word = utf_chars(v.word)
+				local utf_maxw = utf_chars(maxw)
+				for k = 1, #utf_maxw do
+					if utf_maxw[k] == utf_word[k] then
+						maxw2 = maxw2 .. utf_maxw[k]
 					else
 						full = false
 						break
@@ -787,9 +820,15 @@ function mp:docompl(str, maxw)
 	end
 	return str
 end
+
+function mp:__startswith(w, v)
+	return w:find(v, 1, true) == 1
+end
+
 function mp:startswith(w, v)
 	return (self:norm(w)):find(self:norm(v), 1, true) == 1
 end
+
 function mp:hint_verbs(v)
 	if not v.tag then return true end
 	if type(v.hint) == 'function' then
@@ -1034,6 +1073,7 @@ function mp:compl_match(words)
 	local res = {}
 	local dup = {}
 	local multi
+	collectgarbage("stop")
 	for _, v in ipairs(verbs) do
 		local m, h, u, mu = self:match(v, words, true)
 		if #m > 0 then
@@ -1044,6 +1084,7 @@ function mp:compl_match(words)
 		end
 		multi = multi or (#mu > 0)
 	end
+	collectgarbage("restart")
 	hints = lev_sort(hints)
 	if multi then -- #matches > 0 or #hints == 0 or multi then
 		return res
@@ -1088,7 +1129,6 @@ function mp:match(verb, w, compl)
 				vargs = true -- found
 				v = '*'
 			end
-
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
@@ -1583,7 +1623,7 @@ std.world.display = function(s, state)
 		    av or false, l or false,
 		    pv or false) or ''
 	mp:log(l)
-	mp.text = mp.text ..  l .. '^^' .. fmt.anchor()
+	mp.text = mp.text ..  l .. '^^' -- .. fmt.anchor()
 	return mp.text
 end
 
@@ -1637,7 +1677,11 @@ function mp:key_enter()
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
-	self:compl_fill(self:compl(self.inp))
+	if self.autohelp then
+		self:compl_fill(self:compl(self.inp))
+	elseif self.autocompl then
+		self:compl(self.inp)
+	end
 --	self:completion()
 	return r, v
 end
@@ -1683,7 +1727,6 @@ function mp:input(str)
 	if (self.default_Verb or std.here().default_Verb) and str == "" then
 		str = std.here().default_Verb or self.default_Verb
 	end
-
 	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
@@ -1737,7 +1780,6 @@ function mp:input(str)
 			table.insert(multi, mu)
 		end
 	end
-
 	table.sort(matches, function(a, b) return #a.match > #b.match end)
 
 	hints = lev_sort(hints)
@@ -1825,6 +1867,7 @@ std.mod_start(function()
 	mp:compl_fill(mp:compl(""))
 end)
 instead.mouse_filter(0)
+theme.set ('win.scroll.mode', 3)
 
 function instead.fading()
 	return instead.need_fading() or player_moved()

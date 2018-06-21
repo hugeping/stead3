@@ -703,6 +703,8 @@ function mrd.dispof(w)
 	return std.titleof(w)
 end
 
+local obj_cache = { hash = {}, list = {}}
+
 function mrd:obj(w, n, nn)
 	local hint = ''
 	local hint2, disp, ob, raw
@@ -719,20 +721,32 @@ function mrd:obj(w, n, nn)
 	else
 		disp = w
 	end
-	local d = str_split(disp, '|')
-	if #d == 0 then
-		std.err("Wrong object display: ".. (disp or 'nil'), 2)
-	end
-	-- normalize
-	local nd = {}
-	for k, v in ipairs(d) do
-		w, hint2 = str_hint(v)
-		local dd = raw and { w } or str_split(w, ',')
-		for _, vv in ipairs(dd) do
-			table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
+	local d = obj_cache.hash[disp]
+	if not d then
+		d = str_split(disp, '|')
+		if #d == 0 then
+			std.err("Wrong object display: ".. (disp or 'nil'), 2)
 		end
+	-- normalize
+		local nd = {}
+		for k, v in ipairs(d) do
+			w, hint2 = str_hint(v)
+			local dd = raw and { w } or str_split(w, ',')
+			for _, vv in ipairs(dd) do
+				table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
+			end
+		end
+		d = nd
+		table.insert(obj_cache.list, 1, disp)
+		local len = #obj_cache.list
+		if len > 128 then
+			local key = obj_cache.list[len]
+			table.remove(obj_cache.list, len)
+			obj_cache.hash[key] = nil
+		end
+		obj_cache.hash[disp] = d
 	end
-	d = nd
+	
 	if type(n) == 'table' then
 		local ret = n
 		for _, v in ipairs(d) do
@@ -849,11 +863,12 @@ std.obj.Noun = function(self, ...)
 	return mrd.lang.cap(mrd:noun(self, ...))
 end
 
-std.obj.gram = function(self, ...)
+std.obj.gram = function(self, n)
 	local hint, ob, w
-	ob, w, hint = mrd:obj(self, ...)
+	ob, w, hint = mrd:obj(self, n)
 	local _, gram = mrd:word(w .. '/'..hint)
 	local thint = ''
+
 	hint = str_split(hint, ",")
 	local g = gram and gram[1] or {}
 	for _, v in ipairs(gram or {}) do
