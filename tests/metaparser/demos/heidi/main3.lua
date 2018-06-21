@@ -25,7 +25,7 @@ obj {
 	dsc = "Домик мал и неказист, но ты очень счастлива, живя здесь.";
 	before_Enter = [[Такой славный денек...
                     Он слишком хорош, чтобы прятаться внутри.]];
-}
+}:attr 'scenery'
 
 room {
 	-"чаща|лес";
@@ -97,7 +97,7 @@ obj {
 			walk 'happyend'
 		end
 	end
-}:attr 'supporter'
+}:attr 'supporter,scenery'
 
 room {
 	nam = 'happyend';
