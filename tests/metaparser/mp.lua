@@ -537,10 +537,10 @@ end
 
 function mp:pattern(t, delim)
 	local words = {}
-
 	local pat = str_split(self:norm(t), delim or "|")
 	for _, v in ipairs(pat) do
 		local w = { }
+		local ov = v
 		if v:sub(1, 1) == '~' then
 			v = v:sub(2)
 			v = str_strip(v)
@@ -570,7 +570,7 @@ function mp:pattern(t, delim)
 			if type(self.token[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local key = v .. '/' .. (w.morph or '')
+			local key = ov .. '/' .. (w.morph or '')
 			local tok = self.cache.tokens[key]
 			if not tok then
 				tok = self.token[v](w)

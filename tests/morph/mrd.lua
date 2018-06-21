@@ -427,8 +427,11 @@ function mrd:gram_info(a)
 	return t
 end
 
-function mrd:gram_compat(aa, bb)
+function mrd:gram_compat(base, aa, bb)
 	local a, b = aa.t, bb.t
+	if bb.noun and not base['им'] then
+		return false
+	end
 	local g1, g2 = self:gram_info(aa), self:gram_info(bb)
 	if g1.gen ~= g2.gen and g1.gen ~= 'any' and g2.gen ~= 'any' then return false end
 	if g1.num ~= g2.num and g1.num ~= 'any' and g2.num ~= 'any' then return false end
@@ -493,6 +496,7 @@ function mrd:lookup(w, g)
 	return w, g
 end
 function mrd:__lookup(w, g)
+	local ow = w
 	local cap, upper = self.lang.is_cap(w)
 	local t = self.lang.upper(self.lang.norm(w))
 	w = self.words[t]
@@ -505,7 +509,7 @@ function mrd:__lookup(w, g)
 		local score = self:score(v.an, g)
 		local t = v.an.t
 		for _, f in ipairs(flex) do
-			if self:gram_eq(v.an.t, f.an.t) and self:gram_compat(f.an, gram2an(g)) then
+			if self:gram_eq(v.an.t, f.an.t) and self:gram_compat(v.an, f.an, gram2an(g)) then
 				local sc = self:score(f.an, g)
 				if sc < 0 then
 					break
@@ -530,7 +534,7 @@ end
 		end
 	end
 	if #res == 0 then
-		return false, "No gram"
+		return ow, gram2an(g) -- false, "No gram"
 	end
 	table.sort(res, function(a, b)
 		if a.score == b.score then
@@ -571,6 +575,7 @@ end
 local word_match = "[^ \t,%-!/:%+&]+"
 local missed_words = {}
 function mrd:word(w)
+	local ow = w
 	local s, e = w:find("/[^/]*$")
 	local g = {}
 	local grams = {}
@@ -593,7 +598,7 @@ function mrd:word(w)
 	if not found then
 		if DEBUG and not tonumber(w) and not missed_words[w] then
 			missed_words[w] = true
-			msg("Can not find word: '"..w.."'")
+			msg("Can not find word: '"..ow.."'")
 		end
 	end
 	return w, grams
@@ -786,7 +791,10 @@ function mrd:noun_hint(ob, ...)
 		end
 	end
 	if not g[mp.hint.live] then
-		hint = hint .. ',~' .. mp.hint.live
+		hint = hint .. ',~' .. mp.hint.live .. ',' .. mp.hint.nonlive
+	end
+	if ob then
+		hint = hint..",noun"
 	end
 	return hint
 end
@@ -877,16 +885,17 @@ std.obj.gram = function(self, n)
 			break
 		end
 	end
+	local gg = std.clone(g)
 	for _, v in ipairs(hint) do
-		g[v] = true
+		gg[v] = true
 	end
-	for k, v in pairs(g) do
+	for k, v in pairs(gg) do
 		if v then
 			thint = thint .. k .. ','
 		end
 	end
-	g.hint = thint
-	return g
+	gg.hint = thint
+	return gg
 end
 
 std.obj.dict = function(self, v)

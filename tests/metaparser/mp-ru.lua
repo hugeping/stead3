@@ -16,6 +16,8 @@ game.dsc = function()
 end
 local utf = mp.utf
 
+_'@compass'.out_to_dir = 11
+
 _'@compass'.word = function()
 	local dir = -"север,с|северо-восток,св|восток,в|юго-восток,юв|юг,ю|юго-запад,юз|запад,з|северо-запад,сз"
 	local up = -"наверх,вверх,верх|вниз,низ|наружу,выход,назад|внутрь,вход"
@@ -93,7 +95,7 @@ mp.msg.OPEN = function(w)
 	local hint = w:gram().hint
 	pr (" (",mp.mrd:word('открыт/' .. hint), ")")
 end
-mp.msg.EXITBEFORE = "Возможно, {#me/дт} нужно сначала {#if_has/where,supporter,слезть,вылезти из} {#where/рд}."
+mp.msg.EXITBEFORE = "Возможно, {#me/дт} нужно сначала {#if_has/where,supporter,слезть с,вылезти из} {#where/рд}."
 
 mp.default_Event = "Exam"
 mp.default_Verb = "осмотреть"
@@ -141,7 +143,7 @@ mp.msg.Enter.DOOR_CLOSED = "{#First} {#word/закрыт,#first}."
 mp.msg.Walk.ALREADY = mp.msg.Enter.ALREADY
 mp.msg.Walk.WALK = "Но {#first} и так находится здесь."
 
-mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с,покинуть} {#where/вн}."
+mp.msg.Enter.EXITBEFORE = "Сначала нужно {#if_has/where,supporter,слезть с {#where/рд}.,покинуть {#where/вн}.}"
 
 mp.msg.Exit.NOTHERE = "Но {#me} сейчас не {#if_has/first,supporter,на,в} {#first/пр,2}."
 mp.msg.Exit.NOWHERE = "Но {#me/дт} некуда выходить."
@@ -149,8 +151,8 @@ mp.msg.Exit.CLOSED = "Но {#first} {#word/закрыт,#first}."
 
 
 --"покидать"
---"слезть"
-mp.msg.Exit.EXITED = "{#Me} {#if_has/first,supporter,{#word/слезть с,#me,нст} {#first/рд},{#word/покидать,#me,нст} {#first/вн}}."
+--"слезать"
+mp.msg.Exit.EXITED = "{#Me} {#if_has/first,supporter,{#word/слезать с,#me,нст} {#first/рд},{#word/покидать,#me,нст} {#first/вн}}."
 
 mp.msg.Inv.NOTHING = "У {#me/рд} с собой ничего нет."
 mp.msg.Inv.INV = "У {#me/рд} с собой"
@@ -360,6 +362,7 @@ mp.msg.Yes.YES = "Вопрос был риторическим."
 --"продаваться"
 mp.msg.Buy.BUY = "{#First} не {#word/продаваться,нст,#first}."
 mp.hint.live = 'од'
+mp.hint.nonlive = 'но'
 mp.hint.neuter = 'ср'
 mp.hint.male = 'мр'
 mp.hint.female = 'жр'
@@ -508,7 +511,7 @@ function mp:MetaHelp()
 end
 
 Verb { "#Walk",
-	"идти,иду,пойти,пойд/и,подой/ти,иди,войти,войд/и,зайти,зайд/и,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг",
+	"идти,иду,пойти,пойд/и,подой/ти,иди,войти,войд/и,зайти,зайд/и,бежать,бег/и,влез/ть,ехать,поехать,едь,поеду,сесть,сядь,сяду,лечь,ляг,вста/ть",
 	"на|в|во {noun}/вн,scene,enterable : Enter",
 	"к {noun}/дт,scene : Walk",
 	"{noun_obj}/@compass : Walk" }
@@ -828,7 +831,7 @@ Verb {
 	"#GetOff",
 	"слез/ть,спусти/ться",
 	"Exit",
-	"с {noun}/рд,scene : GetOff",
+	"с|со {noun}/рд,scene : GetOff",
 }
 
 Verb {

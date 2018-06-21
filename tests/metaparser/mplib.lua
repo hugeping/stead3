@@ -83,7 +83,10 @@ std.class({
 -- player
 mp.msg.Look = {}
 
-function std.obj:multi_alias()
+function std.obj:multi_alias(n)
+	if n then
+		self.__word_alias = n
+	end
 	return self.__word_alias
 end
 
@@ -117,7 +120,7 @@ function std.player:walk(w, doexit, doenter, dofrom)
 	if std.is_obj(w, 'room') then
 		if w == std.here() then
 			self.__room_where = false
-			self:need_scene(true)
+--			self:need_scene(true)
 			return nil, true
 		end
 		local r, v = owalk(self, w, doexit, doenter, dofrom)
@@ -130,7 +133,7 @@ function std.player:walk(w, doexit, doenter, dofrom)
 		end
 		self.__room_where = w
 		if w:inroom() == std.ref(self.room) then
-			self:need_scene(true)
+			-- self:need_scene(true)
 			return nil, true
 		end
 		return owalk(self, w:inroom(), doexit, doenter, dofrom)
@@ -215,18 +218,18 @@ function std.obj:access()
 		return true
 	end
 	mp:trace(std.me(), function(v)
-		if v:has 'concealed' then
-			return nil, false
-		end
+--		if v:has 'concealed' then
+--			return nil, false
+--		end
 		table.insert(plw, v)
 		if v:has 'container' or v:has 'supporter' then
 			return nil, false
 		end
 	end)
 	return mp:trace(self, function(v)
-		if v:has 'concealed' then
-			return nil, false
-		end
+--		if v:has 'concealed' then
+--			return nil, false
+--		end
 		if check_persist(v) then
 			return true
 		end
@@ -279,18 +282,18 @@ function std.obj:visible()
 	end
 
 	mp:trace(std.me(), function(v)
-		if v:has 'concealed' then
-			return nil, false
-		end
+--		if v:has 'concealed' then
+--			return nil, false
+--		end
 		table.insert(plw, v)
 		if v:has 'container' and not v:has 'transparent' and not v:has 'open' then
 			return nil, false
 		end
 	end)
 	return mp:trace(self, function(v)
-		if v:has 'concealed' then
-			return nil, false
-		end
+--		if v:has 'concealed' then
+--			return nil, false
+--		end
 		if check_persist(v) then
 			return true
 		end
@@ -439,7 +442,7 @@ function mp:content(w)
 	end
 	local oo = {}
 	local ooo = {}
-	if w == std.me():where() then
+	if w == std.me():where() or w:type'room' then
 		pn()
 		local dsc
 		if not mp:offerslight(w) then
@@ -497,7 +500,7 @@ function mp:content(w)
 			p (mp.msg.Exam.NOTHING)
 		end
 	elseif #oo == 1 and not oo[1]:hint 'plural' then
-		if std.me():where() == w then
+		if std.me():where() == w or std.here() == w then
 			p (mp.msg.Look.HEREIS)
 		else
 			if w:has 'supporter' then
@@ -509,7 +512,7 @@ function mp:content(w)
 		end
 		p(oo[1]:noun(), ".")
 	else
-		if std.me():where() == w then
+		if std.me():where() == w or std.here() == w then
 			p (mp.msg.Look.HEREARE)
 		else
 			if w:has 'supporter' then
@@ -544,6 +547,7 @@ std.room:attr 'enterable,light'
 function mp:post_Any()
 	if std.here().noparser then return end
 	if game.player:need_scene() then
+--		pn(iface:nb'')
 		local l = game.player:look() -- objects [and scene]
 		if std.here().gfx ~= nil then
 			local p = std.call(std.here(), 'gfx')
@@ -571,7 +575,25 @@ function mp:post_Any()
 		end
 	end
 end
+function mp:check_touch()
+	if self.first and not self.first:access() and not self.first:type'room' then
+		p (self.msg.ACCESS1 or "{#First} is not accessible.")
+		if std.here() ~= std.me():where() then
+			p (mp.msg.EXITBEFORE)
+		end
+		return true
+	end
+	if self.second and not self.second:access() and not self.first:type'room' then
+		p (self.msg.ACCESS2 or "{#Second} is not accessible.")
+		if std.here() ~= std.me():where() then
+			p (mp.msg.EXITBEFORE)
+		end
+		return true
+	end
+	return false
+end
 
+--[[
 function mp:before_Any(ev)
 	if ev == 'Exam' then
 		return false
@@ -593,7 +615,7 @@ function mp:before_Any(ev)
 	end
 	return false
 end
-
+]]--
 function mp:Look()
 	std.me():need_scene(true)
 	return false
@@ -654,6 +676,9 @@ end
 mp.msg.Enter = {}
 
 function mp:Enter(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -691,6 +716,9 @@ end
 mp.msg.Walk = {}
 
 function mp:Walk(w)
+	if mp:check_touch() then
+		return
+	end
 	if w == std.me():where() then
 		p (mp.msg.Walk.ALREADY)
 		return
@@ -723,6 +751,9 @@ function mp:before_Exit(w)
 end
 
 function mp:Exit(w)
+	if mp:check_touch() then
+		return
+	end
 	local wh = std.me():where()
 	w = w or std.me():where()
 	if wh ~= w then
@@ -733,12 +764,23 @@ function mp:Exit(w)
 		p (mp.msg.Exit.CLOSED)
 		return
 	end
+
+	if wh:type'room' and wh.out_to ~= nil then
+		_'@compass':multi_alias(_'@compass'.out_to_dir)
+		mp:xaction("Walk", _'@compass')
+		return
+	end
+
 	if wh:from() == wh then
 		p (mp.msg.Exit.NOWHERE)
 		return
 	end
+	if wh:type'room' then
 --	local r = std.call(w, 'out_to')
-	walkback()
+		walkback()
+	else
+		walkback(wh:where())
+	end
 	return false
 end
 
@@ -756,21 +798,31 @@ function mp:after_Inv()
 		p(mp.msg.Inv.NOTHING)
 		return
 	end
+	local empty = true
+	for _, v in ipairs(oo) do
+		if not v:has'concealed' then empty = false break end
+	end
+	if empty then
+		p(mp.msg.Inv.NOTHING)
+		return
+	end
 	p(mp.msg.Inv.INV)
 	for _, v in ipairs(oo) do
-		local r, rc = std.call(v, 'inv')
-		if not rc then
-			pr(v:noun(1))
-		end
-		if v:has'worn' then
-			mp.msg.WORN(v)
-		elseif v:has'openable' and v:has'open' then
-			mp.msg.OPEN(v)
-		end
-		if _ == #oo - 1 then
-			pr(" ",mp.msg.AND, " ")
-		elseif _ ~= #oo then
-			pr(', ')
+		if not v:has'concealed' then
+			local r, rc = std.call(v, 'inv')
+			if not rc then
+				pr(v:noun(1))
+			end
+			if v:has'worn' then
+				mp.msg.WORN(v)
+			elseif v:has'openable' and v:has'open' then
+				mp.msg.OPEN(v)
+			end
+			if _ == #oo - 1 then
+				pr(" ",mp.msg.AND, " ")
+			elseif _ ~= #oo then
+				pr(', ')
+			end
 		end
 	end
 	pr(".")
@@ -779,6 +831,9 @@ end
 mp.msg.Open = {}
 
 function mp:Open(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -810,6 +865,9 @@ end
 mp.msg.Close = {}
 
 function mp:Close(w)
+	if mp:check_touch() then
+		return
+	end
 	if not w:has'openable' then
 		p(mp.msg.Close.NOTOPENABLE)
 		return
@@ -861,6 +919,9 @@ end
 
 mp.msg.Lock = {}
 function mp:Lock(w, t)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(t) then
 		return
 	end
@@ -891,6 +952,9 @@ end
 
 mp.msg.Unlock = {}
 function mp:Unlock(w, t)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(t) then
 		return
 	end
@@ -930,11 +994,18 @@ function move(w, wh)
 	wh = wh or std.here()
 	wh = std.object(wh)
 	w = std.object(w)
-	local r, v = std.call(wh, 'before_Receive', w)
-	if r then p(r) end
-	if v == true then
-		return false
+	local ww = {}
+
+	w:where(ww)
+
+	for _, o in ipairs(ww) do
+		local r, v = std.call(o, 'before_LetGo', w, wh)
+		if r then p(r) end
+		if v == true then
+			return false
+		end
 	end
+
 	if w:type'player' then
 		r, v = w:walk(wh)
 		if r then p(r) end
@@ -946,13 +1017,18 @@ function move(w, wh)
 		end
 	end
 	w:attr 'moved'
-	r, v = std.call(wh, 'after_Receive', w)
-	if r then p(r) end
+	for _, o in ipairs(ww) do
+		local r, v = std.call(o, 'after_LetGo', w, wh)
+		if r then p(r) end
+	end
 	return true
 end
 
 mp.msg.Take = {}
 function mp:Take(w, ww)
+	if mp:check_touch() then
+		return
+	end
 	if w == std.me() then
 		p (mp.msg.Take.SELF)
 		return
@@ -995,6 +1071,9 @@ function mp:after_Take(w)
 end
 mp.msg.Remove = {}
 function mp:Remove(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if w:where() ~= wh then
 		p (mp.msg.Remove.WHERE)
 		return
@@ -1008,6 +1087,9 @@ end
 
 mp.msg.Drop = {}
 function mp:Drop(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
@@ -1029,6 +1111,9 @@ end
 mp.msg.Insert = {}
 
 function mp:Insert(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if wh == std.me() then
 		mp:xaction('Take', w)
 		return
@@ -1063,6 +1148,10 @@ function mp:Insert(w, wh)
 		return
 	end
 
+	if mp:runmethods('before', 'Receive', wh, w) then
+		return false
+	end
+
 	if not wh:has'container' then
 		p(mp.msg.Insert.NOTCONTAINER)
 		return
@@ -1076,12 +1165,18 @@ function mp:Insert(w, wh)
 end
 
 function mp:after_Insert(w, wh)
+	if mp:runmethods('after', 'Receive', wh, w) then
+		return false
+	end
 	p(mp.msg.Insert.INSERT)
 end
 
 mp.msg.PutOn = {}
 
 function mp:PutOn(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if wh == std.me() then
 		mp:xaction('Take', w)
 		return
@@ -1110,6 +1205,9 @@ function mp:PutOn(w, wh)
 		p (mp.msg.PutOn.WHERE)
 		return
 	end
+	if mp:runmethods('before', 'Receive', wh, w) then
+		return false
+	end
 	if not wh:has'supporter' then
 		p(mp.msg.PutOn.NOTSUPPORTER)
 		return
@@ -1119,17 +1217,26 @@ function mp:PutOn(w, wh)
 end
 
 function mp:after_PutOn(w, wh)
+	if mp:runmethods('after', 'Receive', wh, w) then
+		return false
+	end
 	p(mp.msg.PutOn.PUTON)
 end
 
 mp.msg.ThrowAt = {}
 
 function mp:ThrowAt(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
 	if mp:check_worn(w) then
 		return
+	end
+	if mp:runmethods('before', 'ThrownAt', wh, w) then
+		return false
 	end
 	if not self:animate(wh) then
 		if wh:has'container' then
@@ -1148,6 +1255,9 @@ end
 mp.msg.Wear = {}
 
 function mp:Wear(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
@@ -1170,6 +1280,9 @@ end
 mp.msg.Disrobe = {}
 
 function mp:Disrobe(w)
+	if mp:check_touch() then
+		return
+	end
 	if not w:has'worn' then
 		p (mp.msg.Disrobe.NOTWORN)
 		return
@@ -1185,6 +1298,9 @@ end
 mp.msg.SwitchOn = {}
 
 function mp:SwitchOn(w)
+	if mp:check_touch() then
+		return
+	end
 	if not w:has'switchable' then
 		p (mp.msg.SwitchOn.NONSWITCHABLE)
 		return
@@ -1204,6 +1320,9 @@ end
 mp.msg.SwitchOff = {}
 
 function mp:SwitchOff(w)
+	if mp:check_touch() then
+		return
+	end
 	if not w:has'switchable' then
 		p (mp.msg.SwitchOff.NONSWITCHABLE)
 		return
@@ -1234,6 +1353,9 @@ end
 mp.msg.Eat = {}
 
 function mp:Eat(w)
+	if mp:check_touch() then
+		return
+	end
 	if not w:has'edible' then
 		p (mp.msg.Eat.NOTEDIBLE)
 		return
@@ -1261,6 +1383,9 @@ end
 mp.msg.Transfer = {}
 
 function mp:Transfer(w, ww)
+	if mp:check_touch() then
+		return
+	end
 	if mp.compass_dir(ww) then
 		mp:xaction('PushDir', w, ww)
 		return
@@ -1275,6 +1400,9 @@ end
 mp.msg.Push = {}
 
 function mp:Push(w)
+	if mp:check_touch() then
+		return
+	end
 	if w:has 'switchable' then
 		if w:has'on' then
 			mp:xaction('SwitchOff', w)
@@ -1300,6 +1428,9 @@ end
 mp.msg.Pull = {}
 
 function mp:Pull(w)
+	if mp:check_touch() then
+		return
+	end
 	if w:has 'static' then
 		p (mp.msg.Pull.STATIC)
 		return
@@ -1317,6 +1448,9 @@ end
 mp.msg.Turn = {}
 
 function mp:Turn(w)
+	if mp:check_touch() then
+		return
+	end
 	if w:has 'static' then
 		p (mp.msg.Turn.STATIC)
 		return
@@ -1339,6 +1473,9 @@ end
 mp.msg.Rub = {}
 
 function mp:Rub(w)
+	if mp:check_touch() then
+		return
+	end
 	p (mp.msg.Rub.RUB)
 end
 
@@ -1351,6 +1488,9 @@ end
 mp.msg.Touch = {}
 
 function mp:Touch(w)
+	if mp:check_touch() then
+		return
+	end
 	if w == std.me() then
 		p (mp.msg.Touch.MYSELF)
 		return
@@ -1365,6 +1505,9 @@ end
 mp.msg.Give = {}
 
 function mp:Give(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
@@ -1381,6 +1524,9 @@ end
 mp.msg.Show = {}
 
 function mp:Show(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
@@ -1397,6 +1543,9 @@ end
 mp.msg.Burn = {}
 
 function mp:Burn(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if wh and mp:check_held(wh) then
 		return
 	end
@@ -1416,6 +1565,9 @@ end
 mp.msg.WakeOther = {}
 
 function mp:WakeOther(w)
+	if mp:check_touch() then
+		return
+	end
 	if w == std.me() then
 		mp:xaction('Wake')
 		return
@@ -1432,6 +1584,9 @@ end
 
 mp.msg.PushDir = {}
 function mp:PushDir(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -1440,6 +1595,9 @@ end
 
 mp.msg.Kiss = {}
 function mp:Kiss(w)
+	if mp:check_touch() then
+		return
+	end
 	if not mp:animate(w) then
 		p (mp.msg.Kiss.NOTLIVE)
 		return
@@ -1461,6 +1619,9 @@ end
 
 mp.msg.Smell = {}
 function mp:Smell(w)
+	if mp:check_touch() then
+		return
+	end
 	if w then
 		p (mp.msg.Smell.SMELL2)
 		return
@@ -1470,6 +1631,9 @@ end
 
 mp.msg.Listen = {}
 function mp:Listen(w)
+	if mp:check_touch() then
+		return
+	end
 	if w then
 		p (mp.msg.Listen.LISTEN2)
 		return
@@ -1479,6 +1643,9 @@ end
 
 mp.msg.Dig = {}
 function mp:Dig(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if w and mp:check_live(w) then
 		return
 	end
@@ -1498,6 +1665,9 @@ end
 
 mp.msg.Cut = {}
 function mp:Cut(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -1520,6 +1690,9 @@ end
 mp.msg.Tie = {}
 
 function mp:Tie(w, wh)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -1536,6 +1709,9 @@ end
 mp.msg.Blow = {}
 
 function mp:Blow(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_live(w) then
 		return
 	end
@@ -1545,6 +1721,9 @@ end
 mp.msg.Attack = {}
 
 function mp:Attack(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:animate(w) and mp:runmethods('life', 'Attack', w) then
 		return false
 	end
@@ -1570,11 +1749,17 @@ end
 mp.msg.Consult = {}
 
 function mp:Consult(w, a)
+	if mp:check_touch() then
+		return
+	end
 	p (mp.msg.Consult.CONSULT)
 end
 
 mp.msg.Fill = {}
 function mp:Fill(w)
+	if mp:check_touch() then
+		return
+	end
 	p (mp.msg.Fill.FILL)
 end
 
@@ -1585,6 +1770,9 @@ end
 
 mp.msg.JumpOver = {}
 function mp:JumpOver(w)
+	if mp:check_touch() then
+		return
+	end
 	p (mp.msg.JumpOver.JUMPOVER)
 end
 
@@ -1595,6 +1783,9 @@ end
 
 mp.msg.Wave = {}
 function mp:Wave(w)
+	if mp:check_touch() then
+		return
+	end
 	if mp:check_held(w) then
 		return
 	end
@@ -1611,11 +1802,17 @@ end
 
 mp.msg.Buy = {}
 function mp:Buy(w)
+	if mp:check_touch() then
+		return
+	end
 	p (mp.msg.Buy.BUY)
 end
 
 mp.msg.Talk = {}
 function mp:Talk(w)
+	if mp:check_touch() then
+		return
+	end
 	local r = std.call(w, 'talk_to')
 	if r then
 		walkin(r)
@@ -1637,6 +1834,9 @@ end
 
 mp.msg.Tell = {}
 function mp:Tell(w, t)
+	if mp:check_touch() then
+		return
+	end
 	if #self.vargs == 0 then
 		p (mp.msg.Tell.EMPTY)
 		return
@@ -1657,6 +1857,9 @@ end
 
 mp.msg.Ask = {}
 function mp:Ask(w, t)
+	if mp:check_touch() then
+		return
+	end
 	if #self.vargs == 0 then
 		p (mp.msg.Ask.EMPTY)
 		return
@@ -1690,6 +1893,9 @@ end
 mp.msg.Answer = {}
 
 function mp:Answer(w, t)
+	if mp:check_touch() then
+		return
+	end
 	if #self.vargs == 0 then
 		p (mp.msg.Answer.EMPTY)
 		return
@@ -1758,6 +1964,7 @@ function mp:MetaWord(w)
 	local w, g = self.mrd:word(w)
 	pn(w)
 	for _, v in ipairs(g) do
+		pn (_, ":")
 		for k, vv in pairs(v) do
 			pn(k, " = ", vv)
 		end
