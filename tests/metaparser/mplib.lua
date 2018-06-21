@@ -994,6 +994,7 @@ function move(w, wh)
 	wh = wh or std.here()
 	wh = std.object(wh)
 	w = std.object(w)
+	local r, v
 	local ww = {}
 
 	w:where(ww)
