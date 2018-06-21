@@ -5,10 +5,15 @@ local mp = _'@metaparser'
 mp.mrd.lang = lang
 
 std.mod_init(
-function()
+	function()
 	mp:init()
 end)
-
+game.dsc = function()
+	p ([[METAPARSER3 Версия: ]]..mp.version.."^")
+	p [[http://instead-hub.github.io^^
+Если вам необходима справка по игре, наберите "помощь".
+^]]
+end
 local utf = mp.utf
 
 _'@compass'.word = function()
@@ -496,6 +501,8 @@ function mp:MetaHelp()
 ^
 Для того чтобы узнать, что вы носите с собой, наберите "инвентарь".^
 ^
+Для перемещений используйте стороны света, например: "идти на север" или "север" или просто "с".
+^^
 Вы можете воспользоваться клавишой "TAB" для автодополнения ввода.
 ]])
 end

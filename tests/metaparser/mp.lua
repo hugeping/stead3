@@ -175,6 +175,7 @@ mp = std.obj {
 	compl_thresh = 0;
 	daemons = std.list {};
 	{
+		version = "0.1";
 		cache = { tokens = {} };
 		scope = std.list {};
 		logfile = false;
@@ -1604,7 +1605,8 @@ end
 std.world.display = function(s, state)
 	local l, av, pv
 	if mp.text == '' and game:time() == 1 then
-		mp.text = game.dsc .. '^'
+		local r = std.call(game, 'dsc')
+		mp.text = r .. '^^'
 	end
 	if player_moved() then mp.text = '' end
 	mp:trim()
