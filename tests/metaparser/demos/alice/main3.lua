@@ -261,7 +261,7 @@ obj {
 		move(pl, 'mantelpiece')
 		p "Алиса ловко вскарабкалась на каминную полку.";
 	end;
-	['before_PutOn,LetGo'] = function(s)
+	['before_Receive,LetGo'] = function(s)
 		if pl:where() ~= s and
 		(not pl:where() ^ 'armchair' or not _'armchair'.moved) then
 			p "Полка слишком высоко, за пределами досягаемости."

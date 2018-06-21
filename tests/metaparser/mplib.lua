@@ -1150,7 +1150,7 @@ function mp:Insert(w, wh)
 	end
 
 	if mp:runmethods('before', 'Receive', wh, w) then
-		return false
+		return
 	end
 
 	if not wh:has'container' then
@@ -1167,7 +1167,7 @@ end
 
 function mp:after_Insert(w, wh)
 	if mp:runmethods('after', 'Receive', wh, w) then
-		return false
+		return
 	end
 	p(mp.msg.Insert.INSERT)
 end
@@ -1207,7 +1207,7 @@ function mp:PutOn(w, wh)
 		return
 	end
 	if mp:runmethods('before', 'Receive', wh, w) then
-		return false
+		return
 	end
 	if not wh:has'supporter' then
 		p(mp.msg.PutOn.NOTSUPPORTER)
@@ -1219,7 +1219,7 @@ end
 
 function mp:after_PutOn(w, wh)
 	if mp:runmethods('after', 'Receive', wh, w) then
-		return false
+		return
 	end
 	p(mp.msg.PutOn.PUTON)
 end
@@ -1237,7 +1237,7 @@ function mp:ThrowAt(w, wh)
 		return
 	end
 	if mp:runmethods('before', 'ThrownAt', wh, w) then
-		return false
+		return
 	end
 	if not self:animate(wh) then
 		if wh:has'container' then
@@ -1248,7 +1248,7 @@ function mp:ThrowAt(w, wh)
 		return
 	end
 	if mp:runmethods('life', 'ThrowAt', wh, w) then
-		return false
+		return
 	end
 	p(mp.msg.ThrowAt.THROW)
 end
@@ -1517,7 +1517,7 @@ function mp:Give(w, wh)
 		return
 	end
 	if mp:runmethods('life', 'Give', wh, w) then
-		return false
+		return
 	end
 	p (mp.msg.Give.GIVE)
 end
@@ -1536,7 +1536,7 @@ function mp:Show(w, wh)
 		return
 	end
 	if mp:runmethods('life', 'Show', wh, w) then
-		return false
+		return
 	end
 	p (mp.msg.Show.SHOW)
 end
@@ -1578,7 +1578,7 @@ function mp:WakeOther(w)
 		return
 	end
 	if mp:runmethods('life', 'WakeOther', w) then
-		return false
+		return
 	end
 	p (mp.msg.WakeOther.WAKE)
 end
@@ -1604,7 +1604,7 @@ function mp:Kiss(w)
 		return
 	end
 	if mp:runmethods('life', 'Kiss', w) then
-		return false
+		return
 	end
 	if w == std.me() then
 		p (mp.msg.Kiss.MYSELF)
@@ -1726,7 +1726,7 @@ function mp:Attack(w)
 		return
 	end
 	if mp:animate(w) and mp:runmethods('life', 'Attack', w) then
-		return false
+		return
 	end
 	if mp:animate(w) then
 		p (mp.msg.Attack.LIFE)
@@ -1828,7 +1828,7 @@ function mp:Talk(w)
 		return
 	end
 	if mp:runmethods('life', 'Talk', w) then
-		return false
+		return
 	end
 	p (mp.msg.Talk.LIVE)
 end
@@ -1851,7 +1851,7 @@ function mp:Tell(w, t)
 		return
 	end
 	if mp:runmethods('life', 'Tell', w, t) then
-		return false
+		return
 	end
 	p (mp.msg.Tell.LIVE)
 end
@@ -1874,7 +1874,7 @@ function mp:Ask(w, t)
 		return
 	end
 	if mp:runmethods('life', 'Ask', w, t) then
-		return false
+		return
 	end
 	p (mp.msg.Ask.LIVE)
 end
@@ -1910,7 +1910,7 @@ function mp:Answer(w, t)
 		return
 	end
 	if mp:runmethods('life', 'Answer', w, t) then
-		return false
+		return
 	end
 	p (mp.msg.Answer.LIVE)
 end
