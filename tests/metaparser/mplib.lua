@@ -120,7 +120,7 @@ function std.player:walk(w, doexit, doenter, dofrom)
 	if std.is_obj(w, 'room') then
 		if w == std.here() then
 			self.__room_where = false
---			self:need_scene(true)
+			self:need_scene(true)
 			return nil, true
 		end
 		local r, v = owalk(self, w, doexit, doenter, dofrom)
@@ -133,7 +133,7 @@ function std.player:walk(w, doexit, doenter, dofrom)
 		end
 		self.__room_where = w
 		if w:inroom() == std.ref(self.room) then
-			-- self:need_scene(true)
+			self:need_scene(true)
 			return nil, true
 		end
 		return owalk(self, w:inroom(), doexit, doenter, dofrom)
@@ -442,7 +442,8 @@ function mp:content(w)
 	end
 	local oo = {}
 	local ooo = {}
-	if w == std.me():where() or w:type'room' then
+	if (w == std.me():where() or std.here() == w) and
+		(player_moved() or mp.event == 'Look' or mp.event == 'Exam') then
 		pn()
 		local dsc
 		if not mp:offerslight(w) then
@@ -452,6 +453,7 @@ function mp:content(w)
 			dsc = std.call(w, w:type'room' and 'dsc' or 'inside_dsc')
 		end
 		p(dsc)
+		p(std.scene_delim)
 	end
 	self:objects(w, oo, false)
 	local something

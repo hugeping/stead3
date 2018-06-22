@@ -1481,6 +1481,9 @@ function mp:events_call(events, oo, t)
 					end
 				end
 			end
+			if r then
+				pn()
+			end
 			if o == 'obj' then
 				table.insert(e.args, 1, ob)
 			end
