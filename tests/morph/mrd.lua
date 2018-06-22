@@ -791,7 +791,7 @@ function mrd:noun_hint(ob, ...)
 		end
 	end
 	if not g[mp.hint.live] then
-		hint = hint .. ',~' .. mp.hint.live .. ',' .. mp.hint.nonlive
+		hint = hint .. ',' .. mp.hint.nonlive
 	end
 	if ob then
 		hint = hint..",noun"
