@@ -587,5 +587,6 @@ Verb {
 room {
 	nam = 'theend';
 	title = 'Конец';
+	dsc = false;
 	noparser = true;
 }

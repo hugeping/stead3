@@ -44,7 +44,7 @@ mp.door = std.class({
 			return
 		end
 --		walk(r)
-		if not move(std.me(), r) then return true end
+		if not mp:move(std.me(), r) then return true end
 	end;
 }, std.obj):attr 'enterable,openable,door'
 local function pnoun(noun, ...)
@@ -412,7 +412,7 @@ obj {
 			return v
 		end
 		if std.object(r):type 'room' then
-			if not move(std.me(), r) then return true end
+			if not mp:move(std.me(), r) then return true end
 		else
 			mp:xaction("Enter", std.object(r))
 		end
@@ -709,7 +709,7 @@ function mp:Enter(w)
 		p (mp.msg.Enter.CLOSED)
 		return
 	end
-	if not move(std.me(), w) then return true end
+	if not mp:move(std.me(), w) then return true end
 	return false
 end
 
@@ -995,18 +995,21 @@ std.obj.inside = function(s, wh)
 	return mp:inside(s, wh)
 end
 function move(w, wh)
+	return mp:move(w, wh, true)
+end
+function mp:move(w, wh, force)
 	wh = wh or std.here()
 	wh = std.object(wh)
 	w = std.object(w)
 	local r, v
 	local ww = {}
 
-	w:where(ww)
+	if not force then
+		w:where(ww)
+	end
 
 	for _, o in ipairs(ww) do
-		local r, v = std.call(o, 'before_LetGo', w, wh)
-		if r then p(r) end
-		if v == true then
+		if mp:runmethods('before', 'LetGo', w, wh) then
 			return false
 		end
 	end
@@ -1023,8 +1026,9 @@ function move(w, wh)
 	end
 	w:attr 'moved'
 	for _, o in ipairs(ww) do
-		local r, v = std.call(o, 'after_LetGo', w, wh)
-		if r then p(r) end
+		if mp:runmethods('after', 'LetGo', w, wh) then
+			return false
+		end
 	end
 	return true
 end
@@ -1067,7 +1071,7 @@ function mp:Take(w, ww)
 		p (mp.msg.Take.PARTOF)
 		return
 	end
-	if not move(w, std.me()) then return true end
+	if not mp:move(w, std.me()) then return true end
 	return false
 end
 
@@ -1105,7 +1109,7 @@ function mp:Drop(w)
 		p (mp.msg.Drop.SELF)
 		return
 	end
-	if not move(w, std.me():where()) then return true end
+	if not mp:move(w, std.me():where()) then return true end
 	return false
 end
 
@@ -1169,7 +1173,7 @@ function mp:Insert(w, wh)
 		p(mp.msg.Insert.CLOSED)
 		return
 	end
-	if not move(w, wh) then return true end
+	if not mp:move(w, wh) then return true end
 	return false
 end
 
@@ -1222,7 +1226,7 @@ function mp:PutOn(w, wh)
 		p(mp.msg.PutOn.NOTSUPPORTER)
 		return
 	end
-	if not move(w, wh) then return true end
+	if not mp:move(w, wh) then return true end
 	return false
 end
 
