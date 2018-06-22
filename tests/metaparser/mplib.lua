@@ -1158,6 +1158,10 @@ function mp:Insert(w, wh)
 	end
 
 	if not wh:has'container' then
+		if wh:has'supporter' then
+			mp:xaction("PutOn", w, wh)
+			return
+		end
 		p(mp.msg.Insert.NOTCONTAINER)
 		return
 	end
@@ -1214,6 +1218,7 @@ function mp:PutOn(w, wh)
 		return
 	end
 	if not wh:has'supporter' then
+		mp:xaction("PutOn", w, wh)
 		p(mp.msg.PutOn.NOTSUPPORTER)
 		return
 	end

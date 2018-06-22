@@ -189,10 +189,6 @@ obj {
 		end
 		return false
 	end;
-	before_Receive = function(s, w)
-		move(w, s)
-		return
-	end;
 	['before_Push,Pull'] = function(s, w)
 		if not (pl:where() ^ 'Drawing_Room') then
 			p ("Для начала необходимо покинуть ", pl:where():noun 'вн', ".")
