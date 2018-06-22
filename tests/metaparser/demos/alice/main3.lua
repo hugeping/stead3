@@ -306,7 +306,7 @@ obj {
              и вот она уже по ту сторону зеркала!!!]];
                 walk 'theend'
         end;
-} : attr 'static,concealed'
+} : attr 'static,concealed,enterable'
 
 obj {
 	-"клубок шерсти,клубок|шерсть";
@@ -568,8 +568,9 @@ Kitten  {
 }
 
 VerbExtend {"#Exam",
-	    "на {noun}/вн в {noun}/пр,2,scene : Reflect",
-	    "в {noun}/пр,2,scene на {noun}/вн : Reflect reverse"
+	    "{noun}/вн,scene в {noun}/пр,2,scene : Reflect",
+	    "~ на {noun}/вн,scene в {noun}/пр,2,scene : Reflect",
+	    "~ в {noun}/пр,2,scene на {noun}/вн : Reflect reverse"
 }
 
 Verb {
@@ -590,3 +591,5 @@ room {
 	dsc = false;
 	noparser = true;
 }
+
+game.hint_verbs = { "#Exam", "#Walk", "#Push", "#Take", "#Drop", "#Search", "#Give", "#Touch" }
