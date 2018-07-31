@@ -595,11 +595,9 @@ function mp:lookup_verb(words, lev)
 		for _, vv in ipairs(v.verb) do
 			local verb = vv.word .. (vv.morph or "")
 			local i, len, rlev
-			if not lev and verb ~= vv.word then
+			i, len, rlev = word_search(words, verb, lev and self.lev_thresh)
+			if not i and not lev and verb ~= vv.word then
 				i, len = self:lookup_short(words, vv.word)
-			end
-			if not i then
-				i, len, rlev = word_search(words, verb, lev and self.lev_thresh)
 			end
 			if i then
 				if lev then
