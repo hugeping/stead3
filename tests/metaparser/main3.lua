@@ -7,38 +7,25 @@ game:dict {
 --	['я/вн'] = 'себя'; -- возвратное местоимение
 }
 
-function parser:before_Take(w)
-	if have(w) then
-		p "У {#me/вн} и так {#firstit} уже есть."
-		return
-	end
-	return false
-end
-
-function parser:Take(w)
-	take(w)
-	return false
-end
-
-function parser:after_Take(w)
-	if not self.reaction then
-		p ("{#Me} {#verb/take} {#first/вн}.");
-	end
-end
 
 parser.door {
 	nam = "дверь";
 	door_to = 'main2';
+	with_key = 'ключ';
+	when_closed = [[Тут есть запертая дверь.]];
 --	dsc = [[Тут есть дверь.]];
-}:attr 'scenery,openable'
+}:attr 'static,openable,lockable,locked'
 
 obj {
 	-"рюкзак";
 	nam = 'рюкзак';
 	obj = {'яблоко2'};
 } : attr 'container,openable'
-
+obj {
+	nam = -"ключ";
+}
 take 'рюкзак'
+take 'ключ'
 
 obj {
 	-"красное яблоко,яблоко/ср",
@@ -46,6 +33,38 @@ obj {
 	nam = 'яблоко';
 --	Take = 'взял';
 --	Take = function(s) walk 'main2' end;
+}: with {
+	obj {
+		nam = -"червяк";
+		dsc = 'В яблоке есть червяк.';
+	}
+}: attr 'edible'
+
+obj {
+	-"короткая стрела,стрела";
+	nam = 'стрела1';
+	init_dsc = [[Я увидел стрелу на столе!]];
+	obj = {
+		obj {
+			-"оперение";
+			nam = '#оперение';
+		}
+	}
+}
+
+obj {
+	-"длинная стрела,стрела";
+	nam = 'стрела2';
+}
+
+obj {
+	-"стрела";
+	nam = 'стрела3';
+}
+
+obj {
+	-"стрела";
+	nam = 'стрела4';
 }
 
 obj {
@@ -58,54 +77,74 @@ obj {
 
 print("attr", _'яблоко2':has 'container')
 -- lifeon 'яблоко'
-parser.debug.trace_action = true
 
 --game: dict {
 --	['красное яблоко/дт,мн'] = 'кустом слово для игры';
 --}
 
-Verb { "#take", "взять,забрать,схват/ить,забери,возьми,бери",
-    "{noun}/вн : Take" }
-Verb { 'сказ/ать', "{noun}/дт * : Talk" }
-
 function parser.token.topic(w)
 	return "пароль"
 end
 
-pl.word = -"ты"
-
+--pl.word = -"ты/мр,2л"
 --/од,мр,1л";
---pl.word = -"вы";
+--pl.word = -"я/мр";
 
 pl:dict {
-	["я/вн"] = "себя";
-	["я/пр"] = "себе";
+--	["я/вн"] = "себя";
+--	["я/пр"] = "себе";
 }
 obj {
 	-"рыбка,рыба";
 	nam = 'рыбка';
-}
+}:attr'~animate'
 
 obj {
 	-"аквариум",
 	nam = 'аквариум',
 	title = [[В аквариуме]];
 	obj = { 'рыбка' },
+	scope = { 'стол' };
 } : attr 'container,transparent,enterable,open'
 
 obj {
 	nam = -"стол";
-	obj = { 'яблоко', 'аквариум' };
-} : attr "supporter"
+	dsc = "В центре комнаты стоит стол.";
+	description = function(s) p "Старый стол."; content(s) end;
+	obj = { 'яблоко', 'аквариум', 'стрела1', 'стрела2' };
+	["before_Exam,Take"] = function(s) s:open(); return false; end;
+} : attr "supporter,enterable":close()
 
+obj {
+	-"выключатель|свет";
+	nam = 'выключатель';
+	after_SwitchOn = function(s) here():attr'light' return false end;
+	after_SwitchOff = function(s) here():attr'~light' return false end;
+} : attr 'light,switchable,scenery';
+parser.cutscene {
+	nam = 'test';
+	text = {
+		[[Привет мир! Это пример катсцен. Текста, который можно читать.]];
+		[[Проверка катсцен1]];
+		[[Вот так]];
+	};
+}
 room {
 	title = -"комната";
 	nam = 'main';
 	n_to = 'дверь';
 	e_to = 'main2';
+	s_to = 'test';
+--	before_Enter = function(s, w) p ([[Попытка идти: ]],w:dir()) end;
 --	dsc = "Я в комнате.";
 --	before_Exit = function(w) pn "нельзя."; return true; end;
-}: with { 'стол', 'дверь' }
+}: with { 'стол', 'дверь', 'кепка','выключатель'} : attr '~light'
+room {
+	nam = 'main3';
+}
+obj {
+	nam = -"кепка";
+}:attr 'clothes'
 
 function init()
 --	me().room_where = _'аквариум'
@@ -113,7 +152,10 @@ function init()
 end
 
 function start()
---	print(_'яблоко':noun('тв,мн')) -- даст яблокам
+--	print(_'стрела2':noun('им')) -- даст яблокам
+--	print(_'стрела2':gram().hint) -- даст яблокам
+	print(_'стрела3':gram().hint) -- даст яблокам
+--	os.exit(1)
 --	print(pl:Noun('тв')) -- даст мной
 --	print(parser.mrd:noun(-"взять/прш,од,1л"))
 --	print(parser.mrd:noun(-"нужен/жр"))
@@ -121,7 +163,6 @@ function start()
 --	print(pl:noun())
 --	print("visible:", _"стол":visible())
 --	print("visible:", _"рыбка":visible())
-
 	for k, v in pairs(_'дверь':gram()) do
 		print(k, v)
 	end

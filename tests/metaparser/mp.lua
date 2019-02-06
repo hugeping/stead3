@@ -1,4 +1,5 @@
 require "fmt"
+require "theme"
 
 local mrd = require "morph/mrd"
 local inp_split = " :.,!?"
@@ -74,14 +75,29 @@ local function utf_char(b, c)
 	return
 end
 
+local function utf_chars(b)
+	local i = 1
+	local n = 0
+	local s
+	local res = {}
+	while i <= b:len() do
+		s = i
+		i = i + utf_ff(b, i)
+		table.insert(res,  b:sub(s, i - 1))
+	end
+	return res
+end
+
 -- Returns the Levenshtein distance between the two given strings
 -- https://gist.github.com/Badgerati/3261142
 
 local function utf_lev(str1, str2)
 	str1 = str1 or ''
 	str2 = str2 or ''
-	local len1 = utf_len(str1)
-	local len2 = utf_len(str2)
+	local chars1 = utf_chars(str1)
+	local chars2 = utf_chars(str2)
+	local len1 = #chars1
+	local len2 = #chars2
 	local matrix = {}
 	local cost = 0
 
@@ -106,7 +122,7 @@ local function utf_lev(str1, str2)
         -- actual Levenshtein algorithm
 	for i = 1, len1, 1 do
 		for j = 1, len2, 1 do
-			if (utf_char(str1, i) == utf_char(str2, j)) then
+			if (chars1[i] == chars2[j]) then
 				cost = 0
 			else
 				cost = 1
@@ -139,7 +155,11 @@ function input:key(press, key)
 
 	if press and not mod and not (mp.ctrl or mp.alt) then
 		if mp:key(key) then
-			mp:compl_fill(mp:compl(mp.inp))
+			if mp.autohelp then
+				mp:compl_fill(mp:compl(mp.inp))
+			elseif mp.autocompl then
+				mp:compl(mp.inp)
+			end
 			return '@mp_key '..tostring(key)
 		end
 	end
@@ -151,7 +171,15 @@ end
 mp = std.obj {
 	nam = '@metaparser';
 	autohelp = false;
+	autocompl = true;
+	compl_thresh = 0;
+	daemons = std.list {};
 	{
+		version = "0.1";
+		cache = { tokens = {} };
+		scope = std.list {};
+		logfile = false;
+		lognum = 0;
 		inp = '';
 		cur = 1;
 		utf = {
@@ -163,7 +191,7 @@ mp = std.obj {
 		lev_thresh = 3;
 		history = {};
 		persistent = std.list {};
-		winsize = 128 * 1024;
+		winsize = 16 * 1024;
 		history_len = 100;
 		history_pos = 0;
 		cursor = fmt.b("|");
@@ -328,7 +356,6 @@ local function str_strip(str)
 	return std.strip(str)
 end
 
-
 local function str_split(str, delim)
 	local a = std.split(str, delim)
 	for k, _ in ipairs(a) do
@@ -338,13 +365,16 @@ local function str_split(str, delim)
 end
 
 instead.get_inv = std.cacheable('inv', function(horiz)
+	if std.here().noparser then
+		return
+	end
 	local delim = instead.hinv_delim
 	if not horiz then
 		delim = instead.inv_delim
 	end
 	local pre, post = mp:inp_split()
-	local ret = mp.prompt .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
-	if not mp.autohelp then
+	local ret = iface:bold(mp.prompt) .. mp:esc(pre)..mp.cursor..mp:esc(post) .. '\n'
+	if not mp.autohelp and not std.here().forcehelp then
 		return ret
 	end
 	delim = delim or ' | '
@@ -376,18 +406,34 @@ instead.get_inv = std.cacheable('inv', function(horiz)
 end)
 
 function mp:objects(wh, oo, recurs)
+	local scope = self.scope
 	wh:for_each(function(v)
 		if v:disabled() then return nil, false end
-		if v:visible() then
+		if scope:lookup(v) or v:visible() then
 			table.insert(oo, v)
+			if v.scope then
+				if std.is_obj(v.scope, 'list') then
+					scope:cat(v.scope)
+				elseif type(v.scope) == 'function' then
+					v:scope(scope)
+				end
+			end
 		end
-		if recurs == false then
+		if recurs == false or v:closed() then
 			return nil, false
+		end
+		if std.is_obj(wh, 'list') then
+			self:objects(v, oo, recurs)
 		end
 	end)
 end
 
+local darkness = std.obj {
+	nam = '@darkness';
+}
+
 function mp:nouns()
+	self.scope:zap()
 	if type(std.here().nouns) == 'function' then
 		return std.here():nouns()
 	end
@@ -396,7 +442,19 @@ function mp:nouns()
 	self:objects(std.me(), oo)
 	self:objects(self.persistent, oo)
 	table.insert(oo, std.me())
-	table.insert(oo, std.here())
+	if std.here().word then
+		table.insert(oo, std.here())
+	end
+	if not self:offerslight(std.me():where()) then
+		table.insert(oo, darkness)
+	end
+	local dups = {}
+	self.scope:for_each(function(v)
+		if not dups[v] then
+			table.insert(oo, v)
+			dups[v] = true
+		end
+	end)
 	return oo
 end
 
@@ -412,7 +470,9 @@ function mp.token.noun(w)
 		local hint = str_split(w.morph, ",")
 		local o = std.ref(hint[1])
 		oo = {}
-		table.insert(oo, o)
+		if o:visible() and not o:disabled() then
+			table.insert(oo, o)
+		end
 	else
 		oo = mp:nouns()
 	end
@@ -422,13 +482,20 @@ function mp.token.noun(w)
 		for k, v in ipairs(d) do
 			local hidden = (k ~= 1) or w.hidden
 			if o:has 'multi' then
-				hidden = hidden or (v.idx ~= 1)
+				hidden = w.hidden or (v.idx ~= 1)
 			end
-			table.insert(ww, { optional = w.optional, word = r[k], ob = o, alias = v.alias, hidden = hidden })
+			if o == std.me() and mp.myself then
+				for _, v in ipairs(mp:myself(o, w.morph)) do
+					table.insert(ww, { optional = w.optional, word = v, morph = attr, ob = o, alias = o.alias, hidden = hidden })
+				end
+				break
+			else
+				table.insert(ww, { optional = w.optional, word = r[k], ob = o, morph = attr, alias = v.alias, hidden = hidden })
+			end
 		end
 		if o == mp.first then
 			for _, v in ipairs(mp:synonyms(o, w.morph)) do
-				table.insert(ww, { optional = w.optional, word = v, ob = o, alias = o.alias, hidden = true })
+				table.insert(ww, { optional = w.optional, word = v, ob = o, morph = attr, alias = o.alias, hidden = true })
 			end
 		end
 	end
@@ -439,8 +506,21 @@ function mp.token.select(w)
 	return mp.token.noun(w)
 end
 
+local norm_cache = { hash = {}, list = {}}
+
 function mp:norm(t)
+	local key = t
+	local cc = norm_cache.hash[t]
+	if cc then return cc end
 	t = mrd.lang.lower(mrd.lang.norm(t)):gsub("[ \t]+", " ")
+	table.insert(norm_cache.list, 1, t)
+	norm_cache.hash[key] = t
+	local len = #norm_cache.list
+	if len > 512 then
+		cc = norm_cache.list[len]
+		table.remove(norm_cache.list, len)
+		norm_cache.hash[cc] = nil
+	end
 	return t
 end
 
@@ -455,21 +535,29 @@ function mp:eq(t1, t2, lev)
 	return self:norm(t1) == self:norm(t2)
 end
 
-function mp:pattern(t)
+function mp:pattern(t, delim)
 	local words = {}
-	local pat = str_split(self:norm(t), "|,")
+	local pat = str_split(self:norm(t), delim or "|")
 	for _, v in ipairs(pat) do
 		local w = { }
-		if v:sub(1, 1) == '?' then
-			v = v:sub(2)
-			v = str_strip(v)
-			w.optional = true
-		end
+		local ov = v
 		if v:sub(1, 1) == '~' then
 			v = v:sub(2)
 			v = str_strip(v)
 			w.hidden = true
 		end
+		if v:sub(1, 1) == '+' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+			w.default = true
+		end
+		if v:sub(1, 1) == '?' then
+			v = v:sub(2)
+			v = str_strip(v)
+			w.optional = true
+		end
+		v = v:gsub("%+", " ") -- spaces
 		if v:find("[^/]+/[^/]*$") then
 			local s, e = v:find("/[^/]*$")
 			w.morph = v:sub(s + 1, e)
@@ -482,7 +570,12 @@ function mp:pattern(t)
 			if type(self.token[v]) ~= 'function' then
 				std.err("Wrong subst function: ".. v, 2);
 			end
-			local tok = self.token[v](w)
+			local key = ov .. '/' .. (w.morph or '')
+			local tok = self.cache.tokens[key]
+			if not tok then
+				tok = self.token[v](w)
+				self.cache.tokens[key] = tok
+			end
 			while type(tok) == 'string' do
 				tok = self:pattern(tok)
 			end
@@ -499,7 +592,25 @@ function mp:pattern(t)
 	return words
 end
 
-function mp:verb(t, w)
+function mp:verb_find(tag, w)
+	w = w or game
+	for k, v in ipairs(w.__Verbs or {}) do
+		if v.tag == tag then
+			return v, k
+		end
+	end
+end
+
+function mp:verb_remove(tag, w)
+	local v, k = self:verb_find(tag, w)
+	if v then
+		table.remove(w or game, k)
+	end
+	return v
+end
+
+function mp:verb(t, w, extend)
+	local rem
 	w = w or game
 	if type(t) ~= 'table' then
 		std.err("Wrong 1-arg to mp:verb()", 2)
@@ -508,23 +619,32 @@ function mp:verb(t, w)
 		std.err("Wrong 2-arg to mp:verb()", 2)
 	end
 	if not w.__Verbs then
-		w.__Verbs = {}
+		std.rawset(w, '__Verbs', {})
 	end
 	local verb = {}
 	local n = 1
 	if std.is_tag(t[1]) then
 		verb.tag = t[1]
+		rem = self:verb_remove(verb.tag, w)
 		n = 2
 	end
-	if type(t[n]) ~= 'string' then
-		std.err("Wrong verb pattern in mp:verb()", 2)
+	if extend and (not rem or not verb.tag) then
+		std.err("Extending non existing verb "..verb.tag or '#Undefined', 2)
 	end
-	verb.verb = self:pattern(t[n])
-	n = n + 1
+	if extend then
+		verb.verb = rem.verb
+		verb.dsc = rem.dsc
+	else
+		if type(t[n]) ~= 'string' then
+			std.err("Wrong verb pattern in mp:verb()", 2)
+		end
+		verb.verb = self:pattern(t[n], ",")
+		n = n + 1
+		verb.dsc = {}
+	end
 	if type(t[n]) ~= 'string' then
 		std.err("Wrong verb descriptor mp:verb()", 2)
 	end
-	verb.dsc = {}
 	while type(t[n]) == 'string' do
 		local dsc = str_split(t[n], ":")
 		local pat
@@ -532,18 +652,29 @@ function mp:verb(t, w)
 			table.insert(verb.dsc, { pat = {}, ev = dsc[1] })
 		elseif #dsc == 2 then
 			pat = str_split(dsc[1], ' ')
+			local hidden = false
+			if pat[1] == '~' then
+				table.remove(pat, 1)
+				hidden = true
+				for k, v in ipairs(pat) do
+					pat[k] = v:gsub("[^ |]+", function(s) return "~" .. s end)
+				end
+			end
 			table.insert(verb.dsc, { pat = pat, ev = dsc[2] })
 		else
 			std.err("Wrong verb descriptor: " .. t[n])
 		end
 		n = n + 1
 	end
-	table.insert(w.__Verbs, verb)
+	verb.hint = t.hint
+	table.insert(w.__Verbs, 1, verb)
 	return verb
 end
 
 function mp:verbs()
-	return std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
+	local ret = {}
+	local w = std.here().__Verbs or std.me().__Verbs or game.__Verbs or {}
+	return w
 end
 
 local function word_search(t, w, lev)
@@ -574,7 +705,7 @@ end
 function mp:lookup_short(words, w)
 	local ret = { }
 	for _,v in ipairs(words) do
-		if self:startswith(v, w) then
+		if self:__startswith(v, w) then
 			table.insert(ret, { i = _, w = v, pos = #ret })
 		end
 	end
@@ -639,11 +770,24 @@ local function tab_sub(t, s, e)
 	return r
 end
 
+local function tab_exclude(t, s, e)
+	local r = {}
+	e = e or #t
+	for i = 1, #t do
+		if i < s or i > e then
+			table.insert(r, t[i])
+		end
+	end
+	return r
+end
+
 function mp:docompl(str, maxw)
 	local full = false
 	local force = maxw
 	local inp, pre = self:compl_ctx()
-
+	if utf_len(pre) < self.compl_thresh then
+		return str
+	end
 	if not maxw then
 		full = false
 		local compl = self:compl(str)
@@ -653,9 +797,11 @@ function mp:docompl(str, maxw)
 				maxw = v.word
 			else
 				local maxw2 = ''
-				for k = 1, utf_len(maxw) do
-					if utf_char(maxw, k) == utf_char(v.word, k) then
-						maxw2 = maxw2 .. utf_char(maxw, k)
+				local utf_word = utf_chars(v.word)
+				local utf_maxw = utf_chars(maxw)
+				for k = 1, #utf_maxw do
+					if utf_maxw[k] == utf_word[k] then
+						maxw2 = maxw2 .. utf_maxw[k]
 					else
 						full = false
 						break
@@ -675,20 +821,91 @@ function mp:docompl(str, maxw)
 	end
 	return str
 end
+
+function mp:__startswith(w, v)
+	return w:find(v, 1, true) == 1
+end
+
 function mp:startswith(w, v)
 	return (self:norm(w)):find(self:norm(v), 1, true) == 1
 end
 
+function mp:hint_verbs(v)
+	if not v.tag then return true end
+	if type(v.hint) == 'function' then
+		return v:hint()
+	end
+	local r = true
+	if game.hint_verbs then
+		r = false
+		for _, vv in ipairs(game.hint_verbs) do
+			if v.tag == vv then
+				r = true
+				break
+			end
+		end
+	end
+	if r then return r end
+	if std.here().hint_verbs then
+		for _, vv in ipairs(game.hint_verbs) do
+			if v.tag == vv then
+				r = true
+				break
+			end
+		end
+	end
+	return r
+end
 function mp:compl_verb(words)
 	local dups = {}
 	local poss = {}
 	for _, v in ipairs(self:verbs()) do
+		local filter = not self:hint_verbs(v)
 		for _, vv in ipairs(v.verb) do
 			local verb = vv.word .. (vv.morph or "")
-			table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden })
+			table.insert(poss, { word = verb, hidden = (_ ~= 1) or vv.hidden or filter})
 		end
 	end
 	return poss
+end
+
+function mp:animate(w)
+	if w:has'animate' == false then
+		return false
+	end
+	return w:has'animate' or w:hint'live'
+end
+
+function mp:compl_filter(v)
+	if v.hidden then return false end
+	local inp, pre = self:compl_ctx()
+	if utf_len(pre) < self.compl_thresh then
+		return false
+	end
+	if not v.ob or not v.morph then
+		return true
+	end
+	local attrs = {
+		held = false;
+		scene = false;
+		container = false;
+		inside = false;
+		enterable = false;
+		supporter = false;
+		live = false,
+	}
+	for _, h in ipairs(str_split(v.morph, ",")) do
+		if attrs[h] ~= nil then attrs[h] = h end
+	end
+	for _, a in ipairs { 'container', 'enterable', 'supporter' } do
+		if attrs[a] and not v.ob:has(a) then return false end
+	end
+	if attrs.live and not self:animate(v.ob) then return false end
+	if attrs.inside and not v.ob:has'container' and not v.ob:has'supporter' then return false end
+	if not attrs.held and not attrs.scene then return true end
+	if attrs.held and have(v.ob) then return true end
+	if attrs.scene and (not have(v.ob) and v.ob ~= std.me()) then return true end
+	return false
 end
 
 function mp:compl_fill(compl, eol, vargs)
@@ -698,9 +915,8 @@ function mp:compl_fill(compl, eol, vargs)
 	self.completions.eol = eol
 	self.completions.vargs = vargs
 	local w = str_split(self.inp, inp_split)
-	local n = w and #w > 0 and utf_len(w[#w]) or 0
 	for _, v in ipairs(compl) do
-		if not v.hidden then -- or n >= 3 then
+		if self:compl_filter(v) then
 			table.insert(self.completions, v)
 		end
 	end
@@ -775,6 +991,7 @@ function mp:compl(str)
 	local eol
 	local e = str:find(" $")
 	local vargs
+	collectgarbage("stop")
 	self:compl_ctx_current();
 	poss = self:compl_ctx_poss()
 	if (#poss == 0 and e) or #words == 0 then -- no context
@@ -785,7 +1002,9 @@ function mp:compl(str)
 				local ww = {}
 				o:noun(ww)
 				for _, n in ipairs(ww) do
-					table.insert(poss, { word = n.word, hidden = true })
+					local hidden = true
+					if o.raw_word then hidden = n.alias ~= 1 and not o:has'multi' end
+					table.insert(poss, { word = n.word, hidden = hidden })
 				end
 			end
 		else -- matches
@@ -805,6 +1024,7 @@ function mp:compl(str)
 	table.sort(ret, function(a, b)
 			   return a.word < b.word
 	end)
+	collectgarbage("restart")
 	return ret, eol, vargs
 end
 
@@ -815,7 +1035,11 @@ local function lev_sort(t)
 		t = fuzzy
 		t.fuzzy = true
 	end
-	table.sort(t, function(a, b) return a.lev > b.lev end)
+	for _, v in ipairs(t) do v.i = _ end
+	table.sort(t, function(a, b)
+			   if a.lev == b.lev then return a.i < b.i end
+			   return a.lev > b.lev
+	end)
 	local lev = t[1] and t[1].lev
 	local res = {}
 	local dup = {}
@@ -850,6 +1074,7 @@ function mp:compl_match(words)
 	local res = {}
 	local dup = {}
 	local multi
+	collectgarbage("stop")
 	for _, v in ipairs(verbs) do
 		local m, h, u, mu = self:match(v, words, true)
 		if #m > 0 then
@@ -860,13 +1085,14 @@ function mp:compl_match(words)
 		end
 		multi = multi or (#mu > 0)
 	end
+	collectgarbage("restart")
 	hints = lev_sort(hints)
 	if multi then -- #matches > 0 or #hints == 0 or multi then
 		return res
 	end
 	for _, v in ipairs(hints) do
 		if #matches > 0 and #matches[1].match > hints.lev then
-			return res
+			return res, false, not not matches[1].match.vargs
 		end
 		local pat = self:pattern(v)
 		for _, p in ipairs(pat) do
@@ -898,13 +1124,12 @@ function mp:match(verb, w, compl)
 		end
 		local all_optional = true
 		local rlev = 1
+		local need_required = false
 		for lev, v in ipairs(d.pat) do -- pattern arguments
-			if v == '*' then
-				found = #a > 0 or self.inp:find(" $")
-				vargs = found
-				break
+			if v == '*' or v == '~*' then
+				vargs = true -- found
+				v = '*'
 			end
-
 			local pat = self:pattern(v) -- pat -- possible words
 			local best = #a + 1
 			local best_len = 1
@@ -912,17 +1137,17 @@ function mp:match(verb, w, compl)
 			local required
 			found = false
 			for _, pp in ipairs(pat) do -- single argument
+				if v == '*' then break end
 				if not pp.optional then
 					required = true
+					need_required = true
 					all_optional = false
 				end
+				if pp.default then
+					word = pp.word
+				end
 				local k, len = word_search(a, pp.word)
-				if found and self:eq(found.word, pp.word) and found.ob and pp.ob then -- few ob candidates
-					table.insert(multi, { word = found.ob:noun(found.alias), lev = rlev })
-					table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
-					found = false
-					break
-				elseif k and (k < best or len > best_len) then
+				if k and (k < best or len > best_len) then
 					best = k
 					word = pp.word
 					found = pp
@@ -930,11 +1155,57 @@ function mp:match(verb, w, compl)
 				end
 			end
 			if found then
-				a = tab_sub(a, best + best_len - 1)
-				table.remove(a, 1)
+				need_required = false
+				if found.ob then
+					local same
+					for _, pp in ipairs(pat) do
+						if pp.ob and self:eq(found.word, pp.word) then
+							if not found.multi then
+								found.multi = {}
+							end
+							table.insert(found.multi, pp.ob)
+							if found.ob:noun(found.alias) ~= pp.ob:noun(pp.alias) then
+								table.insert(multi, { word = pp.ob:noun(pp.alias), lev = rlev })
+							end
+						end
+					end
+					if #multi > 0 then
+						table.insert(multi, 1, { word = found.ob:noun(found.alias), lev = rlev })
+						found = false
+						break
+					end
+				end
+				if vargs then
+					for i = 1, best - 1 do
+						table.insert(match.vargs, a[i])
+						table.insert(match, a[i])
+					end
+					rlev = rlev + 1
+					vargs = false
+				end
+				if false then
+					a = tab_exclude(a, best, best + best_len - 1)
+				else
+					a = tab_sub(a, best + best_len)
+--					table.remove(a, 1)
+				end
 				table.insert(match, word)
 				table.insert(match.args, found)
 				rlev = rlev + 1
+			elseif vargs then
+				if lev == #d.pat then -- last?
+					while #a > 0 do
+						table.insert(match.vargs, a[1])
+						table.insert(match, a[1])
+						table.remove(a, 1)
+					end
+					if not need_required then
+						found = true
+					end
+					break
+				else
+					need_required = need_required or required
+				end
 			elseif required then
 				for i = 1, best - 1 do
 					table.insert(unknown, { word = a[i], lev = rlev })
@@ -948,6 +1219,9 @@ function mp:match(verb, w, compl)
 				table.insert(hints, { word = v, lev = rlev })
 				break
 			else
+				if word then
+					table.insert(match, word)
+				end
 				table.insert(match.args, { word = false, optional = true } )
 --				table.insert(hints, { word = v, lev = rlev })
 				found = true
@@ -963,11 +1237,7 @@ function mp:match(verb, w, compl)
 			match.extra = (#a ~= 0)
 			table.insert(match, 1, fixed) -- w[verb.verb_nr])
 			table.insert(matches, match)
-			if vargs then
-				for _, v in ipairs(a) do
-					table.insert(match.vargs, v)
-				end
-			else
+			if #match.vargs == 0 and not vargs then
 				match.vargs = false
 			end
 		end
@@ -996,6 +1266,13 @@ if false then
 		end
 	end
 end
+	if #hints > 0 and #unknown > 0 then
+		if hints[1].lev > unknown[1].lev then
+			unknown = {}
+		elseif hints[1].lev < unknown[1].lev then
+			hints = {}
+		end
+	end
 	hints = lev_sort(hints)
 	unknown = lev_sort(unknown)
 	multi = lev_sort(multi)
@@ -1007,12 +1284,13 @@ function mp:err(err)
 		local verbs = self:lookup_verb(self.words, true)
 		local hint = false
 		if verbs and #verbs > 0 then
-			local verb = verbs[1]
-			local fixed = verb.verb[verb.word_nr]
-			if verb.lev < self.lev_thresh then
-				hint = true
-				p (self.msg.UNKNOWN_VERB or "Unknown verb:", " ", iface:em(self.words[verb.verb_nr]), ".")
-				pn(self.msg.UNKNOWN_VERB_HINT or "Did you mean:", " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
+			for _, verb in ipairs(verbs) do
+				local fixed = verb.verb[verb.word_nr]
+				if verb.lev < self.lev_thresh and verb.verb_nr == 1 then
+					hint = true
+					p (self.msg.UNKNOWN_VERB, " ", iface:em(self.words[verb.verb_nr]), ".")
+					pn(self.msg.UNKNOWN_VERB_HINT, " ", iface:em(fixed.word .. (fixed.morph or "")), "?")
+				end
 			end
 		end
 		if not hint then
@@ -1029,43 +1307,49 @@ function mp:err(err)
 				unk = unk .. v
 			end
 			if need_noun then
-				p (self.msg.UNKNOWN_OBJ or "Do not see it here ", " (",unk, ").")
+				p (self.msg.UNKNOWN_OBJ, iface:em(" (" .. unk .. ")."))
 			else
-				p (self.msg.UNKNOWN_WORD or "Unknown word", " (", unk, ").")
+				p (self.msg.UNKNOWN_WORD, iface:em(" ("..unk..")."))
 			end
-		end
-
-		if err == "UNKNOWN_WORD" then
-			p (self.msg.UNKNOWN_WORD or "Unknown noun.")
+			if mp:thedark() and need_noun then
+				p (self.msg.UNKNOWN_THEDARK)
+				return
+			end
+		elseif err == "UNKNOWN_WORD" then
+			p (self.msg.UNKNOWN_WORD)
 		else
-			p (self.msg.INCOMPLETE or "Incomplete sentence.")
+			p (self.msg.INCOMPLETE)
 		end
 
 		if #self.hints > 0 then
-			p (self.msg.HINT_WORDS or "Possible words:", " ")
+			p (self.msg.HINT_WORDS, " ")
 		end
 		local first = true
+		local noun = false
 		for kk, v in ipairs(self.hints) do
 			if v:find("^{noun}") or v:find("/[^/]*$") then
-				if not first then
-					pr (" ", mp.msg.HINT_OR or "or", " ")
+				if not noun then
+					noun = true
+					if not first then
+						pr (" ", mp.msg.HINT_OR or "or", " ")
+					end
+					if mp.err_noun then
+						mp:err_noun(v)
+					else
+						pr ("noun")
+					end
 				end
-				if mp.err_noun then
-					mp:err_noun(v)
-				else
-					pr ("noun")
-				end
-			else
+			else -- if not need_noun then
 				local pat = self:pattern(v)
 				for k, vv in ipairs(pat) do
 					if not first then
 						if k == #pat and kk == #self.hints then
-							pr (" ", mp.msg.HINT_OR or "or", " ", vv.word)
+							pr (" ", mp.msg.HINT_OR or "or", " ", iface:em(vv.word))
 						else
-							pr (", ", vv.word)
+							pr (", ", iface:em(vv.word))
 						end
 					else
-						pr (" ", vv.word)
+						pr (" ", iface:em(vv.word))
 					end
 					first = false
 				end
@@ -1076,9 +1360,13 @@ function mp:err(err)
 			p "?"
 		end
 	elseif err == "MULTIPLE" then
-		pr (self.msg.MULTIPLE or "There are", " ", self.multi[1])
+		pr (self.msg.MULTIPLE, " ", self.multi[1])
 		for k = 2, #self.multi do
-			pr (" ", mp.msg.HINT_AND or "and", " ", self.multi[k])
+			if k ~= #self.multi - 1 then
+				pr (" ", mp.msg.HINT_AND, " ", self.multi[k])
+			else
+				pr (", ", self.multi[k])
+			end
 		end
 		pr "."
 	end
@@ -1087,6 +1375,7 @@ end
 local function get_events(self, ev)
 	local events = {}
 	self.aliases = {}
+	self.multi = {}
 	for _, v in ipairs(ev) do
 		local ea = str_split(v)
 		local e = ea[1]
@@ -1100,15 +1389,29 @@ local function get_events(self, ev)
 		end
 		for _, vv in ipairs(self.args) do
 			if vv and std.is_obj(vv.ob) then
-				if reverse then
-					table.insert(args, 1, vv.ob)
-				else
-					table.insert(args, vv.ob)
+				local attrs = {}
+				for _, h in ipairs(str_split(vv.morph, ",")) do
+					attrs[h] = true
 				end
-				self.aliases[vv.ob] = vv.alias
+				local ob = vv.ob
+				for _, h in ipairs(vv.multi) do
+					if attrs.held and not have(vv.ob) and have(h) then
+						ob = h
+						break
+					elseif attrs.scene and have(vv.ob) and not have(h) then
+						ob = h
+						break
+					end
+				end
+				if reverse then
+					table.insert(args, 1, ob)
+				else
+					table.insert(args, ob)
+				end
+				self.aliases[ob] = vv.alias
 			end
 		end
-		if self.vargs then
+		if self.vargs and #self.vargs > 0 then
 			local varg = ''
 			for _, vv in ipairs(self.vargs) do
 				if varg ~= '' then varg = varg .. ' ' end
@@ -1122,7 +1425,7 @@ local function get_events(self, ev)
 end
 
 function mp:call(ob, ev, ...)
-	self.event = ev
+--	self.event = ev
 	for _, v in ipairs({ob, ...}) do
 		if self.aliases[v] then
 			std.rawset(v, '__word_alias', self.aliases[v])
@@ -1133,7 +1436,14 @@ function mp:call(ob, ev, ...)
 	local r, v = std.call(ob, ev, ...)
 --	std.cctx().txt = self.reaction
 	self.reaction = self.reaction or v or false
-	if self.debug.trace_action and v then dprint("mp:call ", ob, ev, ...) end
+	if self.debug.trace_action and v then
+		dprint("mp:call ", ob, ev, ...)
+		p("mp:call ", ob, " ", ev, " ")
+		for _, t in ipairs {...} do
+			pr (tostring(t), " ")
+		end
+		pn()
+	end
 	for _, v in ipairs(self.aliases) do
 		std.rawset(v, '__word_alias', nil)
 	end
@@ -1144,6 +1454,7 @@ function mp:events_call(events, oo, t)
 	if not t then t = '' else t = t .. '_' end
 	for _, o in ipairs(oo) do
 		for _, e in ipairs(events) do
+			self.event = e.ev
 			local ename = t .. e.ev
 			local eany = t .. 'Any'
 			local edef = t .. 'Default'
@@ -1157,7 +1468,7 @@ function mp:events_call(events, oo, t)
 				table.remove(e.args, 1)
 			end
 			local r, v
-			if std.is_obj(ob) then
+			if std.is_obj(ob) and (o ~= 'obj' or ob ~= std.here()) then
 				r, v = self:call(ob, eany, e.ev, std.unpack(e.args))
 				if r then std.pn(r) end
 				if not v then
@@ -1170,10 +1481,13 @@ function mp:events_call(events, oo, t)
 					end
 				end
 			end
+			if r then
+				pn()
+			end
 			if o == 'obj' then
 				table.insert(e.args, 1, ob)
 			end
-			if v and t ~= 'after_' then return v end
+			if v and t ~= 'post_' then return v end
 		end
 	end
 	return false
@@ -1183,13 +1497,50 @@ function mp:__action(events)
 	local r
 	self.reaction = false
 	self.redirect = false
-	r = self:events_call(events, { parser, game, std.me(), std.here(), 'obj' }, 'before')
+	r = self:events_call(events, { parser, game, std.here(), 'obj' }, 'before')
 	if not r then
-		r = self:events_call(events, { 'obj', std.here(), std.me(), game, parser })
+		r = self:events_call(events, { 'obj', std.here(), game, parser })
+		if not r then
+			r = self:events_call(events, { 'obj', std.here(), game, parser }, 'after')
+		end
 	end
 	if not self.redirect then
-		self:events_call(events, { 'obj', std.here(), std.me(), game, parser }, 'after')
+		self:events_call(events, { 'obj', std.here(), game, parser }, 'post')
 	end
+end
+
+function mp:save_ctx()
+	return {
+		first = self.first,
+		second = self.second,
+		first_hint = self.first_hint,
+		second_hint = self.second_hint,
+		event = self.event;
+	}
+end
+
+function mp:restore_ctx(ctx)
+	self.first, self.second = ctx.first, ctx.second
+	self.first_hint, self.second_hint = ctx.first_hint, ctx.second_hint
+	self.event = ctx.event
+end
+
+function mp:runmethods(t, verb, ...)
+	local events = { {ev = verb, args = { ... }}}
+	local ctx = self:save_ctx()
+	local r, v = self:events_call(events, { 'obj' }, t)
+	self:restore_ctx(ctx)
+	self.reaction = false
+	return r, v
+end
+
+function mp:subaction(verb, ...)
+	local events = { {ev = verb, args = { ... }}}
+	local ctx = self:save_ctx()
+	local r, v = self:__action(events)
+	self:restore_ctx(ctx)
+	self.reaction = false
+	return r, v
 end
 
 function mp:xaction(verb, ...)
@@ -1205,63 +1556,45 @@ function mp:action()
 	local events = get_events(self, ev)
 	local r
 	self:__action(events)
-
-	-- parser:before_Any
-	-- parser:before_Take || before_Def
-	-- game:before_Any
-	-- game:before_Take || before_Def
-	-- me():before_Any
-	-- me():before_Take || before_Def
-	-- here():before_Any
-	-- here():before_Take || before_Def
-	-- ob():before_Any
-	-- ob():before_Take || before_Def
-
-	-- game:Any
-	-- game:Take || Def
-	-- me():Any
-	-- me():Take || Def
-	-- here():Any
-	-- here():Take || Def
-	-- ob():Any
-	-- ob():Take || Def
-	-- parser:Any
-	-- parser:Take || Def
-
-	-- ob():after_Take || after_Def
-	-- ob():after_Any
-	-- here():after_Take || after_Def
-	-- here():after_Any
-	-- me():after_Take || after_Def
-	-- me():after_Any
-	-- game:after_Take || after_Def
-	-- game:after_Any
-	-- parser:after_Take || after_Def
-	-- parser:after_Any
 end
 
-function mp:parse(inp)
-	inp = std.strip(inp)
-	pn(fmt.b(self.prompt .. inp))
-	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
-	local r, v = self:input(self:norm(inp))
-	if not r then
-		if v then
-			self:err(v)
-		end
-		return
-	end
+function mp:correct(inp)
 	local rinp = ''
 	for _, v in ipairs(self.parsed) do
 		if rinp ~= '' then rinp = rinp .. ' ' end
 		rinp = rinp .. v
 	end
-	for _, v in ipairs(self.vargs and self.vargs or {}) do
-		if rinp ~= '' then rinp = rinp .. ' ' end
-		rinp = rinp .. v
-	end
 	if not self:eq(rinp, inp) then
 		pn(fmt.em("("..rinp..")"))
+	end
+end
+function mp:log(t)
+	if mp.logfile then
+		t = std.fmt(t)
+		print(t)
+		local f = io.open(mp.logfile, "a+b")
+		if not f then return end
+		f:write((t or '').."\n")
+		f:close()
+	end
+end
+function mp:parse(inp)
+	inp = std.strip(inp)
+	if std.cmd[1] ~= 'look' then
+		pn(fmt.b(self.prompt .. inp))
+	end
+	inp = inp:gsub("[ ]+", " "):gsub("["..inp_split.."]+", " ")
+	local r, v = self:input(self:norm(inp))
+	if not r then
+		if v then
+			pn()
+			self:err(v)
+		end
+		return
+	end
+	if std.cmd[1] ~= 'look' then
+		self:correct(inp)
+		pn()
 	end
 	local t = std.pget()
 	std.pclr()
@@ -1274,6 +1607,11 @@ end
 
 std.world.display = function(s, state)
 	local l, av, pv
+	if mp.text == '' and game:time() == 1 then
+		local r = std.call(game, 'dsc')
+		mp.text = r .. '^^'
+	end
+	if player_moved() then mp.text = '' end
 	mp:trim()
 	local reaction = s:reaction() or nil
 	if state then
@@ -1289,7 +1627,8 @@ std.world.display = function(s, state)
 	l = std.par(std.scene_delim, reaction or false,
 		    av or false, l or false,
 		    pv or false) or ''
-	mp.text = mp.text ..  l .. '^^' .. fmt.anchor()
+	mp:log(l)
+	mp.text = mp.text ..  l .. '^^' -- .. fmt.anchor()
 	return mp.text
 end
 
@@ -1329,6 +1668,9 @@ function mp:key_history_next()
 end
 
 function mp:key_enter()
+	if std.here().noparser then
+		return
+	end
 	if (#self.history == 0 or self.history[1] ~= self.inp) and std.strip(self.inp) ~= '' then
 		table.insert(self.history, 1, self.inp)
 	end
@@ -1336,11 +1678,15 @@ function mp:key_enter()
 	if #self.history > self.history_len then
 		table.remove(self.history, #self.history)
 	end
+	self:compl_reset();
 	local r, v = std.call(mp, 'parse', self.inp)
 	self.inp = '';
 	self.cur = 1;
-	self:compl_reset();
-	self:compl_fill(self:compl(self.inp))
+	if self.autohelp then
+		self:compl_fill(self:compl(self.inp))
+	elseif self.autocompl then
+		self:compl(self.inp)
+	end
 --	self:completion()
 	return r, v
 end
@@ -1375,6 +1721,7 @@ function mp:lookup_noun(w, lev)
 end
 
 function mp:input(str)
+	self.cache = { tokens = {} };
 	local hints = {}
 	local unknown = {}
 	local multi = {}
@@ -1382,10 +1729,9 @@ function mp:input(str)
 	self.unknown = unknown
 	self.multi = multi
 
-	if self.default_Verb and str == "" then
-		str = self.default_Verb
+	if (self.default_Verb or std.here().default_Verb) and str == "" then
+		str = std.here().default_Verb or self.default_Verb
 	end
-
 	local w = str_split(str, inp_split)
 	self.words = w
 	if #w == 0 then
@@ -1420,6 +1766,7 @@ function mp:input(str)
 		else
 			w = self.default_Event or "Exam"
 		end
+		pn()
 		self:xaction(w, ob[1].ob)
 --		verbs = self:lookup_verb(w)
 --		if #verbs == 0 then
@@ -1438,7 +1785,6 @@ function mp:input(str)
 			table.insert(multi, mu)
 		end
 	end
-
 	table.sort(matches, function(a, b) return #a.match > #b.match end)
 
 	hints = lev_sort(hints)
@@ -1457,14 +1803,25 @@ function mp:input(str)
 	end
 	self.parsed = matches[1].match
 	self.args = self.parsed.args
-	self.vargs = self.parsed.vargs
+	self.vargs = self.parsed.vargs or {}
 	return true
 end
 
--- Verb { "#give", "отдать,дать", "{$inv/вн} ?для {$obj/вн} : give %2 %3|receive %3 %2"}
-
 function Verb(t, w)
 	return mp:verb(t, w)
+end
+
+function VerbExtend(t, w)
+	return mp:verb(t, w or false, true)
+end
+
+function VerbRemove(t, w)
+	return mp:verb_remove(t, w)
+end
+
+function VerbHint(t, fn, w)
+	local v = mp:verb_find(t, w)
+	if v then v.hint = fn end
 end
 std.rawset(_G, 'mp', mp)
 std.mod_cmd(
@@ -1475,6 +1832,7 @@ function(cmd)
 		end
 		if cmd[3] == '<space>' then
 			mp:inp_insert(' ')
+			mp:compl_fill(mp:compl(mp.inp))
 			return true, false
 		end
 		if cmd[3] == '<backspace>' then
@@ -1490,29 +1848,34 @@ function(cmd)
 		end
 		return true, false
 	end
-	if cmd[1] == '@mp_key' and cmd[2] == 'enter' then
+	if (cmd[1] == '@mp_key' and cmd[2] == 'enter') or cmd[1] == 'look' then
 --		mp.inp = mp:docompl(mp.inp)
-		return mp:key_enter()
+		return mp:key_enter(cmd[1] == 'look')
 	end
 	if cmd[1] ~= '@mp_key' then
 		return
 	end
 	return true, false
 end)
+std.mod_init(
+function(load)
+	_'game'.__daemons = std.list {}
+end)
 
-std.mod_start(
-function()
+function mp:init()
 	mrd:gramtab("morph/rgramtab.tab")
 	local _, crc = mrd:load("dict.mrd")
 	mrd:create("dict.mrd", crc) -- create or update
+end
+std.mod_start(function()
 	mp:compl_reset()
 	mp:compl_fill(mp:compl(""))
 end)
-
 instead.mouse_filter(0)
+theme.set ('win.scroll.mode', 3)
 
 function instead.fading()
-	return instead.need_fading()
+	return instead.need_fading() or player_moved()
 end
 
 instead.notitle = true
@@ -1526,6 +1889,14 @@ end
 
 function mp.shortcut.where(hint)
 	return shortcut(std.me():where(), hint)
+end
+
+function mp.shortcut.firstwhere(hint)
+	return shortcut(mp.first:where(), hint)
+end
+
+function mp.shortcut.secondwhere(hint)
+	return shortcut(mp.second:where(), hint)
 end
 
 function mp.shortcut.here(hint)
@@ -1581,6 +1952,33 @@ function mp.shortcut.word(hint)
 	return t
 end
 
+function mp.shortcut.if_hint(hint)
+	local w = str_split(hint, ",")
+	if #w < 3 then
+		return hint
+	end
+	local attr = w[2]
+	local ob = w[1]
+
+	if ob == 'first' then
+		ob = mp.first
+	elseif ob == 'second' then
+		ob = mp.second
+	elseif ob == 'me' then
+		ob = std.me()
+	elseif ob == 'where' then
+		ob = std.me():where()
+	elseif ob == 'here' then
+		ob = std.here()
+	else
+		std.err("Wrong object in if_has shortcut: "..hint, 2)
+	end
+	if not ob:hint(attr) then
+		return w[4] or ''
+	end
+	return w[3] or ''
+end
+
 function mp.shortcut.if_has(hint)
 	local w = str_split(hint, ",")
 	if #w < 3 then
@@ -1623,7 +2021,7 @@ function std.pr(...)
 				local ww = w
 				w = w:gsub("^{#", ""):gsub("}$", "")
 				local hint = w:gsub("^[^/]*/?", "")
-				w = w:gsub("/[^/]+$", "")
+				w = w:gsub("/[^/]*$", "")
 				local cap = mp.mrd.lang.is_cap(w)
 				w = w:lower()
 				if mp.shortcut[w] then

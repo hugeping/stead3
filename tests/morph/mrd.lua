@@ -12,6 +12,7 @@ local lang = {
 
 local mrd = {
 	lang = lang;
+	dir = '';
 }
 
 local msg = print
@@ -141,10 +142,16 @@ local function gram_dump(v)
 end
 
 local function gram_filter(v)
-	if v.an["им"] or v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' then
+	if v.an["им"] then
 		return true
 	end
+	if v.an["рд"] or v.an["дт"] or v.an["тв"] or v.an["пр"] or v.an["вн"] then
+		return false
+	end
+	return v.an.t == 'ИНФИНИТИВ' or v.an.t == 'КР_ПРИЛ' or v.an.t == 'КР_ПРИЧАСТИЕ' or v.an.t == 'Г'
 end
+
+local busy_cnt = 0
 
 local function word_fn(l, self, dict)
 	local words = self.words
@@ -189,15 +196,13 @@ local function word_fn(l, self, dict)
 	for k, v in ipairs(nflex) do
 		if gram_filter(v) then
 			for _, pref in ipairs(npref or { '' }) do
-				local tt = pref..v.pre .. t .. v.post
+				local tt = v.pre .. t .. v.post
 				if self.lang.norm then
 					tt = self.lang.norm(tt)
 				end
-
---				if tt == 'МОЧЬ' then
+--				if tt == 'ЗАКРЕПЛЕН' then
 --					gram_dump { t = t, pref = pref, flex = nflex, an = v.an }
 --				end
-
 				if not dict or dict[tt] then
 					local a = {}
 					for kk, vv in pairs(an or {}) do
@@ -226,8 +231,10 @@ local function word_fn(l, self, dict)
 		table.insert(words_list, { t = w[1], flex = nflex, pref = npref, an = an_name })
 	end
 	self.words_nr = self.words_nr + num
-	if self.words_nr % 1000 == 0 then
-		std.busy(true)
+	busy_cnt = busy_cnt + 1
+	if busy_cnt > 1000 then
+		if std then std.busy(true) end
+		busy_cnt = 0
 	end
 	return
 end
@@ -256,14 +263,17 @@ function mrd:load(path, dict)
 	self.words_nr = 0
 	self.words = {}
 	self.words_list = {}
+	collectgarbage("stop")
 	if not section(f, word_fn, self, dict) then
+		collectgarbage("restart")
 		return false, "Error in section 4"
 	end
+	collectgarbage("restart")
 	msg("Generated: "..tostring(self.words_nr).." word(s)");
 	local crc = f:read("*line")
 	if crc then crc = tonumber(crc) end
 	f:close()
-	std.busy(false)
+	if std then std.busy(false) end
 	return true, crc
 end
 
@@ -345,8 +355,22 @@ function mrd:dump(path, crc)
 	f:close()
 end
 
+function mrd:gram_norm(an)
+	local a = {}
+	local g = {}
+	for _, v in ipairs(an) do
+		a[v] = true
+		table.insert(g, v)
+	end
+	if not a['1л'] and not a['2л'] and not a['3л'] then
+		table.insert(g, '3л')
+	end
+	return g
+end
+
 function mrd:score(an, g)
 	local score = 0
+	g = self:gram_norm(g)
 	for kk, vv in ipairs(g or {}) do
 		if vv:sub(1, 1) == '~' then
 			vv = vv:sub(2)
@@ -360,25 +384,121 @@ function mrd:score(an, g)
 	return score
 end
 
-function mrd:gram_compat(a, b)
-	if a == 'ИНФИНИТИВ' then
-		return b == 'ИНФИНИТИВ' or b == 'Г'
+function mrd:gram_info(a)
+	local t = { }
+	if a['мр'] then
+		t.gen = 'male'
+	elseif a['жр'] then
+		t.gen = 'female'
+	elseif a['ср'] then
+		t.gen = 'neuter'
+	else
+		t.gen = 'any'
 	end
-	if b == 'ИНФИНИТИВ' then
-		return a == 'ИНФИНИТИВ' or a == 'Г'
+
+	if a['мн'] then
+		t.num = 'singular'
+	elseif a['ед'] then
+		t.num = 'plural'
+	else
+		t.num = 'any'
 	end
-	if a == 'КР_ПРИЛ' then
-		return b == 'КР_ПРИЛ' -- or b == 'П'
+
+	if a['буд'] then
+		t.time = 'future'
+	elseif a['прш'] then
+		t.time = 'past'
+	elseif a['нст'] then
+		t.time = 'present'
+	else
+		t.time = 'any'
 	end
-	if b == 'КР_ПРИЛ' then
-		return a == 'КР_ПРИЛ' -- or a == 'П'
+
+	if a['1л'] then
+		t.face = 'first'
+	elseif a['2л'] then
+		t.face = 'second'
+	elseif a['3л'] then
+		t.face = 'third'
+	else
+		t.face = 'any'
 	end
+
+	return t
+end
+
+function mrd:gram_compat(base, aa, bb)
+	local a, b = aa.t, bb.t
+	if bb.noun and not base['им'] then
+		return false
+	end
+	local g1, g2 = self:gram_info(aa), self:gram_info(bb)
+	if g1.gen ~= g2.gen and g1.gen ~= 'any' and g2.gen ~= 'any' then return false end
+	if g1.num ~= g2.num and g1.num ~= 'any' and g2.num ~= 'any' then return false end
+	if g1.time ~= g2.time and g1.time ~= 'any' and g2.time ~= 'any' then return false end
+	if g1.face ~= g2.face and g1.face ~= 'any' and g2.face ~= 'any' then return false end
 	return true
 end
 
+function mrd:gram_eq(a, b)
+	if not a or not b then return true end
+	if a == 'ИНФИНИТИВ' or b == 'ИНФИНИТИВ' then
+		return b == a or b == 'Г' or a == 'Г'
+	end
+	if a == 'КР_ПРИЛ' or b == 'КР_ПРИЛ' then
+		return b == a -- or b == 'П'
+	end
+	if a == 'КР_ПРИЧАСТИЕ' or b == 'КР_ПРИЧАСТИЕ' then
+		return b == a
+	end
+	if a == 'ПРИЧАСТИЕ' or b == 'ПРИЧАСТИЕ' then
+		return b == a
+	end
+	if a == 'Г' or b == 'Г' then return a == b end
+	return true
+end
+
+local function gram2an(g)
+	local a = {}
+	for _, v in ipairs(g) do
+		if v:sub(1, 1) == '~' then
+			a[v:sub(2)] = false
+		else
+			a[v] = true
+		end
+	end
+	a.t = nil
+	return a
+end
+
+local cache = {
+	hash = {};
+	list = {};
+}
 function mrd:lookup(w, g)
+	local key  = ""
+	for _, v in ipairs(g or {}) do
+		key = key ..','.. v
+	end
+	key = w .. '/'..key
+	local cc = cache.hash[key]
+	if cc then
+		return cc.w, cc.g
+	end
+	w, g = self:__lookup(w, g)
+	cache.hash[key] = { w = w, g = g }
+	table.insert(cache.list, 1, key)
+	if #cache.list > 512 then
+		key = cache.list[#cache.list]
+		cache.hash[key] = nil
+		table.remove(cache.list, #cache.list)
+	end
+	return w, g
+end
+function mrd:__lookup(w, g)
+	local ow = w
 	local cap, upper = self.lang.is_cap(w)
-	local t = self.lang.upper(w)
+	local t = self.lang.upper(self.lang.norm(w))
 	w = self.words[t]
 	if not w then
 		return false, "No word in dictionary"
@@ -389,7 +509,7 @@ function mrd:lookup(w, g)
 		local score = self:score(v.an, g)
 		local t = v.an.t
 		for _, f in ipairs(flex) do
-			if self:gram_compat(v.an.t, f.an.t)  then
+			if self:gram_eq(v.an.t, f.an.t) and self:gram_compat(v.an, f.an, gram2an(g)) then
 				local sc = self:score(f.an, g)
 				if sc < 0 then
 					break
@@ -397,9 +517,9 @@ function mrd:lookup(w, g)
 				if t ~= f.an.t then sc = sc - 1 end -- todo
 if false then
 				local tt = v.pref .. f.pre .. v.t .. f.post
-				if tt == 'ЗАЛЕЗТЬ' or tt == 'ЗАЛЕЗ' or tt == 'ЗАЛЕЗЛИ' or tt == 'ЗАЛЕЗАЕТЕ' then
+				if tt == 'ДЛИННАЯ' or tt == 'ДЛИННЫЙ' or tt == 'ПОДХОДИШЬ' then
 				print(tt, v.t, score + sc)
-				print "looking for:"
+				print ("looking for:")
 				for _, v in pairs(g) do
 					print(_, v)
 				end
@@ -414,7 +534,7 @@ end
 		end
 	end
 	if #res == 0 then
-		return false, "No gram"
+		return ow, gram2an(g) -- false, "No gram"
 	end
 	table.sort(res, function(a, b)
 		if a.score == b.score then
@@ -455,6 +575,7 @@ end
 local word_match = "[^ \t,%-!/:%+&]+"
 local missed_words = {}
 function mrd:word(w)
+	local ow = w
 	local s, e = w:find("/[^/]*$")
 	local g = {}
 	local grams = {}
@@ -475,9 +596,9 @@ function mrd:word(w)
 			return ww or w
 		end)
 	if not found then
-		if DEBUG and not std.tonum(w) and not missed_words[w] then
+		if DEBUG and not tonumber(w) and not missed_words[w] then
 			missed_words[w] = true
-			msg("Can not find word: "..w)
+			msg("Can not find word: '"..ow.."'")
 		end
 	end
 	return w, grams
@@ -489,6 +610,7 @@ function mrd:file(f, dict)
 	if not ff then
 		return false, e
 	end
+	print("Added file: ", f)
 	for l in ff:lines() do
 		for w in l:gmatch('%-"[^"]+"') do
 			w = w:gsub('^%-"', ""):gsub('"$', "")
@@ -496,7 +618,7 @@ function mrd:file(f, dict)
 			for _, word in ipairs(words) do
 				word = word:gsub("/[^/]*$", "")
 				for ww in word:gmatch(word_match) do
-					local t = self.lang.upper(ww)
+					local t = self.lang.upper(self.lang.norm(ww))
 					if not dict[t] then
 						dict[t] = true;
 						dprint("mrd: Added word: ", ww)
@@ -586,6 +708,8 @@ function mrd.dispof(w)
 	return std.titleof(w)
 end
 
+local obj_cache = { hash = {}, list = {}}
+
 function mrd:obj(w, n, nn)
 	local hint = ''
 	local hint2, disp, ob, raw
@@ -596,26 +720,38 @@ function mrd:obj(w, n, nn)
 		n = nn
 	end
 	if type(w) ~= 'string' then
-		w = std.object(w)
+--		w = std.object(w)
 		ob = w
 		disp, raw = self.dispof(w)
 	else
 		disp = w
 	end
-	local d = str_split(disp, '|')
-	if #d == 0 then
-		std.err("Wrong object display: ", w)
-	end
-	-- normalize
-	local nd = {}
-	for k, v in ipairs(d) do
-		w, hint2 = str_hint(v)
-		local dd = raw and { w } or str_split(w, ',')
-		for _, vv in ipairs(dd) do
-			table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
+	local d = obj_cache.hash[disp]
+	if not d then
+		d = str_split(disp, '|')
+		if #d == 0 then
+			std.err("Wrong object display: ".. (disp or 'nil'), 2)
 		end
+	-- normalize
+		local nd = {}
+		for k, v in ipairs(d) do
+			w, hint2 = str_hint(v)
+			local dd = raw and { w } or str_split(w, ',')
+			for _, vv in ipairs(dd) do
+				table.insert(nd, { word = vv, hint = hint2 or '', alias = k, idx = _ })
+			end
+		end
+		d = nd
+		table.insert(obj_cache.list, 1, disp)
+		local len = #obj_cache.list
+		if len > 128 then
+			local key = obj_cache.list[len]
+			table.remove(obj_cache.list, len)
+			obj_cache.hash[key] = nil
+		end
+		obj_cache.hash[disp] = d
 	end
-	d = nd
+	
 	if type(n) == 'table' then
 		local ret = n
 		for _, v in ipairs(d) do
@@ -630,6 +766,7 @@ function mrd:obj(w, n, nn)
 			break
 		end
 	end
+	if not d[n] then n = 1  end
 	w = d[n].word
 	hint2 = d[n].hint
 	return ob, w, hint .. ',' .. hint2
@@ -645,34 +782,52 @@ local function noun_append(rc, tab, w)
 	return rc
 end
 
+function mrd:noun_hint(ob, ...)
+	local g = ob and ob:gram(...) or {}
+	local hint = ''
+	for _, v in ipairs { mp.hint.male, mp.hint.female, mp.hint.neuter, mp.hint.plural, mp.hint.live } do
+		if g[v] then
+			hint = hint ..','..v
+		end
+	end
+	if not g[mp.hint.live] then
+		hint = hint .. ',' .. mp.hint.nonlive
+	end
+	if ob then
+		hint = hint..",noun"
+	end
+	return hint
+end
+
 function mrd:noun(w, n, nn)
 	local hint, ob, found
 	local rc = ''
 	local tab = false
 	ob, w, hint = self:obj(w, n, nn)
 	if type(w) ~= 'table' then
-		w = {{ word = w, hint = hint }}
+		w = {{ word = w, hint = hint, alias = n }}
 	else
 		tab = {}
 	end
 	for _, v in ipairs(w) do
+		local hint2 = self:noun_hint(ob, v.alias)
 		found = false
 		if ob and type(ob.__dict) == 'table' then
-			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint)
+			local ww = self:dict(ob.__dict, v.word .. '/'.. v.hint .. hint2)
 			if ww then
 				found = true
 				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found and type(game.__dict) == 'table' then
-			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint)
+			local ww = self:dict(game.__dict, v.word .. '/'.. v.hint .. hint2)
 			if ww then
 				found = true
 				rc = noun_append(rc, tab, ww)
 			end
 		end
 		if not found then
-			local m = self:word(v.word .. '/'.. v.hint)
+			local m = self:word(v.word .. '/'.. v.hint .. hint2)
 			rc = noun_append(rc, tab, m)
 		end
 	end
@@ -689,8 +844,8 @@ end
 
 function mrd:create(fname, crc)
 	local dict = {}
-	for f in std.readdir(instead.gamepath()) do
-		if f:find("%.lua$") then
+	for f in std.readdir(instead.gamepath() .. '/'..(self.dir or '')) do
+		if f:find("%.lua$") or f:find("%.LUA$") then
 			mrd:file(f, dict)
 		end
 	end
@@ -707,7 +862,7 @@ function mrd:create(fname, crc)
 		dprint("Using dict.mrd")
 	end
 end
-
+if std then
 std.obj.noun = function(self, ...)
 	return mrd:noun(self, ...)
 end
@@ -716,23 +871,31 @@ std.obj.Noun = function(self, ...)
 	return mrd.lang.cap(mrd:noun(self, ...))
 end
 
-std.obj.gram = function(self, ...)
+std.obj.gram = function(self, n)
 	local hint, ob, w
-	ob, w, hint = mrd:obj(self, ...)
+	ob, w, hint = mrd:obj(self, n)
 	local _, gram = mrd:word(w .. '/'..hint)
 	local thint = ''
+
 	hint = str_split(hint, ",")
 	local g = gram and gram[1] or {}
-	for _, v in ipairs(hint) do
-		g[v] = true
+	for _, v in ipairs(gram or {}) do
+		if v.t == 'С' then
+			g = v
+			break
+		end
 	end
-	for k, v in pairs(g) do
+	local gg = std.clone(g)
+	for _, v in ipairs(hint) do
+		gg[v] = true
+	end
+	for k, v in pairs(gg) do
 		if v then
 			thint = thint .. k .. ','
 		end
 	end
-	g.hint = thint
-	return g
+	gg.hint = thint
+	return gg
 end
 
 std.obj.dict = function(self, v)
@@ -748,7 +911,7 @@ std.obj.new = function(self, v)
 	end
 	return onew(self, v)
 end
-
+end
 local mt = getmetatable("")
 function mt.__unm(v)
 	return v
