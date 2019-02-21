@@ -63,6 +63,7 @@ function draw_tiles()
 end
 local DIST = 6
 local slides = {}
+local slides_pool = {}
 
 function scale_slide(v)
 	local x, y
@@ -103,12 +104,19 @@ function process_slides()
 		end
 		if not once and (v.x > theme.scr.w() and v.dir == 1 or v.x < -v.w and v.dir == 2
 			or v.y > theme.scr.h() and v.dir == 3 or v.y < - v.h and v.dir == 4) then
-			once = true
-			scale_slide(v)
+			once = k
 		end
 --		v.spr:copy(sprite.scr(), v.x, v.y)
 	end
 	if once then
+		local v = slides[once]
+		table.remove(slides, once)
+		table.insert(slides_pool, v)
+		local n = rnd(#slides_pool)
+		v = slides_pool[n]
+		scale_slide(v)
+		table.insert(slides, v)
+		table.remove(slides_pool, n)
 		table.sort(slides, function(a, b) return a.dist > b.dist end)
 	end
 end
@@ -119,8 +127,17 @@ function draw_slides()
 	end
 end
 
+local SLIDES_NR = 8
 function load_slides()
 	scandir()
+	for _ = 1, SLIDES_NR do
+		if #slides_pool == 0 then
+			break
+		end
+		local n = rnd(#slides_pool)
+		table.insert(slides, slides_pool[n])
+		table.remove(slides_pool, n)
+	end
 	DIST = #slides
 	for k, v in ipairs(slides) do
 		scale_slide(v)
@@ -155,25 +172,44 @@ function color(x, y)
 end
 
 local last_t = 0
+local frames = 0
+local frames_t = {}
+
+local function add_frame()
+	frames = frames + 1
+	if frames > 1000 then
+		frames = frames - 1
+		table.remove(frames_t, 1)
+	end
+	frames_t[frames] = instead.ticks()
+end
+
 function game:timer()
+	local t = instead.ticks()
+--	if frames >= 1000 then
+--		t = t - frames_t[1]
+--	end
+--	local fps = frames * 1000 / t
+--	if fps > 41 then
+--		return
+--	end
 	process_tiles()
 	process_slides()
-	local t = instead.ticks()
-	if t - last_t > 20 then
-		last_t = instead.ticks()
-		return
-	end
+--	if fps < 40 then
+--		add_frame()
+--		return
+--	end
+--	add_frame()
 	sprite.scr():fill 'black'
 	draw_tiles()
 	draw_slides()
 	logo(0, 0)
-	last_t = instead.ticks()
 end
 
 function scandir()
 	for d in std.readdir 'screen' do
 		if d:find("%.png$") then
-			table.insert(slides, { nam = "screen/"..d })
+			table.insert(slides_pool, { nam = "screen/"..d })
 		end
 		dprint("Scan: ", d)
 	end
