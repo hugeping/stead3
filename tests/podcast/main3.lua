@@ -94,13 +94,13 @@ function process_slides(delta)
 	local x, y, once
 	for k, v in ipairs(slides) do
 		if v.dir == 1 then
-			v.x = v.x + (delta * (1 - v.dist))
+			v.x = v.x + (delta * (1 - v.dist + 1))
 		elseif v.dir == 2 then
-			v.x = v.x - (delta * (1 - v.dist))
+			v.x = v.x - (delta * (1 - v.dist + 1))
 		elseif v.dir == 3 then
-			v.y = v.y + (delta * (1 - v.dist))
+			v.y = v.y + (delta * (1 - v.dist + 1))
 		else
-			v.y = v.y - (delta * (1 - v.dist))
+			v.y = v.y - (delta * (1 - v.dist + 1))
 		end
 		if not once and (v.x > theme.scr.w() and v.dir == 1 or v.x < -v.w and v.dir == 2
 			or v.y > theme.scr.h() and v.dir == 3 or v.y < - v.h and v.dir == 4) then
@@ -179,7 +179,7 @@ function game:timer()
 	local delta = t - last_t
 	last_t = t
 	process_tiles()
-	process_slides(delta / 10)
+	process_slides(delta / 20)
 	sprite.scr():fill 'black'
 	draw_tiles()
 	draw_slides()
