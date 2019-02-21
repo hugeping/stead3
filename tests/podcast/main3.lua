@@ -90,17 +90,17 @@ function scale_slide(v)
 	v.x, v.y = x, y
 end
 
-function process_slides()
+function process_slides(delta)
 	local x, y, once
 	for k, v in ipairs(slides) do
 		if v.dir == 1 then
-			v.x = v.x + (1 * (1 - v.dist) + 1)
+			v.x = v.x + (delta * (1 - v.dist))
 		elseif v.dir == 2 then
-			v.x = v.x - (1 * (1 - v.dist) + 1)
+			v.x = v.x - (delta * (1 - v.dist))
 		elseif v.dir == 3 then
-			v.y = v.y + (1 * (1 - v.dist) + 1)
+			v.y = v.y + (delta * (1 - v.dist))
 		else
-			v.y = v.y - (1 * (1 - v.dist) + 1)
+			v.y = v.y - (delta * (1 - v.dist))
 		end
 		if not once and (v.x > theme.scr.w() and v.dir == 1 or v.x < -v.w and v.dir == 2
 			or v.y > theme.scr.h() and v.dir == 3 or v.y < - v.h and v.dir == 4) then
@@ -173,16 +173,13 @@ function color(x, y)
 end
 
 local last_t = 0
-local frames = 0
 
 function game:timer()
 	local t = instead.ticks()
-	if t - last_t < 16 then
-		return
-	end
+	local delta = t - last_t
 	last_t = t
 	process_tiles()
-	process_slides()
+	process_slides(delta / 10)
 	sprite.scr():fill 'black'
 	draw_tiles()
 	draw_slides()
@@ -214,5 +211,5 @@ function start()
 	end
 	load_slides()
 	logo_init()
-	timer:set(5)
+	timer:set(10)
 end
