@@ -115,6 +115,7 @@ function process_slides()
 		local n = rnd(#slides_pool)
 		v = slides_pool[n]
 		scale_slide(v)
+--		print("scale", n)
 		table.insert(slides, v)
 		table.remove(slides_pool, n)
 		table.sort(slides, function(a, b) return a.dist > b.dist end)
@@ -173,33 +174,15 @@ end
 
 local last_t = 0
 local frames = 0
-local frames_t = {}
-
-local function add_frame()
-	frames = frames + 1
-	if frames > 1000 then
-		frames = frames - 1
-		table.remove(frames_t, 1)
-	end
-	frames_t[frames] = instead.ticks()
-end
 
 function game:timer()
 	local t = instead.ticks()
---	if frames >= 1000 then
---		t = t - frames_t[1]
---	end
---	local fps = frames * 1000 / t
---	if fps > 41 then
---		return
---	end
+	if t - last_t < 16 then
+		return
+	end
+	last_t = t
 	process_tiles()
 	process_slides()
---	if fps < 40 then
---		add_frame()
---		return
---	end
---	add_frame()
 	sprite.scr():fill 'black'
 	draw_tiles()
 	draw_slides()
@@ -231,5 +214,5 @@ function start()
 	end
 	load_slides()
 	logo_init()
-	timer:set(20)
+	timer:set(5)
 end
