@@ -177,6 +177,9 @@ local last_t = 0
 function game:timer()
 	local t = instead.ticks()
 	local delta = t - last_t
+	if last_t == 0 then
+		delta = 1.0
+	end
 	last_t = t
 	process_tiles()
 	process_slides(delta / 20)
