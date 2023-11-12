@@ -8,7 +8,7 @@ local tiles = {}
 
 local WX, HY = 64, 64
 
-local WW, HH = math.floor(W / WX), math.floor(H / HY)
+local WW, HH = math.ceil(W / WX), math.ceil(H / HY)
 
 local pad = 2
 local book_spr = sprite.new "book.png"
@@ -52,8 +52,8 @@ function logo()
 end
 
 function draw_tiles()
-	for y = 1, HY do
-		for x = 1, WX do
+	for y = 1, HH do
+		for x = 1, WW do
 			local a = tiles[y][x].lev / 255
 			local COL = tiles[y][x].col
 			local col = string.format("#%02x%02x%02x", COL[1] * a, COL[2] * a, COL[3] * a)
@@ -69,7 +69,7 @@ function scale_slide(v)
 	local x, y
 	local distance = rnd(10000) / 10000
 	v.dist = distance
-	local scale = 1 / 8 + (1 - v.dist) * 1 / 2
+	local scale = 1 / 4 + (1 - v.dist) * 1 / 2
 	local smooth = true
 	v.spr = sprite.new(v.nam):scale(scale, scale, smooth)
 	v.w, v.h = v.spr:size()
